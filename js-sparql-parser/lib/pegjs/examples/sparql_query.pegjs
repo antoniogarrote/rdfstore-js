@@ -14,7 +14,100 @@
 }
 
 SPARQL =
-  IRIref
+  Expression
+
+/*
+  @todo
+  @incomplete
+  [95]  	Expression	  ::=  	ConditionalOrExpression
+*/
+Expression "[95] Expression"
+  = UnaryExpression
+
+/*
+  [103]  	UnaryExpression	  ::=  	  '!' PrimaryExpression  |	'+' PrimaryExpression |	'-' PrimaryExpression |	PrimaryExpression
+*/
+UnaryExpression "[103] UnaryExpression"
+  = '!' PrimaryExpression
+  / '+' PrimaryExpression
+  / '-' PrimaryExpression
+  / PrimaryExpression
+
+/*
+  @todo
+  @incomplete
+  [104]  	PrimaryExpression	  ::=  	BrackettedExpression | BuiltInCall | IRIrefOrFunction | RDFLiteral | NumericLiteral | BooleanLiteral | Var | Aggregate
+*/
+PrimaryExpression "[104] PrimaryExpression"
+  = BuiltInCall
+  / RDFLiteral
+  / NumericLiteral
+  / BooleanLiteral
+
+
+/*
+  @todo
+  @incomplete
+  [106] BuiltInCall
+*/
+BuiltInCall "[106] BuiltInCall"
+  = 'STR(' Expression ')'
+
+/*
+  [112]  	RDFLiteral	  ::=  	String ( LANGTAG | ( '^^' IRIref ) )?
+*/
+RDFLiteral "[112] RDFLiteral"
+  = s:String e:( LANGTAG / ('^^' IRIref) )? {
+      if(typeof(e) === "string" && e.length > 0) {
+          return {token:'literal', value:s.value, lang:e.slice(1), type:null}
+      } else {
+          if(typeof(e) === "object") {
+              e.shift();
+              return {token:'literal', value:s.value, lang:null, type:e }
+          } else {
+              return { token:'literal', value:s.value, lang:null, type:null }
+          }
+      }
+}
+
+/*
+  [113]  	NumericLiteral	  ::=  	NumericLiteralUnsigned | NumericLiteralPositive | NumericLiteralNegative
+*/
+NumericLiteral "[113] NumericLiteral"
+  = NumericLiteralUnsigned
+  / NumericLiteralPositive
+  / NumericLiteralNegative
+
+/*
+  [114]  	NumericLiteralUnsigned	  ::=  	INTEGER |	DECIMAL |	DOUBLE
+*/
+NumericLiteralUnsigned "[114] NumericLiteralUnsigned"
+  = DOUBLE
+  / DECIMAL
+  / INTEGER
+
+/*
+  [115]  	NumericLiteralPositive	  ::=  	INTEGER_POSITIVE |	DECIMAL_POSITIVE |	DOUBLE_POSITIVE
+*/
+NumericLiteralPositive "[115] NumericLiteralPositive"
+  = DOUBLE_POSITIVE
+  / DECIMAL_POSITIVE
+  / INTEGER_POSITIVE
+
+/*
+  [116]  	NumericLiteralNegative	  ::=  	INTEGER_NEGATIVE |	DECIMAL_NEGATIVE |	DOUBLE_NEGATIVE
+*/
+NumericLiteralNegative "[116] NumericLiteralNegative"
+  = DOUBLE_NEGATIVE
+  / DECIMAL_NEGATIVE
+  / INTEGER_NEGATIVE
+
+/*
+  [117]  	BooleanLiteral	  ::=  	'true' |	'false'
+*/
+BooleanLiteral "[117] BooleanLiteral"
+  = 'true' { return true }
+  / 'false' { return false }
 
 /*
   [118]  	String	  ::=  	STRING_LITERAL1 | STRING_LITERAL2 | STRING_LITERAL_LONG1 | STRING_LITERAL_LONG2
