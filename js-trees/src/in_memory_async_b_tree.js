@@ -158,7 +158,7 @@ InMemoryAsyncBTree.Tree.prototype.__walk = function(tree,node,f,callback) {
         for(var i=0; i<node.numberActives; i++) {
             f(node.keys[i]);
         }
-        callback();
+        return callback();
     } else {
 
         var max = node.numberActives;
@@ -174,7 +174,7 @@ InMemoryAsyncBTree.Tree.prototype.__walk = function(tree,node,f,callback) {
         };
         InMemoryAsyncBTree._repeat(0,max,loopf1,function(env){
             tree._diskRead(node.children[max],function(node){
-                tree.__walk(tree,node,f,function(){});
+                tree.__walk(tree,node,f,function(){callback();});
             });
         },{});
     }
@@ -192,7 +192,7 @@ InMemoryAsyncBTree.Tree.prototype.walkNodes = function(f) {
 InMemoryAsyncBTree.Tree.prototype.__walkNodes = function(tree,node,f,callback) {
     if(node.isLeaf) {
         f(node);
-        callback();
+        return callback();
     } else {
         f(node);
         var max = node.numberActives;
@@ -262,7 +262,7 @@ InMemoryAsyncBTree.Tree.prototype._splitChild = function(parent, index, child, c
         that._diskWrite(parent,function(parent){
             parent.children[index+1] = newChild;
             that._diskWrite(child,function(child){
-                callback(parent);
+                return callback(parent);
             });
         });
     });
@@ -341,7 +341,7 @@ InMemoryAsyncBTree.Tree.prototype.__insertNonFull = function(tree,node,idx,key,d
         node.keys[idx+1] = {key: key, data:data}
         node.numberActives++;
         tree._diskWrite(node, function(node){
-            callback(node);
+            return callback(node);
         });
     }
 };
@@ -363,7 +363,7 @@ InMemoryAsyncBTree.Tree.prototype.__deleteSearchNode = function(tree,key,node,ca
     i = 0;
 
     if(node.numberActives === 0) {
-        return callback(null);
+        return callback(false);
     }
 
     while(i<node.numberActives && tree.comparator(key, node.keys[i].key) === 1) {
@@ -377,13 +377,13 @@ InMemoryAsyncBTree.Tree.prototype.__deleteSearchNode = function(tree,key,node,ca
     }
 
     if(node.isLeaf === true) {
-        return callback(null);
+        return callback(false);
     }
 
     parent = node;
     tree._diskRead(node.children[i], function(node){
         if(node===null) {
-            return callback(null);
+            return callback(false);
         }
 
         var isLsiblingNull = false;
@@ -435,8 +435,9 @@ InMemoryAsyncBTree.Tree.prototype.__deleteSearchNode = function(tree,key,node,ca
                             tree.__deleteSearchNode(tree,key,node,callback);
                         });
                     }
+                } else {
+                    tree.__deleteSearchNode(tree,key,node,callback);
                 }
-
             });
         })
     });
@@ -447,8 +448,9 @@ InMemoryAsyncBTree.Tree.prototype.__deleteNodeFound = function(tree,key,node,cal
     //Simply remove the key
     if(node.isLeaf && (node.numberActives > (tree.order-1))) {
         tree._deleteKeyFromNode(node,idx,function(){
-            return callback(true);
+            callback(true);
         });
+        return true;
     }
 
 
@@ -456,8 +458,9 @@ InMemoryAsyncBTree.Tree.prototype.__deleteNodeFound = function(tree,key,node,cal
     //less than (t - 1)
     if(node.isLeaf && (node === tree.root)) {
         tree._deleteKeyFromNode(node,idx, function(){
-            return callback(true);
+            callback(true);
         });
+        return true;
     }
 
 
@@ -465,7 +468,7 @@ InMemoryAsyncBTree.Tree.prototype.__deleteNodeFound = function(tree,key,node,cal
     if(node.isLeaf === false) {
         tree._diskRead(node.children[idx], function(tmpNode) {
             if(tmpNode.numberActives > (tree.order-1)) {
-                tree._getMaxKeyPos(tmpNode,function(subNodeIdx){
+                tree._getMaxKeyPos(tree,tmpNode,function(subNodeIdx){
                     key = subNodeIdx.node.keys[subNodeIdx.index];
 
                     node.keys[idx] = key;
@@ -479,7 +482,7 @@ InMemoryAsyncBTree.Tree.prototype.__deleteNodeFound = function(tree,key,node,cal
             } else {
                 tree._diskRead(node.children[idx+1],function(tmpNode2){
                     if (tmpNode2.numberActives >(tree.order-1)) {
-                        tree._getMinKeyPos(tmpNode2, function(subNodeIdx){
+                        tree._getMinKeyPos(tree,tmpNode2, function(subNodeIdx){
                             key = subNodeIdx.node.keys[subNodeIdx.index];
 
                             node.keys[idx] = key;
@@ -590,7 +593,7 @@ InMemoryAsyncBTree.Tree.prototype._moveKey = function(parent,i,position, callbac
             that._diskWrite(lchild, function(lchild){
                 that._diskWrite(rchild, function(rchild){
                     that._diskWrite(parent, function(parent){
-                        callback(parent);
+                        return callback(parent);
                     });
                 });
             });
@@ -621,7 +624,7 @@ InMemoryAsyncBTree.Tree.prototype._mergeSiblings = function(parent,index,pos,cal
         tolookn2 = parent.children[index + 1];
     }
 
-    var that = that;
+    var that = this;
     that._diskRead(tolookn1, function(n1){
         that._diskRead(tolookn2, function(n2){
 
@@ -673,10 +676,10 @@ InMemoryAsyncBTree.Tree.prototype._mergeSiblings = function(parent,index,pos,cal
                         that._diskDelete(n2,function(){
                             if(that.root === newNode) {
                                 that._updateRootNode(that.root,function(){
-                                    callback(newNode);
+                                    return callback(newNode);
                                 });
                             } else {
-                                callback(newNode);
+                                return callback(newNode);
                             }
                         });
                     });
@@ -719,7 +722,7 @@ InMemoryAsyncBTree.Tree.prototype._deleteKeyFromNode = function(node,index,callb
     node.numberActives--;
 
     this._diskWrite(node,function(node){
-        callback(node);
+        return callback(node);
     });
 }
 
@@ -752,7 +755,7 @@ InMemoryAsyncBTree.Tree.prototype._mergeNodes = function(n1, key, n2, callback) 
     this._diskWrite(newNode, function(newNode){
         that._diskDelete(n1, function(){
             that._diskDelete(n2, function(){
-                callback(newNode);
+                return callback(newNode);
             });
         })
     });
@@ -894,12 +897,12 @@ InMemoryAsyncBTree.Tree.prototype._getMaxKeyPos = function(tree,node,callback) {
     if(node.isLeaf === true) {
 	node_pos.node  = node;
 	node_pos.index = node.numberActives - 1;
-	callback(node_pos);
+	return callback(node_pos);
     } else {
 	node_pos.node  = node;
 	node_pos.index = node.numberActives - 1;
 	tree._diskRead(node.children[node.numberActives],function(node){
-            tree._getMaxKeyPos(tree,node,callback);
+            return tree._getMaxKeyPos(tree,node,callback);
         });
     }
 }
@@ -920,12 +923,12 @@ InMemoryAsyncBTree.Tree.prototype._getMinKeyPos = function(tree,node,callback) {
     if(node.isLeaf === true) {
 	node_pos.node  = node;
 	node_pos.index = 0;
-        callback(node_pos);
+        return callback(node_pos);
     } else {
 	node_pos.node  = node;
 	node_pos.index = 0;
 	tree._diskRead(node.children[0], function(node){
-            tree._getMinKeyPos(tree,node, callback);
+            return tree._getMinKeyPos(tree,node, callback);
         });
     }
 }
