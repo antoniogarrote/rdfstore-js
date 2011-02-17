@@ -14,7 +14,56 @@
 }
 
 SPARQL =
-  DECIMAL_NEGATIVE
+  IRIref
+
+/*
+  [118]  	String	  ::=  	STRING_LITERAL1 | STRING_LITERAL2 | STRING_LITERAL_LONG1 | STRING_LITERAL_LONG2
+*/
+String "[118] String"
+  = s:STRING_LITERAL1 { return {token:'string', value:s} }
+  / s:STRING_LITERAL2 { return {token:'string', value:s} }
+  / s:STRING_LITERAL_LONG1 { return {token:'string', value:s} }
+  / s:STRING_LITERAL_LONG2 { return {token:'string', value:s} }
+
+/*
+  [119]  	IRIref	  ::=  	IRI_REF |	PrefixedName
+*/
+IRIref "[119] IRIref"
+  = iri:IRI_REF { return {token: 'uri', prefix:null, suffix:null, value:iri} }
+  / p:PrefixedName { return p }
+
+/*
+  [120]  	PrefixedName	  ::=  	PNAME_LN | PNAME_NS
+*/
+PrefixedName "[120] PrefixedName"
+  = p:PNAME_LN { return {token: 'uri', prefix:p[0], suffix:p[1], value:null } }
+  / p:PNAME_NS { return {token: 'uri', prefix:p, suffix:'', value:null } }
+
+/*
+  [121]  	BlankNode	  ::=  	BLANK_NODE_LABEL |	ANON
+*/
+BlankNode "[121] BlankNode"
+  = l:BLANK_NODE_LABEL { return {token:'blank', label:l}}
+  / ANON { return {token:'blank', label:null} }
+
+/*
+  [122]  	IRI_REF	  ::=  	'<' ([^<>"{}|^`\]-[#x00-#x20])* '>'
+*/
+IRI_REF "[122] IRI_REF"
+  = '<' iri_ref:[^<>\"\{\} / ^\\ / \S]* '>' { return iri_ref }
+
+/*
+  [123]  	PNAME_NS	  ::=  	PN_PREFIX? ':'
+*/
+PNAME_NS "[123] PNAME_NS"
+  = p:PN_PREFIX? ':' { return p }
+
+/*
+  [124]  	PNAME_LN	  ::=  	PNAME_NS PN_LOCAL
+*/
+PNAME_LN "[124] PNAME_LN"
+  = p:PNAME_NS s:PN_LOCAL { return [p, s] }
+
 /*
   [125]  	BLANK_NODE_LABEL	  ::=  	'_:' PN_LOCAL
 */
