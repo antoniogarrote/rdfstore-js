@@ -17,20 +17,136 @@ SPARQL =
   Expression
 
 /*
-  @todo
-  @incomplete
   [95]  	Expression	  ::=  	ConditionalOrExpression
 */
 Expression "[95] Expression"
-  = UnaryExpression
+  = ConditionalOrExpression
+
+/*
+  [96]  	ConditionalOrExpression	  ::=  	ConditionalAndExpression ( '||' ConditionalAndExpression )*
+*/
+ConditionalOrExpression "[96] ConditionalOrExpression"
+  = v:ConditionalAndExpression vs:('||' ConditionalAndExpression)* {
+      var exp = {};
+      exp.token = "expression";
+      exp.expressionType = "conditionalor";
+      var ops = [v];
+
+      for(var i=0; i<vs.length; i++) {
+          ops.push(vs[i][1]);
+      }
+
+      exp.operands = ops;
+
+      return exp;
+}
+
+/*
+  [97]  	ConditionalAndExpression	  ::=  	ValueLogical ( '&&' ValueLogical )*
+*/
+ConditionalAndExpression "[97] ConditionalAndExpression"
+  = v:ValueLogical vs:('&&' ValueLogical)* {
+      var exp = {};
+      exp.token = "expression";
+      exp.expressionType = "conditionaland";
+      var ops = [v];
+
+      for(var i=0; i<vs.length; i++) {
+          ops.push(vs[i][1]);
+      }
+
+      exp.operands = ops;
+
+      return exp;
+}
+
+/*
+  [98]  	ValueLogical	  ::=  	RelationalExpression
+*/
+ValueLogical "[98] ValueLogical"
+  = RelationalExpression
+
+/*
+  @
+  [99]  	RelationalExpression	  ::=  	NumericExpression ( '=' NumericExpression | '!=' NumericExpression | '<' NumericExpression | '>' NumericExpression | '<=' NumericExpression | '>=' NumericExpression | 'IN' ExpressionList | 'NOT IN' ExpressionList )?
+*/
+RelationalExpression "[99] RelationalExpression"
+  = op1:NumericExpression op2:( '=' NumericExpression / '!=' NumericExpression / '<' NumericExpression / '>' NumericExpression / '<=' NumericExpression / '>=' NumericExpression)* {
+      var exp = {};
+      exp.expressionType = "relationalexpression"
+      exp.op1 = op1;
+      exp.ops = op2;
+
+      return exp;
+  }
+
+/*
+  [100]  	NumericExpression	  ::=  	AdditiveExpression
+*/
+NumericExpression "[100] NumericExpression"
+  = AdditiveExpression
+
+/*
+  [101]  	AdditiveExpression	  ::=  	MultiplicativeExpression ( '+' MultiplicativeExpression | 
+                                                                           '-' MultiplicativeExpression | 
+                                                                           ( NumericLiteralPositive | NumericLiteralNegative ) ( ( '*' UnaryExpression ) | ( '/' UnaryExpression ) )? )*
+*/
+AdditiveExpression "[101] AdditiveExpression"
+  = MultiplicativeExpression ( '+' MultiplicativeExpression / '-' MultiplicativeExpression / ( NumericLiteralNegative / NumericLiteralNegative ) ( ('*' UnaryExpression) / ('/' UnaryExpression))? )* 
+
+
+/*
+  [102]  	MultiplicativeExpression	  ::=  	UnaryExpression ( '*' UnaryExpression | '/' UnaryExpression )*
+*/
+MultiplicativeExpression "[102] MultiplicativeExpression"
+  = exp:UnaryExpression exps:('*' UnaryExpression / '/' UnaryExpression)* {
+      var ex = {};
+      ex.token = 'expression';
+      ex.expressionType = 'multiplicativeexpression';
+      ex.factor = exp;
+      ex.factors = [];
+      for(var i=0; i<exps.length; i++) {
+          var factor = exps[i];
+          var fact = {};
+          fact.operator = factor[0];
+          fact.expression = factor[1];
+          ex.factors.push(fact);
+      }
+
+      return ex;
+}
 
 /*
   [103]  	UnaryExpression	  ::=  	  '!' PrimaryExpression  |	'+' PrimaryExpression |	'-' PrimaryExpression |	PrimaryExpression
 */
 UnaryExpression "[103] UnaryExpression"
-  = '!' PrimaryExpression
-  / '+' PrimaryExpression
-  / '-' PrimaryExpression
+  = '!' e:PrimaryExpression {
+      var ex = {};
+      ex.token = 'expression';
+      ex.expressionType = 'unaryexpression';
+      ex.unaryexpression = "!";
+      ex.expression = v;
+
+      return ex;
+  }
+  / '+' v:PrimaryExpression {
+      var ex = {};
+      ex.token = 'expression';
+      ex.expressionType = 'unaryexpression';
+      ex.unaryexpression = "+";
+      ex.expression = v;
+
+      return ex;
+  }
+  / '-' v:PrimaryExpression {
+      var ex = {};
+      ex.token = 'expression';
+      ex.expressionType = 'unaryexpression';
+      ex.unaryexpression = "-";
+      ex.expression = v;
+
+      return ex;
+  }
   / PrimaryExpression
 
 /*
@@ -39,10 +155,51 @@ UnaryExpression "[103] UnaryExpression"
   [104]  	PrimaryExpression	  ::=  	BrackettedExpression | BuiltInCall | IRIrefOrFunction | RDFLiteral | NumericLiteral | BooleanLiteral | Var | Aggregate
 */
 PrimaryExpression "[104] PrimaryExpression"
-  = BuiltInCall
-  / RDFLiteral
-  / NumericLiteral
-  / BooleanLiteral
+  = v:BuiltInCall {
+      var ex = {};
+      ex.token = 'expression';
+      ex.expressionType = 'primaryexpression';
+      ex.primaryexprssion = 'builtincall';
+      ex.value = v;
+
+      return ex;
+  }
+  / v:RDFLiteral {
+      var ex = {};
+      ex.token = 'expression';
+      ex.expressionType = 'primaryexpression';
+      ex.primaryexprssion = 'rdfliteral';
+      ex.value = v;
+
+      return ex;
+  }
+  / v:NumericLiteral {
+      var ex = {};
+      ex.token = 'expression';
+      ex.expressionType = 'primaryexpression';
+      ex.primaryexprssion = 'numericliteral';
+      ex.value = v;
+
+      return ex;
+  }
+  / v:BooleanLiteral {
+      var ex = {};
+      ex.token = 'expression';
+      ex.expressionType = 'primaryexpression';
+      ex.primaryexprssion = 'booleanliteral';
+      ex.value = v;
+
+      return ex;
+  }
+  / v:Aggregate {
+      var ex = {};
+      ex.token = 'expression';
+      ex.expressionType = 'primaryexpression';
+      ex.primaryexprssion = 'aggregate';
+      ex.value = v;
+
+      return ex;
+  }
 
 
 /*
@@ -51,7 +208,114 @@ PrimaryExpression "[104] PrimaryExpression"
   [106] BuiltInCall
 */
 BuiltInCall "[106] BuiltInCall"
-  = 'STR(' Expression ')'
+  = 'STR(' e:Expression ')' {
+      var ex = {};
+      ex.token = 'expression'
+      ex.expressionType = 'builtincall'
+      ex.builtincall = 'str'
+      ex.expression = e
+
+      return ex;
+  }
+  / RegexExpression
+/*
+  [107]  	RegexExpression	  ::=  	'REGEX' '(' Expression ',' Expression ( ',' Expression )? ')'
+*/
+RegexExpression "[107] RegexExpression"
+  = 'REGEX' '(' e1:Expression ',' e2:Expression eo:( ',' Expression)? ')' {
+      var regex = {};
+      regex.token = 'expression';
+      regex.expressionType = 'regex';
+      regex.expression1 = e1;
+      regex.expression2 = e2;
+      regex.optionalExpression = eo;
+
+      return regex;
+}
+
+/*
+  @todo
+  @waiting
+  [108]  	ExistsFunc	  ::=  	'EXISTS' GroupGraphPattern
+*/
+//ExistsFunc "[108] ExistsFunc"
+//  = 'EXISTS' GroupGraphPattern
+
+/*
+  @todo
+  @waiting
+  [109]  	NotExistsFunc	  ::=  	'NOT EXISTS' GroupGraphPattern
+*/
+//NotExistsFunc "[109] NotExistsFunc"
+//  = 'NOT EXISTS' GroupGraphPattern
+
+/*
+  @todo
+  @incomplete
+  [110]  	Aggregate	  ::=  	( 'COUNT' '(' 'DISTINCT'? ( '*' | Expression ) ')' | 
+                                          'SUM' '(' 'DISTINCT'? Expression ')' | 
+                                          'MIN' '(' 'DISTINCT'? Expression ')' | 
+                                          'MAX' '(' 'DISTINCT'? Expression ')' | 
+                                          'AVG' '(' 'DISTINCT'? Expression ')' | 
+                                          'SAMPLE' '(' 'DISTINCT'? Expression ')' | 
+                                          'GROUP_CONCAT' '(' 'DISTINCT'? Expression ( ';' 'SEPARATOR' '=' String )? ')' )
+*/
+Aggregate "[110] Aggregate"
+  = 'COUNT' '(' d:'DISTINCT'?  e:('*' / Expression) ')' {
+      exp = {};
+      exp.token = 'expression'
+      exp.rexpressionType = 'aggregate'
+      exp.aggregateType = 'count'
+      exp.distinct = d
+      exp.expression = e
+
+      return exp
+      
+  }
+  / 'SUM' '(' d:'DISTINCT'? e:Expression ')' {
+      exp = {};
+      exp.token = 'expression'
+      exp.rexpressionType = 'aggregate'
+      exp.aggregateType = 'sum'
+      exp.distinct = d
+      exp.expression = e
+
+      return exp
+      
+  }
+  / 'MIN' '(' d:'DISTINCT'? e:Expression ')' {
+      exp = {};
+      exp.token = 'expression'
+      exp.rexpressionType = 'aggregate'
+      exp.aggregateType = 'min'
+      exp.distinct = d
+      exp.expression = e
+
+      return exp
+      
+  }
+  / 'MAX' '(' d:'DISTINCT'? e:Expression ')' {
+      exp = {};
+      exp.token = 'expression'
+      exp.rexpressionType = 'aggregate'
+      exp.aggregateType = 'max'
+      exp.distinct = d
+      exp.expression = e
+
+      return exp
+      
+  }
+  / 'AVG' '(' d:'DISTINCT'? e:Expression ')' {
+      exp = {};
+      exp.token = 'expression'
+      exp.rexpressionType = 'aggregate'
+      exp.aggregateType = 'avg'
+      exp.distinct = d
+      exp.expression = e
+
+      return exp
+      
+  }
 
 /*
   [112]  	RDFLiteral	  ::=  	String ( LANGTAG | ( '^^' IRIref ) )?
