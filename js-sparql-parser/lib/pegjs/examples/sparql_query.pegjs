@@ -14,7 +14,138 @@
 }
 
 SPARQL =
-  Expression
+  VarOrTerm
+
+/*
+  [82]  	PathMod	  ::=  	( '*' | '?' | '+' | '{' ( Integer ( ',' ( '}' | Integer '}' ) | '}' ) | ',' Integer '}' ) )
+*/
+PathMod "[82] PathMod"
+  = ( '*' / '?' / '+' / '{' ( Integer ( ',' ( '}' / Integer '}' ) / '}' ) / ',' Integer '}' ) )
+
+/*
+ [83]  	PathPrimary	  ::=  	( IRIref | 'a' | '!' PathNegatedPropertySet | '(' Path ')' )
+ @todo
+ @waiting
+*/
+//PathPrimary "[83] PathPrimary"
+//  = ( IRIref / 'a' / '!' PathNegatedPropertySet / '(' Path ')' )
+
+/*
+  [84]	PathNegatedPropertySet	  ::=	( PathOneInPropertySet | '(' ( PathOneInPropertySet ( '|' PathOneInPropertySet )* )? ')' )
+*/
+PathNegatedPropertySet
+  = ( PathOneInPropertySet / '(' ( PathOneInPropertySet	 ('|' PathOneInPropertySet)* )? ')' ) 
+
+/*
+  [85]	PathOneInPropertySet	  ::=	( IRIref | 'a' | '^' ( IRIref | 'a' ) )
+*/
+PathOneInPropertySet "[85] PathOneInPropertySet"
+  = ( IRIref / 'a' / '^' (IRIref / 'a') )
+
+/*
+  [86] 	Integer	  ::=  	INTEGER
+*/
+Integer "[86] Integer"
+  = INTEGER
+
+/*
+  @todo
+  @incomplete
+  [87]  	TriplesNode	  ::=  	Collection |	BlankNodePropertyList
+*/
+TriplesNode "[87] TriplesNode"
+  = Collection 
+//  / BlankNodePropertyList
+
+/*
+  @todo
+  @waiting
+  [88]  	BlankNodePropertyList	  ::=  	'[' PropertyListNotEmpty ']'
+*/
+//BlankNodePropertyList "[88] BlankNodePropertyList"
+//  = '[' PropertyListNotEmpty ']'
+
+/*
+  [89]  	Collection	  ::=  	'(' GraphNode+ ')'
+*/
+Collection "[89] Collection"
+  = '(' GraphNode+ ')'
+
+/*
+  [90]  	GraphNode	  ::=  	VarOrTerm |	TriplesNode
+*/
+GraphNode "[90] GraphNode"
+  = (VarOrTerm / TriplesNode)
+
+/*
+  [91]  	VarOrTerm	  ::=  	Var | GraphTerm
+*/
+VarOrTerm "[91] VarOrTerm"
+  = (Var / GraphTerm)
+
+/*
+  [92]  	VarOrIRIref	  ::=  	Var | IRIref
+*/
+VarOrIRIref "[92] VarOrIRIref"
+  = (Var /IRIref)
+
+/*
+  [93]  	Var	  ::=  	VAR1 | VAR2
+*/
+Var "[93] Var"
+  = v:(VAR1 / VAR2) {
+      var term = {};
+      term.token = 'var';
+      term.value = v;
+      return term;
+  }
+
+/*
+  [94]  	GraphTerm	  ::=  	IRIref |	RDFLiteral |	NumericLiteral |	BooleanLiteral |	BlankNode |	NIL
+*/
+GraphTerm "[94] GraphTerm"
+  = t:IRIref {
+      var term = {};
+      term.token = 'graphterm';
+      term.term = 'iri';
+      term.value = t;
+      return term;
+}
+  / t:RDFLiteral {
+      var term = {};
+      term.token = 'graphterm'
+      term.term = 'literal'
+      term.value = t
+      return term;
+}
+  / t:NumericLiteral {
+      var term = {};
+      term.token = 'graphterm'
+      term.term = 'numericliteral'
+      term.value = t
+      return term;
+}
+  / t:BooleanLiteral  {
+      var term = {};
+      term.token = 'graphterm'
+      term.term = 'booleanliteral'
+      term.value = t
+      return term;
+}
+  / t:BlankNode {
+      var term = {};
+      term.token = 'graphterm'
+      term.term = 'blanknode'
+      term.value = t
+      return term;
+}
+  / t:NIL {
+      var term = {};
+      term.token = 'graphterm'
+      term.term = 'nil'
+      term.value = t
+      return term;
+}
 
 /*
   [95]  	Expression	  ::=  	ConditionalOrExpression
@@ -196,6 +327,15 @@ PrimaryExpression "[104] PrimaryExpression"
       ex.token = 'expression';
       ex.expressionType = 'primaryexpression';
       ex.primaryexprssion = 'aggregate';
+      ex.value = v;
+
+      return ex;
+  }
+  / v:Var {
+      var ex = {};
+      ex.token = 'expression';
+      ex.expressionType = 'primaryexpression';
+      ex.primaryexprssion = 'var';
       ex.value = v;
 
       return ex;
@@ -407,7 +547,7 @@ BlankNode "[121] BlankNode"
   [122]  	IRI_REF	  ::=  	'<' ([^<>"{}|^`\]-[#x00-#x20])* '>'
 */
 IRI_REF "[122] IRI_REF"
-  = '<' iri_ref:[^<>\"\{\} / ^\\ / \S]* '>' { return iri_ref }
+  = '<' iri_ref:[^<>\"\{\} | ^\\ | \S]* '>' { return iri_ref }
 
 /*
   [123]  	PNAME_NS	  ::=  	PN_PREFIX? ':'
