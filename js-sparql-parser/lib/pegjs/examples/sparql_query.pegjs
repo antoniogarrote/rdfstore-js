@@ -14,7 +14,566 @@
 }
 
 SPARQL =
-  VarOrTerm
+  QueryUnit
+
+/*
+  [1]  	QueryUnit	  ::=  	Query
+*/
+QueryUnit "[1] QueryUnit"
+  = Query
+
+/*
+  [2]  	Query	  ::=  	Prologue ( SelectQuery | ConstructQuery | DescribeQuery | AskQuery )
+*/
+Query "[2] Query"
+  = Prologue ( SelectQuery / ConstructQuery / DescribeQuery / AskQuery )
+
+/*
+  [3]  	Prologue	  ::=  	BaseDecl? PrefixDecl*
+*/
+Prologue "[3] Prologue"
+  = BaseDecl? PrefixDecl*
+
+/*
+  [4]  	BaseDecl	  ::=  	'BASE' IRI_REF
+*/
+BaseDecl "[4] BaseDecl"
+  = 'BASE' IRI_REF
+
+/*
+  [5]  	PrefixDecl	  ::=  	'PREFIX' PNAME_NS IRI_REF
+*/
+PrefixDecl "[5] PrefixDecl"
+  = 'PREFIX' PNAME_NS IRI_REF
+
+/*
+  [6]  	SelectQuery	  ::=  	SelectClause DatasetClause* WhereClause SolutionModifier BindingsClause
+*/
+SelectQuery "[6] SelectQuery"
+  = SelectClause DatasetClause* WhereClause SolutionModifier BindingsClause
+
+/*
+  [7]  	SubSelect	  ::=  	SelectClause WhereClause SolutionModifier
+*/
+SubSelect "[7] SubSelect"
+  = SelectClause WhereClause SolutionModifier
+
+/*
+  [8]  	SelectClause	  ::=  	'SELECT' ( 'DISTINCT' | 'REDUCED' )? ( ( Var | ( '(' Expression 'AS' Var ')' ) )+ | '*' )
+*/
+SelectClause "[8] SelectClause"
+  = 'SELECT' ( 'DISTINCT' / 'REDUCED' )? ( ( Var / ( '(' Expression 'AS' Var ')' ) )+ / '*'  )
+
+/*
+  [9]  	ConstructQuery	  ::=  	'CONSTRUCT' ConstructTemplate DatasetClause* WhereClause SolutionModifier
+*/
+ConstructQuery "[9] ConstructQuery"
+  = 'CONSTRUCT' ConstructTemplate DatasetClause* WhereClause SolutionModifier
+
+/*
+  [10]  	DescribeQuery	  ::=  	'DESCRIBE' ( VarOrIRIref+ | '*' ) DatasetClause* WhereClause? SolutionModifier
+*/
+DescribeQuery "[10] DescribeQuery"
+  = 'DESCRIBE' ( VarOrIRIref+ / '*' ) DatasetClause* WhereClause? SolutionModifier
+
+/*
+[11]  	AskQuery	  ::=  	'ASK' DatasetClause* WhereClause
+*/
+AskQuery "[11] AskQuery"
+  = 'ASK' DatasetClause* WhereClause
+
+/*
+  [12]  	DatasetClause	  ::=  	'FROM' ( DefaultGraphClause | NamedGraphClause )
+*/
+DatasetClause "[12] DatasetClause"
+  = 'FROM' ( DefaultGraphClause / NamedGraphClause )
+
+/*
+  [13]  	DefaultGraphClause	  ::=  	SourceSelector
+*/
+DefaultGraphClause "[13] DefaultGraphClause"
+  = SourceSelector
+
+/*
+  [14]  	NamedGraphClause	  ::=  	'NAMED' SourceSelector
+*/
+NamedGraphClause "[14] NamedGraphClause"
+  = 'NAMED' SourceSelector
+
+/*
+  [15]  	SourceSelector	  ::=  	IRIref
+*/
+SourceSelector "[15] SourceSelector"
+  = IRIref
+
+/*
+  [16]  	WhereClause	  ::=  	'WHERE'? GroupGraphPattern
+*/
+WhereClause "[16] WhereClause"
+  = 'WHERE'? GroupGraphPattern
+
+/*
+  [17]  	SolutionModifier	  ::=  	GroupClause? HavingClause? OrderClause? LimitOffsetClauses?
+*/
+SolutionModifier "[17] SolutionModifier"
+  = GroupClause? HavingClause? OrderClause? LimitOffsetClauses?
+
+/*
+  [18]  	GroupClause	  ::=  	'GROUP' 'BY' GroupCondition+
+*/
+GroupClause "[18] GroupClause"
+  = 'GROUP' 'BY' GroupCondition+
+
+/*
+  [19]  	GroupCondition	  ::=  	( BuiltInCall | FunctionCall | '(' Expression ( 'AS' Var )? ')' | Var )
+*/
+GroupCondition "[19] GroupCondition"
+  = ( BuiltInCall / FunctionCall / '(' Expression ( 'AS' Var )?  ')' / Var )
+
+/*
+  [20]  	HavingClause	  ::=  	'HAVING' HavingCondition+
+*/
+HavingClause "[20] HavingClause"
+  = 'HAVING' HavingCondition+
+
+/*
+  [21]  	HavingCondition	  ::=  	Constraint
+*/
+HavingCondition "[21] HavingCondition"
+  = Constraint
+
+/*
+  [22]  	OrderClause	  ::=  	'ORDER' 'BY' OrderCondition+
+*/
+OrderClause "[22] OrderClause"
+  = 'ORDER' 'BY' OrderCondition+
+
+/*
+  [23]  	OrderCondition	  ::=  	 ( ( 'ASC' | 'DESC' ) BrackettedExpression ) | ( Constraint | Var )
+*/
+OrderCondition "[23] OrderCondition"
+  = ( ( 'ASC' / 'DESC' ) BrackettedExpression ) / ( Constraint / Var )
+
+/*
+  [24]  	LimitOffsetClauses	  ::=  	( LimitClause OffsetClause? | OffsetClause LimitClause? )
+*/
+LimitOffsetClauses "[24] LimitOffsetClauses"
+  = ( LimitClause OffsetClause? / OffsetClause LimitClause? )
+
+/*
+  [25]  	LimitClause	  ::=  	'LIMIT' INTEGER
+*/
+LimitClause "[25] LimitClause"
+  = 'LIMIT' INTEGER
+
+/*
+  [26]  	OffsetClause	  ::=  	'OFFSET' INTEGER
+*/
+OffsetClause "[26] OffsetClause"
+  = 'OFFSET' INTEGER
+
+/*
+  [27]  	BindingsClause	  ::=  	( 'BINDINGS' Var* '{' ( '(' BindingValue+ ')' | NIL )* '}' )?
+*/
+BindingsClause "[27] BindingsClause"
+  = ( 'BINDINGS' Var* '{' ( '(' BindingValue+ ')' / NIL )* '}' )?
+
+/*
+  [28]  	BindingValue	  ::=  	IRIref |	RDFLiteral |	NumericLiteral |	BooleanLiteral |	'UNDEF'
+*/
+BindingValue "[28] BindingValue"
+  = IRIref / RDFLiteral / NumericLiteral / BooleanLiteral / 'UNDEF'
+
+/*
+  [29]  	UpdateUnit	  ::=  	Update
+*/
+UpdateUnit "[29] UpdateUnit"
+  = Update
+
+/*
+[30]  	Update	  ::=  	Prologue Update1 ( ';' Update? )?
+*/
+Update "[30] Update"
+  = Prologue Update1 ( ';' Update? )?
+
+/*
+  [31]  	Update1	  ::=  	Load | Clear | Drop | Create | InsertData | DeleteData | DeleteWhere | Modify
+*/
+Update1 "[31] Update1"
+  = Load / Clear / Drop / Create / InsertData / DeleteData / DeleteWhere / Modify
+
+/*
+[32]  	Load	  ::=  	'LOAD' IRIref ( 'INTO' GraphRef )?
+*/
+Load "[32] Load"
+  = 'LOAD' IRIref ( 'INTO' GraphRef )?
+
+/*
+  [33]  	Clear	  ::=  	'CLEAR' 'SILENT'? GraphRefAll
+*/
+Clear "[33] Clear"
+  = 'CLEAR' 'SILENT'? GraphRefAll
+
+/*
+  [34]  	Drop	  ::=  	'DROP' 'SILENT'? GraphRefAll
+*/
+Drop "[34] Drop"
+  = 'DROP' 'SILENT'? GraphRefAll
+
+/*
+[35]  	Create	  ::=  	'CREATE' 'SILENT'? GraphRef
+*/
+Create "[35] Create"
+  = 'CREATE' 'SILENT'? GraphRef
+
+/*
+  [36]  	InsertData	  ::=  	'INSERT' <WS*> ',DATA' QuadData
+*/
+InsertData "[36] InsertData"
+  = 'INSERT' WS* ',DATA' QuadData
+
+/*
+  [37]  	DeleteData	  ::=  	'DELETE' <WS*> 'DATA' QuadData
+*/
+DeleteData "[37] DeleteData"
+  = 'DELETE' WS* 'DATA' QuadData
+
+/*
+  [38]  	DeleteWhere	  ::=  	'DELETE' <WS*> 'WHERE' QuadPattern
+*/
+DeleteWhere "[38] DeleteWhere"
+  = 'DELETE' WS* 'WHERE' QuadPattern
+
+/*
+  [39]  	Modify	  ::=  	( 'WITH' IRIref )? ( DeleteClause InsertClause? | InsertClause ) UsingClause* 'WHERE' GroupGraphPattern
+*/
+Modify "[39] Modify"
+  = ('WITH' IRIref)? ( DeleteClause InsertClause? / InsertClause ) UsingClause* 'WHERE' GroupGraphPattern
+
+/*
+  [40]  	DeleteClause	  ::=  	'DELETE' QuadPattern
+*/
+DeleteClause "[40] DeleteClause"
+  = 'DELETE' QuadPattern
+
+/*
+  [41]  	InsertClause	  ::=  	'INSERT' QuadPattern
+*/
+InsertClause "[41] InsertClause"
+  = 'INSERT' QuadPattern
+
+/*
+  [42]  	UsingClause	  ::=  	'USING' ( IRIref | 'NAMED' IRIref )
+*/
+UsingClause "[42] UsingClause"
+  = 'USING' ( IRIref / 'NAMED' IRIref )
+
+/*
+  [43]  	GraphRef	  ::=  	'GRAPH' IRIref
+*/
+GraphRef "[43] GraphRef"
+  = 'GRAPH' IRIref
+
+
+/*
+  [44]  	GraphRefAll	  ::=  	GraphRef | 'DEFAULT' | 'NAMED' | 'ALL'
+*/
+GraphRefAll "[44] GraphRefAll"
+  = GraphRef
+  / 'DEFAULT'
+  / 'NAMED'
+  / 'ALL'
+
+/*
+  [45]  	QuadPattern	  ::=  	'{' Quads '}'
+*/
+QuadPattern "[45] QuadPattern"
+  = '{' Quads '}'
+
+/*
+  [46]  	QuadData	  ::=  	'{' Quads '}'
+*/
+QuadData "[46] QuadData"
+  = '{' Quads '}'
+
+/*
+  [47]  	Quads	  ::=  	TriplesTemplate? ( QuadsNotTriples '.'? TriplesTemplate? )*
+*/
+Quads "[47] Quads"
+  = TriplesTemplate? ( QuadsNotTriples '.'? TriplesTemplate? )*
+
+/*
+  [48]  	QuadsNotTriples	  ::=  	'GRAPH' VarOrIRIref '{' TriplesTemplate? '}'
+*/
+QuadsNotTriples "[48] QuadsNotTriples"
+  = 'GRAPH' VarOrIRIref '{' TriplesTemplate? '}'
+
+/*
+  [49]  	TriplesTemplate	  ::=  	TriplesSameSubject ( '.' TriplesTemplate? )?
+*/
+TriplesTemplate "[49] TriplesTemplate"
+  = TriplesSameSubject ( '.' TriplesTemplate? )?
+
+/*
+  @todo
+  @incomplete
+  [50]  	GroupGraphPattern	  ::=  	'{' ( SubSelect | GroupGraphPatternSub ) '}'
+*/
+GroupGraphPattern "[50] GroupGraphPattern"
+  = '{' SubSelect  '}'
+  / '{' GroupGraphPatternSub '}'
+
+/*
+  [51]  	GroupGraphPatternSub	  ::=  	TriplesBlock? ( GraphPatternNotTriples '.'? TriplesBlock? )*
+*/
+GroupGraphPatternSub "[51] GroupGraphPatternSub"
+  = TriplesBlock? ( GraphPatternNotTriples '.'? TriplesBlock? )*
+
+/*
+  [52]  	TriplesBlock	  ::=  	TriplesSameSubjectPath ( '.' TriplesBlock? )?
+*/
+TriplesBlock "[54] TriplesBlock"
+  = TriplesSameSubjectPath ( '.' TriplesBlock? )?
+
+/*
+  [53]  	GraphPatternNotTriples	  ::=  	GroupOrUnionGraphPattern | OptionalGraphPattern | MinusGraphPattern | GraphGraphPattern | ServiceGraphPattern | Filter
+*/
+GraphPatternNotTriples "[53] GraphPatternNotTriples"
+  = GroupOrUnionGraphPattern
+  / OptionalGraphPattern
+  / MinusGraphPattern
+  / GraphGraphPattern
+  / ServiceGraphPattern
+  / Filter
+
+/*
+  [54]  	OptionalGraphPattern	  ::=  	'OPTIONAL' GroupGraphPattern
+*/
+OptionalGraphPattern "[54] OptionalGraphPattern"
+  = 'OPTIONAL' GroupGraphPattern
+
+/*
+  [55]  	GraphGraphPattern	  ::=  	'GRAPH' VarOrIRIref GroupGraphPattern
+*/
+GraphGraphPattern "[55] GraphGraphPattern"
+  = 'GRAPH' VarOrIRIref GroupGraphPattern
+
+/*
+  [56]  	ServiceGraphPattern	  ::=  	'SERVICE' VarOrIRIref GroupGraphPattern
+*/
+ServiceGraphPattern "[56] ServiceGraphPattern"
+  = 'SERVICE' VarOrIRIref GroupGraphPattern
+
+/*
+  [57]  	MinusGraphPattern	  ::=  	'MINUS' GroupGraphPattern
+*/
+MinusGraphPattern "[57] MinusGraphPattern"
+  = 'MINUS' GroupGraphPattern
+
+/*
+  [58]  	GroupOrUnionGraphPattern	  ::=  	GroupGraphPattern ( 'UNION' GroupGraphPattern )*
+*/
+GroupOrUnionGraphPattern "[58] GroupOrUnionGraphPattern"
+  = GroupGraphPattern ( 'UNION' GroupGraphPattern )*
+
+/*
+  [59]  	Filter	  ::=  	'FILTER' Constraint
+*/
+Filter "[59] Filter"
+  = 'FILTER' c:Constraint { return c }
+
+/*
+  [60]  	Constraint	  ::=  	BrackettedExpression | BuiltInCall | FunctionCall
+*/
+Constraint "[60] Constraint"
+  = BrackettedExpression / BuiltInCall / FunctionCall
+
+/*
+  [61]  	FunctionCall	  ::=  	IRIref ArgList
+*/
+FunctionCall "[61] FunctionCall"
+  = i:IRIref args:ArgList {
+      var fcall = {};
+      fall.token = "functioncall";
+      fcall.fn = i;
+      fcall.args = args.value;
+
+      return fcall;
+}
+
+
+/*
+  [62]  	ArgList	  ::=  	( NIL | '(' 'DISTINCT'? Expression ( ',' Expression )* ')' )
+*/
+ArgList "[62] ArgList"
+  = NIL  {
+      var args = {};
+      args.token = 'args';
+      args.value = [];
+      return args;
+}
+  / '(' d:'DISTINCT'? e:Expression es:( ',' Expression)* ')' {
+      cleanEx = [];
+
+      for(var i=0; i<es.length; i++) {
+          cleanEx.push(es[i][1]);
+      }
+      var args = {};
+      args.token = 'args';
+      args.value = [e].concat(cleanEx);
+
+      if(d==="DISTINCT") {
+          args.distinct = true;
+      } else {
+          args.distinct = false;
+      }
+
+      return args;
+}
+
+/*
+  [63]  	ExpressionList	  ::=  	( NIL | '(' Expression ( ',' Expression )* ')' )
+*/
+ExpressionList "[63] ExpressionList"
+  = NIL {
+      var args = {};
+      args.token = 'args';
+      args.value = [];
+      return args;
+}
+  / '(' e:Expression es:( ',' Expression)* ')' {
+      cleanEx = [];
+
+      for(var i=0; i<es.length; i++) {
+          cleanEx.push(es[i][1]);
+      }
+      var args = {};
+      args.token = 'args';
+      args.value = [e].concat(cleanEx);
+
+      return args;
+}
+
+/*
+  [64]  	ConstructTemplate	  ::=  	'{' ConstructTriples? '}'
+*/
+ConstructTemplate "[64] ConstructTemplate"
+  = '{' ConstructTriples? '}'
+
+
+/*
+  [65]  	ConstructTriples	  ::=  	TriplesSameSubject ( '.' ConstructTriples? )?
+*/
+ConstructTriples "[65] ConstructTriples"
+  = TriplesSameSubject ( '.' ConstructTriples? )?
+
+/*
+  [66]  	TriplesSameSubject	  ::=  	VarOrTerm PropertyListNotEmpty |	TriplesNode PropertyList
+*/
+TriplesSameSubject "[66] TriplesSameSubject"
+  = VarOrTerm PropertyListNotEmpty
+  / TriplesNode PropertyList
+
+/*
+  [67]  	PropertyListNotEmpty	  ::=  	Verb ObjectList ( ';' ( Verb ObjectList )? )*
+*/
+PropertyListNotEmpty "[67] PropertyListNotEmpty"
+  = Verb ObjectList ( ';' ( Verb ObjectList )? )*
+
+/*
+  [68]  	PropertyList	  ::=  	PropertyListNotEmpty?
+*/
+PropertyList "[68] PropertyList"
+  = PropertyListNotEmpty?
+
+/*
+  [69]  	ObjectList	  ::=  	Object ( ',' Object )*
+*/
+ObjectList "[69] ObjectList"
+  = Object ( ',' Object )*
+
+/*
+  [70]  	Object	  ::=  	GraphNode
+*/
+Object "[70] Object"
+  = GraphNode
+
+/*
+  [71]  	Verb	  ::=  	VarOrIRIref | 'a'
+*/
+Verb "[71] Verb"
+  = VarOrIRIref / 'a'
+
+/*
+  [72]  	TriplesSameSubjectPath	  ::=  	VarOrTerm PropertyListNotEmptyPath |	TriplesNode PropertyListPath
+*/
+TriplesSameSubjectPath "[72] TriplesSameSubject"
+  = VarOrTerm PropertyListNotEmptyPath
+  / TriplesNode PropertyListPath
+
+
+/*
+  [73]  	PropertyListNotEmptyPath	  ::=  	( VerbPath | VerbSimple ) ObjectList ( ';' ( ( VerbPath | VerbSimple ) ObjectList )? )*
+*/
+PropertyListNotEmptyPath "[73] PropertyListNotEmptyPath"
+  = ( VerbPath / VerbSimple ) ObjectList ( ';' ( ( VerbPath / VerbSimple ) ObjectList)? )*
+
+/*
+  [74]  	PropertyListPath	  ::=  	PropertyListNotEmpty?
+*/
+PropertyListPath "[74] PropertyListPath"
+  = PropertyListNotEmpty?
+
+/*
+  [75]  	VerbPath	  ::=  	Path
+*/
+VerbPath "[75]"
+  = p:Path {
+      var path = {};
+      path.token = 'path';
+      path.value = p;
+
+      return p;
+}
+
+/*
+  [76]  	VerbSimple	  ::=  	Var
+*/
+VerbSimple "[76] VerbSimple"
+  = Var
+
+/*
+  [77]  	Path	  ::=  	PathAlternative
+  @todo
+  @fix
+*/
+Path "[77] Path"
+  = PathAlternative
+
+/*
+  [78]  	PathAlternative	  ::=  	PathSequence ( '|' PathSequence )*
+*/
+PathAlternative "[78] PathAlternative"
+  = PathSequence ( '|' PathSequence)*
+
+/*
+  [79]  	PathSequence	  ::=  	PathEltOrInverse ( '/' PathEltOrInverse )*
+*/
+PathSequence "[79] PathSequence"
+    = PathEltOrInverse ( '/' PathEltOrInverse)*
+
+/*
+  [80]  	PathElt	  ::=  	PathPrimary PathMod?
+*/
+PathElt "[88] PathElt"
+  = PathPrimary PathMod?
+
+/*
+  [81]  	PathEltOrInverse	  ::=  	PathElt | '^' PathElt
+*/
+
+PathEltOrInverse "[81] PathEltOrInverse"
+  = PathElt / '^' PathElt
 
 /*
   [82]  	PathMod	  ::=  	( '*' | '?' | '+' | '{' ( Integer ( ',' ( '}' | Integer '}' ) | '}' ) | ',' Integer '}' ) )
@@ -24,17 +583,15 @@ PathMod "[82] PathMod"
 
 /*
  [83]  	PathPrimary	  ::=  	( IRIref | 'a' | '!' PathNegatedPropertySet | '(' Path ')' )
- @todo
- @waiting
 */
-//PathPrimary "[83] PathPrimary"
-//  = ( IRIref / 'a' / '!' PathNegatedPropertySet / '(' Path ')' )
+PathPrimary "[83] PathPrimary"
+  = ( IRIref / 'a' / '!' PathNegatedPropertySet / '(' Path ')' )
 
 /*
   [84]	PathNegatedPropertySet	  ::=	( PathOneInPropertySet | '(' ( PathOneInPropertySet ( '|' PathOneInPropertySet )* )? ')' )
 */
 PathNegatedPropertySet
-  = ( PathOneInPropertySet / '(' ( PathOneInPropertySet	 ('|' PathOneInPropertySet)* )? ')' ) 
+  = ( PathOneInPropertySet / '(' ( PathOneInPropertySet	 ('|' PathOneInPropertySet)* )? ')' )
 
 /*
   [85]	PathOneInPropertySet	  ::=	( IRIref | 'a' | '^' ( IRIref | 'a' ) )
@@ -49,21 +606,17 @@ Integer "[86] Integer"
   = INTEGER
 
 /*
-  @todo
-  @incomplete
   [87]  	TriplesNode	  ::=  	Collection |	BlankNodePropertyList
 */
 TriplesNode "[87] TriplesNode"
-  = Collection 
-//  / BlankNodePropertyList
+  = Collection
+  / BlankNodePropertyList
 
 /*
-  @todo
-  @waiting
   [88]  	BlankNodePropertyList	  ::=  	'[' PropertyListNotEmpty ']'
 */
-//BlankNodePropertyList "[88] BlankNodePropertyList"
-//  = '[' PropertyListNotEmpty ']'
+BlankNodePropertyList "[88] BlankNodePropertyList"
+  = '[' PropertyListNotEmpty ']'
 
 /*
   [89]  	Collection	  ::=  	'(' GraphNode+ ')'
@@ -218,12 +771,12 @@ NumericExpression "[100] NumericExpression"
   = AdditiveExpression
 
 /*
-  [101]  	AdditiveExpression	  ::=  	MultiplicativeExpression ( '+' MultiplicativeExpression | 
-                                                                           '-' MultiplicativeExpression | 
+  [101]  	AdditiveExpression	  ::=  	MultiplicativeExpression ( '+' MultiplicativeExpression |
+                                                                           '-' MultiplicativeExpression |
                                                                            ( NumericLiteralPositive | NumericLiteralNegative ) ( ( '*' UnaryExpression ) | ( '/' UnaryExpression ) )? )*
 */
 AdditiveExpression "[101] AdditiveExpression"
-  = MultiplicativeExpression ( '+' MultiplicativeExpression / '-' MultiplicativeExpression / ( NumericLiteralNegative / NumericLiteralNegative ) ( ('*' UnaryExpression) / ('/' UnaryExpression))? )* 
+  = MultiplicativeExpression ( '+' MultiplicativeExpression / '-' MultiplicativeExpression / ( NumericLiteralNegative / NumericLiteralNegative ) ( ('*' UnaryExpression) / ('/' UnaryExpression))? )*
 
 
 /*
@@ -281,12 +834,19 @@ UnaryExpression "[103] UnaryExpression"
   / PrimaryExpression
 
 /*
-  @todo
-  @incomplete
   [104]  	PrimaryExpression	  ::=  	BrackettedExpression | BuiltInCall | IRIrefOrFunction | RDFLiteral | NumericLiteral | BooleanLiteral | Var | Aggregate
 */
 PrimaryExpression "[104] PrimaryExpression"
-  = v:BuiltInCall {
+  = v:BrackettedExpression {
+      var ex = {};
+      ex.token = 'expression';
+      ex.expressionType = 'primaryexpression';
+      ex.primaryexprssion = 'brackettedexpression';
+      ex.value = v;
+
+      return ex;
+  }
+  / v:BuiltInCall {
       var ex = {};
       ex.token = 'expression';
       ex.expressionType = 'primaryexpression';
@@ -341,6 +901,13 @@ PrimaryExpression "[104] PrimaryExpression"
       return ex;
   }
 
+/*
+  [105]  	BrackettedExpression	  ::=  	'(' Expression ')'
+*/
+BrackettedExpression "[105] BrackettedExpression"
+  = '(' e:Expression ')' {
+      return e;
+}
 
 /*
   @todo
@@ -374,30 +941,26 @@ RegexExpression "[107] RegexExpression"
 }
 
 /*
-  @todo
-  @waiting
   [108]  	ExistsFunc	  ::=  	'EXISTS' GroupGraphPattern
 */
-//ExistsFunc "[108] ExistsFunc"
-//  = 'EXISTS' GroupGraphPattern
+ExistsFunc "[108] ExistsFunc"
+  = 'EXISTS' GroupGraphPattern
 
 /*
-  @todo
-  @waiting
   [109]  	NotExistsFunc	  ::=  	'NOT EXISTS' GroupGraphPattern
 */
-//NotExistsFunc "[109] NotExistsFunc"
-//  = 'NOT EXISTS' GroupGraphPattern
+NotExistsFunc "[109] NotExistsFunc"
+  = 'NOT EXISTS' GroupGraphPattern
 
 /*
   @todo
   @incomplete
-  [110]  	Aggregate	  ::=  	( 'COUNT' '(' 'DISTINCT'? ( '*' | Expression ) ')' | 
-                                          'SUM' '(' 'DISTINCT'? Expression ')' | 
-                                          'MIN' '(' 'DISTINCT'? Expression ')' | 
-                                          'MAX' '(' 'DISTINCT'? Expression ')' | 
-                                          'AVG' '(' 'DISTINCT'? Expression ')' | 
-                                          'SAMPLE' '(' 'DISTINCT'? Expression ')' | 
+  [110]  	Aggregate	  ::=  	( 'COUNT' '(' 'DISTINCT'? ( '*' | Expression ) ')' |
+                                          'SUM' '(' 'DISTINCT'? Expression ')' |
+                                          'MIN' '(' 'DISTINCT'? Expression ')' |
+                                          'MAX' '(' 'DISTINCT'? Expression ')' |
+                                          'AVG' '(' 'DISTINCT'? Expression ')' |
+                                          'SAMPLE' '(' 'DISTINCT'? Expression ')' |
                                           'GROUP_CONCAT' '(' 'DISTINCT'? Expression ( ';' 'SEPARATOR' '=' String )? ')' )
 */
 Aggregate "[110] Aggregate"
@@ -410,7 +973,7 @@ Aggregate "[110] Aggregate"
       exp.expression = e
 
       return exp
-      
+
   }
   / 'SUM' '(' d:'DISTINCT'? e:Expression ')' {
       exp = {};
@@ -421,7 +984,7 @@ Aggregate "[110] Aggregate"
       exp.expression = e
 
       return exp
-      
+
   }
   / 'MIN' '(' d:'DISTINCT'? e:Expression ')' {
       exp = {};
@@ -432,7 +995,7 @@ Aggregate "[110] Aggregate"
       exp.expression = e
 
       return exp
-      
+
   }
   / 'MAX' '(' d:'DISTINCT'? e:Expression ')' {
       exp = {};
@@ -443,7 +1006,7 @@ Aggregate "[110] Aggregate"
       exp.expression = e
 
       return exp
-      
+
   }
   / 'AVG' '(' d:'DISTINCT'? e:Expression ')' {
       exp = {};
@@ -454,7 +1017,7 @@ Aggregate "[110] Aggregate"
       exp.expression = e
 
       return exp
-      
+
   }
 
 /*
@@ -547,7 +1110,7 @@ BlankNode "[121] BlankNode"
   [122]  	IRI_REF	  ::=  	'<' ([^<>"{}|^`\]-[#x00-#x20])* '>'
 */
 IRI_REF "[122] IRI_REF"
-  = '<' iri_ref:[^<>\"\{\} | ^\\ | \S]* '>' { return iri_ref }
+  = '<' iri_ref:[^<>\"\{\} | ^\\ | \S]* '>' { return iri_ref.join('') }
 
 /*
   [123]  	PNAME_NS	  ::=  	PN_PREFIX? ':'
@@ -583,7 +1146,7 @@ VAR2 "[127] VAR2"
   [128]  	LANGTAG	  ::=  	'@' [a-zA-Z]+ ('-' [a-zA-Z0-9]+)*
 */
 LANGTAG "[128] LANGTAG"
-  = '@' a:[a-zA-Z]+ b:('-' [a-zA-Z0-9]+)*  {  
+  = '@' a:[a-zA-Z]+ b:('-' [a-zA-Z0-9]+)*  {
 
       if(b.length===0) {
           return "@"+a.join('');
@@ -714,7 +1277,7 @@ ANON "[146] ANON"
 */
 PN_CHARS_BASE  "[147] PN_CHARS_BASE"
   = [A-Z]
-  / [a-z]  
+  / [a-z]
   / [\u00C0-\u00D6]
   / [\u00D8-\u00F6]
   / [\u00F8-\u02FF]
