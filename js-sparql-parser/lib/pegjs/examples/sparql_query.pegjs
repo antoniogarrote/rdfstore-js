@@ -1,5 +1,5 @@
 {
-    flattenString = function(arrs) {
+    var flattenString = function(arrs) {
         var acum ="";
         for(var i=0; i< arrs.length; i++) {
           if(typeof(arrs[i])==='string') {
@@ -11,10 +11,23 @@
 
         return acum;
     }
+
+
+    var GlobalBlankNodeCounter = 0;
+
+    var prefixes = {};
+
+    var registerPrefix = function(prefix, uri) {
+        prefixes[prefix] = uri;
+    }
+
+    var registerDefaultPrefix = function(uri) {
+        prefixes[null] = uri;
+    }
 }
 
 SPARQL =
-  QueryUnit
+  SelectQuery
 
 /*
   [1]  	QueryUnit	  ::=  	Query
@@ -38,19 +51,48 @@ Prologue "[3] Prologue"
   [4]  	BaseDecl	  ::=  	'BASE' IRI_REF
 */
 BaseDecl "[4] BaseDecl"
-  = 'BASE' IRI_REF
+  = 'BASE' WS* i:IRI_REF {
+      registerDefaultPrefix(i);
+
+      base = {};
+      base.token = 'base';
+      base.value = i;
+
+      return base;
+}
 
 /*
   [5]  	PrefixDecl	  ::=  	'PREFIX' PNAME_NS IRI_REF
 */
 PrefixDecl "[5] PrefixDecl"
-  = 'PREFIX' PNAME_NS IRI_REF
+  = 'PREFIX'  WS* p:PNAME_NS  WS* l:IRI_REF {
+
+      registerPrefix(p,l);
+
+      prefix = {};
+      prefix.token = 'prefix';
+      prefix.prefix = p;
+      prefix.local = l;
+
+      return prefix;
+}
 
 /*
+  @todo
+  @incomplete
+  @semantics
   [6]  	SelectQuery	  ::=  	SelectClause DatasetClause* WhereClause SolutionModifier BindingsClause
 */
 SelectQuery "[6] SelectQuery"
-  = SelectClause DatasetClause* WhereClause SolutionModifier BindingsClause
+  = s:SelectClause WS* d:DatasetClause* WS* w:WhereClause WS* SolutionModifier WS* BindingsClause {
+      var query = {};
+      query.kind = 'select';
+      query.dataset = d;
+      query.projection = s;
+      query.pattern = w
+
+      return query
+}
 
 /*
   [7]  	SubSelect	  ::=  	SelectClause WhereClause SolutionModifier
@@ -62,7 +104,19 @@ SubSelect "[7] SubSelect"
   [8]  	SelectClause	  ::=  	'SELECT' ( 'DISTINCT' | 'REDUCED' )? ( ( Var | ( '(' Expression 'AS' Var ')' ) )+ | '*' )
 */
 SelectClause "[8] SelectClause"
-  = 'SELECT' ( 'DISTINCT' / 'REDUCED' )? ( ( Var / ( '(' Expression 'AS' Var ')' ) )+ / '*'  )
+  = 'SELECT' WS* mod:( 'DISTINCT' / 'REDUCED' )? WS* proj:( ( ( WS* Var WS* ) / ( WS* '(' WS* Expression WS* 'AS' WS* Var WS* ')' WS* ) )+ / ( WS* '*' WS* )  ) {
+      var vars = [];
+      for(var i=0; i< proj.length; i++) {
+          var aVar = proj[i];
+          if(aVar.length === 3) {
+              vars.push(aVar[1]);
+          } else {
+              vars.push({var: aVar[3], alias:aVar[7]})
+          }
+      }
+
+      return vars;
+}
 
 /*
   [9]  	ConstructQuery	  ::=  	'CONSTRUCT' ConstructTemplate DatasetClause* WhereClause SolutionModifier
@@ -86,7 +140,9 @@ AskQuery "[11] AskQuery"
   [12]  	DatasetClause	  ::=  	'FROM' ( DefaultGraphClause | NamedGraphClause )
 */
 DatasetClause "[12] DatasetClause"
-  = 'FROM' ( DefaultGraphClause / NamedGraphClause )
+  = 'FROM' WS* g:( DefaultGraphClause / NamedGraphClause ) {
+      return g[0];
+}
 
 /*
   [13]  	DefaultGraphClause	  ::=  	SourceSelector
@@ -110,7 +166,9 @@ SourceSelector "[15] SourceSelector"
   [16]  	WhereClause	  ::=  	'WHERE'? GroupGraphPattern
 */
 WhereClause "[16] WhereClause"
-  = 'WHERE'? GroupGraphPattern
+  = 'WHERE'? WS* g:GroupGraphPattern WS* {
+      return g;
+}
 
 /*
   [17]  	SolutionModifier	  ::=  	GroupClause? HavingClause? OrderClause? LimitOffsetClauses?
@@ -327,13 +385,82 @@ GroupGraphPattern "[50] GroupGraphPattern"
   [51]  	GroupGraphPatternSub	  ::=  	TriplesBlock? ( GraphPatternNotTriples '.'? TriplesBlock? )*
 */
 GroupGraphPatternSub "[51] GroupGraphPatternSub"
-  = TriplesBlock? ( GraphPatternNotTriples '.'? TriplesBlock? )*
+  = tb:TriplesBlock? tbs:( GraphPatternNotTriples WS* '.'? WS* TriplesBlock? )* {
+      var subpatterns = [];
+      if(tb != null && tb != []) {
+          subpatterns.push(tb);
+      }
+
+      for(var i=0; i<tbs.length; i++) {
+          for(var j=0; j< tbs[i].length; j++) {
+              if(tbs[i][j].token != null) {
+                  subpatterns.push(tbs[i][j]);
+              }
+          }
+      }
+
+      var compactedSubpatterns = [];
+
+      var currentBasicGraphPatterns = [];
+      var currentFilters = [];
+
+      for(var i=0; i<subpatterns.length; i++) {
+          if(subpatterns[i].token!='triplespattern' && subpatterns[i].token != 'filter') {
+              if(currentBasicGraphPatterns.length != 0 || currentFilters.length != 0) {
+                  var triplesContext = [];
+                  for(var j=0; j<currentBasicGraphPatterns.length; j++) {
+                      triplesContext = triplesContext.concat(currentBasicGraphPatterns[j].triplesContext);
+                  }
+                  compactedSubpatterns.push({token: 'basicgraphpattern',
+                                             triplesContext: triplesContext,
+                                             filters: currentFilters});
+                  currentFilters = [];
+                  currentBasicGraphPatterns = [];
+              }
+              compactedSubpatterns.push(subpatterns[i]);
+          } else {
+              if(subpatterns[i].token === 'triplespattern') {
+                  currentBasicGraphPatterns.push(subpatterns[i]);
+              } else {
+                  currentFilters.push(subpatterns[i]);
+              }
+          }
+      }
+
+      if(currentBasicGraphPatterns.length != 0 || currentFilters.length != 0) {
+          var triplesContext = [];
+          for(var j=0; j<currentBasicGraphPatterns.length; j++) {
+              triplesContext = triplesContext.concat(currentBasicGraphPatterns[j].triplesContext);
+          }
+          compactedSubpatterns.push({token: 'basicgraphpattern',
+                                     triplesContext: triplesContext,
+                                     filters: currentFilters});
+      }
+
+      return { token: 'groupgraphpattern',
+               patterns: compactedSubpatterns }
+}
 
 /*
+  @warning
+  @rewritten
   [52]  	TriplesBlock	  ::=  	TriplesSameSubjectPath ( '.' TriplesBlock? )?
 */
 TriplesBlock "[54] TriplesBlock"
-  = TriplesSameSubjectPath ( '.' TriplesBlock? )?
+  = b:TriplesSameSubjectPath bs:(WS*  '.' TriplesBlock? )? {
+     var triples = b.triplesContext;
+     var toTest = null;
+      if(typeof(bs) === 'object') {
+            if(bs.length != null) {
+                  if(bs[2].triplesContext!=null) {
+                     triples = triples.concat(bs[2].triplesContext);
+              }
+           }
+      }
+
+     return {token:'triplespattern',
+             triplesContext: triples}
+}
 
 /*
   [53]  	GraphPatternNotTriples	  ::=  	GroupOrUnionGraphPattern | OptionalGraphPattern | MinusGraphPattern | GraphGraphPattern | ServiceGraphPattern | Filter
@@ -350,37 +477,62 @@ GraphPatternNotTriples "[53] GraphPatternNotTriples"
   [54]  	OptionalGraphPattern	  ::=  	'OPTIONAL' GroupGraphPattern
 */
 OptionalGraphPattern "[54] OptionalGraphPattern"
-  = 'OPTIONAL' GroupGraphPattern
+  = 'OPTIONAL' v:GroupGraphPattern {
+      return { token: 'optionalgraphpattern',
+               value: v }
+}
 
 /*
   [55]  	GraphGraphPattern	  ::=  	'GRAPH' VarOrIRIref GroupGraphPattern
 */
 GraphGraphPattern "[55] GraphGraphPattern"
-  = 'GRAPH' VarOrIRIref GroupGraphPattern
+  = 'GRAPH' v:VarOrIRIref ts:GroupGraphPattern {
+      return {token: 'graphgraphpattern',
+              graph: v,
+              value: ts }
+}
 
 /*
   [56]  	ServiceGraphPattern	  ::=  	'SERVICE' VarOrIRIref GroupGraphPattern
 */
 ServiceGraphPattern "[56] ServiceGraphPattern"
-  = 'SERVICE' VarOrIRIref GroupGraphPattern
+  = 'SERVICE' v:VarOrIRIref ts:GroupGraphPattern {
+      return {token: 'servicegraphpattern',
+              status: 'todo',
+              value: [v,ts] }
+}
 
 /*
   [57]  	MinusGraphPattern	  ::=  	'MINUS' GroupGraphPattern
 */
 MinusGraphPattern "[57] MinusGraphPattern"
-  = 'MINUS' GroupGraphPattern
+  = 'MINUS' ts:GroupGraphPattern {
+      return {token: 'minusgraphpattern',
+              status: 'todo',
+              value: ts}
+}
 
 /*
+  @todo
+  @incomplete
+  @semantics
   [58]  	GroupOrUnionGraphPattern	  ::=  	GroupGraphPattern ( 'UNION' GroupGraphPattern )*
 */
 GroupOrUnionGraphPattern "[58] GroupOrUnionGraphPattern"
-  = GroupGraphPattern ( 'UNION' GroupGraphPattern )*
+  = a:GroupGraphPattern b:( 'UNION' GroupGraphPattern )* {
+      return {token: 'graphorunionpattern',
+              value: [a,b],
+              status: 'todo'}
+}
 
 /*
   [59]  	Filter	  ::=  	'FILTER' Constraint
 */
 Filter "[59] Filter"
-  = 'FILTER' c:Constraint { return c }
+  = 'FILTER' WS* c:Constraint {
+      return {token: 'filter',
+              value: c}
+}
 
 /*
   [60]  	Constraint	  ::=  	BrackettedExpression | BuiltInCall | FunctionCall
@@ -471,14 +623,84 @@ ConstructTriples "[65] ConstructTriples"
   [66]  	TriplesSameSubject	  ::=  	VarOrTerm PropertyListNotEmpty |	TriplesNode PropertyList
 */
 TriplesSameSubject "[66] TriplesSameSubject"
-  = VarOrTerm PropertyListNotEmpty
-  / TriplesNode PropertyList
+  = WS* s:VarOrTerm WS* pairs:PropertyListNotEmpty {
+      var triplesContext = pairs.triplesContext;
+      var subject = s;
+      for(var i=0; i< pairs.pairs.length; i++) {
+          var pair = pairs.pairs[i];
+          var triple = {subject: subject, predicate: pair[0], object: pair[1]}
+          triplesContext.push(triple);
+      }
+
+      var token = {};
+      token.token = "triplessamesubject";
+      token.triplesContext = triplesContext;
+      token.chainSubject = subject;
+
+      return token;
+  }
+  / WS* tn:TriplesNode WS* pairs:PropertyList {
+      var triplesContext = p.triplesContext.concat(tn.triplesContext);
+      var subject = p.chainSubject;
+
+      for(var i=0; i< pairs.pairs.length; i++) {
+          var pair = pairs.pairs[i];
+          var triple = {subject: subject, predicate: pair[0], object: pair[1]}
+          triplesContext.push(triple);
+      }
+
+      var token = {};
+      token.token = "triplessamesubject";
+      token.triplesContext = triplesContext;
+      token.chainSubject = subject;
+
+      return token;
+  }
 
 /*
   [67]  	PropertyListNotEmpty	  ::=  	Verb ObjectList ( ';' ( Verb ObjectList )? )*
 */
 PropertyListNotEmpty "[67] PropertyListNotEmpty"
-  = Verb ObjectList ( ';' ( Verb ObjectList )? )*
+  = v:Verb WS* ol:ObjectList rest:( WS* ';' WS* ( Verb WS* ObjectList )? )* {
+      token = {}
+      token.token = 'propertylist';
+      var triplesContext = [];
+      var pairs = [];
+      var test = [];
+
+      for( var i=0; i<ol.length; i++) {
+
+         if(ol[i].triplesContext != null) {
+              triplesContext = triplesContext.concat(ol[i].triplesContext);
+             pairs.push([v, ol[i].chainSubject]);
+          } else {
+              pairs.push([v, ol[i]])
+          }
+
+      }
+
+
+      for(var i=0; i<rest.length; i++) {
+          var tok = rest[i][3];
+          var newVerb  = tok[0];
+          var newObjsList = tok[2];
+
+          for(var j=0; j<newObjsList.length; j++) {
+           if(newObjsList[j].triplesContext != null) {
+              triplesContext = triplesContext.concat(newObjsList[j].triplesContext);
+             pairs.push([newVerb, newObjsList[j].chainSubject]);
+            } else {
+              pairs.push([newVerb, newObjsList[j]])
+            }
+          }
+      }
+
+      token.pairs = pairs;
+      token.triplesContext = triplesContext;
+
+      return token;
+
+}
 
 /*
   [68]  	PropertyList	  ::=  	PropertyListNotEmpty?
@@ -490,7 +712,18 @@ PropertyList "[68] PropertyList"
   [69]  	ObjectList	  ::=  	Object ( ',' Object )*
 */
 ObjectList "[69] ObjectList"
-  = Object ( ',' Object )*
+  = obj:Object WS* objs:( ',' WS* Object )* {
+   var toReturn = [obj];
+   for(var i=0; i<objs.length; i++) {
+     for(var j=0; j<objs[i].length; j++) {
+       if(typeof(objs[i][j])=="object" && objs[i][j].token != null) {
+           toReturn.push(objs[i][j]);
+       }
+    }
+  }
+
+  return toReturn;
+}
 
 /*
   [70]  	Object	  ::=  	GraphNode
@@ -502,14 +735,23 @@ Object "[70] Object"
   [71]  	Verb	  ::=  	VarOrIRIref | 'a'
 */
 Verb "[71] Verb"
-  = VarOrIRIref / 'a'
+  = VarOrIRIref
+  / 'a' {
+      return{token: 'uri', prefix:null, suffix:null, value:"http://www.w3.org/1999/02/22-rdf-syntax-ns#type"}
+  }
 
 /*
+  @todo
+  @incomplete
+  @semantics
+  // support for property paths must be added
   [72]  	TriplesSameSubjectPath	  ::=  	VarOrTerm PropertyListNotEmptyPath |	TriplesNode PropertyListPath
 */
-TriplesSameSubjectPath "[72] TriplesSameSubject"
-  = VarOrTerm PropertyListNotEmptyPath
-  / TriplesNode PropertyListPath
+TriplesSameSubjectPath "[72] TriplesSameSubjectPath"
+  = TriplesSameSubject
+// Property paths not supported yet :(
+//  = VarOrTerm PropertyListNotEmptyPath
+//  / TriplesNode PropertyListPath
 
 
 /*
@@ -606,11 +848,17 @@ Integer "[86] Integer"
   = INTEGER
 
 /*
+  @todo
+  // finish semantic
   [87]  	TriplesNode	  ::=  	Collection |	BlankNodePropertyList
 */
 TriplesNode "[87] TriplesNode"
-  = Collection
-  / BlankNodePropertyList
+  = Collection {
+      return {token:"triplesnode", triplesContext:[], chainSubject:"todo"}
+}
+  / BlankNodePropertyList {
+      return {token:"triplesnode", triplesContext:[], chainSubject:"todo"}
+}
 
 /*
   [88]  	BlankNodePropertyList	  ::=  	'[' PropertyListNotEmpty ']'
@@ -657,6 +905,8 @@ Var "[93] Var"
   [94]  	GraphTerm	  ::=  	IRIref |	RDFLiteral |	NumericLiteral |	BooleanLiteral |	BlankNode |	NIL
 */
 GraphTerm "[94] GraphTerm"
+ = IRIref /	RDFLiteral /	NumericLiteral /	BooleanLiteral /	BlankNode /	NIL
+/*
   = t:IRIref {
       var term = {};
       term.token = 'graphterm';
@@ -699,7 +949,7 @@ GraphTerm "[94] GraphTerm"
       term.value = t
       return term;
 }
-
+*/
 /*
   [95]  	Expression	  ::=  	ConditionalOrExpression
 */
@@ -710,14 +960,18 @@ Expression "[95] Expression"
   [96]  	ConditionalOrExpression	  ::=  	ConditionalAndExpression ( '||' ConditionalAndExpression )*
 */
 ConditionalOrExpression "[96] ConditionalOrExpression"
-  = v:ConditionalAndExpression vs:('||' ConditionalAndExpression)* {
+  = v:ConditionalAndExpression vs:(WS* '||' WS* ConditionalAndExpression)* {
+      if(vs.length === 0) {
+          return v;
+      }
+
       var exp = {};
       exp.token = "expression";
       exp.expressionType = "conditionalor";
       var ops = [v];
 
       for(var i=0; i<vs.length; i++) {
-          ops.push(vs[i][1]);
+          ops.push(vs[i][3]);
       }
 
       exp.operands = ops;
@@ -729,14 +983,17 @@ ConditionalOrExpression "[96] ConditionalOrExpression"
   [97]  	ConditionalAndExpression	  ::=  	ValueLogical ( '&&' ValueLogical )*
 */
 ConditionalAndExpression "[97] ConditionalAndExpression"
-  = v:ValueLogical vs:('&&' ValueLogical)* {
+  = v:ValueLogical vs:(WS* '&&' WS* ValueLogical)* {
+      if(vs.length === 0) {
+          return v;
+      }
       var exp = {};
       exp.token = "expression";
       exp.expressionType = "conditionaland";
       var ops = [v];
 
       for(var i=0; i<vs.length; i++) {
-          ops.push(vs[i][1]);
+          ops.push(vs[i][3]);
       }
 
       exp.operands = ops;
@@ -751,17 +1008,23 @@ ValueLogical "[98] ValueLogical"
   = RelationalExpression
 
 /*
-  @
+  @todo
+  @incomplete
   [99]  	RelationalExpression	  ::=  	NumericExpression ( '=' NumericExpression | '!=' NumericExpression | '<' NumericExpression | '>' NumericExpression | '<=' NumericExpression | '>=' NumericExpression | 'IN' ExpressionList | 'NOT IN' ExpressionList )?
 */
 RelationalExpression "[99] RelationalExpression"
   = op1:NumericExpression op2:( '=' NumericExpression / '!=' NumericExpression / '<' NumericExpression / '>' NumericExpression / '<=' NumericExpression / '>=' NumericExpression)* {
-      var exp = {};
-      exp.expressionType = "relationalexpression"
-      exp.op1 = op1;
-      exp.ops = op2;
+      if(op2.length === 0) {
+          return op1;
+      } else {
+        var exp = {};
+        exp.expressionType = "relationalexpression"
+        exp.operator = op2[0];
+        exp.op1 = op1;
+        exp.ops = op2[1];
 
-      return exp;
+        return exp;
+      }
   }
 
 /*
@@ -776,7 +1039,46 @@ NumericExpression "[100] NumericExpression"
                                                                            ( NumericLiteralPositive | NumericLiteralNegative ) ( ( '*' UnaryExpression ) | ( '/' UnaryExpression ) )? )*
 */
 AdditiveExpression "[101] AdditiveExpression"
-  = MultiplicativeExpression ( '+' MultiplicativeExpression / '-' MultiplicativeExpression / ( NumericLiteralNegative / NumericLiteralNegative ) ( ('*' UnaryExpression) / ('/' UnaryExpression))? )*
+  = op1:MultiplicativeExpression ops:( WS* '+' WS* MultiplicativeExpression / WS* '-' WS* MultiplicativeExpression / ( NumericLiteralNegative / NumericLiteralNegative ) ( (WS* '*' WS* UnaryExpression) / (WS* '/' WS* UnaryExpression))? )* {
+      if(ops.length === 0) {
+          return op1;
+      }
+
+      var ex = {};
+      ex.token = 'expression';
+      ex.summand = op1;
+      ex.summands = [];
+
+      for(var i=0; i<ops.length; i++) {
+          var summand = ops[i];
+          var sum = {}
+          if(summand.length == 4 && typeof(summand[1]) === "string") {
+              sum.operator = summand[1];
+              sum.expression = summand[3];
+          } else {
+              var subexp = {}
+              var firstFactor = sum[0];
+              var operator = sum[1][1];
+              var secondFactor = sum[1][3];
+              var operator = null;
+              if(firstFactor.value < 0) {
+                  sum.operator = '-';
+                  firstFactor.value = - firstFactor.value;
+              } else {
+                  sum.operator = '+';
+              }
+              subexp.token = 'expression';
+              subexp.expressionType = 'MultiplicativeExpression';
+              subexp.operator = firstFactor;
+              subexp.factors = [{operator: operator, expression: secondFactor}];
+
+              sum.expression = subexp;
+          }
+          ex.summands.push(sum);
+      }
+
+      return ex;
+}
 
 
 /*
@@ -784,6 +1086,10 @@ AdditiveExpression "[101] AdditiveExpression"
 */
 MultiplicativeExpression "[102] MultiplicativeExpression"
   = exp:UnaryExpression exps:('*' UnaryExpression / '/' UnaryExpression)* {
+      if(exps.length === 0) {
+          return exp;
+      }
+
       var ex = {};
       ex.token = 'expression';
       ex.expressionType = 'multiplicativeexpression';
@@ -837,29 +1143,13 @@ UnaryExpression "[103] UnaryExpression"
   [104]  	PrimaryExpression	  ::=  	BrackettedExpression | BuiltInCall | IRIrefOrFunction | RDFLiteral | NumericLiteral | BooleanLiteral | Var | Aggregate
 */
 PrimaryExpression "[104] PrimaryExpression"
-  = v:BrackettedExpression {
-      var ex = {};
-      ex.token = 'expression';
-      ex.expressionType = 'primaryexpression';
-      ex.primaryexprssion = 'brackettedexpression';
-      ex.value = v;
-
-      return ex;
-  }
-  / v:BuiltInCall {
-      var ex = {};
-      ex.token = 'expression';
-      ex.expressionType = 'primaryexpression';
-      ex.primaryexprssion = 'builtincall';
-      ex.value = v;
-
-      return ex;
-  }
+  = BrackettedExpression
+  / BuiltInCall
   / v:RDFLiteral {
       var ex = {};
       ex.token = 'expression';
-      ex.expressionType = 'primaryexpression';
-      ex.primaryexprssion = 'rdfliteral';
+      ex.expressionType = 'atomic';
+      ex.primaryexpression = 'rdfliteral';
       ex.value = v;
 
       return ex;
@@ -867,8 +1157,8 @@ PrimaryExpression "[104] PrimaryExpression"
   / v:NumericLiteral {
       var ex = {};
       ex.token = 'expression';
-      ex.expressionType = 'primaryexpression';
-      ex.primaryexprssion = 'numericliteral';
+      ex.expressionType = 'atomic';
+      ex.primaryexpression = 'numericliteral';
       ex.value = v;
 
       return ex;
@@ -876,26 +1166,18 @@ PrimaryExpression "[104] PrimaryExpression"
   / v:BooleanLiteral {
       var ex = {};
       ex.token = 'expression';
-      ex.expressionType = 'primaryexpression';
-      ex.primaryexprssion = 'booleanliteral';
+      ex.expressionType = 'atomic';
+      ex.primaryexpression = 'booleanliteral';
       ex.value = v;
 
       return ex;
   }
-  / v:Aggregate {
-      var ex = {};
-      ex.token = 'expression';
-      ex.expressionType = 'primaryexpression';
-      ex.primaryexprssion = 'aggregate';
-      ex.value = v;
-
-      return ex;
-  }
+  / Aggregate
   / v:Var {
       var ex = {};
       ex.token = 'expression';
-      ex.expressionType = 'primaryexpression';
-      ex.primaryexprssion = 'var';
+      ex.expressionType = 'atomic';
+      ex.primaryexpression = 'var';
       ex.value = v;
 
       return ex;
@@ -905,37 +1187,99 @@ PrimaryExpression "[104] PrimaryExpression"
   [105]  	BrackettedExpression	  ::=  	'(' Expression ')'
 */
 BrackettedExpression "[105] BrackettedExpression"
-  = '(' e:Expression ')' {
+  = '(' WS* e:Expression WS* ')' {
       return e;
 }
 
 /*
   @todo
   @incomplete
-  [106] BuiltInCall
+  [106]  	BuiltInCall	  ::=  	  'STR' '(' Expression ')'
+                                       |  'LANG' '(' Expression ')'
+                                       |  'LANGMATCHES' '(' Expression ',' Expression ')'
+                                       |  'DATATYPE' '(' Expression ')'
+                                       |  'BOUND' '(' Var ')'
+                                       |  'IRI' '(' Expression ')'
+                                       |  'URI' '(' Expression ')'
+                                       |  'BNODE' ( '(' Expression ')' | NIL )
+                                       |  'COALESCE' ExpressionList
+                                       |  'IF' '(' Expression ',' Expression ',' Expression ')'
+                                       |  'STRLANG' '(' Expression ',' Expression ')'
+                                       |  'STRDT' '(' Expression ',' Expression ')'
+                                       |  'sameTerm' '(' Expression ',' Expression ')'
+                                       |  'isIRI' '(' Expression ')'
+                                       |  'isURI' '(' Expression ')'
+                                       |  'isBLANK' '(' Expression ')'
+                                       |  'isLITERAL' '(' Expression ')'
+                                       |  'isNUMERIC' '(' Expression ')'
+                                       |  RegexExpression
+                                       |  ExistsFunc
+                                       |  NotExistsFunc
 */
 BuiltInCall "[106] BuiltInCall"
-  = 'STR(' e:Expression ')' {
+  = 'STR' WS* '(' e:Expression ')' {
       var ex = {};
       ex.token = 'expression'
       ex.expressionType = 'builtincall'
       ex.builtincall = 'str'
-      ex.expression = e
+      ex.args = [e]
 
       return ex;
   }
+  / 'LANG' WS* '(' e:Expression ')' {
+      var ex = {};
+      ex.token = 'expression'
+      ex.expressionType = 'builtincall'
+      ex.builtincall = 'lang'
+      ex.args = [e]
+
+      return ex;
+}
+  / 'LANGMATCHES' WS* '(' WS* e1:Expression WS* ',' WS* e2:Expression WS* ')' {
+      var ex = {};
+      ex.token = 'expression'
+      ex.expressionType = 'builtincall'
+      ex.builtincall = 'langmatches'
+      ex.args = [e1,e2]
+
+      return ex;
+}
+  / 'DATATYPE' WS* '(' WS* e:Expression WS* ')' {
+      var ex = {};
+      ex.token = 'expression'
+      ex.expressionType = 'builtincall'
+      ex.builtincall = 'datatype'
+      ex.args = [e]
+
+      return ex;
+}
+  / 'BOUND' WS* '(' WS* v:Var WS* ')'  {
+      var ex = {};
+      ex.token = 'expression'
+      ex.expressionType = 'builtincall'
+      ex.builtincall = 'bound'
+      ex.args = [v]
+
+      return ex;
+}
+
+
   / RegexExpression
 /*
   [107]  	RegexExpression	  ::=  	'REGEX' '(' Expression ',' Expression ( ',' Expression )? ')'
 */
 RegexExpression "[107] RegexExpression"
   = 'REGEX' '(' e1:Expression ',' e2:Expression eo:( ',' Expression)? ')' {
+      var optionalExpressions = [];
+      for(var i=0; i<eo.length; i++) {
+          optionalExpressions.push(eo[i][1]);
+      }
       var regex = {};
       regex.token = 'expression';
       regex.expressionType = 'regex';
       regex.expression1 = e1;
       regex.expression2 = e2;
-      regex.optionalExpression = eo;
+      regex.optionalExpression = optionalExpressions;
 
       return regex;
 }
@@ -1073,8 +1417,22 @@ NumericLiteralNegative "[116] NumericLiteralNegative"
   [117]  	BooleanLiteral	  ::=  	'true' |	'false'
 */
 BooleanLiteral "[117] BooleanLiteral"
-  = 'true' { return true }
-  / 'false' { return false }
+  = 'true' {
+      lit = {};
+      lit.token = "literal";
+      lit.lang = null;
+      lit.type = "http://www.w3.org/2001/XMLSchema#boolean";
+      lit.value = true;
+      return lit;
+ }
+  / 'false' {
+      lit = {};
+      lit.token = "literal";
+      lit.lang = null;
+      lit.type = "http://www.w3.org/2001/XMLSchema#boolean";
+      lit.value = false;
+      return lit;
+}
 
 /*
   [118]  	String	  ::=  	STRING_LITERAL1 | STRING_LITERAL2 | STRING_LITERAL_LONG1 | STRING_LITERAL_LONG2
@@ -1104,7 +1462,7 @@ PrefixedName "[120] PrefixedName"
 */
 BlankNode "[121] BlankNode"
   = l:BLANK_NODE_LABEL { return {token:'blank', label:l}}
-  / ANON { return {token:'blank', label:null} }
+  / ANON { GlobalBlankNodeCounter++; return {token:'blank', label:''+GlobalBlankNodeCounter} }
 
 /*
   [122]  	IRI_REF	  ::=  	'<' ([^<>"{}|^`\]-[#x00-#x20])* '>'
@@ -1159,28 +1517,71 @@ LANGTAG "[128] LANGTAG"
   [129]  	INTEGER	  ::=  	[0-9]+
 */
 INTEGER "[129] INTEGER"
-  = d:[0-9]+ { return eval(flattenString(d))}
+  = d:[0-9]+ {
+      lit = {};
+      lit.token = "literal";
+      lit.lang = null;
+      lit.type = "http://www.w3.org/2001/XMLSchema#integer";
+      lit.value = flattenString(d);
+      return lit;
+}
 
 /*
   [130]  	DECIMAL	  ::=  	[0-9]+ '.' [0-9]* | '.' [0-9]+
 */
 DECIMAL "[130] DECIMAL"
-  = a:[0-9]+ b:'.' c:[0-9]* { return eval(flattenString([a,b,c])) }
-  / a:'.' b:[0-9]+ { return eval(flattenString([a,b])) }
+  = a:[0-9]+ b:'.' c:[0-9]* {
+
+      lit = {};
+      lit.token = "literal";
+      lit.lang = null;
+      lit.type = "http://www.w3.org/2001/XMLSchema#decimal";
+      lit.value = eval(flattenString([a,b,c]));
+      return lit;
+}
+  / a:'.' b:[0-9]+ {
+      lit = {};
+      lit.token = "literal";
+      lit.lang = null;
+      lit.type = "http://www.w3.org/2001/XMLSchema#decimal";
+      lit.value = eval(flattenString([a,b]));
+      return lit;
+ }
 
 /*
   [131]  	DOUBLE	  ::=  	[0-9]+ '.' [0-9]* EXPONENT | '.' ([0-9])+ EXPONENT | ([0-9])+ EXPONENT
 */
 DOUBLE "[131] DOUBLE"
-  = a:[0-9]+ b:'.' c:[0-9]* e:EXPONENT { return eval(flattenString([a,b,c,e])) }
-  / a:'.' b:[0-9]+ c:EXPONENT { return eval(flattenString([a,b,c])) }
-  / a:[0-9]+ b:EXPONENT { return eval(flattenString([a,b])) }
+  = a:[0-9]+ b:'.' c:[0-9]* e:EXPONENT {
+      lit = {};
+      lit.token = "literal";
+      lit.lang = null;
+      lit.type = "http://www.w3.org/2001/XMLSchema#double";
+      lit.value = eval(flattenString([a,b,c,e]));
+      return lit;
+}
+  / a:'.' b:[0-9]+ c:EXPONENT {
+      lit = {};
+      lit.token = "literal";
+      lit.lang = null;
+      lit.type = "http://www.w3.org/2001/XMLSchema#double";
+      lit.value = eval(flattenString([a,b,c]));
+      return lit;
+}
+  / a:[0-9]+ b:EXPONENT {
+      lit = {};
+      lit.token = "literal";
+      lit.lang = null;
+      lit.type = "http://www.w3.org/2001/XMLSchema#double";
+      lit.value = eval(flattenString([a,b]));
+      return lit;
+}
 
 /*
   [132]  	INTEGER_POSITIVE	  ::=  	'+' INTEGER
 */
 INTEGER_POSITIVE "[132] INTEGER_POSITIVE"
-  = '+' d:INTEGER { return d }
+  = '+' d:INTEGER { return d; }
 
 /*
   [133]  	DECIMAL_POSITIVE	  ::=  	'+' DECIMAL
@@ -1198,18 +1599,18 @@ DOUBLE_POSITIVE "[134] DOUBLE_POSITIVE"
   [135]  	INTEGER_NEGATIVE	  ::=  	'-' INTEGER
 */
 INTEGER_NEGATIVE "[135] INTEGER_NEGATIVE"
-  = '-' d:INTEGER {return -d }
+  = '-' d:INTEGER { d.value = - d.value; return d; }
 
 /*
   [136]  	DECIMAL_NEGATIVE	  ::=  	'-' DECIMAL
 */
 DECIMAL_NEGATIVE "[136] DECIMAL_NEGATIVE"
-  = '-' d:DECIMAL { return -d }
+  = '-' d:DECIMAL { d.value = - d.value; return d; }
 /*
   [137]  	DOUBLE_NEGATIVE	  ::=  	'-' DOUBLE
 */
 DOUBLE_NEGATIVE "[137] DOUBLE_NEGATIVE"
-  = '-' d:DOUBLE { return -d }
+  = '-' d:DOUBLE { d.value = - d.value; return d; }
 
 /*
   [138]  	EXPONENT	  ::=  	[eE] [+-]? [0-9]+
