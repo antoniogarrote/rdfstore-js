@@ -378,8 +378,12 @@ TriplesTemplate "[49] TriplesTemplate"
   [50]  	GroupGraphPattern	  ::=  	'{' ( SubSelect | GroupGraphPatternSub ) '}'
 */
 GroupGraphPattern "[50] GroupGraphPattern"
-  = '{' SubSelect  '}'
-  / '{' GroupGraphPatternSub '}'
+  = '{' WS* p:SubSelect  WS* '}' {
+      return p;
+}
+  / '{' WS* p:GroupGraphPatternSub WS* '}' {
+      return p;
+}
 
 /*
   [51]  	GroupGraphPatternSub	  ::=  	TriplesBlock? ( GraphPatternNotTriples '.'? TriplesBlock? )*
@@ -437,8 +441,12 @@ GroupGraphPatternSub "[51] GroupGraphPatternSub"
                                      filters: currentFilters});
       }
 
-      return { token: 'groupgraphpattern',
-               patterns: compactedSubpatterns }
+      if(compactedSubpatterns.length == 1) {
+          return compactedSubpatterns[0];
+      } else  {
+          return { token: 'groupgraphpattern',
+                   patterns: compactedSubpatterns }
+      }
 }
 
 /*
@@ -477,7 +485,7 @@ GraphPatternNotTriples "[53] GraphPatternNotTriples"
   [54]  	OptionalGraphPattern	  ::=  	'OPTIONAL' GroupGraphPattern
 */
 OptionalGraphPattern "[54] OptionalGraphPattern"
-  = 'OPTIONAL' v:GroupGraphPattern {
+  = 'OPTIONAL' WS* v:GroupGraphPattern {
       return { token: 'optionalgraphpattern',
                value: v }
 }
@@ -519,10 +527,29 @@ MinusGraphPattern "[57] MinusGraphPattern"
   [58]  	GroupOrUnionGraphPattern	  ::=  	GroupGraphPattern ( 'UNION' GroupGraphPattern )*
 */
 GroupOrUnionGraphPattern "[58] GroupOrUnionGraphPattern"
-  = a:GroupGraphPattern b:( 'UNION' GroupGraphPattern )* {
-      return {token: 'graphorunionpattern',
-              value: [a,b],
-              status: 'todo'}
+  = a:GroupGraphPattern b:( WS* 'UNION' WS* GroupGraphPattern )* {
+      if(b.length === 0) {
+          return a;
+      } else {
+
+          var lastToken = {token: 'graphunionpattern',
+                           value: [a]};
+
+          for(var i=0; i<b.length; i++) {
+              if(i==b.length-1) {
+                  lastToken.value.push(b[i][3]);
+              } else {
+                  lastToken.value.push(b[i][3]);
+                  var newToken = {token: 'graphunionpattern',
+                                  value: [lastToken]}
+
+                  lastToken = newToken;
+              }
+          }
+
+          return lastToken;
+
+      }
 }
 
 /*
@@ -1019,9 +1046,9 @@ RelationalExpression "[99] RelationalExpression"
       } else {
         var exp = {};
         exp.expressionType = "relationalexpression"
-        exp.operator = op2[0];
+        exp.operator = op2[0][0];
         exp.op1 = op1;
-        exp.ops = op2[1];
+        exp.op2 = op2[0][1];
 
         return exp;
       }
