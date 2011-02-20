@@ -111,7 +111,7 @@ SelectClause "[8] SelectClause"
           if(aVar.length === 3) {
               vars.push(aVar[1]);
           } else {
-              vars.push({var: aVar[3], alias:aVar[7]})
+              vars.push({variable: aVar[3], alias:aVar[7]})
           }
       }
 
@@ -416,9 +416,7 @@ GroupGraphPatternSub "[51] GroupGraphPatternSub"
                       triplesContext = triplesContext.concat(currentBasicGraphPatterns[j].triplesContext);
                   }
                   compactedSubpatterns.push({token: 'basicgraphpattern',
-                                             triplesContext: triplesContext,
-                                             filters: currentFilters});
-                  currentFilters = [];
+                                             triplesContext: triplesContext});
                   currentBasicGraphPatterns = [];
               }
               compactedSubpatterns.push(subpatterns[i]);
@@ -437,15 +435,16 @@ GroupGraphPatternSub "[51] GroupGraphPatternSub"
               triplesContext = triplesContext.concat(currentBasicGraphPatterns[j].triplesContext);
           }
           compactedSubpatterns.push({token: 'basicgraphpattern',
-                                     triplesContext: triplesContext,
-                                     filters: currentFilters});
+                                     triplesContext: triplesContext});
       }
 
       if(compactedSubpatterns.length == 1) {
+          compactedSubpatterns[0].filters = currentFilters;
           return compactedSubpatterns[0];
       } else  {
           return { token: 'groupgraphpattern',
-                   patterns: compactedSubpatterns }
+                   patterns: compactedSubpatterns,
+                   filters: currentFilters }
       }
 }
 
