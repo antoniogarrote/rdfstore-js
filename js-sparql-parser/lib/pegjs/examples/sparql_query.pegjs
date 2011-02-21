@@ -438,14 +438,14 @@ GroupGraphPatternSub "[51] GroupGraphPatternSub"
                                      triplesContext: triplesContext});
       }
 
-      if(compactedSubpatterns.length == 1) {
-          compactedSubpatterns[0].filters = currentFilters;
-          return compactedSubpatterns[0];
-      } else  {
+//      if(compactedSubpatterns.length == 1) {
+//          compactedSubpatterns[0].filters = currentFilters;
+//          return compactedSubpatterns[0];
+//      } else  {
           return { token: 'groupgraphpattern',
                    patterns: compactedSubpatterns,
                    filters: currentFilters }
-      }
+//      }
 }
 
 /*
