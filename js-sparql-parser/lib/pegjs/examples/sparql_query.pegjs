@@ -288,7 +288,7 @@ Create "[35] Create"
   [36]  	InsertData	  ::=  	'INSERT' <WS*> ',DATA' QuadData
 */
 InsertData "[36] InsertData"
-  = 'INSERT' WS* ',DATA' QuadData
+  = 'INSERT' WS* 'DATA' WS* QuadData
 
 /*
   [37]  	DeleteData	  ::=  	'DELETE' <WS*> 'DATA' QuadData
@@ -352,25 +352,69 @@ QuadPattern "[45] QuadPattern"
   [46]  	QuadData	  ::=  	'{' Quads '}'
 */
 QuadData "[46] QuadData"
-  = '{' Quads '}'
+  = WS* '{' WS* Quads WS* '}' WS*
 
 /*
   [47]  	Quads	  ::=  	TriplesTemplate? ( QuadsNotTriples '.'? TriplesTemplate? )*
 */
 Quads "[47] Quads"
-  = TriplesTemplate? ( QuadsNotTriples '.'? TriplesTemplate? )*
+  = ts:TriplesTemplate? qs:( QuadsNotTriples '.'? TriplesTemplate? )* {
+      var quads = []
+      for(var i=0; i<ts.triplesContext.length; i++) {
+          var triple = ts.triplesContext[i]
+          triple.graph = null;
+          quads.push(triple)
+      }
+
+      if(qs[0].length > 0) {
+        quads = quads.concat(qs[0][0].quadsContext);
+         
+        for(var i=0; i<qs[0][2].triplesContext.length; i++) {
+            var triple = qs[0][2].triplesContext[i]
+            triple.graph = null;
+            quads.push(triple)
+        }      
+         
+        return {token:'quads',
+                quadsContext: quads}
+      }
+}
 
 /*
   [48]  	QuadsNotTriples	  ::=  	'GRAPH' VarOrIRIref '{' TriplesTemplate? '}'
 */
 QuadsNotTriples "[48] QuadsNotTriples"
-  = 'GRAPH' VarOrIRIref '{' TriplesTemplate? '}'
+  = WS* 'GRAPH' WS* g:VarOrIRIref WS* '{' WS* ts:TriplesTemplate? WS* '}' WS* {
+      var quads = []
+      for(var i=0; i<ts.triplesContext.length; i++) {
+          var triple = ts.triplesContext[i]
+          triple.graph = g;
+          quads.push(triple)
+      }
+
+      return {token:'quadsnottriples',
+              quadsContext: quads}      
+}
 
 /*
   [49]  	TriplesTemplate	  ::=  	TriplesSameSubject ( '.' TriplesTemplate? )?
 */
 TriplesTemplate "[49] TriplesTemplate"
-  = TriplesSameSubject ( '.' TriplesTemplate? )?
+  = b:TriplesSameSubject bs:(WS* '.' WS* TriplesTemplate? )? {
+     var triples = b.triplesContext;
+     var toTest = null;
+      if(typeof(bs) === 'object') {
+            if(bs.length != null) {
+                  if(bs[3].triplesContext!=null) {
+                     triples = triples.concat(bs[3].triplesContext);
+              }
+           }
+      }
+
+     return {token:'triplestemplate',
+             triplesContext: triples}
+
+}
 
 /*
   @todo
