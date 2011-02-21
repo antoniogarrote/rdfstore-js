@@ -98,7 +98,26 @@ exports.example7 = function(test) {
 
     var result = aqt.parseSelect(query);
 
-    console.log(result.rvalue);
+    test.ok(result.kind === "LEFT_JOIN");
+    test.ok(result.filter.length === 1);
+    test.ok(result.filter[0].token === 'filter');
+    test.ok(result.lvalue.kind === "BGP");
+    test.ok(result.rvalue.kind === "BGP");
+
+    test.done();
+}
+
+exports.example8 = function(test) {
+    var query = "SELECT * { {?s :p1 ?v1} UNION {?s :p2 ?v2} OPTIONAL {?s :p3 ?v3} }";
+
+    var result = aqt.parseSelect(query);
+
+    console.log(result);
+//    test.ok(result.kind === "LEFT_JOIN");
+//    test.ok(result.filter.length === 1);
+//    test.ok(result.filter[0].token === 'filter');
+//    test.ok(result.lvalue.kind === "BGP");
+//    test.ok(result.rvalue.kind === "BGP");
 
     test.done();
 }
