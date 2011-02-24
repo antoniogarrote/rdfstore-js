@@ -9,24 +9,56 @@ var patternBuiler = function(s,p,o) {
     return new QuadIndexCommon.Pattern({subject: s, predicate:p, object:o});
 }
 
-exports.rangeQuery = function(test) {
-    var t = new QuadIndex.Tree({order: 2});
-
-    for(var i=0; i< 10; i++) {
-        t.insert(quadBuilder(i,0,0));
+var repeat = function(c,max,floop,fend,env) {
+    if(arguments.length===4) { env = {}; }
+    if(c<max) {
+        env._i = c;
+        floop(function(floop,env){
+            repeat(c+1, max, floop, fend, env);
+        },env);
+    } else {
+        fend(env);
     }
-
-    for(var i=5; i< 10; i++) {
-        t.insert(quadBuilder(5,i,0));
-    }
-
-    var results = t.range(patternBuiler(5,null,null));
-
-    console.log(results.length)
-    for(var i=0; i<results.length; i++) {
-        console.log(results[i]);
-    }
-    test.ok(results.length === 6);
-
-    test.done();
 }
+
+exports.testRepeat = function(test){
+    var acum = [];
+    repeat(0,10, function(c,env){
+        acum.push(env._i);
+        c(arguments.callee,env);
+    }, function(env){
+        test.ok(acum.length==10);
+        test.done();
+    });
+}
+
+
+exports.rangeQuery = function(test) {
+
+    new QuadIndex.Tree({order: 2}, function(t){
+
+        repeat(0, 10, function(k,env){
+            var floop = arguments.callee;
+            t.insert(quadBuilder(env._i,0,0), function(){
+                k(floop, env);
+            });
+        }, function(env){
+            repeat(5, 10, function(k,env){
+                var floop = arguments.callee;
+                t.insert(quadBuilder(5,env._i,0), function(){
+                    k(floop, env);
+                });
+            }, function(env){
+                t.range(patternBuiler(5,null,null), function(results){
+                    for(var i=0; i<results.length; i++) {
+                        test.ok(results[i].subject === 5);
+                    }
+                    test.ok(results.length === 6);
+                    test.done();
+                });
+            })
+        });
+
+    });
+}
+
