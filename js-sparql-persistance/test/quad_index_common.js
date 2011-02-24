@@ -44,8 +44,37 @@ exports.quadPatternBuild = function(test) {
 
     test.ok(pattern.order[0] === 'subject');
     test.ok(pattern.order[1] === 'object');
-    test.ok(pattern.order[2] === 'predicate');
-    test.ok(pattern.order.length === 3);
+    test.ok(pattern.order[2] === 'graph');
+    test.ok(pattern.order[3] === 'predicate');
+    test.ok(pattern.order.length === 4);
+
+    test.done();
+}
+
+
+exports.quadPatternIndexKey = function(test) {
+    var comps1 = {subject:1, predicate:'p', object:3, graph:4};
+    var pattern = new QuadIndexCommon.Pattern(comps1);
+    test.ok(pattern.indexKey[0] === "subject");
+    test.ok(pattern.indexKey[1] === "object");
+    test.ok(pattern.indexKey[2] === "graph");
+    test.ok(pattern.indexKey.length === 3);
+
+    var comps1 = {subject:1, predicate:'p', object:3, graph:'g'};
+    var pattern = new QuadIndexCommon.Pattern(comps1);
+
+    test.ok(pattern.indexKey[0] === "subject");
+    test.ok(pattern.indexKey[1] === "object");
+    test.ok(pattern.indexKey.length === 2);
+
+    var comps1 = {subject:1, predicate:4, object:3, graph:5};
+    var pattern = new QuadIndexCommon.Pattern(comps1);
+    test.ok(pattern.indexKey[0] === "subject");
+    test.ok(pattern.indexKey[1] === "predicate");
+    test.ok(pattern.indexKey[2] === "object");
+    test.ok(pattern.indexKey[3] === "graph");
+
+    test.ok(pattern.indexKey.length === 4);
 
     test.done();
 }

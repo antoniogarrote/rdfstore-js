@@ -2,7 +2,7 @@ var QuadIndex = require("./../src/quad_index").QuadIndex;
 var QuadIndexCommon = require("./../src/quad_index_common").QuadIndexCommon;
 
 var quadBuilder = function(s,p,o) {
-    return new QuadIndexCommon.NodeKey({subject: s, predicate:p, object:o}, ['subject', 'predicate', 'object']);
+    return new QuadIndexCommon.NodeKey({subject: s, predicate:p, object:o});
 }
 
 var patternBuiler = function(s,p,o) {
@@ -35,7 +35,7 @@ exports.testRepeat = function(test){
 
 exports.rangeQuery = function(test) {
 
-    new QuadIndex.Tree({order: 2}, function(t){
+    new QuadIndex.Tree({order: 2, componentOrder:['subject', 'predicate', 'object']}, function(t){
 
         repeat(0, 10, function(k,env){
             var floop = arguments.callee;
@@ -53,6 +53,7 @@ exports.rangeQuery = function(test) {
                     for(var i=0; i<results.length; i++) {
                         test.ok(results[i].subject === 5);
                     }
+                    console.log("results:"+results.length);
                     test.ok(results.length === 6);
                     test.done();
                 });

@@ -45,13 +45,14 @@ QuadIndexCommon.Pattern = function(components) {
     this.predicate = components.predicate;
     this.object = components.object;
     this.graph = components.graph;
+    this.indexKey = [];
 
     this.keyComponents = {}
 
     var ks,ko,kp;
     var order = [];
     var indif = [];
-    var components = ['subject', 'predicate', 'object'];
+    var components = ['subject', 'predicate', 'object', 'graph'];
     for(var i=0; i<components.length; i++) {
         if(typeof(this[components[i]]) === 'string') {
             indif.push(components[i]);
@@ -59,9 +60,9 @@ QuadIndexCommon.Pattern = function(components) {
         } else {
             order.push(components[i]);
             this.keyComponents[components[i]] = this[components[i]];
+            this.indexKey.push(components[i]);
         }
     }
-    this.keyComponents['graph'] = this.graph;
 
     this.order = order.concat(indif);
     this.key = new QuadIndexCommon.NodeKey(this.keyComponents, this.order);
