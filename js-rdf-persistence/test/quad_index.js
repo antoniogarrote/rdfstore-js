@@ -53,7 +53,6 @@ exports.rangeQuery = function(test) {
                     for(var i=0; i<results.length; i++) {
                         test.ok(results[i].subject === 5);
                     }
-                    console.log("results:"+results.length);
                     test.ok(results.length === 6);
                     test.done();
                 });

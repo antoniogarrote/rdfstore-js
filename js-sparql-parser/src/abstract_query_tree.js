@@ -19,7 +19,9 @@ AbstractQueryTree.parseSelect = function(query_string){
         return null;
     } else {
         var env = {};
-        return this.build(syntaxTree.pattern, env);
+        syntaxTree.pattern = this.build(syntaxTree.pattern, env);
+        console.log(syntaxTree);
+        return syntaxTree;
     }
 }
 
@@ -71,7 +73,7 @@ AbstractQueryTree._buildGroupGraphPattern = function(node, env) {
             } else {
                 g = { kind: 'JOIN',
                       lvalue: g,
-                      rvalue: parsedPattern }    
+                      rvalue: parsedPattern }
             }
         }
     }

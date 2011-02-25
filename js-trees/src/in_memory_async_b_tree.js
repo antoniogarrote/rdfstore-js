@@ -275,6 +275,7 @@ InMemoryAsyncBTree.Tree.prototype._splitChild = function(parent, index, child, c
  * into the tree.
  */
 InMemoryAsyncBTree.Tree.prototype.insert = function(key,data,callback) {
+
     if(this.root.numberActives === (2 * this.order - 1)) {
         var newRoot = this._allocateNode();
         newRoot.isLeaf = false;

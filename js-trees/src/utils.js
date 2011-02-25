@@ -12,7 +12,7 @@ Utils.shuffle = function(o){ //v1.0
 	return o;
 };
 
-Utils.include? = function(a,v) {
+Utils.include = function(a,v) {
     var cmp = arguments[2];
 
     for(var i=(a.length-1); i>=0; i--) {
@@ -23,7 +23,7 @@ Utils.include? = function(a,v) {
             res = (cmp(a[i],v) === 0);
         }
 
-        if(cmp === true) {
+        if(res === true) {
             return true;
         }
     }

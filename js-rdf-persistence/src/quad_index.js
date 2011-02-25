@@ -26,6 +26,8 @@ QuadIndex.Tree = function(params,callback) {
                         return 1;
                     }
                 }
+
+                return 0;
             }
 
             tree.rangeComparator = function(a,b) {
@@ -119,13 +121,3 @@ QuadIndex.Tree.prototype._rangeTraverse = function(tree,node, pattern, callback)
         callback(acum);
     })
 };
-
-
-/**
- * Node
- *
- * A node storing a quad.
- */
-QuadIndex.Node = function(){
-
-}

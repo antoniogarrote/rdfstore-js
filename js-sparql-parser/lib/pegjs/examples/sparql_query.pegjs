@@ -27,7 +27,8 @@
 }
 
 SPARQL =
-  SelectQuery
+  QueryUnit
+  / UpdateUnit
 
 /*
   [1]  	QueryUnit	  ::=  	Query
@@ -45,13 +46,17 @@ Query "[2] Query"
   [3]  	Prologue	  ::=  	BaseDecl? PrefixDecl*
 */
 Prologue "[3] Prologue"
-  = BaseDecl? PrefixDecl*
+  = b:BaseDecl? WS* pfx:PrefixDecl* {
+      return { token: 'prologue',
+               base: b,
+               prefixes: pfx }
+}
 
 /*
   [4]  	BaseDecl	  ::=  	'BASE' IRI_REF
 */
 BaseDecl "[4] BaseDecl"
-  = 'BASE' WS* i:IRI_REF {
+  = WS* 'BASE' WS* i:IRI_REF {
       registerDefaultPrefix(i);
 
       base = {};
@@ -65,7 +70,7 @@ BaseDecl "[4] BaseDecl"
   [5]  	PrefixDecl	  ::=  	'PREFIX' PNAME_NS IRI_REF
 */
 PrefixDecl "[5] PrefixDecl"
-  = 'PREFIX'  WS* p:PNAME_NS  WS* l:IRI_REF {
+  = WS* 'PREFIX'  WS* p:PNAME_NS  WS* l:IRI_REF {
 
       registerPrefix(p,l);
 
@@ -87,6 +92,7 @@ SelectQuery "[6] SelectQuery"
   = s:SelectClause WS* d:DatasetClause* WS* w:WhereClause WS* SolutionModifier WS* BindingsClause {
       var query = {};
       query.kind = 'select';
+      query.token = 'executableunit'
       query.dataset = d;
       query.projection = s;
       query.pattern = w
@@ -104,14 +110,19 @@ SubSelect "[7] SubSelect"
   [8]  	SelectClause	  ::=  	'SELECT' ( 'DISTINCT' | 'REDUCED' )? ( ( Var | ( '(' Expression 'AS' Var ')' ) )+ | '*' )
 */
 SelectClause "[8] SelectClause"
-  = 'SELECT' WS* mod:( 'DISTINCT' / 'REDUCED' )? WS* proj:( ( ( WS* Var WS* ) / ( WS* '(' WS* Expression WS* 'AS' WS* Var WS* ')' WS* ) )+ / ( WS* '*' WS* )  ) {
-      var vars = [];
+  = WS* 'SELECT' WS* mod:( 'DISTINCT' / 'REDUCED' )? WS* proj:( ( ( WS* Var WS* ) / ( WS* '(' WS* Expression WS* 'AS' WS* Var WS* ')' WS* ) )+ / ( WS* '*' WS* )  ) {
+     var vars = [];
+      if(proj.length === 3 && proj[1]==="*") {
+          return [{token: 'variable', kind:'*'}];
+      }
+
       for(var i=0; i< proj.length; i++) {
           var aVar = proj[i];
+
           if(aVar.length === 3) {
-              vars.push(aVar[1]);
+              vars.push({token: 'variable', kind:'var', value:aVar[1]});
           } else {
-              vars.push({variable: aVar[3], alias:aVar[7]})
+              vars.push({token: 'variable', kind:'aliased', expression: aVar[3], alias:aVar[7]})
           }
       }
 
@@ -252,7 +263,23 @@ UpdateUnit "[29] UpdateUnit"
 [30]  	Update	  ::=  	Prologue Update1 ( ';' Update? )?
 */
 Update "[30] Update"
-  = Prologue Update1 ( ';' Update? )?
+  = p:Prologue WS* u:Update1 us:(WS* ';' WS* Update? )? {
+       var query = {};
+      query.token = 'query';
+      query.kind = 'update'
+      query.prologue = p;
+
+     var units = [u];
+
+     for(var i=0; i<us.length; i++) {
+          if(us[i] && us[i][3]) {
+            units.push(us[i][3]);
+          }
+     }
+
+      query.units = units;
+      return query;
+}
 
 /*
   [31]  	Update1	  ::=  	Load | Clear | Drop | Create | InsertData | DeleteData | DeleteWhere | Modify
@@ -288,7 +315,14 @@ Create "[35] Create"
   [36]  	InsertData	  ::=  	'INSERT' <WS*> ',DATA' QuadData
 */
 InsertData "[36] InsertData"
-  = 'INSERT' WS* 'DATA' WS* QuadData
+  = 'INSERT' WS* 'DATA' WS* qs:QuadData {
+      var query = {};
+      query.kind = 'insertdata';
+      query.token = 'executableunit'
+      query.quads = qs;
+
+      return query;
+}
 
 /*
   [37]  	DeleteData	  ::=  	'DELETE' <WS*> 'DATA' QuadData
@@ -352,7 +386,9 @@ QuadPattern "[45] QuadPattern"
   [46]  	QuadData	  ::=  	'{' Quads '}'
 */
 QuadData "[46] QuadData"
-  = WS* '{' WS* Quads WS* '}' WS*
+  = WS* '{' WS* qs:Quads WS* '}' WS* {
+      return qs.quadsContext;
+}
 
 /*
   [47]  	Quads	  ::=  	TriplesTemplate? ( QuadsNotTriples '.'? TriplesTemplate? )*
@@ -366,18 +402,18 @@ Quads "[47] Quads"
           quads.push(triple)
       }
 
-      if(qs[0].length > 0) {
-        quads = quads.concat(qs[0][0].quadsContext);
-         
-        for(var i=0; i<qs[0][2].triplesContext.length; i++) {
-            var triple = qs[0][2].triplesContext[i]
-            triple.graph = null;
-            quads.push(triple)
-        }      
-         
-        return {token:'quads',
-                quadsContext: quads}
+      if(qs && qs.length>0 && qs[0].length > 0) {
+          quads = quads.concat(qs[0][0].quadsContext);
+
+          for(var i=0; i<qs[0][2].triplesContext.length; i++) {
+              var triple = qs[0][2].triplesContext[i]
+              triple.graph = null;
+              quads.push(triple)
+          }
       }
+
+      return {token:'quads',
+              quadsContext: quads}
 }
 
 /*
@@ -393,7 +429,7 @@ QuadsNotTriples "[48] QuadsNotTriples"
       }
 
       return {token:'quadsnottriples',
-              quadsContext: quads}      
+              quadsContext: quads}
 }
 
 /*
@@ -528,7 +564,7 @@ GraphPatternNotTriples "[53] GraphPatternNotTriples"
   [54]  	OptionalGraphPattern	  ::=  	'OPTIONAL' GroupGraphPattern
 */
 OptionalGraphPattern "[54] OptionalGraphPattern"
-  = 'OPTIONAL' WS* v:GroupGraphPattern {
+  = WS* 'OPTIONAL' WS* v:GroupGraphPattern {
       return { token: 'optionalgraphpattern',
                value: v }
 }
