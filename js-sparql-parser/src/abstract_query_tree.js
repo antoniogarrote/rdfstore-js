@@ -11,34 +11,59 @@ var SparqlParser = require("./sparql_parser").SparqlParser;
  * Based on <http://www.w3.org/2001/sw/DataAccess/rq23/rq24-algebra.html>
  * W3C's note
  */
+AbstractQueryTree.AbstractQueryTree = function(params) {
+}
 
-AbstractQueryTree.parseSelect = function(query_string){
+AbstractQueryTree.AbstractQueryTree.prototype.parseQueryString = function(query_string) {
     var syntaxTree  = SparqlParser.parser.parse(query_string);
+    return syntaxTree;
+}
+
+AbstractQueryTree.parseExecutableUnit = function(executableUnit) {
+    if(executableUnit.kind === 'select') {
+        this.parseSelect(executableUnit);
+    } else if(executableUnit.kind === 'insertdata') {
+        this.parseInsertData(executableUnit);        
+    } else {
+        throw new Error('unknown executable unit' + executableUnit.kind);
+    }
+}
+
+AbstractQueryTree.AbstractQueryTree.prototype.parseSelect = function(syntaxTree){
+
     if(syntaxTree == null) {
         console.log("error parsing query");
         return null;
     } else {
         var env = {};
         syntaxTree.pattern = this.build(syntaxTree.pattern, env);
-        console.log(syntaxTree);
         return syntaxTree;
     }
 }
 
-AbstractQueryTree.build = function(node, env) {
+AbstractQueryTree.AbstractQueryTree.prototype.parseInsertData = function(syntaxTree){
+    if(syntaxTree == null) {
+        console.log("error parsing query");
+        return null;
+    } else {
+        return syntaxTree;
+    }
+}
+
+AbstractQueryTree.AbstractQueryTree.prototype.build = function(node, env) {
     if(node.token === 'groupgraphpattern') {
-        return AbstractQueryTree._buildGroupGraphPattern(node, env);
+        return this._buildGroupGraphPattern(node, env);
     } else if (node.token === 'basicgraphpattern') {
         return { kind: 'BGP',
                  value: node.triplesContext };
     } else if (node.token === 'graphunionpattern') {
-        var a = AbstractQueryTree.build(node.value[0],env);
-        var b = AbstractQueryTree.build(node.value[1],env);
+        var a = this.build(node.value[0],env);
+        var b = this.build(node.value[1],env);
 
         return { kind: 'UNION',
                  value: [a,b] };
     } else if(node.token === 'graphgraphpattern') {
-        var c = AbstractQueryTree.build(node.value, env);
+        var c = this.build(node.value, env);
         return { kind: 'GRAPH',
                  value: c,
                  graph: node.graph };
@@ -47,7 +72,7 @@ AbstractQueryTree.build = function(node, env) {
     }
 }
 
-AbstractQueryTree._buildGroupGraphPattern = function(node, env) {
+AbstractQueryTree.AbstractQueryTree.prototype._buildGroupGraphPattern = function(node, env) {
     var f = (node.filters || []);
     var g = {kind: "EMPTY_PATTERN"};
 

@@ -1,9 +1,14 @@
-var aqt = require("./../src/abstract_query_tree").AbstractQueryTree;
+var AbstractQueryTree = require("./../src/abstract_query_tree").AbstractQueryTree;
+var Lexicon = require("./../../js-rdf-persistence/src/lexicon").Lexicon;
+
+var aqt = new AbstractQueryTree.AbstractQueryTree();
 
 exports.example1 = function(test) {
     var query = "SELECT * { ?s ?p ?o }";
 
-    var result = aqt.parseSelect(query);
+    var query = aqt.parseQueryString(query);
+    console.log(query)
+    var result = aqt.parseSelect(query.units[0]);
 
     test.ok(result.pattern.kind==='BGP');
     test.ok(result.pattern.value.length === 1);
@@ -15,7 +20,9 @@ exports.example1 = function(test) {
 exports.example2 = function(test) {
     var query = "SELECT * { ?s :p1 ?v1 ; :p2 ?v2 }";
 
-    var result = aqt.parseSelect(query);
+    var query = aqt.parseQueryString(query);
+    var result = aqt.parseSelect(query.units[0]);
+
     console.log(result.pattern);
     test.ok(result.pattern.kind==='BGP');
     test.ok(result.pattern.value.length === 2);
@@ -26,7 +33,8 @@ exports.example2 = function(test) {
 exports.example3 = function(test) {
     var query = "SELECT * { { ?s :p1 ?v1 } UNION {?s :p2 ?v2 } }";
 
-    var result = aqt.parseSelect(query);
+    var query = aqt.parseQueryString(query);
+    var result = aqt.parseSelect(query.units[0]);
 
     test.ok(result.pattern.kind ==='UNION');
     test.ok(result.pattern.value.length === 2);
@@ -41,7 +49,8 @@ exports.example3 = function(test) {
 exports.example4 = function(test) {
     var query = "SELECT * { { ?s :p1 ?v1 } UNION {?s :p2 ?v2 } UNION {?s :p3 ?v3 } }";
 
-    var result = aqt.parseSelect(query);
+    var query = aqt.parseQueryString(query);
+    var result = aqt.parseSelect(query.units[0]);
 
     test.ok(result.pattern.kind ==='UNION');
     test.ok(result.pattern.value.length === 2);
@@ -68,7 +77,9 @@ exports.example4 = function(test) {
 exports.example5 = function(test) {
     var query = "SELECT * { ?s :p1 ?v1 OPTIONAL {?s :p2 ?v2 } }";
 
-    var result = aqt.parseSelect(query);
+    var query = aqt.parseQueryString(query);
+    var result = aqt.parseSelect(query.units[0]);
+
 
     test.ok(result.pattern.kind === "LEFT_JOIN");
     test.ok(result.pattern.filter === true);
@@ -83,7 +94,8 @@ exports.example5 = function(test) {
 exports.example6 = function(test) {
     var query = "SELECT * { ?s :p1 ?v1 OPTIONAL {?s :p2 ?v2 } OPTIONAL { ?s :p3 ?v3 } }";
 
-    var result = aqt.parseSelect(query);
+    var query = aqt.parseQueryString(query);
+    var result = aqt.parseSelect(query.units[0]);
 
     test.ok(result.pattern.kind === "LEFT_JOIN");
     test.ok(result.pattern.lvalue.kind === "LEFT_JOIN");
@@ -96,7 +108,8 @@ exports.example6 = function(test) {
 exports.example7 = function(test) {
     var query = "SELECT * { ?s :p1 ?v1 OPTIONAL {?s :p2 ?v2 FILTER(?v1<3) } }";
 
-    var result = aqt.parseSelect(query);
+    var query = aqt.parseQueryString(query);
+    var result = aqt.parseSelect(query.units[0]);
 
     test.ok(result.pattern.kind === "LEFT_JOIN");
     test.ok(result.pattern.filter.length === 1);
@@ -110,7 +123,8 @@ exports.example7 = function(test) {
 exports.example8 = function(test) {
     var query = "SELECT * { {?s :p1 ?v1} UNION {?s :p2 ?v2} OPTIONAL {?s :p3 ?v3} }";
 
-    var result = aqt.parseSelect(query);
+    var query = aqt.parseQueryString(query);
+    var result = aqt.parseSelect(query.units[0]);
 
     test.ok(result.pattern.kind === "LEFT_JOIN");
     test.ok(result.pattern.lvalue.kind === "UNION");

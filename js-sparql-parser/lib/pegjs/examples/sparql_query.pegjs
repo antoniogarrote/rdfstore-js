@@ -40,6 +40,13 @@ QueryUnit "[1] QueryUnit"
   [2]  	Query	  ::=  	Prologue ( SelectQuery | ConstructQuery | DescribeQuery | AskQuery )
 */
 Query "[2] Query"
+  = p:Prologue q:( SelectQuery / ConstructQuery / DescribeQuery / AskQuery ) {
+      return {token: 'query',
+              kind: 'query',
+              prologue: p,
+              units: [q]};
+}
+
   = Prologue ( SelectQuery / ConstructQuery / DescribeQuery / AskQuery )
 
 /*
