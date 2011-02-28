@@ -12,22 +12,22 @@ var SparqlParser = require("./sparql_parser").SparqlParser;
  * W3C's note
  */
 AbstractQueryTree.AbstractQueryTree = function(params) {
-}
+};
 
 AbstractQueryTree.AbstractQueryTree.prototype.parseQueryString = function(query_string) {
     var syntaxTree  = SparqlParser.parser.parse(query_string);
     return syntaxTree;
-}
+};
 
-AbstractQueryTree.parseExecutableUnit = function(executableUnit) {
+AbstractQueryTree.AbstractQueryTree.prototype.parseExecutableUnit = function(executableUnit) {
     if(executableUnit.kind === 'select') {
-        this.parseSelect(executableUnit);
+        return this.parseSelect(executableUnit);
     } else if(executableUnit.kind === 'insertdata') {
-        this.parseInsertData(executableUnit);        
+        return this.parseInsertData(executableUnit);        
     } else {
         throw new Error('unknown executable unit' + executableUnit.kind);
     }
-}
+};
 
 AbstractQueryTree.AbstractQueryTree.prototype.parseSelect = function(syntaxTree){
 
@@ -39,7 +39,7 @@ AbstractQueryTree.AbstractQueryTree.prototype.parseSelect = function(syntaxTree)
         syntaxTree.pattern = this.build(syntaxTree.pattern, env);
         return syntaxTree;
     }
-}
+};
 
 AbstractQueryTree.AbstractQueryTree.prototype.parseInsertData = function(syntaxTree){
     if(syntaxTree == null) {
@@ -48,7 +48,7 @@ AbstractQueryTree.AbstractQueryTree.prototype.parseInsertData = function(syntaxT
     } else {
         return syntaxTree;
     }
-}
+};
 
 AbstractQueryTree.AbstractQueryTree.prototype.build = function(node, env) {
     if(node.token === 'groupgraphpattern') {
@@ -70,7 +70,7 @@ AbstractQueryTree.AbstractQueryTree.prototype.build = function(node, env) {
     } else {
         throw new Error("not supported token in query:"+node.token);
     }
-}
+};
 
 AbstractQueryTree.AbstractQueryTree.prototype._buildGroupGraphPattern = function(node, env) {
     var f = (node.filters || []);
@@ -133,4 +133,4 @@ AbstractQueryTree.AbstractQueryTree.prototype._buildGroupGraphPattern = function
     } else {
         return g;
     }
-}
+};

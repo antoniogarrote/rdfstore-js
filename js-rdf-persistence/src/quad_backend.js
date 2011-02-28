@@ -83,7 +83,7 @@ QuadBackend.QuadBackend.prototype.index = function(quad, callback) {
             k(floop, e);
         });
     }, function(e) {
-        callback(that);
+        callback(true);
     });
 }
 

@@ -6,16 +6,19 @@ var Lexicon = exports.Lexicon;
 var QuadIndexCommon = require("./quad_index_common").QuadIndexCommon
 
 
-Lexicon.Lexicon = function(){
-    if(arguments.length === 0) {
-        this.uriToOID = {};
-        this.OIDToUri = {};
+Lexicon.Lexicon = function(callback){
 
-        this.literalToOID = {};
-        this.OIDToLiteral = {};
+    this.uriToOID = {};
+    this.OIDToUri = {};
 
-        this.uriCounter = 0;
-        this.literalCounter = 0;
+    this.literalToOID = {};
+    this.OIDToLiteral = {};
+
+    this.uriCounter = 0;
+    this.literalCounter = 0;
+    
+    if(callback != null) {
+        callback(this);
     }
 };
 

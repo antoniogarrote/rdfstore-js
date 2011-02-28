@@ -29,7 +29,7 @@ Utils.include = function(a,v) {
     }
 
     return false;
-}
+};
 
 Utils.repeat = function(c,max,floop,fend,env) {
     if(arguments.length===4) { env = {}; }
@@ -41,7 +41,7 @@ Utils.repeat = function(c,max,floop,fend,env) {
     } else {
         fend(env);
     }
-}
+};
 
 
 Utils.while = function(c,floop,fend,env) {
@@ -53,4 +53,18 @@ Utils.while = function(c,floop,fend,env) {
     } else {
         fend(env);
     }
-}
+};
+
+Utils.seq = function() {
+    var fs = arguments;
+    return function(callback) {
+        Utils.repeat(0, fs.length, function(k,env){
+            var floop = arguments.callee;
+            fs[env._i](function(){
+                k(floop, env);
+            });
+        }, function(){
+            callback();
+        });
+    }
+};

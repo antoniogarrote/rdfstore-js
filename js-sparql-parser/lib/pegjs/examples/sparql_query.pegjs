@@ -47,8 +47,6 @@ Query "[2] Query"
               units: [q]};
 }
 
-  = Prologue ( SelectQuery / ConstructQuery / DescribeQuery / AskQuery )
-
 /*
   [3]  	Prologue	  ::=  	BaseDecl? PrefixDecl*
 */
