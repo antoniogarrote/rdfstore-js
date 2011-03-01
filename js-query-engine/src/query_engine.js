@@ -15,7 +15,6 @@ QueryEngine.QueryEngine = function(params) {
     }
 };
 
-
 QueryEngine.QueryEngine.prototype.execute = function(queryString, callback){
     var syntaxTree = this.abstractQueryTree.parseQueryString(queryString);
     if(syntaxTree.token === 'query' && syntaxTree.kind == 'update')  {
@@ -77,7 +76,7 @@ QueryEngine.QueryEngine.prototype._executeQuadInsert = function(quad, queryEnv, 
             k();
         } else {
 
-            that.normalizeTerm(quad.graph, function(result, oid){    
+            that.normalizeTerm(quad.graph, queryEnv, function(result, oid){    
                 if(errorFound === false){
                     if(result===true) {
                         graph = oid;
@@ -89,7 +88,7 @@ QueryEngine.QueryEngine.prototype._executeQuadInsert = function(quad, queryEnv, 
             });
         }
     }, function(k){
-        that.normalizeTerm(quad.subject, function(result, oid){    
+        that.normalizeTerm(quad.subject, queryEnv, function(result, oid){    
             if(errorFound === false){
                 if(result===true) {
                     subject = oid;
@@ -100,7 +99,7 @@ QueryEngine.QueryEngine.prototype._executeQuadInsert = function(quad, queryEnv, 
             k();
         });
     }, function(k){
-        that.normalizeTerm(quad.predicate, function(result, oid){    
+        that.normalizeTerm(quad.predicate, queryEnv, function(result, oid){    
             if(errorFound === false){
                 if(result===true) {
                     predicate = oid;
@@ -111,7 +110,7 @@ QueryEngine.QueryEngine.prototype._executeQuadInsert = function(quad, queryEnv, 
             k();
         });
     }, function(k){
-        that.normalizeTerm(quad.object, function(result, oid){    
+        that.normalizeTerm(quad.object, queryEnv, function(result, oid){    
             if(errorFound === false){
                 if(result===true) {
                     object = oid;
@@ -122,7 +121,10 @@ QueryEngine.QueryEngine.prototype._executeQuadInsert = function(quad, queryEnv, 
             k();
         });
     })(function(){
-        var key = new QuadIndexCommon.NodeKey({subject:1, predicate:2, object:3, graph:4})                                    
+        var key = new QuadIndexCommon.NodeKey({subject:subject, 
+                                               predicate:predicate, 
+                                               object:object, 
+                                               graph:graph})                                    
         // indexation
         that.backend.index(key, function(result, error){
             if(result == true){
@@ -141,8 +143,7 @@ QueryEngine.QueryEngine.prototype.resolveNsInEnvironment = function(prefix, env)
 
 QueryEngine.QueryEngine.prototype.normalizeTerm = function(term, env, callback) {
     if(term.token === 'uri') {
-        if(token.value == null) {
-            console.log(token);
+        if(term.value == null) {
             var prefix = term.prefix;
             var suffix = term.suffix;
             var resolvedPrefix = this.resolveNsInEnvironment(prefix, env);
@@ -158,7 +159,46 @@ QueryEngine.QueryEngine.prototype.normalizeTerm = function(term, env, callback) 
                callback(true, oid);
             });
         }
+    } else if(term.token === 'literal') {
+        this.normalizeLiteral(term, env, function(result, data){
+            callback(result, data);
+        })
     } else {
-        callback(false, 'Token of kind '+token.token+' cannot be normalized');
+        callback(false, 'Token of kind '+term.token+' cannot be normalized');
     }
+};
+
+
+QueryEngine.QueryEngine.prototype.normalizeLiteral = function(term, env, callback) {
+    var value = term.value;
+    var lang = term.value;
+    var type = term.type;
+
+    var indexedValue = null;
+
+    if(value != null && type != null && typeof(type) != 'string') {
+        var typeValue = type.value;
+
+        if(typeValue != null) {
+            indexedValue = '"' + value + '"^^<' + typeValue + '>';
+        } else {
+            var typePrefix = type.prefix;
+            var typeSuffix = type.suffix;
+
+            var resolvedPrefix = this.resolveNsInEnvironment(typePrefix, env);
+            indexedValue = '"' + value + '"^^<' + resolvedPrefix + typeSuffix + '>';
+        }
+    } else {
+        if(lang == null && type == null) {
+            indexedValue = value;
+        } else if(type == null) {
+            indexedValue = value + "@" + lang;        
+        } else {
+            indexedValue = '"' + value + '"^^<'+type+'>';
+        }
+    }
+
+    this.lexicon.registerLiteral(indexedValue, function(oid){
+        callback(true, oid);
+    });
 };
