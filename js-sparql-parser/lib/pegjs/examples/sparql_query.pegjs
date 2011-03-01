@@ -967,21 +967,38 @@ TriplesNode "[87] TriplesNode"
   = Collection {
       return {token:"triplesnode", triplesContext:[], chainSubject:"todo"}
 }
-  / BlankNodePropertyList {
-      return {token:"triplesnode", triplesContext:[], chainSubject:"todo"}
-}
+  / BlankNodePropertyList
 
 /*
   [88]  	BlankNodePropertyList	  ::=  	'[' PropertyListNotEmpty ']'
 */
 BlankNodePropertyList "[88] BlankNodePropertyList"
-  = '[' PropertyListNotEmpty ']'
+  = WS* '[' WS* pl:PropertyListNotEmpty WS* ']' WS* {
+
+      GlobalBlankNodeCounter++;
+      var subject = {token:'blank', label:''+GlobalBlankNodeCounter};
+      var newTriples =  [];
+
+      for(var i=0; i< pl.pairs.length; i++) {
+          var pair = pl.pairs[i];
+          var triple = {}
+          triple.subject = subject;
+          triple.predicate = pair[0];
+          triple.object = pair[1];
+          newTriples.push(triple);
+      }
+
+      return {token: 'triplesnode',
+              kind: 'blanknodepropertylist',
+              triplesContext: pl.triplesContext.concat(newTriples),
+              chainSubject: subject};
+}
 
 /*
   [89]  	Collection	  ::=  	'(' GraphNode+ ')'
 */
 Collection "[89] Collection"
-  = '(' GraphNode+ ')'
+  = WS* '(' WS* GraphNode+ WS* ')' WS*
 
 /*
   [90]  	GraphNode	  ::=  	VarOrTerm |	TriplesNode
