@@ -333,13 +333,27 @@ InsertData "[36] InsertData"
   [37]  	DeleteData	  ::=  	'DELETE' <WS*> 'DATA' QuadData
 */
 DeleteData "[37] DeleteData"
-  = 'DELETE' WS* 'DATA' QuadData
+  = 'DELETE' WS* 'DATA' qs:QuadData {
+      var query = {};
+      query.kind = 'deletedata';
+      query.token = 'executableunit'
+      query.quads = qs;
+
+      return query;
+}
 
 /*
   [38]  	DeleteWhere	  ::=  	'DELETE' <WS*> 'WHERE' QuadPattern
 */
 DeleteWhere "[38] DeleteWhere"
-  = 'DELETE' WS* 'WHERE' QuadPattern
+  = 'DELETE' WS* 'WHERE' WS* qs:QuadPattern {
+      var query = {};
+      query.kind = 'deletewhere';
+      query.token = 'executableunit'
+      query.quads = qs;
+
+      return query;
+}
 
 /*
   [39]  	Modify	  ::=  	( 'WITH' IRIref )? ( DeleteClause InsertClause? | InsertClause ) UsingClause* 'WHERE' GroupGraphPattern
@@ -385,7 +399,9 @@ GraphRefAll "[44] GraphRefAll"
   [45]  	QuadPattern	  ::=  	'{' Quads '}'
 */
 QuadPattern "[45] QuadPattern"
-  = '{' Quads '}'
+  = WS* '{' WS* qs:Quads WS* '}' WS* {
+      return qs.quadsContext;
+}
 
 /*
   [46]  	QuadData	  ::=  	'{' Quads '}'
