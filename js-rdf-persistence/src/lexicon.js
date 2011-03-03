@@ -5,6 +5,10 @@ var Lexicon = exports.Lexicon;
 // imports
 var QuadIndexCommon = require("./quad_index_common").QuadIndexCommon
 
+/**
+ * Temporal implementation of the lexicon
+ */
+
 
 Lexicon.Lexicon = function(callback){
 
@@ -43,7 +47,6 @@ Lexicon.Lexicon.prototype.registerLiteral = function(literal, callback) {
 
         this.literalToOID[literal] = oid;
         this.OIDToLiteral[oid] = literal;
-
         callback(oid);
     } else {
         callback(oid);
@@ -56,7 +59,7 @@ Lexicon.Lexicon.prototype.retrieve = function(oid,callback) {
     } else if(oid[0]==='u') {
         callback(this.OIDToUri[oid]);
     } else {
-        throw new Error("Unknown OID"+oid);
+        throw new Error("Unknown OID:"+oid);
     }
 };
 
