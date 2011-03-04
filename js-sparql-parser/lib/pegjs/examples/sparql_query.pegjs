@@ -594,10 +594,18 @@ OptionalGraphPattern "[54] OptionalGraphPattern"
   [55]  	GraphGraphPattern	  ::=  	'GRAPH' VarOrIRIref GroupGraphPattern
 */
 GraphGraphPattern "[55] GraphGraphPattern"
-  = 'GRAPH' v:VarOrIRIref ts:GroupGraphPattern {
-      return {token: 'graphgraphpattern',
-              graph: v,
-              value: ts }
+  = WS* 'GRAPH' WS* g:VarOrIRIref gg:GroupGraphPattern {
+      for(var i=0; i<gg.patterns.length; i++) {
+        var quads = []
+        var ts = gg.patterns[i];
+        for(var j=0; j<ts.triplesContext.length; j++) {
+            var triple = ts.triplesContext[j]
+            triple.graph = g;
+        }
+      }
+
+      gg.token = 'groupgraphpattern'
+      return gg;
 }
 
 /*
