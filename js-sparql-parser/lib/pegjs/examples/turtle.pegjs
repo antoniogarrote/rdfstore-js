@@ -111,10 +111,12 @@ TriplesSameSubject "[66] TriplesSameSubject"
   = WS* s:GraphTerm WS* pairs:PropertyListNotEmpty {
       var triplesContext = pairs.triplesContext;
       var subject = s;
-      for(var i=0; i< pairs.pairs.length; i++) {
-          var pair = pairs.pairs[i];
-          var triple = {subject: subject, predicate: pair[0], object: pair[1]}
-          triplesContext.push(triple);
+      if(pairs.pairs != null) {
+        for(var i=0; i< pairs.pairs.length; i++) {
+            var pair = pairs.pairs[i];
+            var triple = {subject: subject, predicate: pair[0], object: pair[1]}
+            triplesContext.push(triple);
+        }
       }
 
       var token = {};
@@ -125,13 +127,28 @@ TriplesSameSubject "[66] TriplesSameSubject"
       return token;
   }
   / WS* tn:TriplesNode WS* pairs:PropertyList {
-      var triplesContext = p.triplesContext.concat(tn.triplesContext);
-      var subject = p.chainSubject;
+      var triplesContext = tn.triplesContext;
+      var subject = tn.chainSubject;
 
-      for(var i=0; i< pairs.pairs.length; i++) {
-          var pair = pairs.pairs[i];
-          var triple = {subject: subject, predicate: pair[0], object: pair[1]}
-          triplesContext.push(triple);
+      if(pairs.pairs != null) {
+        for(var i=0; i< pairs.pairs.length; i++) {
+            var pair = pairs.pairs[i];
+            if(tn.token === "triplesnodecollection") {
+                for(var j=0; j<subject.length; j++) {
+                    var subj = subject[j];
+                    if(typeof(subj) === 'object') {
+                        var triple = {subject: subj.chainSubject, predicate: pair[0], object: pair[1]}
+                        triplesContext.concat(subj.triplesContext);
+                    } else {
+                        var triple = {subject: subject[j], predicate: pair[0], object: pair[1]}
+                        triplesContext.push(triple);
+                    }
+                }
+            } else {
+                var triple = {subject: subject, predicate: pair[0], object: pair[1]}
+                triplesContext.push(triple);
+            }
+        }
       }
 
       var token = {};
@@ -200,17 +217,26 @@ PropertyList "[68] PropertyList"
 */
 ObjectList "[69] ObjectList"
   = obj:Object WS* objs:( ',' WS* Object )* {
-   var toReturn = [obj];
-   for(var i=0; i<objs.length; i++) {
-     for(var j=0; j<objs[i].length; j++) {
-       if(typeof(objs[i][j])=="object" && objs[i][j].token != null) {
-           toReturn.push(objs[i][j]);
-       }
-    }
-  }
 
-  return toReturn;
-}
+        var toReturn = [];
+        if(typeof(obj)==='object' && obj.token==='triplesnodecollection') {
+            for(var i=0; i<obj.chainSubject.length; i++) {
+                toReturn.push(obj.chainSubject[i]);
+            }
+        } else {
+            toReturn.push(obj);
+        }
+
+        for(var i=0; i<objs.length; i++) {
+            for(var j=0; j<objs[i].length; j++) {
+                if(typeof(objs[i][j])=="object" && objs[i][j].token != null) {
+                    toReturn.push(objs[i][j]);
+                }
+            }
+        }
+
+        return toReturn;
+    }
 
 /*
   [70]  	Object	  ::=  	GraphNode
@@ -247,8 +273,21 @@ Integer "[86] Integer"
   [87]  	TriplesNode	  ::=  	Collection |	BlankNodePropertyList
 */
 TriplesNode "[87] TriplesNode"
-  = Collection {
-      return {token:"triplesnode", triplesContext:[], chainSubject:"todo"}
+  = c:Collection {
+      triplesContext = [];
+      chainSubject = [];
+
+      for(var i=0; i<c.length; i++) {
+          var node = c[i];
+
+          if(node.triplesContext == null) {
+              chainSubject.push(node);
+          } else {
+              triplesContext.concat(node.triplesContext);
+              chainSubject.push(node.chainSubject);
+          }
+      }
+      return {token:"triplesnodecollection", triplesContext:triplesContext, chainSubject:chainSubject}
 }
   / BlankNodePropertyList
 
@@ -281,13 +320,18 @@ BlankNodePropertyList "[88] BlankNodePropertyList"
   [89]  	Collection	  ::=  	'(' GraphNode+ ')'
 */
 Collection "[89] Collection"
-  = WS* '(' WS* GraphNode+ WS* ')' WS*
+  = WS* '(' WS* gn:GraphNode+ WS* ')' WS* {
+      return gn;
+}
 
 /*
   [90]  	GraphNode	  ::=  	VarOrTerm |	TriplesNode
 */
 GraphNode "[90] GraphNode"
-  = (GraphTerm / TriplesNode)
+  = gn:(WS* GraphTerm WS* / WS* TriplesNode WS*) {
+  return gn[1];
+}
+
 
 /*
   [94]  	GraphTerm	  ::=  	IRIref |	RDFLiteral |	NumericLiteral |	BooleanLiteral |	BlankNode |	NIL

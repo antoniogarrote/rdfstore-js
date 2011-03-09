@@ -269,22 +269,22 @@ UpdateUnit "[29] UpdateUnit"
 */
 Update "[30] Update"
   = p:Prologue WS* u:Update1 us:(WS* ';' WS* Update? )? {
-       var query = {};
+
+      var query = {};
       query.token = 'query';
       query.kind = 'update'
       query.prologue = p;
 
      var units = [u];
 
-     for(var i=0; i<us.length; i++) {
-          if(us[i] && us[i][3]) {
-            units.push(us[i][3]);
-          }
+     if(us.length != null && us[3] != null && us[3].units != null) {
+         units = units.concat(us[3].units);
      }
 
-      query.units = units;
-      return query;
+     query.units = units;
+     return query;
 }
+
 
 /*
   [31]  	Update1	  ::=  	Load | Clear | Drop | Create | InsertData | DeleteData | DeleteWhere | Modify
@@ -417,19 +417,23 @@ QuadData "[46] QuadData"
 Quads "[47] Quads"
   = ts:TriplesTemplate? qs:( QuadsNotTriples '.'? TriplesTemplate? )* {
       var quads = []
-      for(var i=0; i<ts.triplesContext.length; i++) {
-          var triple = ts.triplesContext[i]
-          triple.graph = null;
-          quads.push(triple)
+      if(ts.triplesContext != null && ts.triplesContext != null) {
+        for(var i=0; i<ts.triplesContext.length; i++) {
+            var triple = ts.triplesContext[i]
+            triple.graph = null;
+            quads.push(triple)
+        }
       }
 
       if(qs && qs.length>0 && qs[0].length > 0) {
           quads = quads.concat(qs[0][0].quadsContext);
 
-          for(var i=0; i<qs[0][2].triplesContext.length; i++) {
-              var triple = qs[0][2].triplesContext[i]
-              triple.graph = null;
-              quads.push(triple)
+          if( qs[0][2] != null && qs[0][2].triplesContext != null) {
+            for(var i=0; i<qs[0][2].triplesContext.length; i++) {
+                var triple = qs[0][2].triplesContext[i]
+                triple.graph = null;
+                quads.push(triple)
+            }
           }
       }
 
@@ -594,7 +598,7 @@ OptionalGraphPattern "[54] OptionalGraphPattern"
   [55]  	GraphGraphPattern	  ::=  	'GRAPH' VarOrIRIref GroupGraphPattern
 */
 GraphGraphPattern "[55] GraphGraphPattern"
-  = WS* 'GRAPH' WS* g:VarOrIRIref gg:GroupGraphPattern {
+  = WS* 'GRAPH' WS* g:VarOrIRIref WS* gg:GroupGraphPattern {
       for(var i=0; i<gg.patterns.length; i++) {
         var quads = []
         var ts = gg.patterns[i];
@@ -775,13 +779,26 @@ TriplesSameSubject "[66] TriplesSameSubject"
       return token;
   }
   / WS* tn:TriplesNode WS* pairs:PropertyList {
-      var triplesContext = p.triplesContext.concat(tn.triplesContext);
-      var subject = p.chainSubject;
+      var triplesContext = tn.triplesContext;
+      var subject = tn.chainSubject;
 
       for(var i=0; i< pairs.pairs.length; i++) {
           var pair = pairs.pairs[i];
-          var triple = {subject: subject, predicate: pair[0], object: pair[1]}
-          triplesContext.push(triple);
+          if(tn.token === "triplesnodecollection") {
+              for(var j=0; j<subject.length; j++) {
+                  var subj = subject[j];
+                  if(typeof(subj) === 'object') {
+                      var triple = {subject: subj.chainSubject, predicate: pair[0], object: pair[1]}
+                      triplesContext.concat(subj.triplesContext);
+                  } else {
+                      var triple = {subject: subject[j], predicate: pair[0], object: pair[1]}
+                      triplesContext.push(triple);
+                  }
+              }
+          } else {
+              var triple = {subject: subject, predicate: pair[0], object: pair[1]}
+              triplesContext.push(triple);
+          }
       }
 
       var token = {};
@@ -846,19 +863,31 @@ PropertyList "[68] PropertyList"
 /*
   [69]  	ObjectList	  ::=  	Object ( ',' Object )*
 */
+/*
+  [69]  	ObjectList	  ::=  	Object ( ',' Object )*
+*/
 ObjectList "[69] ObjectList"
   = obj:Object WS* objs:( ',' WS* Object )* {
-   var toReturn = [obj];
-   for(var i=0; i<objs.length; i++) {
-     for(var j=0; j<objs[i].length; j++) {
-       if(typeof(objs[i][j])=="object" && objs[i][j].token != null) {
-           toReturn.push(objs[i][j]);
-       }
-    }
-  }
 
-  return toReturn;
-}
+        var toReturn = [];
+        if(typeof(obj)==='object' && obj.token==='triplesnodecollection') {
+            for(var i=0; i<obj.chainSubject.length; i++) {
+                toReturn.push(obj.chainSubject[i]);
+            }
+        } else {
+            toReturn.push(obj);
+        }
+
+        for(var i=0; i<objs.length; i++) {
+            for(var j=0; j<objs[i].length; j++) {
+                if(typeof(objs[i][j])=="object" && objs[i][j].token != null) {
+                    toReturn.push(objs[i][j]);
+                }
+            }
+        }
+
+        return toReturn;
+    }
 
 /*
   [70]  	Object	  ::=  	GraphNode
@@ -988,8 +1017,20 @@ Integer "[86] Integer"
   [87]  	TriplesNode	  ::=  	Collection |	BlankNodePropertyList
 */
 TriplesNode "[87] TriplesNode"
-  = Collection {
-      return {token:"triplesnode", triplesContext:[], chainSubject:"todo"}
+  = c:Collection {
+      triplesContext = [];
+      chainSubject = [];
+
+      for(var i=0; i<c.length; i++) {
+          var node = c[i];
+
+          if(node.triplesContext == null) {
+              chainSubject.push(node);
+          } else {
+              chainSubject.push(node);
+          }
+      }
+      return {token:"triplesnodecollection", triplesContext:triplesContext, chainSubject:chainSubject}
 }
   / BlankNodePropertyList
 
@@ -1022,13 +1063,17 @@ BlankNodePropertyList "[88] BlankNodePropertyList"
   [89]  	Collection	  ::=  	'(' GraphNode+ ')'
 */
 Collection "[89] Collection"
-  = WS* '(' WS* GraphNode+ WS* ')' WS*
+  = WS* '(' WS* gn:GraphNode+ WS* ')' WS* {
+      return gn;
+}
 
 /*
   [90]  	GraphNode	  ::=  	VarOrTerm |	TriplesNode
 */
 GraphNode "[90] GraphNode"
-  = (VarOrTerm / TriplesNode)
+  = gn:(WS* VarOrTerm WS* / WS* TriplesNode WS*) {
+  return gn[1];
+}
 
 /*
   [91]  	VarOrTerm	  ::=  	Var | GraphTerm
