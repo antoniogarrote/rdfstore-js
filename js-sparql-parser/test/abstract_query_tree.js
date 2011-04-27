@@ -1,15 +1,14 @@
 var AbstractQueryTree = require("./../src/abstract_query_tree").AbstractQueryTree;
 var Lexicon = require("./../../js-rdf-persistence/src/lexicon").Lexicon;
-
+var sys = require("sys");
 var aqt = new AbstractQueryTree.AbstractQueryTree();
 
 exports.example1 = function(test) {
     var query = "SELECT * { ?s ?p ?o }";
 
     var query = aqt.parseQueryString(query);
-    console.log(query)
-    var result = aqt.parseSelect(query.units[0]);
-
+    var result = aqt.parseExecutableUnit(query.units[0]);
+    console.log(JSON.stringify(result));
     test.ok(result.pattern.kind==='BGP');
     test.ok(result.pattern.value.length === 1);
 
@@ -22,8 +21,7 @@ exports.example2 = function(test) {
 
     var query = aqt.parseQueryString(query);
     var result = aqt.parseSelect(query.units[0]);
-
-    console.log(result.pattern);
+    console.log(JSON.stringify(result));
     test.ok(result.pattern.kind==='BGP');
     test.ok(result.pattern.value.length === 2);
 

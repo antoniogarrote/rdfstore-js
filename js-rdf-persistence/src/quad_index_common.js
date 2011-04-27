@@ -53,6 +53,11 @@ QuadIndexCommon.Pattern = function(components) {
     var order = [];
     var indif = [];
     var components = ['subject', 'predicate', 'object', 'graph'];
+
+    // components must have been already normalized and
+    // inserted in the lexicon.
+    // OIDs retrieved from the lexicon *are* numbers so
+    // they can be told apart from variables (strings)
     for(var i=0; i<components.length; i++) {
         if(typeof(this[components[i]]) === 'string') {
             indif.push(components[i]);
