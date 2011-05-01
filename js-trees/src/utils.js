@@ -68,3 +68,32 @@ Utils.seq = function() {
         });
     }
 };
+
+
+Utils.partition = function(c, n) {
+    var rem = c.length % n;
+    var currentGroup = [];
+    for(var i=0; i<rem; i++) {
+        currentGroup.push(null);
+    }
+
+    var groups = [];
+    var groupCounter = rem;
+    for(var i=0; i<c.length; i++) {
+        currentGroup.push(c[i]);
+        if(currentGroup.length % n == 0) {
+            groups.push(currentGroup);
+            currentGroup = [];
+        }
+    }
+    return groups;
+};
+
+Utils.keys = function(obj) {
+    var variables = [];
+    for(var variable in obj) {
+        variables.push(variable);
+    }
+
+    return variables;
+}

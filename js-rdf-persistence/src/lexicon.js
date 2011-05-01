@@ -36,7 +36,7 @@ Lexicon.Lexicon.prototype.registerUri = function(uri, callback) {
 
         callback(oid);
     } else {
-        callback(oid);
+        callback(this.uriToOID[uri]);
     }
 };
 
@@ -49,7 +49,7 @@ Lexicon.Lexicon.prototype.registerLiteral = function(literal, callback) {
         this.OIDToLiteral[oid] = literal;
         callback(oid);
     } else {
-        callback(oid);
+        callback(this.literalToOID[literal]);
     }
 };
 

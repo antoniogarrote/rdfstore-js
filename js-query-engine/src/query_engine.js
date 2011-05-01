@@ -6,6 +6,7 @@ var QueryEngine = exports.QueryEngine;
 var AbstractQueryTree = require("./../../js-sparql-parser/src/abstract_query_tree").AbstractQueryTree;
 var Utils = require("./../../js-trees/src/utils").Utils;
 var QuadIndexCommon = require("./../../js-rdf-persistence/src/quad_index_common").QuadIndexCommon;
+var QueryPlan = require("./query_plan").QueryPlan;
 
 QueryEngine.QueryEngine = function(params) {
     if(arguments.length != 0) {
@@ -44,6 +45,8 @@ QueryEngine.QueryEngine.prototype.normalizeTerm = function(term, env, callback) 
         this.normalizeLiteral(term, env, function(result, data){
             callback(result, data);
         })
+    } else if(term.token === 'var') {
+        callback(true, term.value);
     } else {
         //@todo handle here variables and blank nodes
         callback(false, 'Token of kind '+term.token+' cannot be normalized');
@@ -154,6 +157,40 @@ QueryEngine.QueryEngine.prototype.normalizeLiteral = function(term, env, callbac
     });
 };
 
+QueryEngine.QueryEngine.prototype.denormalizeBindingsList = function(bindingsList, callback) {
+    var results = [];
+    var that = this;
+
+    Utils.repeat(0, bindingsList.length, function(k,env){
+        var floop = arguments.callee;
+        that.denormalizeBindings(bindingsList[env._i], function(success, result){
+            if(success) {
+                results.push(result);
+                k(floop, env);
+            } else {
+                callback(false, result);
+            }
+        });
+    }, function(env) {
+        callback(true, results);
+    })
+};
+
+QueryEngine.QueryEngine.prototype.denormalizeBindings = function(bindings, callback) {
+    var variables = Utils.keys(bindings);
+    var that = this;
+    Utils.repeat(0, variables.length, function(k, env) {
+        var floop = arguments.callee;
+        var oid = bindings[variables[env._i]];
+        that.lexicon.retrieve(oid, function(val){
+            bindings[variables[env._i]] = val;
+            k(floop, env);
+        });
+    }, function(env){
+        callback(true, bindings);
+    })
+};
+
 // Queries execution
 
 QueryEngine.QueryEngine.prototype.execute = function(queryString, callback){
@@ -181,11 +218,17 @@ QueryEngine.QueryEngine.prototype.executeQuery = function(syntaxTree, callback) 
 
     // @todo process query here
     // can be anything else but a select???
-    this.sparqlAlgebra.executeSelect(aqt,function(success, result){
+    var that = this;
+    this.executeSelect(aqt,function(success, result){
         // @todo handle result here
+        that.denormalizeBindingsList(result, function(success, result){
+            if(success) {
+                callback(true, result);
+            } else {
+                callback(false, result);
+            }
+        })
     });
-
-    throw new Error("Execution of retrieval queries not implemented yet");
 };
 
 
@@ -205,34 +248,35 @@ QueryEngine.QueryEngine.prototype.executeSelect = function(unit, callback) {
     }
 }
 
-QueryEngine.QueryEngine.prototype.executeAndBGP = function(projection, dataset, pattern, callback) {
-    var patterns = pattern.value;
-    var that = this;
+QueryEngine.QueryEngine.prototype.executeAndBGP = function(projection, dataset, patterns, callback) {
+    var patterns = patterns.value;
 
-    // (AND BGP1, BGP2 ... BGPN)
-    Utils.repeat(0,patterns.length, function(k,e){
-        var floop = arguments.callee;
-        var quad = patterns[e._i];
-        quad.graph = dataset;
-        
-        that.normalizeQuad(quad, {}, function(success, key){
-            if(result == true) {
-                that.backend.range(key,function(quads){
-                    var results = e.results || [];
-                    if(quads == null || quads.length == 0) {
-                        callback(true, []);
-                    } else {
-                        e.results = results.concat(quads);
-                        k(floop, e);
-                    }
-                });
-            } else {
-                callback(false, "Cannot normalize quad: "+quad);
-            }
-        });
-    }, function(e){
-        //@todo projection
-        callback(true, []);
+    // @todo call QueryPlan to run the query
+    // @todo project resulting bindings and return in callback
+    QueryPlan.executeAndBGPs(patterns, dataset, this, function(success,result){
+        if(success) {
+            callback(true, result);
+        } else {
+            callback(false, result);
+        }
+    });
+};
+
+
+QueryEngine.QueryEngine.prototype.rangeQuery = function(quad, callback) {
+    var that = this;
+    that.normalizeQuad(quad, {}, function(success, key){
+        if(success == true) {
+            that.backend.range(new QuadIndexCommon.Pattern(key),function(quads){
+                if(quads == null || quads.length == 0) {
+                    callback(true, []);
+                } else {
+                    callback(true, quads);
+                }
+            });
+        } else {
+            callback(false, "Cannot normalize quad: "+quad);
+        }
     });
 };
 
@@ -254,9 +298,10 @@ QueryEngine.QueryEngine.prototype.executeUpdate = function(syntaxTree, callback)
         if(aqt.kind === 'insertdata') {
             Utils.repeat(0, aqt.quads.length, function(k,env) {                
                 var quad = aqt.quads[env._i];
+                var floop = arguments.callee;
                 that._executeQuadInsert(quad, queryEnv, function(result, error) {
                     if(result === true) {
-                        k(arguments.callee, env);
+                        k(floop, env);
                     } else {
                         callback(false, error);
                     }
@@ -289,5 +334,3 @@ QueryEngine.QueryEngine.prototype._executeQuadInsert = function(quad, queryEnv, 
         }
     });
 };
-
-

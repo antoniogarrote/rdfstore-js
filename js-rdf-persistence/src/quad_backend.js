@@ -50,13 +50,11 @@ QuadBackend.QuadBackend = function(configuration, callback) {
 
 QuadBackend.QuadBackend.prototype._indexForPattern = function(pattern) {
     var indexKey = pattern.indexKey;
-
     var matchingIndices = this.indices;
 
     for(var i=0; i<matchingIndices.length; i++) {
         var index = matchingIndices[i];
         var indexComponents = this.componentOrders[index]
-
         for(var j=0; j<indexComponents.length; j++) {
             if(Utils.include(indexKey, indexComponents[j])===false) {
                 break;
