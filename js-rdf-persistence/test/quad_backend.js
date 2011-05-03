@@ -35,6 +35,10 @@ exports.indexForPatternTest = function(test) {
         var pattern = new QuadIndexCommon.Pattern(comps);
         test.ok(backend._indexForPattern(pattern)==="OGS");
 
+        var comps = {subject:0, predicate:'p', object:'o', graph:6};
+        var pattern = new QuadIndexCommon.Pattern(comps);
+        test.ok(backend._indexForPattern(pattern)==="GSP");
+
         test.done();
     });
 }

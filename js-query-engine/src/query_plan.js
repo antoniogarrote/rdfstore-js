@@ -32,7 +32,7 @@ QueryPlan.variablesInBGP = function(bgp) {
 
 QueryPlan.variablesIntersectionBGP = function(bgpa, bgpb) {
     var varsa = QueryPlan.variablesInBGP(bgpa).sort();
-    var varsb = QueryPlan.variablesInBGP(bgp).sort();
+    var varsb = QueryPlan.variablesInBGP(bgpb).sort();
 
     var ia = 0;
     var ib = 0;
@@ -40,7 +40,7 @@ QueryPlan.variablesIntersectionBGP = function(bgpa, bgpb) {
     var intersection = [];
 
     while(ia<varsa.length && ib<varsb.length) {
-        if(varsa[ia] === vars[ib]) {
+        if(varsa[ia] === varsb[ib]) {
             intersection.push(varsa[ia]);
             ia++;
             ib++;
@@ -54,14 +54,14 @@ QueryPlan.variablesIntersectionBGP = function(bgpa, bgpb) {
     return intersection;
 };
 
-QueryPlan.executeAndBGPs = function(bgps, dataset, queryEngine, callback) {
+QueryPlan.executeAndBGPs = function(bgps, dataset, queryEngine, env, callback) {
     for(var i=0; i<bgps.length; i++) {
         bgps[i].graph = dataset;
     }
 
     var pairs = Utils.partition(bgps,2);
 
-    QueryPlan.buildBushyJoinTreeBase(pairs, queryEngine, function(success, results){
+    QueryPlan.buildBushyJoinTreeBase(pairs, queryEngine, env, function(success, results){
         if(success) {
             callback(true, results);
         } else {
@@ -70,7 +70,7 @@ QueryPlan.executeAndBGPs = function(bgps, dataset, queryEngine, callback) {
     });
 };
 
-QueryPlan.buildBushyJoinTreeBase = function(pairs, queryEngine, callback) {
+QueryPlan.buildBushyJoinTreeBase = function(pairs, queryEngine, queryEnv, callback) {
     var that = this;
     Utils.repeat(0, pairs.length, function(k, env) {
         var floop = arguments.callee;
@@ -78,7 +78,7 @@ QueryPlan.buildBushyJoinTreeBase = function(pairs, queryEngine, callback) {
         var bgpa = pair[0];
         var bgpb = pair[1];
 
-        QueryPlan.executeAndBGP(bgpa,bgpb, queryEngine, function(success, results){
+        QueryPlan.executeAndBGP(bgpa,bgpb, queryEngine, queryEnv, function(success, results){
             if(success) {
                 if(env.acum == null) {
                     env.acum = [];
@@ -131,25 +131,25 @@ QueryPlan.executeAndBindings = function(bindingsa, bindingsb) {
     }
 };
 
-QueryPlan.executeAndBGP = function(bgpa, bgpb, queryEngine, callback) {
+QueryPlan.executeAndBGP = function(bgpa, bgpb, queryEngine, queryEnv, callback) {
     if(bgpa==null) {
-        QueryPlan.executeEmptyJoinBGP(bgpb, queryEngine, callback);
+        QueryPlan.executeEmptyJoinBGP(bgpb, queryEngine, queryEnv, callback);
     } else if(bgpb==null) {
-        QueryPlan.executeEmptyJoinBGP(bgpa, queryEngine, callback);
+        QueryPlan.executeEmptyJoinBGP(bgpa, queryEngine, queryEnv, callback);
     } else {
-      var joinVars = QueryPlan.variablesIntersectionBGP(bgpa,bgpb);
-      if(joinVars.length === 0) {
-          // range a, range b -> cartesian product
-          QueryPlan.executeCrossProductBGP(joinVars, bgpa, bgpb, queryEngine, callback);
-      } else {
-          // join on intersection vars
-          QueryPlan.executeJoinBGP(joinVars, bgpa, bgpb, queryEngine, callback);
-      }
+        var joinVars = QueryPlan.variablesIntersectionBGP(bgpa,bgpb);
+        if(joinVars.length === 0) {
+            // range a, range b -> cartesian product
+            QueryPlan.executeCrossProductBGP(joinVars, bgpa, bgpb, queryEngine, queryEnv, callback);
+        } else {
+            // join on intersection vars
+            QueryPlan.executeJoinBGP(joinVars, bgpa, bgpb, queryEngine, queryEnv, callback);
+        }
     }
 };
 
-QueryPlan.executeEmptyJoinBGP = function(bgp, queryEngine, callback) {
-    queryEngine.rangeQuery(bgp, function(success, results){
+QueryPlan.executeEmptyJoinBGP = function(bgp, queryEngine, queryEnv, callback) {
+    queryEngine.rangeQuery(bgp, queryEnv, function(success, results){
         if(success) {
             var bindings = QueryPlan.buildBindingsFromRange(results, bgp);
             callback(true, bindings);
@@ -159,11 +159,11 @@ QueryPlan.executeEmptyJoinBGP = function(bgp, queryEngine, callback) {
     });
 };
 
-QueryPlan.executeJoinBGP = function(joinVars, bgpa, bgpb, queryEngine, callback) {
-    queryEngine.rangeQuery(bgpa, function(success, resultsa){
+QueryPlan.executeJoinBGP = function(joinVars, bgpa, bgpb, queryEngine, queryEnv, callback) {
+    queryEngine.rangeQuery(bgpa, queryEnv, function(success, resultsa){
         if(success) {
             var bindingsa = QueryPlan.buildBindingsFromRange(resultsa, bgpa);
-            queryEngine.rangeQuery(bgpb, function(success, resultsb){
+            queryEngine.rangeQuery(bgpb, queryEnv, function(success, resultsb){
                 if(success) {
                     var bindingsb = QueryPlan.buildBindingsFromRange(resultsb, bgpb);
                     var bindings = QueryPlan.joinBindings(bindingsa, bindingsb);
@@ -178,11 +178,11 @@ QueryPlan.executeJoinBGP = function(joinVars, bgpa, bgpb, queryEngine, callback)
     });
 };
 
-QueryPlan.executeCrossProductBGP = function(joinVars, bgpa, bgpb, queryEngine, callback) {
-    queryEngine.rangeQuery(bgpa, function(success, resultsa){
+QueryPlan.executeCrossProductBGP = function(joinVars, bgpa, bgpb, queryEngine, queryEnv, callback) {
+    queryEngine.rangeQuery(bgpa, queryEnv, function(success, resultsa){
         if(success) {
             var bindingsa = QueryPlan.buildBindingsFromRange(resultsa, bgpa);
-            queryEngine.rangeQuery(bgpb, function(success, resultsb){
+            queryEngine.rangeQuery(bgpb, queryEnv, function(success, resultsb){
                 if(success) {
                     var bindingsb = QueryPlan.buildBindingsFromRange(resultsb, bgpb);
                     var bindings = QueryPlan.crossProductBindings(bindingsa, bindingsb);
@@ -261,7 +261,7 @@ QueryPlan.variablesIntersectionBindings = function(bindingsa, bindingsb) {
 
 QueryPlan.areCompatibleBindings = function(bindingsa, bindingsb) {
     for(var variable in bindingsa) {
-        if(bindingsb[variable] && (bindingsb[variable] != bindingsa[variable])) {
+        if(bindingsb[variable]!=null && (bindingsb[variable] != bindingsa[variable])) {
             return false;
         }
     }
@@ -287,9 +287,9 @@ QueryPlan.mergeBindings = function(bindingsa, bindingsb) {
 QueryPlan.joinBindings = function(bindingsa, bindingsb) {
     var result = [];
 
-    for(var i=0; i< bindingsa; i++) {
+    for(var i=0; i< bindingsa.length; i++) {
         var bindinga = bindingsa[i];
-        for(var j=0; j<bindingsb; j++) {
+        for(var j=0; j<bindingsb.length; j++) {
             var bindingb = bindingsb[j];
             if(QueryPlan.areCompatibleBindings(bindinga, bindingb)){
                 result.push(QueryPlan.mergeBindings(bindinga, bindingb));
@@ -312,4 +312,8 @@ QueryPlan.crossProductBindings = function(bindingsa, bindingsb) {
     }
 
     return result;
+};
+
+QueryPlan.unionBindings = function(bindingsa, bindingsb) {
+    return bindingsa.concat(bindingsb);
 };

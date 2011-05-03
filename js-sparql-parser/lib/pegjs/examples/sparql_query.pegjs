@@ -1725,9 +1725,10 @@ INTEGER "[129] INTEGER"
 
 /*
   [130]  	DECIMAL	  ::=  	[0-9]+ '.' [0-9]* | '.' [0-9]+
+  @warning Changed [0-9]+ '.' [0-9]* -> [0-9]+ '.' [0-9]+
 */
 DECIMAL "[130] DECIMAL"
-  = a:[0-9]+ b:'.' c:[0-9]* {
+  = a:[0-9]+ b:'.' c:[0-9]+ {
 
       lit = {};
       lit.token = "literal";

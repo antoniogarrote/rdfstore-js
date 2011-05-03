@@ -18,33 +18,114 @@ QueryEngine.QueryEngine = function(params) {
 
 // Utils
 
+QueryEngine.QueryEngine.prototype.registerNsInEnvironment = function(prologue, env) {
+    var prefixes = prologue.prefixes;
+    var toSave = {};
+    for(var i=0; i<prefixes.length; i++) {
+        var prefix = prefixes[i];
+        if(prefix.token === "prefix") {
+            toSave[prefix.prefix] = prefix.local;
+        }
+    }
+
+    env.namespaces = toSave;
+    if(prologue.base && typeof(prologue.base) === 'object') {
+        env.base = prologue.base.value;
+    } else {
+        env.base = null;
+    }
+};
+
+QueryEngine.QueryEngine.prototype.projectBindings = function(projection, results) {
+    if(projection[0].kind === '*') {
+        return results;
+    } else {
+        var toProject = [];
+        var result = [];
+        for(var i=0; i< projection.length; i++) {
+            toProject.push(projection[i].value.value);
+        }
+
+        for(var i=0; i< results.length; i++) {
+            var bindings = results[i];
+            var projected = {};
+            for(var j=0; j<toProject.length; j++) {
+                projected[toProject[j]] = bindings[toProject[j]];
+            }
+            result.push(projected);
+        }
+    }
+    return result;
+};
+
+QueryEngine.QueryEngine.prototype.applyBaseUri = function(uriFragment, env) {
+    return env.base + uriFragment;
+};
+
 QueryEngine.QueryEngine.prototype.resolveNsInEnvironment = function(prefix, env) {
     var namespaces = env.namespaces;
     return namespaces[prefix];
 };
 
+QueryEngine.QueryEngine.prototype.hasScheme = function(uri) {
+    return uri.indexOf(":") != -1;
+};
+
 QueryEngine.QueryEngine.prototype.normalizeTerm = function(term, env, callback) {
     if(term.token === 'uri') {
+        var uri = null;
+        //console.log("*** normalizing URI token:");
+        //console.log(term);
         if(term.value == null) {
+            //console.log(" - URI has prefix and suffix");
+            //console.log(" - prefix:"+term.prefix);
+            //console.log(" - suffixx:"+term.suffix);
             var prefix = term.prefix;
             var suffix = term.suffix;
             var resolvedPrefix = this.resolveNsInEnvironment(prefix, env);
-            if(resolvedPrefix == null) {
-                callback(false, "The prefix "+prefix+" cannot be resolved in the current environment");
-            } else {
-                this.lexicon.registerUri(resolvedPrefix+suffix, function(oid){
-                    callback(true, oid);
-                });
+            if(resolvedPrefix != null) {
+                uri = resolvedPrefix+suffix;
             }
         } else {
-            this.lexicon.registerUri(term.value, function(oid){
-               callback(true, oid);
+            //console.log(" - URI is not prefixed");
+            uri = term.value
+        }
+
+        if(uri===null) {
+            callback(false, "The prefix "+prefix+" cannot be resolved in the current environment");
+        } else {
+            //console.log(" - resolved URI is "+uri);
+            if(!this.hasScheme(uri)) {
+                //console.log(" - URI is partial");
+                uri = this.applyBaseUri(uri, env);
+            } else {
+                //console.log(" - URI is complete");
+            }
+
+            //console.log(" -> FINAL URI: "+uri);
+            // 1. resolve ns prefix if prefixed
+            // 2. check if fragment or full uri
+            // 3. apply base if fragment
+            this.lexicon.registerUri(uri, function(oid){
+                callback(true, oid);
             });
         }
+
     } else if(term.token === 'literal') {
-        this.normalizeLiteral(term, env, function(result, data){
-            callback(result, data);
+        this.normalizeLiteral(term, env, function(success, result){
+            callback(success, result);
         })
+    } else if(term.token === 'blank') {
+        var label = term.label;
+        var oid = env.blanks[label];
+        if( oid != null) {
+            callback(true,oid);
+        } else {
+            this.lexicon.registerBlank(label, function(oid) {
+                env.blanks[label] = oid;
+                callback(true,oid);
+            });
+        }
     } else if(term.token === 'var') {
         callback(true, term.value);
     } else {
@@ -66,12 +147,13 @@ QueryEngine.QueryEngine.prototype.normalizeQuad = function(quad, queryEnv, callb
             graph = 0; // default graph
             k();
         } else {
-
             that.normalizeTerm(quad.graph, queryEnv, function(result, oid){    
                 if(errorFound === false){
                     if(result===true) {
                         graph = oid;
                     } else {
+                        console.log("Error normalizing graph");
+                        console.log(quad.graph);
                         errorFound = true;
                     }
                 }
@@ -84,6 +166,8 @@ QueryEngine.QueryEngine.prototype.normalizeQuad = function(quad, queryEnv, callb
                 if(result===true) {
                     subject = oid;
                 } else {
+                    console.log("Error normalizing subject");
+                    console.log(quad.subject);
                     errorFound = true;
                 }
             }
@@ -95,6 +179,8 @@ QueryEngine.QueryEngine.prototype.normalizeQuad = function(quad, queryEnv, callb
                 if(result===true) {
                     predicate = oid;
                 } else {
+                    console.log("Error normalizing predicate");
+                    console.log(quad.predicate);
                     errorFound = true;
                 }
             }
@@ -106,6 +192,8 @@ QueryEngine.QueryEngine.prototype.normalizeQuad = function(quad, queryEnv, callb
                 if(result===true) {
                     object = oid;
                 } else {
+                    console.log("Error normalizing object");
+                    console.log(quad.object);
                     errorFound = true;
                 }
             }
@@ -113,6 +201,7 @@ QueryEngine.QueryEngine.prototype.normalizeQuad = function(quad, queryEnv, callb
         });
     })(function(){
         if(errorFound) {
+            console.log(errorFound);
             callback(false, "Error normalizing quad");
         } else {
             callback(true,{subject:subject, 
@@ -125,7 +214,7 @@ QueryEngine.QueryEngine.prototype.normalizeQuad = function(quad, queryEnv, callb
 
 QueryEngine.QueryEngine.prototype.normalizeLiteral = function(term, env, callback) {
     var value = term.value;
-    var lang = term.value;
+    var lang = term.lang;
     var type = term.type;
 
     var indexedValue = null;
@@ -144,9 +233,9 @@ QueryEngine.QueryEngine.prototype.normalizeLiteral = function(term, env, callbac
         }
     } else {
         if(lang == null && type == null) {
-            indexedValue = value;
+            indexedValue = '"' + value + '"';
         } else if(type == null) {
-            indexedValue = value + "@" + lang;        
+            indexedValue = '"' + value + '"' + "@" + lang;        
         } else {
             indexedValue = '"' + value + '"^^<'+type+'>';
         }
@@ -182,10 +271,16 @@ QueryEngine.QueryEngine.prototype.denormalizeBindings = function(bindings, callb
     Utils.repeat(0, variables.length, function(k, env) {
         var floop = arguments.callee;
         var oid = bindings[variables[env._i]];
-        that.lexicon.retrieve(oid, function(val){
-            bindings[variables[env._i]] = val;
-            k(floop, env);
-        });
+        if(oid == null) {
+            // this can be null, e.g. union different variables (check SPARQL recommendation examples UNION)
+              bindings[variables[env._i]] = null;
+              k(floop, env);
+        } else {
+          that.lexicon.retrieve(oid, function(val){
+              bindings[variables[env._i]] = val;
+              k(floop, env);
+          });
+        }
     }, function(env){
         callback(true, bindings);
     })
@@ -210,8 +305,8 @@ QueryEngine.QueryEngine.prototype.executeQuery = function(syntaxTree, callback) 
     var that = this;
 
     // environment for the operation -> base ns, declared ns, etc.
-    // @todo register base, and declared namespaces
-    var queryEnv = {namespaces: {}};
+    var queryEnv = {blanks:{}};
+    this.registerNsInEnvironment(prologue, queryEnv);
 
     // retrieval queries only can have 1 executable unit
     var aqt = that.abstractQueryTree.parseExecutableUnit(units[0]);
@@ -219,7 +314,7 @@ QueryEngine.QueryEngine.prototype.executeQuery = function(syntaxTree, callback) 
     // @todo process query here
     // can be anything else but a select???
     var that = this;
-    this.executeSelect(aqt,function(success, result){
+    this.executeSelect(aqt,queryEnv,function(success, result){
         // @todo handle result here
         that.denormalizeBindingsList(result, function(success, result){
             if(success) {
@@ -234,26 +329,77 @@ QueryEngine.QueryEngine.prototype.executeQuery = function(syntaxTree, callback) 
 
 // Select queries
 
-QueryEngine.QueryEngine.prototype.executeSelect = function(unit, callback) {
+QueryEngine.QueryEngine.prototype.executeSelect = function(unit, env, callback) {
     if(unit.kind === "select") {
         var projection = unit.projection;
         var dataset    = unit.dataset[0]; // more than one? why array?
-        if(unit.pattern.kind === "BGP") {
-            this.executeAndBGP(projection, dataset, unit.pattern, callback);
-        } else {
-            callback(false, "Cannot execute query pattern " + unit.pattern.kind + ". Not implemented yet.");
-        }
+        var that = this;
+        this.executeSelectUnit(projection, dataset, unit.pattern, env, function(success, result){
+            if(success) {
+                var projectedBindings = that.projectBindings(projection, result);
+                callback(true,projectedBindings);
+            } else {
+                callback(false, result);
+            }
+        });
     } else {
         callback(false,"Cannot execute " + unit.kind + " query as a select query");
     }
-}
+};
 
-QueryEngine.QueryEngine.prototype.executeAndBGP = function(projection, dataset, patterns, callback) {
+QueryEngine.QueryEngine.prototype.executeSelectUnit = function(projection, dataset, pattern, env, callback) {
+    if(pattern.kind === "BGP") {
+        this.executeAndBGP(projection, dataset, pattern, env, callback);
+    } else if(pattern.kind === "UNION") {
+        this.executeUNION(projection, dataset, pattern.value, env, callback);            
+    } else {
+        callback(false, "Cannot execute query pattern " + unit.pattern.kind + ". Not implemented yet.");
+    }
+};
+
+QueryEngine.QueryEngine.prototype.executeUNION = function(projection, dataset, patterns, env, callback) {
+    var setQuery1 = patterns[0];
+    var setQuery2 = patterns[1];
+    var set1 = null;
+    var set2 = null;
+
+    if(patterns.length != 2) {
+        throw("SPARQL algebra UNION with more than two components");
+    }
+
+    var that = this;
+    var sets = [];
+
+    Utils.seq(function(k){
+        that.executeSelectUnit(projection, dataset, setQuery1, env, function(success, results){
+            if(success) {
+                set1 = results;
+                k();
+            } else {
+                return callback(false, results);
+            }
+        });
+    }, function(k) {
+        that.executeSelectUnit(projection, dataset, setQuery2, env, function(success, results){
+            if(success) {
+                set2 = results;
+                k();
+            } else {
+                return callback(false, results);
+            }
+        });
+    })(function(){
+        var result = QueryPlan.unionBindings(set1, set2);
+        callback(true, result);
+    });
+};
+
+QueryEngine.QueryEngine.prototype.executeAndBGP = function(projection, dataset, patterns, env, callback) {
     var patterns = patterns.value;
 
     // @todo call QueryPlan to run the query
     // @todo project resulting bindings and return in callback
-    QueryPlan.executeAndBGPs(patterns, dataset, this, function(success,result){
+    QueryPlan.executeAndBGPs(patterns, dataset, this, env, function(success,result){
         if(success) {
             callback(true, result);
         } else {
@@ -263,9 +409,9 @@ QueryEngine.QueryEngine.prototype.executeAndBGP = function(projection, dataset, 
 };
 
 
-QueryEngine.QueryEngine.prototype.rangeQuery = function(quad, callback) {
+QueryEngine.QueryEngine.prototype.rangeQuery = function(quad, queryEnv, callback) {
     var that = this;
-    that.normalizeQuad(quad, {}, function(success, key){
+    that.normalizeQuad(quad, queryEnv, function(success, key){
         if(success == true) {
             that.backend.range(new QuadIndexCommon.Pattern(key),function(quads){
                 if(quads == null || quads.length == 0) {
@@ -288,8 +434,8 @@ QueryEngine.QueryEngine.prototype.executeUpdate = function(syntaxTree, callback)
     var that = this;
 
     // environment for the operation -> base ns, declared ns, etc.
-    // @todo register base, and declared namespaces
-    var queryEnv = {namespaces: {}};
+    var queryEnv = {blanks:{}};
+    this.registerNsInEnvironment(prologue, queryEnv);
 
     for(var i=0; i<units.length; i++) {
 
@@ -330,7 +476,8 @@ QueryEngine.QueryEngine.prototype._executeQuadInsert = function(quad, queryEnv, 
                 }
             });
         } else {
-            callback(false, error);
+            console.log(result);
+            callback(false, result);
         }
     });
 };

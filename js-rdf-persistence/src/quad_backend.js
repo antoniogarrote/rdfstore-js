@@ -18,7 +18,7 @@ var QuadIndex = require("./quad_index").QuadIndex;
  * POG  (?, p, ?, ?), (?, p, o, ?), (?, p, o, g)
  * GSP  (s, ?, ?, g), (s, p, ?, g)
  * OS   (s, ?, o, ?)
-*/
+ */
 QuadBackend.QuadBackend = function(configuration, callback) {
     if(arguments!=0) {
         this.indexMap = {};
@@ -88,7 +88,6 @@ QuadBackend.QuadBackend.prototype.index = function(quad, callback) {
 QuadBackend.QuadBackend.prototype.range = function(pattern, callback)  {
     var indexKey = this._indexForPattern(pattern);
     var index = this.indexMap[indexKey];
-
     index.range(pattern, function(quads){
         callback(quads);
     });

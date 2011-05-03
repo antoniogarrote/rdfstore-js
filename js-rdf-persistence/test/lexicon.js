@@ -1,5 +1,25 @@
 var Lexicon = require("./../src/lexicon").Lexicon;
 
+exports.testParsingLiterals = function(test){
+    new Lexicon.Lexicon(function(lexicon){
+            var literal1 = '"this is a test"';
+            var parsed = lexicon.parseLiteral(literal1);
+            test.ok(parsed.value==="this is a test");
+
+            var literal2 = '"this is another test"@en';
+            var parsed = lexicon.parseLiteral(literal2);
+            test.ok(parsed.value==="this is another test");
+            test.ok(parsed.lang==="en");
+
+            var literal3 = '"this is another test"^^<http://sometypehere.org>';
+            var parsed = lexicon.parseLiteral(literal3);
+            test.ok(parsed.value==="this is another test");
+            test.ok(parsed.type==="http://sometypehere.org");
+
+            test.done();
+    });
+};
+
 exports.testLexiconInterface = function(test) {
     var lexicon = new Lexicon.Lexicon();
 
@@ -7,7 +27,7 @@ exports.testLexiconInterface = function(test) {
     var oid2 = null;
 
     var uri = "http://test.com/1";
-    var literal = "this is a literal";
+    var literal = '"this is a literal"';
 
     lexicon.registerUri(uri, function(oid){
         oid1 = oid;
@@ -18,20 +38,28 @@ exports.testLexiconInterface = function(test) {
     });
 
     lexicon.retrieve(oid1,function(result){
-        test.ok(result===uri);
+        test.ok(result.value===uri);
     });
 
     lexicon.retrieve(oid2,function(result){
-        test.ok(result===literal);
+        test.ok('"'+result.value+'"'===literal);
     });
+    
+    try {
+        lexicon.retrieve(34234234234,function(result){
+            test.ok(false);
+        });
+    } catch (e) {
+        test.ok(true);
+    }
 
-    lexicon.retrieve("l34234234234",function(result){
-        test.ok(result==null);
-    });
-
-    lexicon.retrieve("u34234234234",function(result){
-        test.ok(result==null);
-    });
+    try {
+        lexicon.retrieve(34234234234,function(result){
+            test.ok(false);
+        });
+    } catch (e) {
+        test.ok(true);
+    }
 
     test.done();
 }

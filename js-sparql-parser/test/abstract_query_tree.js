@@ -33,7 +33,7 @@ exports.example3 = function(test) {
 
     var query = aqt.parseQueryString(query);
     var result = aqt.parseSelect(query.units[0]);
-
+    console.log(result);
     test.ok(result.pattern.kind ==='UNION');
     test.ok(result.pattern.value.length === 2);
     test.ok(result.pattern.value[0].kind === 'BGP');
