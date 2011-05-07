@@ -71,22 +71,22 @@ Lexicon.Lexicon.prototype.parseLiteral = function(literalString) {
     if(parts!=-1 && literalString[parts-1]==='"' && literalString.length - parts === 3) {
         var value = literalString.substring(1,parts-1);
         var lang = literalString.substring(parts+1, literalString.length);
-        return {kind: "literal", value:value, lang:lang};
+        return {token: "literal", value:value, lang:lang};
     }
 
     var parts = literalString.lastIndexOf("^^");
     if(parts!=-1 && literalString[parts-1]==='"' && literalString[parts+2] === '<' && literalString[literalString.length-1] === '>') {
         var value = literalString.substring(1,parts-1);
         var type = literalString.substring(parts+3, literalString.length-1);
-        return {kind: "literal", value:value, type:type};
+        return {token: "literal", value:value, type:type};
     }
 
     var value = literalString.substring(1,literalString.length-1);
-    return {kind:"literal", value:value};
+    return {token:"literal", value:value};
 };
 
 Lexicon.Lexicon.prototype.parseUri = function(uriString) {
-    return {kind: "uri", value:uriString};
+    return {token: "uri", value:uriString};
 };
 
 Lexicon.Lexicon.prototype.retrieve = function(oid,callback) {
@@ -101,16 +101,13 @@ Lexicon.Lexicon.prototype.retrieve = function(oid,callback) {
             } else {
                 var maybeBlank = this.OIDToBlank[""+oid];
                 if(maybeBlank) {
-                    callback({kind:"blank", value:"_:"+oid});
+                    callback({token:"blank", value:"_:"+oid});
                 } else {
                     throw("Null value for OID");
                 }
             }
         }
     } catch(e) {
-        console.log("ERROR");
-        console.log(e.stack);
-        console.log(e);
         throw new Error("Unknown OID:"+oid);
 
     }

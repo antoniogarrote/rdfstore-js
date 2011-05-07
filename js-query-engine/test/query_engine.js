@@ -78,7 +78,7 @@ exports.testInsertDataSimpleQueryLiteral = function(test){
                 }
 
                 engine.lexicon.retrieve(o, function(result){
-                    test.ok(result.kind === "literal");
+                    test.ok(result.token === "literal");
                     test.ok(result.value === "2");
                     test.ok(result.type === "http://www.w3.org/2001/XMLSchema#integer");
                     test.done();
@@ -385,12 +385,56 @@ exports.testUnionBasic4 = function(test) {
                                                 function(success, results) {
                                                     test.ok(results.length === 6);
                                                     for(var i=0; i<6; i++) {
-                                                        test.ok(results[i].book.kind == 'blank');
+                                                        test.ok(results[i].book.token == 'blank');
                                                         test.ok(results[i].book.value != null);
                                                     }
                                                     test.done();
                                                 });
                              });
+        });
+    });
+};
+
+exports.testOptionalBasic1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            engine.execute("PREFIX  foaf:  <http://xmlns.com/foaf/0.1/>\
+                            INSERT DATA {\
+                              _:a    foaf:name   'Alice' .\
+                              _:a    foaf:knows  _:b .\
+                              _:a    foaf:knows  _:c .\
+                              _:b    foaf:name   'Bob' .\
+                              _:c    foaf:name   'Clare' .\
+                              _:c    foaf:nick   'CT' .\
+                            }", function(success, result) {
+
+                                engine.execute("PREFIX foaf:    <http://xmlns.com/foaf/0.1/>\
+                                                SELECT ?nameX ?nameY ?nickY\
+                                                WHERE\
+                                                { ?x foaf:knows ?y ;\
+                                                  foaf:name ?nameX .\
+                                                  ?y foaf:name ?nameY .\
+                                                  OPTIONAL { ?y foaf:nick ?nickY }  }",
+                                               function(success, results) {
+                                                   test.ok(results.length === 2);
+                                                   if(results[0].nickY === null) {
+                                                       test.ok(results[0].nameX.value === 'Alice');
+                                                       test.ok(results[0].nameY.value === 'Bob');                                                       
+                                                       test.ok(results[1].nameX.value === 'Alice');
+                                                       test.ok(results[1].nameY.value === 'Clare');                                                       
+                                                       test.ok(results[1].nickY.value === 'CT');                                                       
+                                                   } else {
+                                                       test.ok(results[1].nameX.value === 'Alice');
+                                                       test.ok(results[1].nameY.value === 'Bob');                                                       
+                                                       test.ok(results[0].nameX.value === 'Alice');
+                                                       test.ok(results[0].nameY.value === 'Clare');                                                       
+                                                       test.ok(results[0].nickY.value === 'CT');                                                       
+                                                   }
+                                                   test.done();
+                                               });
+                            });
         });
     });
 };

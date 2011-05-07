@@ -7,6 +7,7 @@ var AbstractQueryTree = require("./../../js-sparql-parser/src/abstract_query_tre
 var Utils = require("./../../js-trees/src/utils").Utils;
 var QuadIndexCommon = require("./../../js-rdf-persistence/src/quad_index_common").QuadIndexCommon;
 var QueryPlan = require("./query_plan").QueryPlan;
+var QueryFilters = require("./query_filters").QueryFilters;
 
 QueryEngine.QueryEngine = function(params) {
     if(arguments.length != 0) {
@@ -152,8 +153,6 @@ QueryEngine.QueryEngine.prototype.normalizeQuad = function(quad, queryEnv, callb
                     if(result===true) {
                         graph = oid;
                     } else {
-                        console.log("Error normalizing graph");
-                        console.log(quad.graph);
                         errorFound = true;
                     }
                 }
@@ -166,8 +165,6 @@ QueryEngine.QueryEngine.prototype.normalizeQuad = function(quad, queryEnv, callb
                 if(result===true) {
                     subject = oid;
                 } else {
-                    console.log("Error normalizing subject");
-                    console.log(quad.subject);
                     errorFound = true;
                 }
             }
@@ -179,8 +176,6 @@ QueryEngine.QueryEngine.prototype.normalizeQuad = function(quad, queryEnv, callb
                 if(result===true) {
                     predicate = oid;
                 } else {
-                    console.log("Error normalizing predicate");
-                    console.log(quad.predicate);
                     errorFound = true;
                 }
             }
@@ -192,8 +187,6 @@ QueryEngine.QueryEngine.prototype.normalizeQuad = function(quad, queryEnv, callb
                 if(result===true) {
                     object = oid;
                 } else {
-                    console.log("Error normalizing object");
-                    console.log(quad.object);
                     errorFound = true;
                 }
             }
@@ -201,7 +194,6 @@ QueryEngine.QueryEngine.prototype.normalizeQuad = function(quad, queryEnv, callb
         });
     })(function(){
         if(errorFound) {
-            console.log(errorFound);
             callback(false, "Error normalizing quad");
         } else {
             callback(true,{subject:subject, 
@@ -265,6 +257,51 @@ QueryEngine.QueryEngine.prototype.denormalizeBindingsList = function(bindingsLis
     })
 };
 
+/**
+ * Receives a bindings map (var -> oid) and an out cache (oid -> value)
+ * returns a bindings map (var -> value) storing in cache all the missing values for oids
+ *
+ * This is required just to save lookups when final results are generated.
+ * Currently only being used by the filters interpreter logic.
+ */
+QueryEngine.QueryEngine.prototype.copyDenormalizedBindings = function(bindingsList, out, callback) {
+
+    var that = this;
+    var denormList = [];
+    Utils.repeat(0, bindingsList.length, function(klist,listEnv){
+        var denorm = {};
+        var floopList = arguments.callee;
+        var bindings = bindingsList[listEnv._i];
+        var variables = Utils.keys(bindings);
+        Utils.repeat(0, variables.length, function(k, env) {
+            var floop = arguments.callee;
+            var oid = bindings[variables[env._i]];
+            if(oid == null) {
+                // this can be null, e.g. union different variables (check SPARQL recommendation examples UNION)
+                denorm[variables[env._i]] = null;
+                k(floop, env);
+            } else {
+                var inOut = out[oid];
+                if(inOut!= null) {
+                    denorm[variables[env._i]] = inOut;
+                    k(floop, env);
+                } else {
+                    that.lexicon.retrieve(oid, function(val){
+                        out[oid] = val;
+                        denorm[variables[env._i]] = val;
+                        k(floop, env);
+                    });
+                }
+            }
+        }, function(env){
+            denormList.push(denorm);
+            klist(floopList, listEnv);
+        })
+    }, function(){
+        callback(true, denormList);
+    });
+};
+
 QueryEngine.QueryEngine.prototype.denormalizeBindings = function(bindings, callback) {
     var variables = Utils.keys(bindings);
     var that = this;
@@ -305,7 +342,7 @@ QueryEngine.QueryEngine.prototype.executeQuery = function(syntaxTree, callback) 
     var that = this;
 
     // environment for the operation -> base ns, declared ns, etc.
-    var queryEnv = {blanks:{}};
+    var queryEnv = {blanks:{}, outCache:{}};
     this.registerNsInEnvironment(prologue, queryEnv);
 
     // retrieval queries only can have 1 executable unit
@@ -347,13 +384,29 @@ QueryEngine.QueryEngine.prototype.executeSelect = function(unit, env, callback) 
     }
 };
 
+/**
+ * Here, all the constructions of the SPARQL algebra are handled
+ */
 QueryEngine.QueryEngine.prototype.executeSelectUnit = function(projection, dataset, pattern, env, callback) {
     if(pattern.kind === "BGP") {
         this.executeAndBGP(projection, dataset, pattern, env, callback);
     } else if(pattern.kind === "UNION") {
         this.executeUNION(projection, dataset, pattern.value, env, callback);            
+    } else if(pattern.kind === "LEFT_JOIN") {
+        this.executeLEFT_JOIN(projection, dataset, pattern, env, callback);            
+    } else if(pattern.kind === "FILTER") {
+        // Some components may have the filter inside the unit
+        var filter = pattern.filter;
+        var that = this;
+        this.executeSelectUnit(projection, dataset, pattern.value, env, function(success, results){
+            if(success) {
+                QueryFilters.run(filter[0].value, results, env, that, callback);
+            } else {
+                callback(false, results);
+            }
+        });
     } else {
-        callback(false, "Cannot execute query pattern " + unit.pattern.kind + ". Not implemented yet.");
+        callback(false, "Cannot execute query pattern " + pattern.kind + ". Not implemented yet.");
     }
 };
 
@@ -390,21 +443,54 @@ QueryEngine.QueryEngine.prototype.executeUNION = function(projection, dataset, p
         });
     })(function(){
         var result = QueryPlan.unionBindings(set1, set2);
-        callback(true, result);
+        QueryFilters.checkFilters(patterns, result, env, that, callback);
     });
 };
 
 QueryEngine.QueryEngine.prototype.executeAndBGP = function(projection, dataset, patterns, env, callback) {
     var patterns = patterns.value;
+    var that = this;
 
     // @todo call QueryPlan to run the query
-    // @todo project resulting bindings and return in callback
     QueryPlan.executeAndBGPs(patterns, dataset, this, env, function(success,result){
         if(success) {
-            callback(true, result);
+            QueryFilters.checkFilters(patterns, result, env, that, callback);
         } else {
             callback(false, result);
         }
+    });
+};
+
+QueryEngine.QueryEngine.prototype.executeLEFT_JOIN = function(projection, dataset, patterns, env, callback) {
+    var setQuery1 = patterns.lvalue;
+    var setQuery2 = patterns.rvalue;
+    var set1 = null;
+    var set2 = null;
+
+    var that = this;
+    var sets = [];
+
+    Utils.seq(function(k){
+        that.executeSelectUnit(projection, dataset, setQuery1, env, function(success, results){
+            if(success) {
+                set1 = results;
+                k();
+            } else {
+                return callback(false, results);
+            }
+        });
+    }, function(k) {
+        that.executeSelectUnit(projection, dataset, setQuery2, env, function(success, results){
+            if(success) {
+                set2 = results;
+                k();
+            } else {
+                return callback(false, results);
+            }
+        });
+    })(function(){
+        var result = QueryPlan.leftOuterJoinBindings(set1, set2);
+        QueryFilters.checkFilters(patterns, result, env, that, callback);
     });
 };
 
@@ -434,7 +520,7 @@ QueryEngine.QueryEngine.prototype.executeUpdate = function(syntaxTree, callback)
     var that = this;
 
     // environment for the operation -> base ns, declared ns, etc.
-    var queryEnv = {blanks:{}};
+    var queryEnv = {blanks:{}, outCache:{}};
     this.registerNsInEnvironment(prologue, queryEnv);
 
     for(var i=0; i<units.length; i++) {
@@ -476,7 +562,6 @@ QueryEngine.QueryEngine.prototype._executeQuadInsert = function(quad, queryEnv, 
                 }
             });
         } else {
-            console.log(result);
             callback(false, result);
         }
     });

@@ -668,7 +668,7 @@ GroupOrUnionGraphPattern "[58] GroupOrUnionGraphPattern"
   [59]  	Filter	  ::=  	'FILTER' Constraint
 */
 Filter "[59] Filter"
-  = 'FILTER' WS* c:Constraint {
+  = WS* 'FILTER' WS* c:Constraint {
       return {token: 'filter',
               value: c}
 }
@@ -1210,15 +1210,16 @@ ValueLogical "[98] ValueLogical"
   [99]  	RelationalExpression	  ::=  	NumericExpression ( '=' NumericExpression | '!=' NumericExpression | '<' NumericExpression | '>' NumericExpression | '<=' NumericExpression | '>=' NumericExpression | 'IN' ExpressionList | 'NOT IN' ExpressionList )?
 */
 RelationalExpression "[99] RelationalExpression"
-  = op1:NumericExpression op2:( '=' NumericExpression / '!=' NumericExpression / '<' NumericExpression / '>' NumericExpression / '<=' NumericExpression / '>=' NumericExpression)* {
+  = op1:NumericExpression op2:( WS* '=' WS* NumericExpression / WS* '!=' WS* NumericExpression / WS* '<' WS* NumericExpression / WS* '>' WS* NumericExpression / WS* '<=' WS* NumericExpression / WS* '>=' WS* NumericExpression)* {
       if(op2.length === 0) {
           return op1;
       } else {
         var exp = {};
         exp.expressionType = "relationalexpression"
-        exp.operator = op2[0][0];
+        exp.operator = op2[0][1];
         exp.op1 = op1;
-        exp.op2 = op2[0][1];
+        exp.op2 = op2[0][3];
+        exp.token = "expression";
 
         return exp;
       }
@@ -1243,12 +1244,13 @@ AdditiveExpression "[101] AdditiveExpression"
 
       var ex = {};
       ex.token = 'expression';
+      ex.expressionType = 'additiveexpression';
       ex.summand = op1;
       ex.summands = [];
 
       for(var i=0; i<ops.length; i++) {
           var summand = ops[i];
-          var sum = {}
+          var sum = {};
           if(summand.length == 4 && typeof(summand[1]) === "string") {
               sum.operator = summand[1];
               sum.expression = summand[3];
@@ -1265,7 +1267,7 @@ AdditiveExpression "[101] AdditiveExpression"
                   sum.operator = '+';
               }
               subexp.token = 'expression';
-              subexp.expressionType = 'MultiplicativeExpression';
+              subexp.expressionType = 'multiplicativeexpression';
               subexp.operator = firstFactor;
               subexp.factors = [{operator: operator, expression: secondFactor}];
 
@@ -1282,7 +1284,7 @@ AdditiveExpression "[101] AdditiveExpression"
   [102]  	MultiplicativeExpression	  ::=  	UnaryExpression ( '*' UnaryExpression | '/' UnaryExpression )*
 */
 MultiplicativeExpression "[102] MultiplicativeExpression"
-  = exp:UnaryExpression exps:('*' UnaryExpression / '/' UnaryExpression)* {
+  = exp:UnaryExpression exps:(WS* '*' WS* UnaryExpression / WS* '/' WS* UnaryExpression)* {
       if(exps.length === 0) {
           return exp;
       }
@@ -1295,8 +1297,8 @@ MultiplicativeExpression "[102] MultiplicativeExpression"
       for(var i=0; i<exps.length; i++) {
           var factor = exps[i];
           var fact = {};
-          fact.operator = factor[0];
-          fact.expression = factor[1];
+          fact.operator = factor[1];
+          fact.expression = factor[3];
           ex.factors.push(fact);
       }
 
@@ -1414,7 +1416,7 @@ BrackettedExpression "[105] BrackettedExpression"
                                        |  NotExistsFunc
 */
 BuiltInCall "[106] BuiltInCall"
-  = 'STR' WS* '(' e:Expression ')' {
+  = 'STR' WS* '(' WS* e:Expression WS* ')' {
       var ex = {};
       ex.token = 'expression'
       ex.expressionType = 'builtincall'
@@ -1423,7 +1425,7 @@ BuiltInCall "[106] BuiltInCall"
 
       return ex;
   }
-  / 'LANG' WS* '(' e:Expression ')' {
+  / 'LANG' WS* '(' WS* e:Expression WS* ')' {
       var ex = {};
       ex.token = 'expression'
       ex.expressionType = 'builtincall'
@@ -1456,6 +1458,39 @@ BuiltInCall "[106] BuiltInCall"
       ex.expressionType = 'builtincall'
       ex.builtincall = 'bound'
       ex.args = [v]
+
+      return ex;
+}
+  / 'IRI' WS* '(' WS* e:Expression WS* ')' {
+      var ex = {};
+      ex.token = 'expression';
+      ex.expressionType = 'builtincall';
+      ex.builtincall = 'iri'
+      ex.args = [e];
+
+      return ex;
+}
+
+  / 'URI' WS* '(' WS* e:Expression WS* ')' {
+      var ex = {};
+      ex.token = 'expression';
+      ex.expressionType = 'builtincall';
+      ex.builtincall = 'uri'
+      ex.args = [e];
+
+      return ex;
+}
+
+  / 'BNODE' WS* arg:('(' WS* e:Expression WS* ')' / NIL) {
+      var ex = {};
+      ex.token = 'expression';
+      ex.expressionType = 'builtincall';
+      ex.builtincall = 'bnode';
+      if(arg.length === 5) {
+          ex.args = [arg[2]];
+      } else {
+          ex.args = null;
+      }
 
       return ex;
 }
@@ -1663,9 +1698,11 @@ BlankNode "[121] BlankNode"
 
 /*
   [122]  	IRI_REF	  ::=  	'<' ([^<>"{}|^`\]-[#x00-#x20])* '>'
+  @todo check this rule
+  @incomplete
 */
 IRI_REF "[122] IRI_REF"
-  = '<' iri_ref:[^<>\"\{\} | ^\\ | \S]* '>' { return iri_ref.join('') }
+  = '<' iri_ref:[^<>\"\{\} | ^\\]* '>' { return iri_ref.join('') }
 
 /*
   [123]  	PNAME_NS	  ::=  	PN_PREFIX? ':'

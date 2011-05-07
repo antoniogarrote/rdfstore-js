@@ -107,7 +107,7 @@ QueryPlan.buildBushyJoinTreeBranches = function(bindingsList, callback) {
             var bindingsa = pair[0];
             var bindingsb = pair[1];
             var result =  QueryPlan.executeAndBindings(bindingsa, bindingsb);
-            pairs.push(result);
+            acum.push(result);
         }
         QueryPlan.buildBushyJoinTreeBranches(acum, callback);
     }
@@ -245,7 +245,7 @@ QueryPlan.variablesIntersectionBindings = function(bindingsa, bindingsb) {
     var intersection = [];
 
     while(ia<varsa.length && ib<varsb.length) {
-        if(varsa[ia] === vars[ib]) {
+        if(varsa[ia] === varsb[ib]) {
             intersection.push(varsa[ia]);
             ia++;
             ib++;
@@ -300,12 +300,33 @@ QueryPlan.joinBindings = function(bindingsa, bindingsb) {
     return result;
 };
 
+QueryPlan.leftOuterJoinBindings = function(bindingsa, bindingsb) {
+    var result = [];
+
+    for(var i=0; i< bindingsa.length; i++) {
+        var bindinga = bindingsa[i];
+        var matched = false;
+        for(var j=0; j<bindingsb.length; j++) {
+            var bindingb = bindingsb[j];
+            if(QueryPlan.areCompatibleBindings(bindinga, bindingb)){
+                matched = true;
+                result.push(QueryPlan.mergeBindings(bindinga, bindingb));
+            }
+        }
+        if(matched === false) {
+            result.push(bindinga);
+        }
+    }
+
+    return result;
+};
+
 QueryPlan.crossProductBindings = function(bindingsa, bindingsb) {
     var result = [];
 
-    for(var i=0; i< bindingsa; i++) {
+    for(var i=0; i< bindingsa.length; i++) {
         var bindinga = bindingsa[i];
-        for(var j=0; j<bindingsb; j++) {
+        for(var j=0; j<bindingsb.length; j++) {
             var bindingb = bindingsb[j];
             result.push(QueryPlan.mergeBindings(bindinga, bindingb));
          }

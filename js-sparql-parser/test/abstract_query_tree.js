@@ -8,7 +8,6 @@ exports.example1 = function(test) {
 
     var query = aqt.parseQueryString(query);
     var result = aqt.parseExecutableUnit(query.units[0]);
-    console.log(JSON.stringify(result));
     test.ok(result.pattern.kind==='BGP');
     test.ok(result.pattern.value.length === 1);
 
@@ -21,7 +20,6 @@ exports.example2 = function(test) {
 
     var query = aqt.parseQueryString(query);
     var result = aqt.parseSelect(query.units[0]);
-    console.log(JSON.stringify(result));
     test.ok(result.pattern.kind==='BGP');
     test.ok(result.pattern.value.length === 2);
 
@@ -33,7 +31,6 @@ exports.example3 = function(test) {
 
     var query = aqt.parseQueryString(query);
     var result = aqt.parseSelect(query.units[0]);
-    console.log(result);
     test.ok(result.pattern.kind ==='UNION');
     test.ok(result.pattern.value.length === 2);
     test.ok(result.pattern.value[0].kind === 'BGP');
@@ -108,7 +105,7 @@ exports.example7 = function(test) {
 
     var query = aqt.parseQueryString(query);
     var result = aqt.parseSelect(query.units[0]);
-
+    console.log(JSON.stringify(result));
     test.ok(result.pattern.kind === "LEFT_JOIN");
     test.ok(result.pattern.filter.length === 1);
     test.ok(result.pattern.filter[0].token === 'filter');
@@ -126,6 +123,24 @@ exports.example8 = function(test) {
 
     test.ok(result.pattern.kind === "LEFT_JOIN");
     test.ok(result.pattern.lvalue.kind === "UNION");
+    test.ok(result.pattern.rvalue.kind === "BGP");
+
+    test.done();
+}
+
+exports.examples9 = function(test) {
+    var query = "PREFIX foaf:    <http://xmlns.com/foaf/0.1/>\
+                 SELECT ?nameX ?nameY ?nickY\
+                 WHERE\
+                 { ?x foaf:knows ?y ;\
+                   foaf:name ?nameX .\
+                   ?y foaf:name ?nameY .\
+                   OPTIONAL { ?y foaf:nick ?nickY }  }";
+    var query = aqt.parseQueryString(query);
+    var result = aqt.parseSelect(query.units[0]);
+
+    test.ok(result.pattern.kind === "LEFT_JOIN");
+    test.ok(result.pattern.lvalue.kind === "BGP");
     test.ok(result.pattern.rvalue.kind === "BGP");
 
     test.done();
