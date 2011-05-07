@@ -253,3 +253,107 @@ exports.filterTest8 = function(test){
         });
     });
  }
+
+exports.filterTest9 = function(test){
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            engine.execute('INSERT DATA {  <http://example/book1> <http://example.com/vocab#pages> 10 .\
+                                           <http://example/book2> <http://example.com/vocab#pages> 20 .\
+                                           <http://example/book3> <http://example.com/vocab#pages> 30 }', function(result){
+                                               
+                                               engine.execute('SELECT ?title { ?title <http://example.com/vocab#pages> ?pages . FILTER(?pages=(6+4)) }', function(success, results){
+                                                   test.ok(results.length === 1);
+                                                   test.ok(results[0].title.value =="http://example/book1");
+                                                   test.done();
+                                               });
+
+            });
+        });
+    });
+ }
+
+
+exports.filterTest10 = function(test){
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            engine.execute('INSERT DATA {  <http://example/book1> <http://example.com/vocab#pages> 10 .\
+                                           <http://example/book2> <http://example.com/vocab#pages> 20 .\
+                                           <http://example/book3> <http://example.com/vocab#pages> 30 }', function(result){
+                                               
+                                               engine.execute('SELECT ?title { ?title <http://example.com/vocab#pages> ?pages . FILTER(14=(?pages+4)) }', function(success, results){
+                                                   test.ok(results.length === 1);
+                                                   test.ok(results[0].title.value =="http://example/book1");
+                                                   test.done();
+                                               });
+
+            });
+        });
+    });
+ }
+
+
+exports.filterTest11 = function(test){
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            engine.execute('INSERT DATA {  <http://example/book1> <http://example.com/vocab#pages> 10 .\
+                                           <http://example/book2> <http://example.com/vocab#pages> 20 .\
+                                           <http://example/book3> <http://example.com/vocab#pages> 30 }', function(result){
+                                               
+                                               engine.execute('SELECT ?title { ?title <http://example.com/vocab#pages> ?pages . FILTER(?pages=14-6+2) }', function(success, results){
+                                                   test.ok(results.length === 1);
+                                                   test.ok(results[0].title.value =="http://example/book1");
+                                                   test.done();
+                                               });
+
+            });
+        });
+    });
+ }
+
+
+exports.filterTest12 = function(test){
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            engine.execute('INSERT DATA {  <http://example/book1> <http://example.com/vocab#pages> 10 .\
+                                           <http://example/book2> <http://example.com/vocab#pages> 20 .\
+                                           <http://example/book3> <http://example.com/vocab#pages> 30 }', function(result){
+                                               
+                                               engine.execute('SELECT ?title { ?title <http://example.com/vocab#pages> ?pages . FILTER(?pages=5*2) }', function(success, results){
+                                                   test.ok(results.length === 1);
+                                                   test.ok(results[0].title.value =="http://example/book1");
+                                                   test.done();
+                                               });
+
+            });
+        });
+    });
+ }
+
+exports.filterTest13 = function(test){
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            engine.execute('INSERT DATA {  <http://example/book1> <http://example.com/vocab#pages> 10 .\
+                                           <http://example/book2> <http://example.com/vocab#pages> 20 .\
+                                           <http://example/book3> <http://example.com/vocab#pages> 30 }', function(result){
+                                               
+                                               engine.execute('SELECT ?title { ?title <http://example.com/vocab#pages> ?pages . FILTER(?pages=20/2) }', function(success, results){
+                                                   test.ok(results.length === 1);
+                                                   test.ok(results[0].title.value =="http://example/book1");
+                                                   test.done();
+                                               });
+
+            });
+        });
+    });
+ }
+

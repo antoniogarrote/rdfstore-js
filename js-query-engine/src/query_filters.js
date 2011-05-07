@@ -99,8 +99,8 @@ QueryFilters.runFilter = function(filterExpr, bindings) {
             return QueryFilters.runOrFunction(filterExpr, bindings);
         } else if (expressionType == 'conditionaland') {
             return QueryFilters.runAndFunction(filterExpr, bindings);
-            
-
+        } else if(expressionType == 'additiveexpression') {
+            return QueryFilters.runAddition(filterExpr.summand, filterExpr.summands, bindings);
 //        } else if(expressionType == 'builtincall') {
 //            if(filterExpr.args == null) {
 //                return [];
@@ -111,24 +111,14 @@ QueryFilters.runFilter = function(filterExpr, bindings) {
 //                }
 //                return acum;
 //            }
-//        } else if(expressionType == 'multiplicativeexpression') {
-//            var acum = QueryFilters.boundVars(filterExpr.factor);
-//            for(var i=0; i<filterExpr.factors.length; i++) {
-//                acum = acum.concat(QueryFilters.boundVars(filterExpr.factors[i].expression))
-//            }
-//            return acum;
-//        } else if(expressionType == 'additiveexpression') {
-//            var acum = QueryFilters.boundVars(filterExpr.summand);
-//            for(var i=0; i<filterExpr.summands.length; i++) {
-//                acum = acum.concat(QueryFilters.boundVars(filterExpr.summands[i].expression))
-//            }
-// 
-//            return acum;
+        } else if(expressionType == 'multiplicativeexpression') {
+            return QueryFilters.runMultiplication(filterExpr.factor, filterExpr.factors, bindings);
 //        } else if(expressionType == 'regex') {
 //            var acum = QueryFilters.boundVars(filterExpr.expression1);
 //            return acum.concat(QueryFilters.boundVars(filterExpr.expression2));
 //        } else if(expressionType == 'unaryexpression') {
 //            return QueryFilters.boundVars(filterExpr.expression);
+
         } else if(expressionType == 'atomic') {           
             if(filterExpr.primaryexpression == 'var') {
                 // lookup the var in the bindings
@@ -145,6 +135,51 @@ QueryFilters.runFilter = function(filterExpr, bindings) {
         throw("Cannot find bound expressions in a no expression token");
     }
 };
+
+QueryFilters.isInteger = function(val) {
+    if(val == null) {
+        return false;
+    }
+    if(val.token === 'literal') {
+        if(val.type == "http://www.w3.org/2001/XMLSchema#integer" ||
+           val.type == "http://www.w3.org/2001/XMLSchema#decimal" ||
+           val.type == "http://www.w3.org/2001/XMLSchema#double" ||
+           val.type == "http://www.w3.org/2001/XMLSchema#nonPositiveInteger" ||
+           val.type == "http://www.w3.org/2001/XMLSchema#negativeInteger" ||
+           val.type == "http://www.w3.org/2001/XMLSchema#long" ||
+           val.type == "http://www.w3.org/2001/XMLSchema#int" ||
+           val.type == "http://www.w3.org/2001/XMLSchema#short" ||
+           val.type == "http://www.w3.org/2001/XMLSchema#byte" ||
+           val.type == "http://www.w3.org/2001/XMLSchema#nonNegativeInteger" ||
+           val.type == "http://www.w3.org/2001/XMLSchema#unsignedLong" ||
+           val.type == "http://www.w3.org/2001/XMLSchema#unsignedInt" ||
+           val.type == "http://www.w3.org/2001/XMLSchema#unsignedShort" ||
+           val.type == "http://www.w3.org/2001/XMLSchema#unsignedByte" ||
+           val.type == "http://www.w3.org/2001/XMLSchema#positiveInteger" ) {
+            return true;
+        } else {
+            return false;
+        }
+    } else {
+        return false;
+    }
+};
+
+QueryFilters.isFloat = function(val) {
+    if(val == null) {
+        return false;
+    }
+    if(val.token === 'literal') {
+        if(val.type == "http://www.w3.org/2001/XMLSchema#float") {
+            return true;
+        } else {
+            return false;
+        }
+    } else {
+        return false;
+    }
+};
+
 
 QueryFilters.isNumeric = function(val) {
     if(val == null) {
@@ -407,3 +442,86 @@ QueryFilters.runLtEqFunction = function(op1, op2, bindings) {
     }
 };
 
+QueryFilters.runAddition = function(summand, summands, bindings) {
+    var summandOp = QueryFilters.runFilter(summand,bindings);
+    var acum = summandOp;
+    if(QueryFilters.isNumeric(summandOp)) {
+        for(var i=0; i<summands.length; i++) {
+            var nextSummandOp = QueryFilters.runFilter(summands[i].expression, bindings);
+            if(QueryFilters.isNumeric(nextSummandOp)) {
+                if(summands[i].operator === '+') {
+                    acum = QueryFilters.runSumFunction(acum, nextSummandOp);
+                } else if(summands[i].operator === '-') {
+                    acum = QueryFilters.runSubFunction(acum, nextSummandOp);
+                }
+            } else {
+                return QueryFilters.ebvFalse();
+            }
+        }
+        return acum;
+    } else {
+        return QueryFilters.ebvFalse();
+    }
+};
+
+QueryFilters.runSumFunction = function(suma, sumb) {
+    if(QueryFilters.isFloat(suma) || QueryFilters.isFloat(sumb)) {
+        var val = QueryFilters.effectiveTypeValue(suma) + QueryFilters.effectiveTypeValue(sumb);
+        return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#float", value:val};        
+    } else {
+        var val = QueryFilters.effectiveTypeValue(suma) + QueryFilters.effectiveTypeValue(sumb);
+        return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#integer", value:val};        
+    }
+};
+
+QueryFilters.runSubFunction = function(suma, sumb) {
+    if(QueryFilters.isFloat(suma) || QueryFilters.isFloat(sumb)) {
+        var val = QueryFilters.effectiveTypeValue(suma) - QueryFilters.effectiveTypeValue(sumb);
+        return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#float", value:val};        
+    } else {
+        var val = QueryFilters.effectiveTypeValue(suma) - QueryFilters.effectiveTypeValue(sumb);
+        return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#integer", value:val};        
+    }
+};
+
+QueryFilters.runMultiplication = function(factor, factors, bindings) {
+    var factorOp = QueryFilters.runFilter(factor,bindings);
+    var acum = factorOp;
+    if(QueryFilters.isNumeric(factorOp)) {
+        for(var i=0; i<factors.length; i++) {
+            var nextFactorOp = QueryFilters.runFilter(factors[i].expression, bindings);
+            if(QueryFilters.isNumeric(nextFactorOp)) {
+                if(factors[i].operator === '*') {
+                    acum = QueryFilters.runMulFunction(acum, nextFactorOp);
+                } else if(factors[i].operator === '/') {
+                    acum = QueryFilters.runDivFunction(acum, nextFactorOp);
+                }
+            } else {
+                return QueryFilters.ebvFalse();
+            }
+        }
+        return acum;
+    } else {
+        return QueryFilters.ebvFalse();
+    }
+};
+
+QueryFilters.runMulFunction = function(faca, facb) {
+    if(QueryFilters.isFloat(faca) || QueryFilters.isFloat(facb)) {
+        var val = QueryFilters.effectiveTypeValue(faca) * QueryFilters.effectiveTypeValue(facb);
+        return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#float", value:val};        
+    } else {
+        var val = QueryFilters.effectiveTypeValue(faca) * QueryFilters.effectiveTypeValue(facb);
+        return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#integer", value:val};        
+    }
+};
+
+QueryFilters.runDivFunction = function(faca, facb) {
+    if(QueryFilters.isFloat(faca) || QueryFilters.isFloat(facb)) {
+        var val = QueryFilters.effectiveTypeValue(faca) / QueryFilters.effectiveTypeValue(facb);
+        return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#float", value:val};        
+    } else {
+        var val = QueryFilters.effectiveTypeValue(faca) / QueryFilters.effectiveTypeValue(facb);
+        return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#integer", value:val};        
+    }
+};
