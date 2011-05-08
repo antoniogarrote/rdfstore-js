@@ -357,3 +357,22 @@ exports.filterTest13 = function(test){
     });
  }
 
+exports.filterTest14 = function(test){
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            engine.execute('INSERT DATA {  <http://example/book1> <http://example.com/vocab#title> "titulo"@es .\
+                                           <http://example/book2> <http://example.com/vocab#title> "title"@en .\
+                                           <http://example/book3> <http://example.com/vocab#title> "titre"@fr }', function(result){
+                                               engine.execute('SELECT ?book { ?book <http://example.com/vocab#title> ?title . FILTER(LANG(?title)="en") }', function(success, results){
+                                                   test.ok(results.length === 1);
+                                                   test.ok(results[0].book.value =="http://example/book2");
+                                                   test.done();
+                                               });
+
+            });
+        });
+    });
+ }
+

@@ -99,7 +99,8 @@ SelectQuery "[6] SelectQuery"
       query.kind = 'select';
       query.token = 'executableunit'
       query.dataset = d;
-      query.projection = s;
+      query.projection = s.vars;
+      query.modifier = s.modifier;
       query.pattern = w
 
       return query
@@ -118,7 +119,7 @@ SelectClause "[8] SelectClause"
   = WS* 'SELECT' WS* mod:( 'DISTINCT' / 'REDUCED' )? WS* proj:( ( ( WS* Var WS* ) / ( WS* '(' WS* Expression WS* 'AS' WS* Var WS* ')' WS* ) )+ / ( WS* '*' WS* )  ) {
      var vars = [];
       if(proj.length === 3 && proj[1]==="*") {
-          return [{token: 'variable', kind:'*'}];
+          return {vars: [{token: 'variable', kind:'*'}], modifier:mod};
       }
 
       for(var i=0; i< proj.length; i++) {
@@ -131,7 +132,7 @@ SelectClause "[8] SelectClause"
           }
       }
 
-      return vars;
+      return {vars: vars, modifier:mod};
 }
 
 /*
@@ -1495,8 +1496,28 @@ BuiltInCall "[106] BuiltInCall"
       return ex;
 }
 
+/ 'COALESCE' WS* args:ExpressionList {
+      var ex = {};
+      ex.token = 'expression';
+      ex.expressionType = 'builtincall';
+      ex.builtincall = 'coalesce';
+      ex.args = args;
 
-  / RegexExpression
+      return ex;    
+}
+
+/ 'IF' WS* '(' WS* test:Expression WS* ',' WS* trueCond:Expression WS* ',' WS* falseCond:Expression WS* ')' {
+    var ex = {};
+    ex.token = 'expression';
+    ex.expressionType = 'builtincall';
+    ex.builtincall = 'if';
+    ex.args = [test,trueCond,falseCond];
+
+    return ex;
+}
+
+/ RegexExpression
+
 /*
   [107]  	RegexExpression	  ::=  	'REGEX' '(' Expression ',' Expression ( ',' Expression )? ')'
 */

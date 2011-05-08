@@ -101,24 +101,10 @@ QueryFilters.runFilter = function(filterExpr, bindings) {
             return QueryFilters.runAndFunction(filterExpr, bindings);
         } else if(expressionType == 'additiveexpression') {
             return QueryFilters.runAddition(filterExpr.summand, filterExpr.summands, bindings);
-//        } else if(expressionType == 'builtincall') {
-//            if(filterExpr.args == null) {
-//                return [];
-//            } else {
-//                var acum = [];
-//                for(var i=0; i< filterExpr.args.length; i++) {
-//                    acum = acum.concat(QueryFilters.boundVars(filterExpr.args[i]));
-//                }
-//                return acum;
-//            }
+        } else if(expressionType == 'builtincall') {
+            return QueryFilters.runBuiltInCall(filterExpr.builtincall, filterExpr.args, bindings);
         } else if(expressionType == 'multiplicativeexpression') {
             return QueryFilters.runMultiplication(filterExpr.factor, filterExpr.factors, bindings);
-//        } else if(expressionType == 'regex') {
-//            var acum = QueryFilters.boundVars(filterExpr.expression1);
-//            return acum.concat(QueryFilters.boundVars(filterExpr.expression2));
-//        } else if(expressionType == 'unaryexpression') {
-//            return QueryFilters.boundVars(filterExpr.expression);
-
         } else if(expressionType == 'atomic') {           
             if(filterExpr.primaryexpression == 'var') {
                 // lookup the var in the bindings
@@ -135,6 +121,35 @@ QueryFilters.runFilter = function(filterExpr, bindings) {
         throw("Cannot find bound expressions in a no expression token");
     }
 };
+
+QueryFilters.isRDFTerm = function(val) {
+    if((val.token && val.token == 'literal') ||
+       (val.token && val.token == 'uri') ||
+       (val.token && val.token == 'blank')) {
+        return true;
+    } else {
+        return false;
+    }
+};
+
+
+QueryFilters.RDFTermEquality = function(v1, v2) {
+    if(v1.token === 'literal' && v2.token === 'literal') {
+        console.log("comparing literals")
+        if(v1.lang == v2.lang && v1.type == v2.type && v1.value == v2.value) {
+            return true;
+        } else {
+            return false;
+        }
+    } else if(v1.token === 'uri' && v2.token === 'uri') {
+        return v1.value == v2.value;
+    } else if(v1.token === 'blank' && v2.token === 'blank') {
+        return v1.value == v2.value;
+    } else {
+        return false;
+    }
+};
+
 
 QueryFilters.isInteger = function(val) {
     if(val == null) {
@@ -359,6 +374,7 @@ QueryFilters.runAndFunction = function(filterExpr, bindings) {
     return QueryFilters.ebvBoolean(true);
 };
 
+
 QueryFilters.runEqualityFunction = function(op1, op2, bindings) {
     if(QueryFilters.isNumeric(op1) && QueryFilters.isNumeric(op2)) {
         return QueryFilters.ebvBoolean(QueryFilters.effectiveTypeValue(op1) == QueryFilters.effectiveTypeValue(op2));
@@ -370,6 +386,8 @@ QueryFilters.runEqualityFunction = function(op1, op2, bindings) {
         return QueryFilters.ebvBoolean(QueryFilters.effectiveTypeValue(op1) == QueryFilters.effectiveTypeValue(op2));
     } else if(QueryFilters.isXsdType("dateTime", op1) && QueryFilters.isXsdType("dateTime", op2)) {
         return QueryFilters.ebvBoolean(QueryFilters.effectiveTypeValue(op1).getTime() == QueryFilters.effectiveTypeValue(op2).getTime());
+    } else if(QueryFilters.isRDFTerm(op1) && QueryFilters.isRDFTerm(op2)) {
+        return QueryFilters.ebvBoolean(QueryFilters.RDFTermEquality(op1, op2));
     } else {
         return QueryFilters.ebvFalse();
     }
@@ -523,5 +541,31 @@ QueryFilters.runDivFunction = function(faca, facb) {
     } else {
         var val = QueryFilters.effectiveTypeValue(faca) / QueryFilters.effectiveTypeValue(facb);
         return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#integer", value:val};        
+    }
+};
+
+QueryFilters.runBuiltInCall = function(builtincall, args, bindings) {
+    var ops = [];
+    for(var i=0; i<args.length; i++) {
+        ops.push(QueryFilters.runFilter(args[i], bindings));
+    }
+
+    if(builtincall === 'str') {
+
+        if(ops[0].token === 'literal') {
+            // lexical form literals
+            return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#string", value:""+ops[0].value};
+        } else if(ops[0].token === 'uri'){
+            // codepoint URIs
+            return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#string", value:ops[0].value};
+        } else {
+            return QueryFilters.ebvFalse();
+        }
+    } else if(builtincall === 'lang') {
+        if(ops[0].token === 'literal'){
+            return {token: 'literal', value:""+ops[0].lang};
+        } else {
+            return QueryFilters.ebvFalse();
+        }
     }
 };

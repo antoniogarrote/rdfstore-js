@@ -108,3 +108,25 @@ exports.testBasePrefix5 = function(test) {
         });
     });
 };
+
+exports.testBaseBGPNoMatch = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            engine.execute('PREFIX : <http://example.org/> PREFIX foaf: <http://xmlns.com/foaf/0.1/> INSERT DATA { :john a foaf:Person ; foaf:name "John Smith" }', function(success, result){
+                engine.execute('PREFIX : <http://example.org/>\
+                                PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
+                                SELECT ?x\
+                                WHERE {\
+                                  ?x foaf:name "John Smith" ;\
+                                       a foaf:Womble .\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 0);
+                                    test.done();
+                });
+            });
+        });
+    });
+}
