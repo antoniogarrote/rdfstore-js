@@ -438,3 +438,59 @@ exports.testOptionalBasic1 = function(test) {
         });
     });
 };
+
+exports.testOptionalDistinct1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            engine.execute("PREFIX  foaf:  <http://xmlns.com/foaf/0.1/>\
+                            INSERT DATA {\
+                              _:x    foaf:name   'Alice' .\
+                              _:x    foaf:mbox   <mailto:alice@example.com> .\
+                              _:y    foaf:name   'Alice' .\
+                              _:y    foaf:mbox   <mailto:asmith@example.com> .\
+                              _:z    foaf:name   'Alice' .\
+                              _:z    foaf:mbox   <mailto:alice.smith@example.com> .\
+                            }", function(success, result) {
+
+                                engine.execute("PREFIX foaf:    <http://xmlns.com/foaf/0.1/>\
+                                                SELECT DISTINCT ?name WHERE { ?x foaf:name ?name }",
+                                               function(success, results) {
+                                                   test.ok(results.length === 1);
+                                                   test.ok(results[0].name.value === 'Alice');
+                                                   test.done();
+                                               });
+                            });
+        });
+    });
+};
+
+
+exports.testLimit1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            engine.execute("PREFIX  foaf:  <http://xmlns.com/foaf/0.1/>\
+                            INSERT DATA {\
+                              _:x    foaf:name   'Alice' .\
+                              _:x    foaf:mbox   <mailto:alice@example.com> .\
+                              _:y    foaf:name   'Alice' .\
+                              _:y    foaf:mbox   <mailto:asmith@example.com> .\
+                              _:z    foaf:name   'Alice' .\
+                              _:z    foaf:mbox   <mailto:alice.smith@example.com> .\
+                            }", function(success, result) {
+
+                                engine.execute("PREFIX foaf:    <http://xmlns.com/foaf/0.1/>\
+                                                SELECT ?name WHERE { ?x foaf:name ?name } LIMIT 2",
+                                               function(success, results) {
+                                                   test.ok(results.length === 2);
+                                                   test.ok(results[0].name.value === 'Alice');
+                                                   test.ok(results[1].name.value === 'Alice');
+                                                   test.done();
+                                               });
+                            });
+        });
+    });
+};

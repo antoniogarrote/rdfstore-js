@@ -37,6 +37,62 @@ QueryEngine.QueryEngine.prototype.registerNsInEnvironment = function(prologue, e
     }
 };
 
+QueryEngine.QueryEngine.prototype.applyModifier = function(modifier, projectedBindings) {
+    if(modifier == "DISTINCT") {
+        var map = {};
+        var result = [];
+        for(var i=0; i<projectedBindings.length; i++) {
+            var bindings = projectedBindings[i];
+            var key = "";
+            for(var p in bindings) {
+                // hashing the object
+                var obj = bindings[p];
+                if(obj.token == 'literal') {
+                    if(obj.value != null) {
+                        key = key + obj.value;
+                    }
+                    if(obj.lang != null) {
+                        key = key + obj.lang;
+                    }
+                    if(obj.type != null) {
+                        key = key + obj.type;
+                    }
+                } else {
+                    key  = key + p + obj.value;
+                }
+            }
+            if(map[key] == null) {
+                // this will preserve the order in projectedBindings
+                result.push(bindings) 
+                map[key] = true;
+            }
+        }
+        return result; 
+    } else {
+        return projectedBindings;
+    }
+};
+
+QueryEngine.QueryEngine.prototype.applyLimitOffset = function(offset, limit, bindings) {
+    if(limit == null && offset == null) {
+        return bindings;
+    }
+
+    if(limit == null) {
+        limit = bindings.length;
+    }
+
+    if (offset == null) {
+        offset = 0;
+    }
+
+    return bindings.slice(offset, limit);
+};
+
+QueryEngine.QueryEngine.prototype.applyGroupBy = function(key, direction, bindings) {
+
+};
+
 QueryEngine.QueryEngine.prototype.projectBindings = function(projection, results) {
     if(projection[0].kind === '*') {
         return results;
@@ -370,11 +426,17 @@ QueryEngine.QueryEngine.prototype.executeSelect = function(unit, env, callback) 
     if(unit.kind === "select") {
         var projection = unit.projection;
         var dataset    = unit.dataset[0]; // more than one? why array?
+        var modifier   = unit.modifier;
+        var limit      = unit.limit;
+        var offset     = unit.offset;
         var that = this;
         this.executeSelectUnit(projection, dataset, unit.pattern, env, function(success, result){
             if(success) {
                 var projectedBindings = that.projectBindings(projection, result);
-                callback(true,projectedBindings);
+                var modifiedBindings = that.applyModifier(modifier, projectedBindings);
+                // @todo group here!
+                var limitedBindings  = that.applyLimitOffset(offset, limit, modifiedBindings);
+                callback(true,limitedBindings);
             } else {
                 callback(false, result);
             }

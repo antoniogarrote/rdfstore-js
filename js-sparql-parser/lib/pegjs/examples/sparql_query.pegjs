@@ -94,7 +94,7 @@ PrefixDecl "[5] PrefixDecl"
   [6]  	SelectQuery	  ::=  	SelectClause DatasetClause* WhereClause SolutionModifier BindingsClause
 */
 SelectQuery "[6] SelectQuery"
-  = s:SelectClause WS* d:DatasetClause* WS* w:WhereClause WS* SolutionModifier WS* BindingsClause {
+  = s:SelectClause WS* d:DatasetClause* WS* w:WhereClause WS* sm:SolutionModifier WS* BindingsClause {
       var query = {};
       query.kind = 'select';
       query.token = 'executableunit'
@@ -102,7 +102,16 @@ SelectQuery "[6] SelectQuery"
       query.projection = s.vars;
       query.modifier = s.modifier;
       query.pattern = w
-
+      
+      if(sm!=null && sm.limit!=null) {
+          query.limit = sm.limit;
+      }
+      if(sm!=null && sm.offset!=null) {
+          query.offset = sm.offset;
+      }
+      if(sm!=null && (sm.order!=null && sm.order!="")) {
+          query.order = sm.order;
+      }
       return query
 }
 
@@ -191,7 +200,21 @@ WhereClause "[16] WhereClause"
   [17]  	SolutionModifier	  ::=  	GroupClause? HavingClause? OrderClause? LimitOffsetClauses?
 */
 SolutionModifier "[17] SolutionModifier"
-  = GroupClause? HavingClause? OrderClause? LimitOffsetClauses?
+  = GroupClause? HavingClause? oc:OrderClause? lo:LimitOffsetClauses? {
+      var acum = {};
+      if(lo != null) {
+          if(lo.limit != null) {
+              acum.limit = lo.limit;
+          } 
+          if(lo.offset != null) {
+              acum.offset = lo.offset;
+          }
+      }
+
+      acum.order = oc;
+
+      return acum
+}
 
 /*
   [18]  	GroupClause	  ::=  	'GROUP' 'BY' GroupCondition+
@@ -221,31 +244,54 @@ HavingCondition "[21] HavingCondition"
   [22]  	OrderClause	  ::=  	'ORDER' 'BY' OrderCondition+
 */
 OrderClause "[22] OrderClause"
-  = 'ORDER' 'BY' OrderCondition+
+  = 'ORDER' WS* 'BY' WS* os:OrderCondition+ WS* {
+      return os;
+}
 
 /*
   [23]  	OrderCondition	  ::=  	 ( ( 'ASC' | 'DESC' ) BrackettedExpression ) | ( Constraint | Var )
 */
 OrderCondition "[23] OrderCondition"
-  = ( ( 'ASC' / 'DESC' ) BrackettedExpression ) / ( Constraint / Var )
+  = ( direction:( 'ASC' / 'DESC' ) WS* e:BrackettedExpression ) {
+      return { direction: direction, expression:e };
+}
+/ e:( Constraint / Var ) {
+      return { direction: 'ASC', expression:e };
+}
 
 /*
   [24]  	LimitOffsetClauses	  ::=  	( LimitClause OffsetClause? | OffsetClause LimitClause? )
 */
 LimitOffsetClauses "[24] LimitOffsetClauses"
-  = ( LimitClause OffsetClause? / OffsetClause LimitClause? )
+  = cls:( LimitClause OffsetClause? / OffsetClause LimitClause? ) {
+      var acum = {};
+      for(var i=0; i<cls.length; i++) {
+          var cl = cls[i];
+          if(cl.limit != null) {
+              acum['limit'] = cl.limit;
+          } else if(cl.offset != null){
+              acum['offset'] = cl.offset;
+          }
+      }
+
+      return acum;
+}
 
 /*
   [25]  	LimitClause	  ::=  	'LIMIT' INTEGER
 */
 LimitClause "[25] LimitClause"
-  = 'LIMIT' INTEGER
+  = 'LIMIT' WS* i:INTEGER WS* {
+  return { limit:parseInt(i.value) };
+}
 
 /*
   [26]  	OffsetClause	  ::=  	'OFFSET' INTEGER
 */
 OffsetClause "[26] OffsetClause"
-  = 'OFFSET' INTEGER
+  = 'OFFSET' WS* i:INTEGER WS* {
+  return { offset:parseInt(i.value) };
+}
 
 /*
   [27]  	BindingsClause	  ::=  	( 'BINDINGS' Var* '{' ( '(' BindingValue+ ')' | NIL )* '}' )?
