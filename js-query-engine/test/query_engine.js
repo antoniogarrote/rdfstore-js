@@ -494,3 +494,62 @@ exports.testLimit1 = function(test) {
         });
     });
 };
+
+
+exports.testOrderBy1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            engine.execute("PREFIX  foaf:  <http://xmlns.com/foaf/0.1/>\
+                            INSERT DATA {\
+                              _:x    foaf:name   'Bob' .\
+                              _:x    foaf:mbox   <mailto:alice@example.com> .\
+                              _:y    foaf:name   'Alice' .\
+                              _:y    foaf:mbox   <mailto:asmith@example.com> .\
+                              _:z    foaf:name   'Marie' .\
+                              _:z    foaf:mbox   <mailto:alice.smith@example.com> .\
+                            }", function(success, result) {
+
+                                engine.execute("PREFIX foaf:    <http://xmlns.com/foaf/0.1/>\
+                                                SELECT ?name WHERE { ?x foaf:name ?name } ORDER BY ?name",
+                                               function(success, results) {
+                                                   test.ok(results.length === 3);
+                                                   test.ok(results[0].name.value === 'Alice');
+                                                   test.ok(results[1].name.value === 'Bob');
+                                                   test.ok(results[2].name.value === 'Marie');
+                                                   test.done();
+                                               });
+                            });
+        });
+    });
+};
+
+exports.testOrderBy2 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            engine.execute("PREFIX  foaf:  <http://xmlns.com/foaf/0.1/>\
+                            INSERT DATA {\
+                              _:x    foaf:name   'Bob' .\
+                              _:x    foaf:mbox   <mailto:alice@example.com> .\
+                              _:y    foaf:name   'Alice' .\
+                              _:y    foaf:mbox   <mailto:asmith@example.com> .\
+                              _:z    foaf:name   'Marie' .\
+                              _:z    foaf:mbox   <mailto:alice.smith@example.com> .\
+                            }", function(success, result) {
+
+                                engine.execute("PREFIX foaf:    <http://xmlns.com/foaf/0.1/>\
+                                                SELECT ?name WHERE { ?x foaf:name ?name } ORDER BY DESC(?name)",
+                                               function(success, results) {
+                                                   test.ok(results.length === 3);
+                                                   test.ok(results[0].name.value === 'Marie');
+                                                   test.ok(results[1].name.value === 'Bob');
+                                                   test.ok(results[2].name.value === 'Alice');
+                                                   test.done();
+                                               });
+                            });
+        });
+    });
+};

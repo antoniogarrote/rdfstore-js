@@ -256,7 +256,13 @@ OrderCondition "[23] OrderCondition"
       return { direction: direction, expression:e };
 }
 / e:( Constraint / Var ) {
-      return { direction: 'ASC', expression:e };
+    if(e.token === 'var') {
+        e = { token:'expression', 
+              expressionType:'atomic',
+              primaryexpression: 'var',
+              value: e };
+    }
+    return { direction: 'ASC', expression:e };
 }
 
 /*

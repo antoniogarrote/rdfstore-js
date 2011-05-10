@@ -88,6 +88,22 @@ QueryFilters.run = function(filterExpr, bindings, outCache, queryEngine, callbac
     });
 };
 
+QueryFilters.collect = function(filterExpr, bindings, outCache, queryEngine, callback) {
+    queryEngine.copyDenormalizedBindings(bindings, outCache, function(success, denormBindings){
+        if(success === true) {
+            var filteredBindings = [];
+            for(var i=0; i<bindings.length; i++) {
+                var thisDenormBindings = denormBindings[i];
+                var ebv = QueryFilters.runFilter(filterExpr, thisDenormBindings);
+                filteredBindings.push({binding:bindings[i], value:ebv});
+            }
+            callback(true, filteredBindings);
+        } else {
+            callback(success, denormBindings);
+        }
+    });
+};
+
 QueryFilters.runFilter = function(filterExpr, bindings) {
     if(filterExpr.expressionType != null) {
         var expressionType = filterExpr.expressionType;

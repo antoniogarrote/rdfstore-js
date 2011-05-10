@@ -89,8 +89,43 @@ QueryEngine.QueryEngine.prototype.applyLimitOffset = function(offset, limit, bin
     return bindings.slice(offset, limit);
 };
 
-QueryEngine.QueryEngine.prototype.applyGroupBy = function(key, direction, bindings) {
+QueryEngine.QueryEngine.prototype.applyOrderBy = function(order, modifiedBindings, env, callback) {
+    if(order != null) {
+        QueryFilters.collect(order.expression, modifiedBindings, env.outCache, this, function(success, results){
+            var sortedBindings = results.sort(function(a,b){
 
+                if(QueryFilters.runEqualityFunction(a.value,b.value,[]).value == true) {
+                    return 0
+                } else if(QueryFilters.runGtFunction(a.value,b.value,[]).value == true) {
+                    if(order.direction === "ASC") {
+                        return 1;
+                    } else {
+                        return -1;
+                    }
+                } else {
+                    if(order.direction === "ASC") {
+                        return -1;
+                    } else {
+                        return 1;
+                    }
+                }
+            });
+
+            var toReturn = [];
+            for(var i=0; i<sortedBindings.length; i++) {
+                toReturn.push(sortedBindings[i].binding);
+            }
+
+            callback(true,toReturn);
+        });
+    } else {
+        callback(true,modifiedBindings);
+    }
+};
+
+QueryEngine.QueryEngine.prototype.applyGroupBy = function(key, direction, bindings) {
+    // @todo
+    return bindings;
 };
 
 QueryEngine.QueryEngine.prototype.projectBindings = function(projection, results) {
@@ -429,14 +464,25 @@ QueryEngine.QueryEngine.prototype.executeSelect = function(unit, env, callback) 
         var modifier   = unit.modifier;
         var limit      = unit.limit;
         var offset     = unit.offset;
+        var order      = unit.order;
+        if(order!=null) {
+            order = order[0]; // more than one? why array?
+        }
         var that = this;
         this.executeSelectUnit(projection, dataset, unit.pattern, env, function(success, result){
             if(success) {
                 var projectedBindings = that.projectBindings(projection, result);
-                var modifiedBindings = that.applyModifier(modifier, projectedBindings);
-                // @todo group here!
-                var limitedBindings  = that.applyLimitOffset(offset, limit, modifiedBindings);
-                callback(true,limitedBindings);
+                var modifiedBindings = that.applyModifier(modifier, projectedBindings)
+                that.applyOrderBy(order, modifiedBindings, env, function(success, orderedBindings){
+                    if(success) {
+                        // @todo group here!
+                        var limitedBindings  = that.applyLimitOffset(offset, limit, orderedBindings);
+                        callback(true,limitedBindings);
+
+                    } else {
+                        callback(false, orderedBindings);
+                    }
+                });
             } else {
                 callback(false, result);
             }
@@ -462,7 +508,7 @@ QueryEngine.QueryEngine.prototype.executeSelectUnit = function(projection, datas
         var that = this;
         this.executeSelectUnit(projection, dataset, pattern.value, env, function(success, results){
             if(success) {
-                QueryFilters.run(filter[0].value, results, env, that, callback);
+                QueryFilters.run(filter[0].value, results, env.outCache, that, callback);
             } else {
                 callback(false, results);
             }

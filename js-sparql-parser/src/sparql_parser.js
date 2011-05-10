@@ -658,9 +658,8 @@ SparqlParser.parser = (function(){
                     query.offset = sm.offset;
                 }
                 if(sm!=null && (sm.order!=null && sm.order!="")) {
-                  query.order = sm.order;
+                    query.order = sm.order;
                 }
-          
                 return query
           })(result1[0], result1[2], result1[4], result1[6])
           : null;
@@ -2089,8 +2088,8 @@ SparqlParser.parser = (function(){
           pos = savedPos0;
         }
         var result5 = result6 !== null
-          ? (function(dir, e) {
-                return { direction: dir, expression:e };
+          ? (function(direction, e) {
+                return { direction: direction, expression:e };
           })(result6[0], result6[2])
           : null;
         if (result5 !== null) {
@@ -2109,7 +2108,13 @@ SparqlParser.parser = (function(){
           }
           var result1 = result2 !== null
             ? (function(e) {
-                  return { direction: 'ASC', expression:e };
+                if(e.token === 'var') {
+                    e = { token:'expression', 
+                          expressionType:'atomic',
+                          primaryexpression: 'var',
+                          value: e };
+                }
+                return { direction: 'ASC', expression:e };
             })(result2)
             : null;
           if (result1 !== null) {
