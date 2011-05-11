@@ -104,6 +104,7 @@ QueryFilters.collect = function(filterExpr, bindings, outCache, queryEngine, cal
     });
 };
 
+
 QueryFilters.runFilter = function(filterExpr, bindings) {
     if(filterExpr.expressionType != null) {
         var expressionType = filterExpr.expressionType;
@@ -151,7 +152,6 @@ QueryFilters.isRDFTerm = function(val) {
 
 QueryFilters.RDFTermEquality = function(v1, v2) {
     if(v1.token === 'literal' && v2.token === 'literal') {
-        console.log("comparing literals")
         if(v1.lang == v2.lang && v1.type == v2.type && v1.value == v2.value) {
             return true;
         } else {
@@ -422,6 +422,33 @@ QueryFilters.runGtFunction = function(op1, op2, bindings) {
         return QueryFilters.ebvBoolean(QueryFilters.effectiveTypeValue(op1).getTime() > QueryFilters.effectiveTypeValue(op2).getTime());
     } else {
         return QueryFilters.ebvFalse();
+    }
+};
+
+/**
+ * Total gt function used when sorting bindings in the SORT BY clause.
+ *
+ * @todo
+ * Some criteria are not clear
+ */
+QueryFilters.runTotalGtFunction = function(op1,op2) {
+    if((QueryFilters.isNumeric(op1) && QueryFilters.isNumeric(op2)) ||
+       (QueryFilters.isSimpleLiteral(op1) && QueryFilters.isSimpleLiteral(op2)) ||
+       (QueryFilters.isXsdType("string",op1) && QueryFilters.isSimpleLiteral("string",op2)) ||
+       (QueryFilters.isXsdType("boolean",op1) && QueryFilters.isSimpleLiteral("boolean",op2)) ||
+       (QueryFilters.isXsdType("dateTime",op1) && QueryFilters.isSimpleLiteral("dateTime",op2))) {
+        return QueryFilters.runGtFunction(op1, op2, []);
+    } else if(op1.token && op1.token === 'uri' && op2.token && op2.token === 'uri') {
+        return QueryFilters.ebvBoolean(op1.value > op2.value);
+    } else if(op1.token && op1.token === 'literal' && op2.token && op2.token === 'literal') {
+        // one of the literals must have type/lang and the othe may not have them
+        return QueryFilters.ebvBoolean(""+op1.value+op1.type+op1.lang > ""+op2.value+op2.type+op2.lang);
+    } else if(op1.token && op1.token === 'blank' && op2.token && op2.token === 'blank') {    
+        return QueryFilters.ebvBoolean(op1.value > op2.value);
+    } else if(op1.value && op2.value) {
+        return QueryFilters.ebvBoolean(op1.value > op2.value);
+    } else {
+        return QueryFilters.ebvTrue();
     }
 };
 

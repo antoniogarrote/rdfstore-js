@@ -252,7 +252,7 @@ OrderClause "[22] OrderClause"
   [23]  	OrderCondition	  ::=  	 ( ( 'ASC' | 'DESC' ) BrackettedExpression ) | ( Constraint | Var )
 */
 OrderCondition "[23] OrderCondition"
-  = ( direction:( 'ASC' / 'DESC' ) WS* e:BrackettedExpression ) {
+  = ( direction:( 'ASC' / 'DESC' ) WS* e:BrackettedExpression WS* ) {
       return { direction: direction, expression:e };
 }
 / e:( Constraint / Var ) {
@@ -820,8 +820,15 @@ TriplesSameSubject "[66] TriplesSameSubject"
       var subject = s;
       for(var i=0; i< pairs.pairs.length; i++) {
           var pair = pairs.pairs[i];
-          var triple = {subject: subject, predicate: pair[0], object: pair[1]}
-          triplesContext.push(triple);
+          var triple = null;
+          if(subject.token && subject.token==='triplesnodecollection') {
+              triple = {subject: subject.chainSubject[0], predicate: pair[0], object: pair[1]}
+              triplesContext.push(triple);
+              triplesContext = triplesContext.concat(subject.triplesContext);
+          } else {
+              triple = {subject: subject, predicate: pair[0], object: pair[1]}
+              triplesContext.push(triple);
+          }
       }
 
       var token = {};
@@ -840,7 +847,7 @@ TriplesSameSubject "[66] TriplesSameSubject"
           if(tn.token === "triplesnodecollection") {
               for(var j=0; j<subject.length; j++) {
                   var subj = subject[j];
-                  if(typeof(subj) === 'object') {
+                  if(subj.triplesContext != null) {
                       var triple = {subject: subj.chainSubject, predicate: pair[0], object: pair[1]}
                       triplesContext.concat(subj.triplesContext);
                   } else {
@@ -876,8 +883,13 @@ PropertyListNotEmpty "[67] PropertyListNotEmpty"
       for( var i=0; i<ol.length; i++) {
 
          if(ol[i].triplesContext != null) {
-              triplesContext = triplesContext.concat(ol[i].triplesContext);
-             pairs.push([v, ol[i].chainSubject]);
+             triplesContext = triplesContext.concat(ol[i].triplesContext);
+             if(ol[i].token==='triplesnodecollection' && ol[i].chainSubject.length != null) {
+                 pairs.push([v, ol[i].chainSubject[0]]);
+             } else {
+                 pairs.push([v, ol[i].chainSubject]);
+             }
+
           } else {
               pairs.push([v, ol[i]])
           }
@@ -923,13 +935,8 @@ ObjectList "[69] ObjectList"
   = obj:Object WS* objs:( ',' WS* Object )* {
 
         var toReturn = [];
-        if(typeof(obj)==='object' && obj.token==='triplesnodecollection') {
-            for(var i=0; i<obj.chainSubject.length; i++) {
-                toReturn.push(obj.chainSubject[i]);
-            }
-        } else {
-            toReturn.push(obj);
-        }
+
+        toReturn.push(obj);
 
         for(var i=0; i<objs.length; i++) {
             for(var j=0; j<objs[i].length; j++) {
@@ -1074,16 +1081,58 @@ TriplesNode "[87] TriplesNode"
       triplesContext = [];
       chainSubject = [];
 
-      for(var i=0; i<c.length; i++) {
-          var node = c[i];
+      var triple = null;
 
-          if(node.triplesContext == null) {
-              chainSubject.push(node);
-          } else {
-              chainSubject.push(node);
-          }
+      // catch NIL
+      /*
+      if(c.length == 1 && c[0].token && c[0].token === 'nil') {
+          GlobalBlankNodeCounter++;
+          return  {token: "triplesnodecollection", 
+                   triplesContext:[{subject: {token:'blank', label:("_:"+GlobalBlankNodeCounter)},
+                                    predicate:{token:'uri', prefix:null, suffix:null, value:'http://www.w3.org/1999/02/22-rdf-syntax-ns#rest'},
+                                    object:  {token:'blank', label:("_:"+(GlobalBlankNodeCounter+1))}}], 
+                   chainSubject:{token:'blank', label:("_:"+GlobalBlankNodeCounter)}};
+
       }
-      return {token:"triplesnodecollection", triplesContext:triplesContext, chainSubject:chainSubject}
+      */
+
+      // other cases
+      for(var i=0; i<c.length; i++) {
+          GlobalBlankNodeCounter++;
+          //_:b0  rdf:first  1 ;
+          //rdf:rest   _:b1 .
+          var nextObject = null;
+          if(c[i].chainSubject == null && c[i].triplesContext == null) {
+              nextObject = c[i];
+          } else {
+              nextObject = c[i].chainSubject;
+              triplesContext = triplesContext.concat(nextSubject.triplesContext);
+          }
+          var currentSubject = null;
+          triple = {subject: {token:'blank', label:("_:"+GlobalBlankNodeCounter)},
+                    predicate:{token:'uri', prefix:null, suffix:null, value:'http://www.w3.org/1999/02/22-rdf-syntax-ns#first'},
+                    object:nextObject };
+
+          if(i==0) {
+              chainSubject.push(triple.subject);
+          }
+
+          triplesContext.push(triple);
+
+          if(i===(c.length-1)) {
+              triple = {subject: {token:'blank', label:("_:"+GlobalBlankNodeCounter)},
+                        predicate:{token:'uri', prefix:null, suffix:null, value:'http://www.w3.org/1999/02/22-rdf-syntax-ns#rest'},
+                        object:   {token:'uri', prefix:null, suffix:null, value:'http://www.w3.org/1999/02/22-rdf-syntax-ns#nil'}};
+          } else {
+              triple = {subject: {token:'blank', label:("_:"+GlobalBlankNodeCounter)},
+                        predicate:{token:'uri', prefix:null, suffix:null, value:'http://www.w3.org/1999/02/22-rdf-syntax-ns#rest'},
+                        object:  {token:'blank', label:("_:"+(GlobalBlankNodeCounter+1))} };
+          }
+
+          triplesContext.push(triple);
+      }
+
+      return {token:"triplesnodecollection", triplesContext:triplesContext, chainSubject:chainSubject};
 }
   / BlankNodePropertyList
 
@@ -1963,7 +2012,15 @@ ECHAR "[143] ECHAR"
 */
 
 NIL "[144] NIL"
-  = '(' WS* ')'
+  = '(' WS* ')' {
+
+      GlobalBlankNodeCounter++;
+      return  {token: "triplesnodecollection", 
+               triplesContext:[{subject: {token:'blank', label:("_:"+GlobalBlankNodeCounter)},
+                                predicate:{token:'uri', prefix:null, suffix:null, value:'http://www.w3.org/1999/02/22-rdf-syntax-ns#rest'},
+                                object: {token:'uri', prefix:null, suffix:null, value:'http://www.w3.org/1999/02/22-rdf-syntax-ns#nil'}}], 
+               chainSubject:[{token:'blank', label:("_:"+GlobalBlankNodeCounter)}]};
+}
 
 /*
   [145]  	WS	  ::=  	#x20 | #x9 | #xD | #xA

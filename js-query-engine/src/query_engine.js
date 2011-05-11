@@ -89,37 +89,85 @@ QueryEngine.QueryEngine.prototype.applyLimitOffset = function(offset, limit, bin
     return bindings.slice(offset, limit);
 };
 
-QueryEngine.QueryEngine.prototype.applyOrderBy = function(order, modifiedBindings, env, callback) {
-    if(order != null) {
-        QueryFilters.collect(order.expression, modifiedBindings, env.outCache, this, function(success, results){
-            var sortedBindings = results.sort(function(a,b){
 
-                if(QueryFilters.runEqualityFunction(a.value,b.value,[]).value == true) {
-                    return 0
-                } else if(QueryFilters.runGtFunction(a.value,b.value,[]).value == true) {
-                    if(order.direction === "ASC") {
-                        return 1;
-                    } else {
-                        return -1;
-                    }
+QueryEngine.QueryEngine.prototype.applySingleOrderBy = function(orderFilters, modifiedBindings, outEnv, callback) {
+    var that = this;
+    Utils.repeat(0, orderFilters.length, function(k,env){
+        var floop = arguments.callee;
+        var orderFilter = orderFilters[env._i];
+        QueryFilters.collect(orderFilter.expression, [modifiedBindings], outEnv.outCache, that, function(success, results){
+            if(success) {
+                env.acum = env.acum || [];
+                env.acum.push(results[0].value);
+                k(floop, env);
+            } else {
+                callback(false, results);
+            }
+        });
+    }, function(env) {
+        callback(true, {binding:modifiedBindings, value:env.acum});
+    });
+};
+
+QueryEngine.QueryEngine.prototype.applyOrderBy = function(order, modifiedBindings, outEnv, callback) {
+    var that = this;
+    if(order != null && order.length > 0) {
+        Utils.repeat(0, modifiedBindings.length, function(k,env) {
+            var floop = arguments.callee;
+            var bindings = modifiedBindings[env._i];
+            that.applySingleOrderBy(order, bindings, outEnv, function(success, results){
+                if(success) {
+                    env.acum = env.acum || [];
+                    env.acum.push(results);
+                    k(floop, env);
                 } else {
-                    if(order.direction === "ASC") {
-                        return -1;
-                    } else {
-                        return 1;
-                    }
+                    callback(false, results);
                 }
             });
-
+        }, function(env) {
+            var results = env.acum;
+            results.sort(function(a,b){
+                return that.compareFilteredBindings(a, b, order);
+            });
             var toReturn = [];
-            for(var i=0; i<sortedBindings.length; i++) {
-                toReturn.push(sortedBindings[i].binding);
+            for(var i=0; i<results.length; i++) {
+                toReturn.push(results[i].binding);
             }
 
             callback(true,toReturn);
         });
     } else {
         callback(true,modifiedBindings);
+    }
+};
+
+QueryEngine.QueryEngine.prototype.compareFilteredBindings = function(a, b, order) {
+    var found = false;
+    var i = 0
+    while(!found) {
+        var direction = order[i].direction;
+        if(i==a.value.length) {
+            return 0;
+        }
+
+        if(QueryFilters.runEqualityFunction(a.value[i], b.value[i], []).value == true) {
+            i++;
+        } else {
+            var filterResult = QueryFilters.runTotalGtFunction(a.value[i], b.value[i], []);
+            if(filterResult.value == true) {
+                if(direction === "ASC") {
+                    return 1;
+                } else {
+                    return -1;
+                }
+            } else {
+                if(direction === "ASC") {
+                    return -1;
+                } else {
+                    return 1;
+                }
+            }       
+        }     
     }
 };
 
@@ -465,19 +513,17 @@ QueryEngine.QueryEngine.prototype.executeSelect = function(unit, env, callback) 
         var limit      = unit.limit;
         var offset     = unit.offset;
         var order      = unit.order;
-        if(order!=null) {
-            order = order[0]; // more than one? why array?
-        }
         var that = this;
         this.executeSelectUnit(projection, dataset, unit.pattern, env, function(success, result){
             if(success) {
-                var projectedBindings = that.projectBindings(projection, result);
-                var modifiedBindings = that.applyModifier(modifier, projectedBindings)
+
+                var modifiedBindings = that.applyModifier(modifier, result)
                 that.applyOrderBy(order, modifiedBindings, env, function(success, orderedBindings){
                     if(success) {
                         // @todo group here!
                         var limitedBindings  = that.applyLimitOffset(offset, limit, orderedBindings);
-                        callback(true,limitedBindings);
+                        var projectedBindings = that.projectBindings(projection, limitedBindings);
+                        callback(true,projectedBindings);
 
                     } else {
                         callback(false, orderedBindings);
