@@ -23,6 +23,8 @@ QueryPlan.variablesInBGP = function(bgp) {
     for(comp in components) {
         if(components[comp] && components[comp].token === "var") {
             variables.push(components[comp].value);
+        } else if(components[comp] && components[comp].token === "blank") {
+            variables.push("blank:"+components[comp].label);
         }
     }
     bgp.variables = variables;
@@ -165,9 +167,13 @@ QueryPlan.executeJoinBGP = function(joinVars, bgpa, bgpb, queryEngine, queryEnv,
             var bindingsa = QueryPlan.buildBindingsFromRange(resultsa, bgpa);
             queryEngine.rangeQuery(bgpb, queryEnv, function(success, resultsb){
                 if(success) {
-                    var bindingsb = QueryPlan.buildBindingsFromRange(resultsb, bgpb);
-                    var bindings = QueryPlan.joinBindings(bindingsa, bindingsb);
-                    callback(true, bindings);
+                    //queryEngine.copyDenormalizedBindings(bindingsa, queryEnv.outCache||[], function(success, denormBindingsa){
+                        var bindingsb = QueryPlan.buildBindingsFromRange(resultsb, bgpb);
+                        //queryEngine.copyDenormalizedBindings(bindingsb, queryEnv.outCache||[], function(success, denormBindingsb){
+                            var bindings = QueryPlan.joinBindings(bindingsa, bindingsb);
+                            callback(true, bindings);
+                        //});
+                    //});
                 } else {
                     callback(false, results);
                 }
@@ -206,6 +212,8 @@ QueryPlan.buildBindingsFromRange = function(results, bgp) {
     for(comp in components) {
         if(components[comp] && components[comp].token === "var") {
             bindings[comp] = components[comp].value;
+        } else if(components[comp] && components[comp].token === "blank") {
+            bindings[comp] = "blank:"+components[comp].label;
         }
     }
 
@@ -218,7 +226,6 @@ QueryPlan.buildBindingsFromRange = function(results, bgp) {
             var value = result[comp];
             binding[bindings[comp]] = value;
         }
-
         resultsBindings.push(binding);
     }
 

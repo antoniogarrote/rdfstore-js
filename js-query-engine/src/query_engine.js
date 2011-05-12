@@ -401,7 +401,6 @@ QueryEngine.QueryEngine.prototype.denormalizeBindingsList = function(bindingsLis
  * returns a bindings map (var -> value) storing in cache all the missing values for oids
  *
  * This is required just to save lookups when final results are generated.
- * Currently only being used by the filters interpreter logic.
  */
 QueryEngine.QueryEngine.prototype.copyDenormalizedBindings = function(bindingsList, out, callback) {
 

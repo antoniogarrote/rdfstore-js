@@ -1727,8 +1727,8 @@ RDFLiteral "[112] RDFLiteral"
           return {token:'literal', value:s.value, lang:e.slice(1), type:null}
       } else {
           if(typeof(e) === "object") {
-              e.shift();
-              return {token:'literal', value:s.value, lang:null, type:e }
+              e.shift(); // remove the '^^' char
+              return {token:'literal', value:s.value, lang:null, type:e[0] }
           } else {
               return { token:'literal', value:s.value, lang:null, type:null }
           }
@@ -2014,12 +2014,9 @@ ECHAR "[143] ECHAR"
 NIL "[144] NIL"
   = '(' WS* ')' {
 
-      GlobalBlankNodeCounter++;
       return  {token: "triplesnodecollection", 
-               triplesContext:[{subject: {token:'blank', label:("_:"+GlobalBlankNodeCounter)},
-                                predicate:{token:'uri', prefix:null, suffix:null, value:'http://www.w3.org/1999/02/22-rdf-syntax-ns#rest'},
-                                object: {token:'uri', prefix:null, suffix:null, value:'http://www.w3.org/1999/02/22-rdf-syntax-ns#nil'}}], 
-               chainSubject:[{token:'blank', label:("_:"+GlobalBlankNodeCounter)}]};
+               triplesContext:[], 
+               chainSubject:[{token:'uri', value:"http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"}]};
 }
 
 /*

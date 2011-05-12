@@ -109,6 +109,97 @@ exports.testBasePrefix5 = function(test) {
     });
 };
 
+exports.testList1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            engine.execute('PREFIX : <http://example.org/ns#> PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> INSERT DATA { :x :list0 () . :x :list1 ("1"^^xsd:integer) . :x :list2 ("11"^^xsd:integer "22"^^xsd:integer) . :x :list3 ("111"^^xsd:integer "222"^^xsd:integer "333"^^xsd:integer) .}', function(success, result){
+
+                engine.execute('PREFIX : <http://example.org/ns#>\
+                                SELECT ?p\
+                                WHERE {\
+                                  :x ?p () .\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 1);
+                                    test.ok(results[0].p.value === "http://example.org/ns#list0");
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testList2 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            engine.execute('PREFIX : <http://example.org/ns#> PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> INSERT DATA { :x :list0 () . :x :list1 ("1"^^xsd:integer) . :x :list2 ("11"^^xsd:integer "22"^^xsd:integer) . :x :list3 ("111"^^xsd:integer "222"^^xsd:integer "333"^^xsd:integer) .}', function(success, result){
+
+                engine.execute('PREFIX : <http://example.org/ns#>\
+                                SELECT ?p\
+                                WHERE {\
+                                  :x ?p (1) .\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 1);
+                                    test.ok(results[0].p.value === "http://example.org/ns#list1");
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testList3 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            engine.execute('PREFIX : <http://example.org/ns#> PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> INSERT DATA { :x :list0 () . :x :list1 ("1"^^xsd:integer) . :x :list2 ("11"^^xsd:integer "22"^^xsd:integer) . :x :list3 ("111"^^xsd:integer "222"^^xsd:integer "333"^^xsd:integer) .}', function(success, result){
+
+                engine.execute('PREFIX : <http://example.org/ns#>\
+                                SELECT ?p ?v\
+                                WHERE {\
+                                  :x ?p (?v) .\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 1);
+                                    test.ok(results[0].p.value === "http://example.org/ns#list1");
+                                    test.ok(results[0].v.value === "1");
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testList4 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            engine.execute('PREFIX : <http://example.org/ns#> PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> INSERT DATA { :x :list0 () . :x :list1 ("1"^^xsd:integer) . :x :list2 ("11"^^xsd:integer "22"^^xsd:integer) . :x :list3 ("111"^^xsd:integer "222"^^xsd:integer "333"^^xsd:integer) .}', function(success, result){
+
+                engine.execute('PREFIX : <http://example.org/ns#>\
+                                SELECT ?p ?v ?w\
+                                WHERE {\
+                                  :x ?p (?v ?w) .\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 1);
+                                    test.ok(results[0].p.value === "http://example.org/ns#list2");
+                                    test.ok(results[0].v.value === "11");
+                                    test.ok(results[0].w.value === "22");
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
 exports.testBaseBGPNoMatch = function(test) {
     new Lexicon.Lexicon(function(lexicon){
         new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
