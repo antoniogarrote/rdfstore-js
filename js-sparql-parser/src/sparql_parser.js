@@ -12121,28 +12121,28 @@ SparqlParser.parser = (function(){
         
         var savedReportMatchFailures = reportMatchFailures;
         reportMatchFailures = false;
-        var result8 = parse_STRING_LITERAL1();
+        var result8 = parse_STRING_LITERAL_LONG1();
         var result7 = result8 !== null
           ? (function(s) { return {token:'string', value:s} })(result8)
           : null;
         if (result7 !== null) {
           var result0 = result7;
         } else {
-          var result6 = parse_STRING_LITERAL2();
+          var result6 = parse_STRING_LITERAL_LONG2();
           var result5 = result6 !== null
             ? (function(s) { return {token:'string', value:s} })(result6)
             : null;
           if (result5 !== null) {
             var result0 = result5;
           } else {
-            var result4 = parse_STRING_LITERAL_LONG1();
+            var result4 = parse_STRING_LITERAL1();
             var result3 = result4 !== null
               ? (function(s) { return {token:'string', value:s} })(result4)
               : null;
             if (result3 !== null) {
               var result0 = result3;
             } else {
-              var result2 = parse_STRING_LITERAL_LONG2();
+              var result2 = parse_STRING_LITERAL2();
               var result1 = result2 !== null
                 ? (function(s) { return {token:'string', value:s} })(result2)
                 : null;
@@ -12881,6 +12881,7 @@ SparqlParser.parser = (function(){
             }
           }
           if (result9 !== null) {
+            var result10 = [];
             if (input.substr(pos).match(/^[0-9]/) !== null) {
               var result11 = input.charAt(pos);
               pos++;
@@ -12890,22 +12891,17 @@ SparqlParser.parser = (function(){
                 matchFailed("[0-9]");
               }
             }
-            if (result11 !== null) {
-              var result10 = [];
-              while (result11 !== null) {
-                result10.push(result11);
-                if (input.substr(pos).match(/^[0-9]/) !== null) {
-                  var result11 = input.charAt(pos);
-                  pos++;
-                } else {
-                  var result11 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("[0-9]");
-                  }
+            while (result11 !== null) {
+              result10.push(result11);
+              if (input.substr(pos).match(/^[0-9]/) !== null) {
+                var result11 = input.charAt(pos);
+                pos++;
+              } else {
+                var result11 = null;
+                if (reportMatchFailures) {
+                  matchFailed("[0-9]");
                 }
               }
-            } else {
-              var result10 = null;
             }
             if (result10 !== null) {
               var result7 = [result8, result9, result10];
@@ -13831,65 +13827,70 @@ SparqlParser.parser = (function(){
         var savedReportMatchFailures = reportMatchFailures;
         reportMatchFailures = false;
         var savedPos0 = pos;
-        if (input.substr(pos, 0) === "") {
-          var result2 = "";
-          pos += 0;
+        if (input.substr(pos, 3) === "'''") {
+          var result2 = "'''";
+          pos += 3;
         } else {
           var result2 = null;
           if (reportMatchFailures) {
-            matchFailed("\"\"");
+            matchFailed("\"'''\"");
           }
         }
         if (result2 !== null) {
-          if (input.substr(pos, 0) === "") {
-            var result3 = "";
-            pos += 0;
+          var result3 = [];
+          if (input.substr(pos).match(/^[^'\\]/) !== null) {
+            var result7 = input.charAt(pos);
+            pos++;
           } else {
-            var result3 = null;
+            var result7 = null;
             if (reportMatchFailures) {
-              matchFailed("\"\"");
+              matchFailed("[^'\\\\]");
+            }
+          }
+          if (result7 !== null) {
+            var result5 = result7;
+          } else {
+            var result6 = parse_ECHAR();
+            if (result6 !== null) {
+              var result5 = result6;
+            } else {
+              var result5 = null;;
+            };
+          }
+          while (result5 !== null) {
+            result3.push(result5);
+            if (input.substr(pos).match(/^[^'\\]/) !== null) {
+              var result7 = input.charAt(pos);
+              pos++;
+            } else {
+              var result7 = null;
+              if (reportMatchFailures) {
+                matchFailed("[^'\\\\]");
+              }
+            }
+            if (result7 !== null) {
+              var result5 = result7;
+            } else {
+              var result6 = parse_ECHAR();
+              if (result6 !== null) {
+                var result5 = result6;
+              } else {
+                var result5 = null;;
+              };
             }
           }
           if (result3 !== null) {
-            if (input.substr(pos, 26) === " content:([^'\\] / ECHAR)* ") {
-              var result4 = " content:([^'\\] / ECHAR)* ";
-              pos += 26;
+            if (input.substr(pos, 3) === "'''") {
+              var result4 = "'''";
+              pos += 3;
             } else {
               var result4 = null;
               if (reportMatchFailures) {
-                matchFailed("\" content:([^'\\\\] / ECHAR)* \"");
+                matchFailed("\"'''\"");
               }
             }
             if (result4 !== null) {
-              if (input.substr(pos, 0) === "") {
-                var result5 = "";
-                pos += 0;
-              } else {
-                var result5 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"\"");
-                }
-              }
-              if (result5 !== null) {
-                if (input.substr(pos, 0) === "") {
-                  var result6 = "";
-                  pos += 0;
-                } else {
-                  var result6 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"\"");
-                  }
-                }
-                if (result6 !== null) {
-                  var result1 = [result2, result3, result4, result5, result6];
-                } else {
-                  var result1 = null;
-                  pos = savedPos0;
-                }
-              } else {
-                var result1 = null;
-                pos = savedPos0;
-              }
+              var result1 = [result2, result3, result4];
             } else {
               var result1 = null;
               pos = savedPos0;
@@ -13903,7 +13904,7 @@ SparqlParser.parser = (function(){
           pos = savedPos0;
         }
         var result0 = result1 !== null
-          ? (function() { return flattenString(content) })()
+          ? (function(content) { return flattenString(content) })(result1[1])
           : null;
         reportMatchFailures = savedReportMatchFailures;
         if (reportMatchFailures && result0 === null) {

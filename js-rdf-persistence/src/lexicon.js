@@ -108,7 +108,9 @@ Lexicon.Lexicon.prototype.retrieve = function(oid,callback) {
             }
         }
     } catch(e) {
-        throw new Error("Unknown OID:"+oid);
+        console.log(e.message);
+        console.log(e.stack);
+        throw new Error("Unknown retrieving OID in lexicon:"+oid);
 
     }
 };

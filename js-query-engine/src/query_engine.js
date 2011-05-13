@@ -354,13 +354,14 @@ QueryEngine.QueryEngine.prototype.normalizeLiteral = function(term, env, callbac
         var typeValue = type.value;
 
         if(typeValue != null) {
-            indexedValue = '"' + value + '"^^<' + typeValue + '>';
+            indexedValue = '"' + QueryFilters.effectiveTypeValue(term) + '"^^<' + typeValue + '>';
         } else {
             var typePrefix = type.prefix;
             var typeSuffix = type.suffix;
 
             var resolvedPrefix = this.resolveNsInEnvironment(typePrefix, env);
-            indexedValue = '"' + value + '"^^<' + resolvedPrefix + typeSuffix + '>';
+            term.type = resolvedPrefix+typeSuffix;
+            indexedValue = '"' + QueryFilters.effectiveTypeValue(term) + '"^^<' + resolvedPrefix + typeSuffix + '>';
         }
     } else {
         if(lang == null && type == null) {
@@ -368,7 +369,7 @@ QueryEngine.QueryEngine.prototype.normalizeLiteral = function(term, env, callbac
         } else if(type == null) {
             indexedValue = '"' + value + '"' + "@" + lang;        
         } else {
-            indexedValue = '"' + value + '"^^<'+type+'>';
+            indexedValue = '"' + QueryFilters.effectiveTypeValue(term) + '"^^<'+type+'>';
         }
     }
 
@@ -451,9 +452,9 @@ QueryEngine.QueryEngine.prototype.denormalizeBindings = function(bindings, callb
               bindings[variables[env._i]] = null;
               k(floop, env);
         } else {
-          that.lexicon.retrieve(oid, function(val){
-              bindings[variables[env._i]] = val;
-              k(floop, env);
+            that.lexicon.retrieve(oid, function(val){
+                bindings[variables[env._i]] = val;
+                k(floop, env);
           });
         }
     }, function(env){
@@ -465,10 +466,14 @@ QueryEngine.QueryEngine.prototype.denormalizeBindings = function(bindings, callb
 
 QueryEngine.QueryEngine.prototype.execute = function(queryString, callback){
     var syntaxTree = this.abstractQueryTree.parseQueryString(queryString);
-    if(syntaxTree.token === 'query' && syntaxTree.kind == 'update')  {
-        this.executeUpdate(syntaxTree, callback);
-    } else if(syntaxTree.token === 'query' && syntaxTree.kind == 'query') {
-        this.executeQuery(syntaxTree, callback);
+    if(syntaxTree == null) {
+        throw("Error parsing query string");
+    } else {
+       if(syntaxTree.token === 'query' && syntaxTree.kind == 'update')  {
+           this.executeUpdate(syntaxTree, callback);
+       } else if(syntaxTree.token === 'query' && syntaxTree.kind == 'query') {
+           this.executeQuery(syntaxTree, callback);
+       }
     }
 };
 

@@ -200,6 +200,372 @@ exports.testList4 = function(test) {
     });
 }
 
+exports.testQuotes1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/ns#> INSERT DATA { :x1 :p1 "x" . :x2 :p2 """x \
+y""" . :x3 :p3 """x \
+y"""^^:someType .}';
+            engine.execute(query, function(success, result){
+                engine.execute("PREFIX : <http://example.org/ns#>\
+                                SELECT ?x\
+                                WHERE {\
+                                  ?x ?p '''x''' .}", function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 1);
+                                    test.ok(results[0].x.value === "http://example.org/ns#x1");
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testQuotes2 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/ns#> INSERT DATA { :x1 :p1 "x" . :x2 :p2 """x \
+y""" . :x3 :p3 """x \
+y"""^^:someType .}';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example.org/ns#>\
+                                SELECT ?x\
+                                WHERE {\
+                                  ?x ?p """x""" .}', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 1);
+                                    test.ok(results[0].x.value === "http://example.org/ns#x1");
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testQuotes3 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/ns#> INSERT DATA { :x1 :p1 "x" . :x2 :p2 """x \
+y""" . :x3 :p3 """x \
+y"""^^:someType .}';
+            engine.execute(query, function(success, result){
+                engine.execute("PREFIX : <http://example.org/ns#>\
+                                SELECT ?x\
+                                WHERE {\
+                                  ?x ?p '''x \
+y''' .}", function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 1);
+                                    test.ok(results[0].x.value === "http://example.org/ns#x2");
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testQuotes4 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/ns#> INSERT DATA { :x1 :p1 "x" . :x2 :p2 """x \
+y""" . :x3 :p3 """x \
+y"""^^:someType .}';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example.org/ns#>\
+                                SELECT ?x\
+                                WHERE {\
+                                  ?x ?p """x \
+y"""^^:someType .}', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 1);
+                                    test.ok(results[0].x.value === "http://example.org/ns#x3");
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+
+exports.testTerm1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/ns#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         INSERT DATA {\
+                           :x :p1 "true"^^xsd:boolean .\
+                           :x :p2 "false"^^xsd:boolean .\
+                           :x rdf:type :C . :x :n1  "123.0"^^xsd:decimal .\
+                           :x :n2  "456."^^xsd:decimal .\
+                           :x :n3 "+5"^^xsd:integer .\
+                           :x :n4 "-18"^^xsd:integer . }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX :     <http://example.org/ns#>\
+                                PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT * { :x ?p true . }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 1);
+                                    test.ok(results[0].p.value === "http://example.org/ns#p1");
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+
+exports.testTerm2 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/ns#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         INSERT DATA {\
+                           :x :p1 "true"^^xsd:boolean .\
+                           :x :p2 "false"^^xsd:boolean .\
+                           :x rdf:type :C . :x :n1  "123.0"^^xsd:decimal .\
+                           :x :n2  "456."^^xsd:decimal .\
+                           :x :n3 "+5"^^xsd:integer .\
+                           :x :n4 "-18"^^xsd:integer . }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX :     <http://example.org/ns#>\
+                                PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT * { :x ?p false . }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 1);
+                                    test.ok(results[0].p.value === "http://example.org/ns#p2");
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testTerm3 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/ns#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         INSERT DATA {\
+                           :x :p1 "true"^^xsd:boolean .\
+                           :x :p2 "false"^^xsd:boolean .\
+                           :x rdf:type :C .\
+                           :x :n1  "123.0"^^xsd:decimal .\
+                           :x :n2  "456."^^xsd:decimal .\
+                           :x :n3 "+5"^^xsd:integer .\
+                           :x :n4 "-18"^^xsd:integer . }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX :     <http://example.org/ns#>\
+                                PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT * { :x a ?C . }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 1);
+                                    test.ok(results[0].C.value === "http://example.org/ns#C");
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testTerm4 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/ns#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         INSERT DATA {\
+                           :x :p1 "true"^^xsd:boolean .\
+                           :x :p2 "false"^^xsd:boolean .\
+                           :x rdf:type :C .\
+                           :x :n1  "123.0"^^xsd:decimal .\
+                           :x :n2  "456."^^xsd:decimal .\
+                           :x :n3 "+5"^^xsd:integer .\
+                           :x :n4 "-18"^^xsd:integer . }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX :     <http://example.org/ns#>\
+                                PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT * { :x ?p 123.0 }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 1);
+                                    test.ok(results[0].p.value === "http://example.org/ns#n1");
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testTerm5 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/ns#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         INSERT DATA {\
+                           :x :p1 "true"^^xsd:boolean .\
+                           :x :p2 "false"^^xsd:boolean .\
+                           :x rdf:type :C .\
+                           :x :n1  "123.0"^^xsd:decimal .\
+                           :x :n2  "456."^^xsd:decimal .\
+                           :x :n3 "+5"^^xsd:integer .\
+                           :x :n4 "-18"^^xsd:integer . }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX :     <http://example.org/ns#>\
+                                PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT * { :x ?p 123.0. }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 1);
+                                    test.ok(results[0].p.value === "http://example.org/ns#n1");
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testTerm6 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/ns#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         INSERT DATA {\
+                           :x :p1 "true"^^xsd:boolean .\
+                           :x :p2 "false"^^xsd:boolean .\
+                           :x rdf:type :C .\
+                           :x :n1  "123.0"^^xsd:decimal .\
+                           :x :n2  "456."^^xsd:decimal .\
+                           :x :n3 "+5"^^xsd:integer .\
+                           :x :n4 "-18"^^xsd:integer . }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX :     <http://example.org/ns#>\
+                                PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT * { :x ?p 456. }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 1);
+                                    test.ok(results[0].p.value === "http://example.org/ns#n2");
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testTerm7 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/ns#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         INSERT DATA {\
+                           :x :p1 "true"^^xsd:boolean .\
+                           :x :p2 "false"^^xsd:boolean .\
+                           :x rdf:type :C .\
+                           :x :n1  "123.0"^^xsd:decimal .\
+                           :x :n2  "456."^^xsd:decimal .\
+                           :x :n3 "+5"^^xsd:integer .\
+                           :x :n4 "-18"^^xsd:integer . }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX :     <http://example.org/ns#>\
+                                PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT * { :x ?p 456. . }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 1);
+                                    test.ok(results[0].p.value === "http://example.org/ns#n2");
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+
+exports.testTerm8 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/ns#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         INSERT DATA {\
+                           :x :p1 "true"^^xsd:boolean .\
+                           :x :p2 "false"^^xsd:boolean .\
+                           :x rdf:type :C .\
+                           :x :n1  "123.0"^^xsd:decimal .\
+                           :x :n2  "456."^^xsd:decimal .\
+                           :x :n3 "+5"^^xsd:integer .\
+                           :x :n4 "-18"^^xsd:integer . }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX :     <http://example.org/ns#>\
+                                PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT * { :x ?p +5 . }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 1);
+                                    test.ok(results[0].p.value === "http://example.org/ns#n3");
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testTerm9 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/ns#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         INSERT DATA {\
+                           :x :p1 "true"^^xsd:boolean .\
+                           :x :p2 "false"^^xsd:boolean .\
+                           :x rdf:type :C .\
+                           :x :n1  "123.0"^^xsd:decimal .\
+                           :x :n2  "456."^^xsd:decimal .\
+                           :x :n3 "+5"^^xsd:integer .\
+                           :x :n4 "-18"^^xsd:integer . }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX :     <http://example.org/ns#>\
+                                PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT * { :x ?p -18 . }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 1);
+                                    test.ok(results[0].p.value === "http://example.org/ns#n4");
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+
 exports.testBaseBGPNoMatch = function(test) {
     new Lexicon.Lexicon(function(lexicon){
         new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
@@ -221,3 +587,4 @@ exports.testBaseBGPNoMatch = function(test) {
         });
     });
 }
+

@@ -1792,10 +1792,10 @@ BooleanLiteral "[117] BooleanLiteral"
   [118]  	String	  ::=  	STRING_LITERAL1 | STRING_LITERAL2 | STRING_LITERAL_LONG1 | STRING_LITERAL_LONG2
 */
 String "[118] String"
-  = s:STRING_LITERAL1 { return {token:'string', value:s} }
-  / s:STRING_LITERAL2 { return {token:'string', value:s} }
-  / s:STRING_LITERAL_LONG1 { return {token:'string', value:s} }
+  = s:STRING_LITERAL_LONG1 { return {token:'string', value:s} }
   / s:STRING_LITERAL_LONG2 { return {token:'string', value:s} }
+  / s:STRING_LITERAL1 { return {token:'string', value:s} }
+  / s:STRING_LITERAL2 { return {token:'string', value:s} }
 
 /*
   [119]  	IRIref	  ::=  	IRI_REF |	PrefixedName
@@ -1884,10 +1884,9 @@ INTEGER "[129] INTEGER"
 
 /*
   [130]  	DECIMAL	  ::=  	[0-9]+ '.' [0-9]* | '.' [0-9]+
-  @warning Changed [0-9]+ '.' [0-9]* -> [0-9]+ '.' [0-9]+
 */
 DECIMAL "[130] DECIMAL"
-  = a:[0-9]+ b:'.' c:[0-9]+ {
+  = a:[0-9]+ b:'.' c:[0-9]* {
 
       lit = {};
       lit.token = "literal";
@@ -1992,7 +1991,7 @@ STRING_LITERAL2 "[140] STRING_LITERAL2"
   [141]  	STRING_LITERAL_LONG1	  ::=  	"'''" ( ( "'" | "''" )? ( [^'\] | ECHAR ) )* "'''"
 */
 STRING_LITERAL_LONG1 "[141] STRING_LITERAL_LONG1"
-  = ''''' content:([^\'\\] / ECHAR)* '''''  { return flattenString(content) }
+  = "'''" content:([^\'\\] / ECHAR)* "'''"  { return flattenString(content) }
 
 /*
   @todo check
