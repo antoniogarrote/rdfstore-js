@@ -565,6 +565,74 @@ exports.testTerm9 = function(test) {
     });
 }
 
+exports.testVar1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/ns#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA {\
+                           :x :p1 "1"^^xsd:integer .\
+                           :x :p2 "2"^^xsd:integer . }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX :     <http://example.org/ns#>\
+                                PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT * { :x ?p $v . }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 2);
+                                    if(results[0].p.value === "http://example.org/ns#p2") {
+                                        test.ok(results[0].p.value === "http://example.org/ns#p2");
+                                        test.ok(results[0].v.value === '2');
+                                        test.ok(results[1].p.value === "http://example.org/ns#p1");
+                                        test.ok(results[1].v.value === '1');
+                                    } else {
+                                        test.ok(results[0].p.value === "http://example.org/ns#p1");
+                                        test.ok(results[0].v.value === '1');
+                                        test.ok(results[1].p.value === "http://example.org/ns#p2");
+                                        test.ok(results[1].v.value === '2');
+                                    }
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testVar2 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/ns#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA {\
+                           :x :p1 "1"^^xsd:integer .\
+                           :x :p2 "2"^^xsd:integer . }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX :     <http://example.org/ns#>\
+                                PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT * { :x ?p $v . :x ?p ?v }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 2);
+                                    if(results[0].p.value === "http://example.org/ns#p2") {
+                                        test.ok(results[0].p.value === "http://example.org/ns#p2");
+                                        test.ok(results[0].v.value === '2');
+                                        test.ok(results[1].p.value === "http://example.org/ns#p1");
+                                        test.ok(results[1].v.value === '1');
+                                    } else {
+                                        test.ok(results[0].p.value === "http://example.org/ns#p1");
+                                        test.ok(results[0].v.value === '1');
+                                        test.ok(results[1].p.value === "http://example.org/ns#p2");
+                                        test.ok(results[1].v.value === '2');
+                                    }
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
 
 exports.testBaseBGPNoMatch = function(test) {
     new Lexicon.Lexicon(function(lexicon){
@@ -588,3 +656,49 @@ exports.testBaseBGPNoMatch = function(test) {
     });
 }
 
+exports.testSPOO = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/ns#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA {\
+                           :x :p1 "1"^^xsd:integer .\
+                           :x :p1 "2"^^xsd:integer . }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX :     <http://example.org/ns#>\
+                                PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT ?s WHERE { ?s :p1 1, 2 . }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 1);
+                                    test.ok(results[0].s.value === "http://example.org/ns#x");
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testPrefixName1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/ns#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA {\
+                           :x :p1 "1"^^xsd:integer .\
+                           :x :p1 "2"^^xsd:integer . }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX ex:     <http://example.org/ns#x>\
+                                SELECT ?p WHERE { ex: ?p 1 . }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 1);
+                                    test.ok(results[0].p.value === "http://example.org/ns#p1");
+                                    test.done();
+                });
+            });
+        });
+    });
+}
