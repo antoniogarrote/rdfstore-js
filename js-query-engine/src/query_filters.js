@@ -121,7 +121,7 @@ QueryFilters.runFilter = function(filterExpr, bindings, queryEngine, env) {
         if(expressionType == 'relationalexpression') {
             var op1 = QueryFilters.runFilter(filterExpr.op1, bindings,queryEngine, env);
             var op2 = QueryFilters.runFilter(filterExpr.op2, bindings,queryEngine, env);
-            return QueryFilters.runRelationalFilter(filterExpr, op1, op2, bindings);
+            return QueryFilters.runRelationalFilter(filterExpr, op1, op2, bindings, queryEngine, env);
         } else if(expressionType == 'conditionalor') {
             return QueryFilters.runOrFunction(filterExpr, bindings, queryEngine, env);
         } else if (expressionType == 'conditionaland') {
@@ -134,6 +134,8 @@ QueryFilters.runFilter = function(filterExpr, bindings, queryEngine, env) {
             return QueryFilters.runMultiplication(filterExpr.factor, filterExpr.factors, bindings, queryEngine, env);
         } else if(expressionType == 'unaryexpression') {
             return QueryFilters.runUnaryExpression(filterExpr.unaryexpression, filterExpr.expression, bindings);
+        } else if(expressionType == 'irireforfunction') {
+            return QueryFilters.runIriRefOrFunction(filterExpr.iriref, filterExpr.args, bindings, queryEngine, env);
         } else if(expressionType == 'atomic') {        
             if(filterExpr.primaryexpression == 'var') {
                 // lookup the var in the bindings
@@ -173,7 +175,7 @@ QueryFilters.isRDFTerm = function(val) {
 };
 
 
-QueryFilters.RDFTermEquality = function(v1, v2) {
+QueryFilters.RDFTermEquality = function(v1, v2, queryEngine, env) {
     if(v1.token === 'literal' && v2.token === 'literal') {
         if(v1.lang == v2.lang && v1.type == v2.type && v1.value == v2.value) {
             return true;
@@ -181,7 +183,7 @@ QueryFilters.RDFTermEquality = function(v1, v2) {
             return false;
         }
     } else if(v1.token === 'uri' && v2.token === 'uri') {
-        return v1.value == v2.value;
+        return queryEngine.normalizeBaseUri(v1, env) == queryEngine.normalizeBaseUri(v2, env);
     } else if(v1.token === 'blank' && v2.token === 'blank') {
         return v1.value == v2.value;
     } else {
@@ -362,10 +364,10 @@ QueryFilters.ebvBoolean = function(bool) {
 }
 
 
-QueryFilters.runRelationalFilter = function(filterExpr, op1, op2, bindings) {
+QueryFilters.runRelationalFilter = function(filterExpr, op1, op2, bindings, queryEngine, env) {
     var operator = filterExpr.operator;
     if(operator === '=') {
-        return QueryFilters.runEqualityFunction(op1, op2, bindings);
+        return QueryFilters.runEqualityFunction(op1, op2, bindings, queryEngine, env);
     } else if(operator === '!=') {
        
     } else if(operator === '<') {
@@ -463,7 +465,7 @@ QueryFilters.runAndFunction = function(filterExpr, bindings, queryEngine, env) {
 };
 
 
-QueryFilters.runEqualityFunction = function(op1, op2, bindings) {
+QueryFilters.runEqualityFunction = function(op1, op2, bindings, queryEngine, env) {
     if(QueryFilters.isNumeric(op1) && QueryFilters.isNumeric(op2)) {
         return QueryFilters.ebvBoolean(QueryFilters.effectiveTypeValue(op1) == QueryFilters.effectiveTypeValue(op2));
     } else if(QueryFilters.isSimpleLiteral(op1) && QueryFilters.isSimpleLiteral(op2)) {
@@ -475,7 +477,7 @@ QueryFilters.runEqualityFunction = function(op1, op2, bindings) {
     } else if(QueryFilters.isXsdType("dateTime", op1) && QueryFilters.isXsdType("dateTime", op2)) {
         return QueryFilters.ebvBoolean(QueryFilters.effectiveTypeValue(op1).getTime() == QueryFilters.effectiveTypeValue(op2).getTime());
     } else if(QueryFilters.isRDFTerm(op1) && QueryFilters.isRDFTerm(op2)) {
-        return QueryFilters.ebvBoolean(QueryFilters.RDFTermEquality(op1, op2));
+        return QueryFilters.ebvBoolean(QueryFilters.RDFTermEquality(op1, op2, queryEngine, env));
     } else {
         return QueryFilters.ebvFalse();
     }
@@ -680,8 +682,25 @@ QueryFilters.runBuiltInCall = function(builtincall, args, bindings, queryEngine,
         if(ops[0].token === 'literal'){
             return {token: 'literal', value:""+ops[0].lang};
         } else {
-            return QueryFilters.ebvFalse();
+            return QueryFilters.ebvError();
         }
+    } else if(builtincall === 'datatype') {
+        if(ops[0].token === 'literal'){
+            var lit = ops[0];
+            if(lit.type != null) {
+                if(typeof(lit.type) === 'string') {
+                    return {token: 'uri', value:lit.type, prefix:null, suffix:null};
+                } else {
+                    return lit.type;
+                }
+            } else {
+                return {token: 'uri', value:'http://www.w3.org/2001/XMLSchema#string', prefix:null, suffix:null};
+            }
+        } else {
+            return QueryFilters.ebvError();
+        }
+    } else {
+        throw ("Builtin call "+builtincall+" not implemented yet");
     }
 };
 
@@ -709,4 +728,276 @@ QueryFilters.runUnaryExpression = function(unaryexpression, expression, bindings
             return QueryFilters.ebvError();
         }
     }
-}
+};
+
+QueryFilters.normalizeLiteralDatatype = function(literal, queryEngine, env) {
+    if(literal.value.type == null || typeof(literal.value.type) != 'object') {
+        return literal;
+    } else {
+        // type can be parsed as a hash using namespaces
+        literal.value.type =  queryEngine.normalizeBaseUri(literal.value.type, env);
+        return literal;
+    }
+};
+
+QueryFilters.runIriRefOrFunction = function(iriref, args, bindings,queryEngine, env) {
+    if(args == null) {
+        return iriref;
+    } else {
+        var ops = [];
+        for(var i=0; i<args.length; i++) {
+            ops.push(QueryFilters.runFilter(args[i], bindings, queryEngine, env))
+        }
+
+        var fun = queryEngine.normalizeBaseUri(iriref, env);
+
+        if(fun == "http://www.w3.org/2001/XMLSchema#integer" ||
+           fun == "http://www.w3.org/2001/XMLSchema#decimal" ||
+           fun == "http://www.w3.org/2001/XMLSchema#double" ||
+           fun == "http://www.w3.org/2001/XMLSchema#nonPositiveInteger" ||
+           fun == "http://www.w3.org/2001/XMLSchema#negativeInteger" ||
+           fun == "http://www.w3.org/2001/XMLSchema#long" ||
+           fun == "http://www.w3.org/2001/XMLSchema#int" ||
+           fun == "http://www.w3.org/2001/XMLSchema#short" ||
+           fun == "http://www.w3.org/2001/XMLSchema#byte" ||
+           fun == "http://www.w3.org/2001/XMLSchema#nonNegativeInteger" ||
+           fun == "http://www.w3.org/2001/XMLSchema#unsignedLong" ||
+           fun == "http://www.w3.org/2001/XMLSchema#unsignedInt" ||
+           fun == "http://www.w3.org/2001/XMLSchema#unsignedShort" ||
+           fun == "http://www.w3.org/2001/XMLSchema#unsignedByte" ||
+           fun == "http://www.w3.org/2001/XMLSchema#positiveInteger") {
+            var from = ops[0];
+            if(from.token === 'literal') {
+                from = QueryFilters.normalizeLiteralDatatype(from, queryEngine, env);
+                if(from.type == "http://www.w3.org/2001/XMLSchema#integer" ||
+                   from.type == "http://www.w3.org/2001/XMLSchema#decimal" ||
+                   from.type == "http://www.w3.org/2001/XMLSchema#double" ||
+                   from.type == "http://www.w3.org/2001/XMLSchema#nonPositiveInteger" ||
+                   from.type == "http://www.w3.org/2001/XMLSchema#negativeInteger" ||
+                   from.type == "http://www.w3.org/2001/XMLSchema#long" ||
+                   from.type == "http://www.w3.org/2001/XMLSchema#int" ||
+                   from.type == "http://www.w3.org/2001/XMLSchema#short" ||
+                   from.type == "http://www.w3.org/2001/XMLSchema#byte" ||
+                   from.type == "http://www.w3.org/2001/XMLSchema#nonNegativeInteger" ||
+                   from.type == "http://www.w3.org/2001/XMLSchema#unsignedLong" ||
+                   from.type == "http://www.w3.org/2001/XMLSchema#unsignedInt" ||
+                   from.type == "http://www.w3.org/2001/XMLSchema#unsignedShort" ||
+                   from.type == "http://www.w3.org/2001/XMLSchema#unsignedByte" ||
+                   from.type == "http://www.w3.org/2001/XMLSchema#positiveInteger") {
+                    from.type = fun;
+                    return from;
+                } else if(from.type == 'http://www.w3.org/2001/XMLSchema#boolean') {
+                    if(QueryFilters.ebv(from) == true) {
+                        from.type = fun;
+                        from.value = 1;
+                    } else {
+                        from.type = fun;
+                        from.value = 0;
+                    }
+                    return from;
+                } else if(from.type == 'http://www.w3.org/2001/XMLSchema#float' || 
+                          from.type == 'http://www.w3.org/2001/XMLSchema#double') {
+                    from.type = fun;
+                    from.value = parseInt(from.value);
+                    return from;
+                } else if(from.type == 'http://www.w3.org/2001/XMLSchema#string' || from.type == null) {
+                    if(from.value.split(".").length > 2) {
+                        return QueryFilters.ebvError();
+                    } else if (from.value.split("-").length > 2) {
+                        return QueryFilters.ebvError();                            
+                    } else if (from.value.split("/").length > 2) {
+                        return QueryFilters.ebvError();                            
+                    } else if (from.value.split("+").length > 2) {
+                        return QueryFilters.ebvError();                            
+                    }
+
+                    // @todo improve this with regular expressions for each lexical representation
+                    if(fun == "http://www.w3.org/2001/XMLSchema#decimal") {
+                        if(from.value.indexOf("e") != -1 || from.value.indexOf("E") != -1) {
+                            return QueryFilters.ebvError();
+                        }
+                    }
+
+                    // @todo improve this with regular expressions for each lexical representation
+                    if(fun == "http://www.w3.org/2001/XMLSchema#int" || fun == "http://www.w3.org/2001/XMLSchema#integer") {
+                        if(from.value.indexOf("e") != -1 || from.value.indexOf("E") != -1 || from.value.indexOf(".") != -1) {
+                            return QueryFilters.ebvError();
+                        }
+                    }
+
+                    try {
+                        from.value = parseInt(parseFloat(from.value));
+                        if(isNaN(from.value)) {
+                            return QueryFilters.ebvError();
+                        } else {
+                            from.type = fun;
+                            return from;
+                        }
+                    } catch(e) {
+                        return QueryFilters.ebvError();                        
+                    }
+                } else {
+                    return QueryFilters.ebvError();
+                }
+            } else {
+                return QueryFilters.ebvError();
+            }
+        } else if(fun == "http://www.w3.org/2001/XMLSchema#boolean") { 
+            var from = ops[0];
+            if(from.token === "literal" && from.type == null) {
+                if(from.value === "true" || from.value === "1") {
+                    return QueryFilters.ebvTrue();
+                } else if(from.value === "false" || from.value === "0" ) {
+                    return QueryFilters.ebvFalse();
+                } else {
+                    return QueryFilters.ebvError();
+                }
+            } else if(from.token === "literal") {
+              if(QueryFilters.isEbvError(from)) {
+                  return from;
+              } else {
+                  return QueryFilters.ebvBoolean(from);
+              }
+            } else {
+                return QueryFilters.ebvError();
+            }
+        } else if(fun == "http://www.w3.org/2001/XMLSchema#string") { 
+            var from = ops[0];
+            if(from.token === 'literal') {
+                from = QueryFilters.normalizeLiteralDatatype(from, queryEngine, env);
+                if(from.type == "http://www.w3.org/2001/XMLSchema#integer" ||
+                   from.type == "http://www.w3.org/2001/XMLSchema#decimal" ||
+                   from.type == "http://www.w3.org/2001/XMLSchema#double" ||
+                   from.type == "http://www.w3.org/2001/XMLSchema#nonPositiveInteger" ||
+                   from.type == "http://www.w3.org/2001/XMLSchema#negativeInteger" ||
+                   from.type == "http://www.w3.org/2001/XMLSchema#long" ||
+                   from.type == "http://www.w3.org/2001/XMLSchema#int" ||
+                   from.type == "http://www.w3.org/2001/XMLSchema#short" ||
+                   from.type == "http://www.w3.org/2001/XMLSchema#byte" ||
+                   from.type == "http://www.w3.org/2001/XMLSchema#nonNegativeInteger" ||
+                   from.type == "http://www.w3.org/2001/XMLSchema#unsignedLong" ||
+                   from.type == "http://www.w3.org/2001/XMLSchema#unsignedInt" ||
+                   from.type == "http://www.w3.org/2001/XMLSchema#unsignedShort" ||
+                   from.type == "http://www.w3.org/2001/XMLSchema#unsignedByte" ||
+                   from.type == "http://www.w3.org/2001/XMLSchema#positiveInteger" ||
+                   from.type == "http://www.w3.org/2001/XMLSchema#float") {
+                    from.type = fun;
+                    from.value = ""+from.value;
+                    return from;
+                } else if(from.type == "http://www.w3.org/2001/XMLSchema#string") {
+                    return from;
+                } else if(from.type == "http://www.w3.org/2001/XMLSchema#boolean") {
+                    if(QueryFilters.ebv(from)) {
+                        from.type = fun;
+                        from.value = 'true';
+                    } else {
+                        from.type = fun;
+                        from.value = 'false';
+                    }
+                    return from;
+                } else if(from.type == "http://www.w3.org/2001/XMLSchema#dateTime") {
+                    from.type = fun;
+                    if(typeof(from.value) != 'string') {
+                        from.value = Utils.iso8601(from.value);
+                    }
+                    return from;
+                } else if(from.type == null) {
+                    from.value = ""+from.value;
+                    from.type = fun;
+                    return from;
+                } else {
+                    return QueryFilters.ebvError();
+                }
+            } else if(from.token === 'uri') {
+                return {token: 'literal',
+                        value: queryEngine.normalizeBaseUri(from, env),
+                        type: fun,
+                        lang: null};
+            } else {
+                return QueryFilters.ebvError();
+            }            
+        } else if(fun == "http://www.w3.org/2001/XMLSchema#dateTime") { 
+            from = ops[0];
+            if(from.type == "http://www.w3.org/2001/XMLSchema#dateTime") {
+                return from;
+            } else if(from.type == "http://www.w3.org/2001/XMLSchema#string" || from.type == null) {
+                try {
+                    from.value = Utils.iso8601(Utils.parseISO8601(from.value));
+                    from.type = fun;
+                    return from;
+                } catch(e) {
+                    return QueryFilters.ebvError();
+                }
+            } else {
+                return QueryFilters.ebvError();
+            }
+        } else if(fun == "http://www.w3.org/2001/XMLSchema#float") { 
+            var from = ops[0];
+            if(from.token === 'literal') {
+                from = QueryFilters.normalizeLiteralDatatype(from, queryEngine, env);
+                if(from.type == 'http://www.w3.org/2001/XMLSchema#decimal' || 
+                   from.type == 'http://www.w3.org/2001/XMLSchema#int') {
+                    from.type = fun;
+                    from.value = parseFloat(from.value);
+                    return from;
+                } else if(from.type == 'http://www.w3.org/2001/XMLSchema#boolean') {
+                    if(QueryFilters.ebv(from) == true) {
+                        from.type = fun;
+                        from.value = 1.0;
+                    } else {
+                        from.type = fun;
+                        from.value = 0.0;
+                    }
+                    return from;
+                } else if(from.type == 'http://www.w3.org/2001/XMLSchema#float' || 
+                          from.type == 'http://www.w3.org/2001/XMLSchema#double') {
+                    from.type = fun;
+                    from.value = parseFloat(from.value);
+                    return from;
+                } else if(from.type == 'http://www.w3.org/2001/XMLSchema#string') {
+                    try {
+                        from.value = parseFloat(from.value);
+                        if(isNaN(from.value)) {
+                            return QueryFilters.ebvError();
+                        } else {
+                            from.type = fun;
+                            return from;
+                        }
+                    } catch(e) {
+                        return QueryFilters.ebvError();                        
+                    }
+                } else if(from.type == null) {
+                    // checking some exceptions that are parsed as Floats by JS
+                    if(from.value.split(".").length > 2) {
+                        return QueryFilters.ebvError();
+                    } else if (from.value.split("-").length > 2) {
+                        return QueryFilters.ebvError();                            
+                    } else if (from.value.split("/").length > 2) {
+                        return QueryFilters.ebvError();                            
+                    } else if (from.value.split("+").length > 2) {
+                        return QueryFilters.ebvError();                            
+                    }
+
+                    try {
+                        from.value = parseFloat(from.value);
+                        if(isNaN(from.value)) {
+                            return QueryFilters.ebvError();
+                        } else {
+                            from.type = fun;
+                            return from;
+                        }
+                    } catch(e) {
+                        return QueryFilters.ebvError();                        
+                    }
+                } else {
+                    return QueryFilters.ebvError();
+                }
+            } else {
+                return QueryFilters.ebvError();
+            }
+        } else {
+            // unknown function
+            return QueryFilters.ebvError();
+        }
+    }
+};

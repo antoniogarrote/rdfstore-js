@@ -72,6 +72,7 @@ SparqlParser.parser = (function(){
         "INTEGER_POSITIVE": parse_INTEGER_POSITIVE,
         "IRI_REF": parse_IRI_REF,
         "IRIref": parse_IRIref,
+        "IRIrefOrFunction": parse_IRIrefOrFunction,
         "InsertClause": parse_InsertClause,
         "InsertData": parse_InsertData,
         "LANGTAG": parse_LANGTAG,
@@ -4604,10 +4605,10 @@ SparqlParser.parser = (function(){
                             for(var j=0; j<currentBasicGraphPatterns.length; j++) {
                                 triplesContext = triplesContext.concat(currentBasicGraphPatterns[j].triplesContext);
                             }
-                             if(triplesContext.length > 0) {
-                            compactedSubpatterns.push({token: 'basicgraphpattern',
-                                                       triplesContext: triplesContext});
-          }
+                            if(triplesContext.length > 0) {  
+                                compactedSubpatterns.push({token: 'basicgraphpattern',
+                                                           triplesContext: triplesContext});
+                            }
                             currentBasicGraphPatterns = [];
                         }
                         compactedSubpatterns.push(subpatterns[i]);
@@ -4626,8 +4627,8 @@ SparqlParser.parser = (function(){
                         triplesContext = triplesContext.concat(currentBasicGraphPatterns[j].triplesContext);
                     }
                     if(triplesContext.length > 0) {
-                    compactedSubpatterns.push({token: 'basicgraphpattern',
-                                               triplesContext: triplesContext});
+                      compactedSubpatterns.push({token: 'basicgraphpattern',
+                                                 triplesContext: triplesContext});
                     }
                 }
           
@@ -5360,7 +5361,7 @@ SparqlParser.parser = (function(){
         var result0 = result1 !== null
           ? (function(i, args) {
                 var fcall = {};
-                fall.token = "functioncall";
+                fcall.token = "functioncall";
                 fcall.fn = i;
                 fcall.args = args.value;
           
@@ -9888,79 +9889,84 @@ SparqlParser.parser = (function(){
         
         var savedReportMatchFailures = reportMatchFailures;
         reportMatchFailures = false;
-        var result11 = parse_BrackettedExpression();
-        if (result11 !== null) {
-          var result0 = result11;
+        var result12 = parse_BrackettedExpression();
+        if (result12 !== null) {
+          var result0 = result12;
         } else {
-          var result10 = parse_BuiltInCall();
-          if (result10 !== null) {
-            var result0 = result10;
+          var result11 = parse_BuiltInCall();
+          if (result11 !== null) {
+            var result0 = result11;
           } else {
-            var result9 = parse_RDFLiteral();
-            var result8 = result9 !== null
-              ? (function(v) {
-                    var ex = {};
-                    ex.token = 'expression';
-                    ex.expressionType = 'atomic';
-                    ex.primaryexpression = 'rdfliteral';
-                    ex.value = v;
-              
-                    return ex;
-                })(result9)
-              : null;
-            if (result8 !== null) {
-              var result0 = result8;
+            var result10 = parse_IRIrefOrFunction();
+            if (result10 !== null) {
+              var result0 = result10;
             } else {
-              var result7 = parse_NumericLiteral();
-              var result6 = result7 !== null
+              var result9 = parse_RDFLiteral();
+              var result8 = result9 !== null
                 ? (function(v) {
                       var ex = {};
                       ex.token = 'expression';
                       ex.expressionType = 'atomic';
-                      ex.primaryexpression = 'numericliteral';
+                      ex.primaryexpression = 'rdfliteral';
                       ex.value = v;
                 
                       return ex;
-                  })(result7)
+                  })(result9)
                 : null;
-              if (result6 !== null) {
-                var result0 = result6;
+              if (result8 !== null) {
+                var result0 = result8;
               } else {
-                var result5 = parse_BooleanLiteral();
-                var result4 = result5 !== null
+                var result7 = parse_NumericLiteral();
+                var result6 = result7 !== null
                   ? (function(v) {
                         var ex = {};
                         ex.token = 'expression';
                         ex.expressionType = 'atomic';
-                        ex.primaryexpression = 'booleanliteral';
+                        ex.primaryexpression = 'numericliteral';
                         ex.value = v;
                   
                         return ex;
-                    })(result5)
+                    })(result7)
                   : null;
-                if (result4 !== null) {
-                  var result0 = result4;
+                if (result6 !== null) {
+                  var result0 = result6;
                 } else {
-                  var result3 = parse_Aggregate();
-                  if (result3 !== null) {
-                    var result0 = result3;
+                  var result5 = parse_BooleanLiteral();
+                  var result4 = result5 !== null
+                    ? (function(v) {
+                          var ex = {};
+                          ex.token = 'expression';
+                          ex.expressionType = 'atomic';
+                          ex.primaryexpression = 'booleanliteral';
+                          ex.value = v;
+                    
+                          return ex;
+                      })(result5)
+                    : null;
+                  if (result4 !== null) {
+                    var result0 = result4;
                   } else {
-                    var result2 = parse_Var();
-                    var result1 = result2 !== null
-                      ? (function(v) {
-                            var ex = {};
-                            ex.token = 'expression';
-                            ex.expressionType = 'atomic';
-                            ex.primaryexpression = 'var';
-                            ex.value = v;
-                      
-                            return ex;
-                        })(result2)
-                      : null;
-                    if (result1 !== null) {
-                      var result0 = result1;
+                    var result3 = parse_Aggregate();
+                    if (result3 !== null) {
+                      var result0 = result3;
                     } else {
-                      var result0 = null;;
+                      var result2 = parse_Var();
+                      var result1 = result2 !== null
+                        ? (function(v) {
+                              var ex = {};
+                              ex.token = 'expression';
+                              ex.expressionType = 'atomic';
+                              ex.primaryexpression = 'var';
+                              ex.value = v;
+                        
+                              return ex;
+                          })(result2)
+                        : null;
+                      if (result1 !== null) {
+                        var result0 = result1;
+                      } else {
+                        var result0 = null;;
+                      };
                     };
                   };
                 };
@@ -11836,6 +11842,54 @@ SparqlParser.parser = (function(){
         reportMatchFailures = savedReportMatchFailures;
         if (reportMatchFailures && result0 === null) {
           matchFailed("[110] Aggregate");
+        }
+        
+        cache[cacheKey] = {
+          nextPos: pos,
+          result:  result0
+        };
+        return result0;
+      }
+      
+      function parse_IRIrefOrFunction() {
+        var cacheKey = 'IRIrefOrFunction@' + pos;
+        var cachedResult = cache[cacheKey];
+        if (cachedResult) {
+          pos = cachedResult.nextPos;
+          return cachedResult.result;
+        }
+        
+        var savedReportMatchFailures = reportMatchFailures;
+        reportMatchFailures = false;
+        var savedPos0 = pos;
+        var result2 = parse_IRIref();
+        if (result2 !== null) {
+          var result4 = parse_ArgList();
+          var result3 = result4 !== null ? result4 : '';
+          if (result3 !== null) {
+            var result1 = [result2, result3];
+          } else {
+            var result1 = null;
+            pos = savedPos0;
+          }
+        } else {
+          var result1 = null;
+          pos = savedPos0;
+        }
+        var result0 = result1 !== null
+          ? (function(i, args) {
+                var fcall = {};
+                fcall.token = "expression";
+                fcall.expressionType = 'irireforfunction';
+                fcall.iriref = i;
+                fcall.args = args.value;
+          
+                return fcall;
+          })(result1[0], result1[1])
+          : null;
+        reportMatchFailures = savedReportMatchFailures;
+        if (reportMatchFailures && result0 === null) {
+          matchFailed("[117] IRIrefOrFunction");
         }
         
         cache[cacheKey] = {

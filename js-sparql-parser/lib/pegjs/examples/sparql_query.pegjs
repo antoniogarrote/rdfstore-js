@@ -742,7 +742,7 @@ Constraint "[60] Constraint"
 FunctionCall "[61] FunctionCall"
   = i:IRIref args:ArgList {
       var fcall = {};
-      fall.token = "functioncall";
+      fcall.token = "functioncall";
       fcall.fn = i;
       fcall.args = args.value;
 
@@ -1444,12 +1444,12 @@ UnaryExpression "[103] UnaryExpression"
   }
   / PrimaryExpression
 
-/*
-  [104]  	PrimaryExpression	  ::=  	BrackettedExpression | BuiltInCall | IRIrefOrFunction | RDFLiteral | NumericLiteral | BooleanLiteral | Var | Aggregate
+/*  [104]  	PrimaryExpression	  ::=  	BrackettedExpression | BuiltInCall | IRIrefOrFunction | RDFLiteral | NumericLiteral | BooleanLiteral | Var | Aggregate
 */
 PrimaryExpression "[104] PrimaryExpression"
   = BrackettedExpression
   / BuiltInCall
+  / IRIrefOrFunction 
   / v:RDFLiteral {
       var ex = {};
       ex.token = 'expression';
@@ -1721,6 +1721,23 @@ Aggregate "[110] Aggregate"
       return exp
 
   }
+
+/*
+  @error
+  Something has gone wrong with numeration in the rules!!
+
+  [117]  	IRIrefOrFunction	  ::=  	IRIref ArgList?
+*/
+IRIrefOrFunction "[117] IRIrefOrFunction"
+  = i:IRIref args:ArgList? {
+      var fcall = {};
+      fcall.token = "expression";
+      fcall.expressionType = 'irireforfunction';
+      fcall.iriref = i;
+      fcall.args = args.value;
+
+      return fcall;
+}
 
 /*
   [112]  	RDFLiteral	  ::=  	String ( LANGTAG | ( '^^' IRIref ) )?

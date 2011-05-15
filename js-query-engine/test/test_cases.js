@@ -1002,3 +1002,262 @@ exports.testDAWGBEV6 = function(test) {
     });
 }
 
+
+
+// Castings
+
+exports.testCastStr = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/> \
+                         INSERT DATA {\
+                           :iri :p :z .\
+                           :str :p "string" .\
+                           :fltdbl :p "-10.2E3" .\
+                           :decimal :p "+33.3300" .\
+                           :int :p "13" .\
+                           :dT :p "2002-10-10T17:00:00Z" .\
+                           :bool :p "true" .\
+                           }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example.org/>\
+                                PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                                PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT ?s WHERE {\
+                                    ?s :p ?v .\
+                                    FILTER(DATATYPE(xsd:string(?v)) = xsd:string) .\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 7);
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+
+exports.testCastFlt = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/> \
+                         INSERT DATA {\
+                           :iri :p :z .\
+                           :str :p "string" .\
+                           :fltdbl :p "-10.2E3" .\
+                           :decimal :p "+33.3300" .\
+                           :int :p "13" .\
+                           :dT :p "2002-10-10T17:00:00Z" .\
+                           :bool :p "true" .\
+                           }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example.org/>\
+                                PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                                PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT ?s WHERE {\
+                                    ?s :p ?v .\
+                                    FILTER(DATATYPE(xsd:float(?v)) = xsd:float) .\
+                                }', function(success, results){
+
+                                    test.ok(success === true);
+                                    var acum = [];
+                                    for(var i=0; i< results.length; i++) {
+                                        acum.push(results[i].s.value);
+                                    }
+                                    acum.sort();
+                                    test.ok(acum[0]=="http://example.org/decimal");
+                                    test.ok(acum[1]=="http://example.org/fltdbl");
+                                    test.ok(acum[2]=="http://example.org/int");
+                                    
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testCastDbl = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/> \
+                         INSERT DATA {\
+                           :iri :p :z .\
+                           :str :p "string" .\
+                           :fltdbl :p "-10.2E3" .\
+                           :decimal :p "+33.3300" .\
+                           :int :p "13" .\
+                           :dT :p "2002-10-10T17:00:00Z" .\
+                           :bool :p "true" .\
+                           }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example.org/>\
+                                PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                                PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT ?s WHERE {\
+                                    ?s :p ?v .\
+                                    FILTER(DATATYPE(xsd:double(?v)) = xsd:double) .\
+                                }', function(success, results){
+
+                                    test.ok(success === true);
+                                    var acum = [];
+                                    for(var i=0; i< results.length; i++) {
+                                        acum.push(results[i].s.value);
+                                    }
+                                    acum.sort();
+                                    test.ok(acum[0]=="http://example.org/decimal");
+                                    test.ok(acum[1]=="http://example.org/fltdbl");
+                                    test.ok(acum[2]=="http://example.org/int");
+                                    
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testCastDec = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/> \
+                         INSERT DATA {\
+                           :iri :p :z .\
+                           :str :p "string" .\
+                           :fltdbl :p "-10.2E3" .\
+                           :decimal :p "+33.3300" .\
+                           :int :p "13" .\
+                           :dT :p "2002-10-10T17:00:00Z" .\
+                           :bool :p "true" .\
+                           }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example.org/>\
+                                PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                                PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT ?s WHERE {\
+                                    ?s :p ?v .\
+                                    FILTER(DATATYPE(xsd:decimal(?v)) = xsd:decimal) .\
+                                }', function(success, results){
+
+                                    test.ok(success === true);
+                                    var acum = [];
+                                    for(var i=0; i< results.length; i++) {
+                                        acum.push(results[i].s.value);
+                                    }
+                                    acum.sort();
+                                    test.ok(acum[0]=="http://example.org/decimal");
+                                    test.ok(acum[1]=="http://example.org/int");
+                                    
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testCastInt = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/> \
+                         INSERT DATA {\
+                           :iri :p :z .\
+                           :str :p "string" .\
+                           :fltdbl :p "-10.2E3" .\
+                           :decimal :p "+33.3300" .\
+                           :int :p "13" .\
+                           :dT :p "2002-10-10T17:00:00Z" .\
+                           :bool :p "true" .\
+                           }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example.org/>\
+                                PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                                PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT ?s WHERE {\
+                                    ?s :p ?v .\
+                                    FILTER(DATATYPE(xsd:integer(?v)) = xsd:integer) .\
+                                }', function(success, results){
+
+                                    test.ok(success === true);
+                                    test.ok(results.length === 1);
+                                    test.ok(results[0].s.value=="http://example.org/int");
+                                    
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testCastDT = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/> \
+                         INSERT DATA {\
+                           :iri :p :z .\
+                           :str :p "string" .\
+                           :fltdbl :p "-10.2E3" .\
+                           :decimal :p "+33.3300" .\
+                           :int :p "13" .\
+                           :dT :p "2002-10-10T17:00:00Z" .\
+                           :bool :p "true" .\
+                           }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example.org/>\
+                                PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                                PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT ?s WHERE {\
+                                    ?s :p ?v .\
+                                    FILTER(DATATYPE(xsd:dateTime(?v)) = xsd:dateTime) .\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 1);
+                                    test.ok(results[0].s.value=="http://example.org/dT");
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testCastBool = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/> \
+                         INSERT DATA {\
+                           :iri :p :z .\
+                           :str :p "string" .\
+                           :fltdbl :p "-10.2E3" .\
+                           :decimal :p "+33.3300" .\
+                           :int :p "13" .\
+                           :dT :p "2002-10-10T17:00:00Z" .\
+                           :bool :p "true" .\
+                           }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example.org/>\
+                                PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                                PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT ?s WHERE {\
+                                    ?s :p ?v .\
+                                    FILTER(DATATYPE(xsd:boolean(?v)) = xsd:boolean) .\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 1);
+                                    test.ok(results[0].s.value=="http://example.org/bool");
+                                    test.done();
+                });
+            });
+        });
+    });
+}
