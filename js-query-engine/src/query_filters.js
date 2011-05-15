@@ -8,7 +8,7 @@ var Utils = require("./../../js-trees/src/utils").Utils;
 QueryFilters.checkFilters = function(pattern, bindings, queryEnv, queryEngine, callback) {
     var filters = pattern.filter;
     if(filters && filters[0]) {
-        QueryFilters.run(filters[0].value, bindings, queryEnv.outCache, queryEngine, callback);
+        QueryFilters.run(filters[0].value, bindings, queryEnv, queryEngine, callback);
     } else {
         callback(true, bindings);
     }
@@ -70,15 +70,25 @@ QueryFilters.boundVars = function(filterExpr) {
     }
 };
 
-QueryFilters.run = function(filterExpr, bindings, outCache, queryEngine, callback) {
-    queryEngine.copyDenormalizedBindings(bindings, outCache, function(success, denormBindings){
+QueryFilters.run = function(filterExpr, bindings, env, queryEngine, callback) {    
+    queryEngine.copyDenormalizedBindings(bindings, env.outCache, function(success, denormBindings){
         if(success === true) {
             var filteredBindings = [];
             for(var i=0; i<bindings.length; i++) {
                 var thisDenormBindings = denormBindings[i];
-                var ebv = QueryFilters.runFilter(filterExpr, thisDenormBindings);
-                if(QueryFilters.ebv(ebv) === true) {
+                var ebv = QueryFilters.runFilter(filterExpr, thisDenormBindings, queryEngine, env);
+                
+                // ebv can be directly a RDFTerm (e.g. atomic expression in filter)
+                // this additional call to ebv will return -> true/false/error
+                var ebv = QueryFilters.ebv(ebv);
+
+                if(QueryFilters.isEbvError(ebv)) {
+                    // error
+                } else if(ebv === true) {
+                    // true
                     filteredBindings.push(bindings[i]);
+                } else {
+                    // false
                 }
             }
             callback(true, filteredBindings);
@@ -88,13 +98,13 @@ QueryFilters.run = function(filterExpr, bindings, outCache, queryEngine, callbac
     });
 };
 
-QueryFilters.collect = function(filterExpr, bindings, outCache, queryEngine, callback) {
-    queryEngine.copyDenormalizedBindings(bindings, outCache, function(success, denormBindings){
+QueryFilters.collect = function(filterExpr, bindings, env, queryEngine, callback) {
+    queryEngine.copyDenormalizedBindings(bindings, env.outCache, function(success, denormBindings){
         if(success === true) {
             var filteredBindings = [];
             for(var i=0; i<bindings.length; i++) {
                 var thisDenormBindings = denormBindings[i];
-                var ebv = QueryFilters.runFilter(filterExpr, thisDenormBindings);
+                var ebv = QueryFilters.runFilter(filterExpr, thisDenormBindings, queryEngine, env);
                 filteredBindings.push({binding:bindings[i], value:ebv});
             }
             callback(true, filteredBindings);
@@ -105,31 +115,44 @@ QueryFilters.collect = function(filterExpr, bindings, outCache, queryEngine, cal
 };
 
 
-QueryFilters.runFilter = function(filterExpr, bindings) {
+QueryFilters.runFilter = function(filterExpr, bindings, queryEngine, env) {
     if(filterExpr.expressionType != null) {
         var expressionType = filterExpr.expressionType;
         if(expressionType == 'relationalexpression') {
-            var op1 = QueryFilters.runFilter(filterExpr.op1, bindings);
-            var op2 = QueryFilters.runFilter(filterExpr.op2, bindings);
+            var op1 = QueryFilters.runFilter(filterExpr.op1, bindings,queryEngine, env);
+            var op2 = QueryFilters.runFilter(filterExpr.op2, bindings,queryEngine, env);
             return QueryFilters.runRelationalFilter(filterExpr, op1, op2, bindings);
         } else if(expressionType == 'conditionalor') {
-            return QueryFilters.runOrFunction(filterExpr, bindings);
+            return QueryFilters.runOrFunction(filterExpr, bindings, queryEngine, env);
         } else if (expressionType == 'conditionaland') {
-            return QueryFilters.runAndFunction(filterExpr, bindings);
+            return QueryFilters.runAndFunction(filterExpr, bindings, queryEngine, env);
         } else if(expressionType == 'additiveexpression') {
-            return QueryFilters.runAddition(filterExpr.summand, filterExpr.summands, bindings);
+            return QueryFilters.runAddition(filterExpr.summand, filterExpr.summands, bindings, queryEngine, env);
         } else if(expressionType == 'builtincall') {
-            return QueryFilters.runBuiltInCall(filterExpr.builtincall, filterExpr.args, bindings);
+            return QueryFilters.runBuiltInCall(filterExpr.builtincall, filterExpr.args, bindings, queryEngine, env);
         } else if(expressionType == 'multiplicativeexpression') {
-            return QueryFilters.runMultiplication(filterExpr.factor, filterExpr.factors, bindings);
-        } else if(expressionType == 'atomic') {           
+            return QueryFilters.runMultiplication(filterExpr.factor, filterExpr.factors, bindings, queryEngine, env);
+        } else if(expressionType == 'unaryexpression') {
+            return QueryFilters.runUnaryExpression(filterExpr.unaryexpression, filterExpr.expression, bindings);
+        } else if(expressionType == 'atomic') {        
             if(filterExpr.primaryexpression == 'var') {
                 // lookup the var in the bindings
                 var val = bindings[filterExpr.value.value];
                 return val;
             } else {
                 // numeric, literal, etc...
-                return filterExpr.value;
+                //return queryEngine.filterExpr.value;
+                if(typeof(filterExpr.value) != 'object') {
+                    return filterExpr.value
+                } else {
+                    if(filterExpr.value.type == null || typeof(filterExpr.value.type) != 'object') {
+                        return filterExpr.value
+                    } else {
+                        // type can be parsed as a hash using namespaces
+                        filterExpr.value.type =  queryEngine.normalizeBaseUri(filterExpr.value.type, env);
+                        return filterExpr.value
+                    }
+                }
             }
         } else {
             throw("Unknown filter expression type");
@@ -264,9 +287,45 @@ QueryFilters.isXsdType = function(type, val) {
 
 QueryFilters.ebv = function(term) {
     if(term == null) {
-        return false;
+        return QueryFilters.ebvError();
     } else {
-        return term.value === true;
+        if(term.token && term.token === 'literal') {
+          if(term.type == "http://www.w3.org/2001/XMLSchema#integer" ||
+             term.type == "http://www.w3.org/2001/XMLSchema#decimal" ||
+             term.type == "http://www.w3.org/2001/XMLSchema#double" ||
+             term.type == "http://www.w3.org/2001/XMLSchema#nonPositiveInteger" ||
+             term.type == "http://www.w3.org/2001/XMLSchema#negativeInteger" ||
+             term.type == "http://www.w3.org/2001/XMLSchema#long" ||
+             term.type == "http://www.w3.org/2001/XMLSchema#int" ||
+             term.type == "http://www.w3.org/2001/XMLSchema#short" ||
+             term.type == "http://www.w3.org/2001/XMLSchema#byte" ||
+             term.type == "http://www.w3.org/2001/XMLSchema#nonNegativeInteger" ||
+             term.type == "http://www.w3.org/2001/XMLSchema#unsignedLong" ||
+             term.type == "http://www.w3.org/2001/XMLSchema#unsignedInt" ||
+             term.type == "http://www.w3.org/2001/XMLSchema#unsignedShort" ||
+             term.type == "http://www.w3.org/2001/XMLSchema#unsignedByte" ||
+             term.type == "http://www.w3.org/2001/XMLSchema#positiveInteger" ) {
+              return parseFloat(term.value) != 0;
+          } else if(term.type === "http://www.w3.org/2001/XMLSchema#boolean"){
+              return (term.value === 'true' || term.value === true || term.value === 'True');
+          } else if(term.type === "http://www.w3.org/2001/XMLSchema#string"){
+              return term.value != "";
+          } else if(term.type === "http://www.w3.org/2001/XMLSchema#dateTime"){
+              return (new Date(term.value)) != null;
+          } else if(QueryFilters.isEbvError(term)) {
+              return term;
+          } else if(term.type == null) {
+              if( term.value != "") {
+                  return true;
+              } else {
+                  return false;
+              }
+          } else {
+              return QueryFilters.ebvError();
+          }
+        } else {
+            return term.value === true;
+        }
     }
 }
 
@@ -279,6 +338,19 @@ QueryFilters.ebvTrue = function() {
 QueryFilters.ebvFalse = function() {
     val = {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#boolean", value:false};
     return val;
+};
+
+QueryFilters.ebvError = function() {
+    val = {token: 'literal', type:"https://github.com/antoniogarrote/js-tools/types#error", value:null};
+    return val;
+};
+
+QueryFilters.isEbvError = function(term) {
+    if(typeof(term) == 'object' && term != null) {
+        return term.type === "https://github.com/antoniogarrote/js-tools/types#error";
+    } else {
+        return false;
+    }
 };
 
 QueryFilters.ebvBoolean = function(bool) {
@@ -368,9 +440,9 @@ QueryFilters.effectiveTypeValue = function(val){
     }
 };
 
-QueryFilters.runOrFunction = function(filterExpr, bindings) {
+QueryFilters.runOrFunction = function(filterExpr, bindings, queryEngine, env) {
     for(var i=0; i< filterExpr.operands.length; i++) {
-        var ebv = QueryFilters.runFilter(filterExpr.operands[i], bindings);
+        var ebv = QueryFilters.runFilter(filterExpr.operands[i], bindings, queryEngine, env);
         if(QueryFilters.ebv(ebv) === true) {
             return ebv;
         }
@@ -379,9 +451,9 @@ QueryFilters.runOrFunction = function(filterExpr, bindings) {
     return QueryFilters.ebvBoolean(false);
 };
 
-QueryFilters.runAndFunction = function(filterExpr, bindings) {
+QueryFilters.runAndFunction = function(filterExpr, bindings, queryEngine, env) {
     for(var i=0; i< filterExpr.operands.length; i++) {
-        var ebv = QueryFilters.runFilter(filterExpr.operands[i], bindings);
+        var ebv = QueryFilters.runFilter(filterExpr.operands[i], bindings,queryEngine, env);
         if(QueryFilters.ebv(ebv) === false) {
             return ebv;
         }
@@ -503,12 +575,12 @@ QueryFilters.runLtEqFunction = function(op1, op2, bindings) {
     }
 };
 
-QueryFilters.runAddition = function(summand, summands, bindings) {
-    var summandOp = QueryFilters.runFilter(summand,bindings);
+QueryFilters.runAddition = function(summand, summands, bindings, queryEngine, env) {
+    var summandOp = QueryFilters.runFilter(summand,bindings,queryEngine, env);
     var acum = summandOp;
     if(QueryFilters.isNumeric(summandOp)) {
         for(var i=0; i<summands.length; i++) {
-            var nextSummandOp = QueryFilters.runFilter(summands[i].expression, bindings);
+            var nextSummandOp = QueryFilters.runFilter(summands[i].expression, bindings,queryEngine, env);
             if(QueryFilters.isNumeric(nextSummandOp)) {
                 if(summands[i].operator === '+') {
                     acum = QueryFilters.runSumFunction(acum, nextSummandOp);
@@ -545,12 +617,12 @@ QueryFilters.runSubFunction = function(suma, sumb) {
     }
 };
 
-QueryFilters.runMultiplication = function(factor, factors, bindings) {
-    var factorOp = QueryFilters.runFilter(factor,bindings);
+QueryFilters.runMultiplication = function(factor, factors, bindings, queryEngine, env) {
+    var factorOp = QueryFilters.runFilter(factor,bindings,queryEngine, env);
     var acum = factorOp;
     if(QueryFilters.isNumeric(factorOp)) {
         for(var i=0; i<factors.length; i++) {
-            var nextFactorOp = QueryFilters.runFilter(factors[i].expression, bindings);
+            var nextFactorOp = QueryFilters.runFilter(factors[i].expression, bindings,queryEngine, env);
             if(QueryFilters.isNumeric(nextFactorOp)) {
                 if(factors[i].operator === '*') {
                     acum = QueryFilters.runMulFunction(acum, nextFactorOp);
@@ -587,10 +659,10 @@ QueryFilters.runDivFunction = function(faca, facb) {
     }
 };
 
-QueryFilters.runBuiltInCall = function(builtincall, args, bindings) {
+QueryFilters.runBuiltInCall = function(builtincall, args, bindings, queryEngine, env) {
     var ops = [];
     for(var i=0; i<args.length; i++) {
-        ops.push(QueryFilters.runFilter(args[i], bindings));
+        ops.push(QueryFilters.runFilter(args[i], bindings, queryEngine, env));
     }
 
     if(builtincall === 'str') {
@@ -612,3 +684,29 @@ QueryFilters.runBuiltInCall = function(builtincall, args, bindings) {
         }
     }
 };
+
+QueryFilters.runUnaryExpression = function(unaryexpression, expression, bindings, queryEngine, env) {
+    var op = QueryFilters.runFilter(expression, bindings,queryEngine, env);
+    if(unaryexpression === '!') {
+        var res = QueryFilters.ebv(op);
+        if(QueryFilters.isEbvError(res)) {
+            return res;
+        } else {
+            res = !res;
+            return QueryFilters.ebvBoolean(res);
+        }
+    } else if(unaryexpression === '+') {
+        if(QueryFilters.isNumeric(op)) {
+            return op;
+        } else {
+            return QueryFilters.ebvError();
+        }
+    } else if(unaryexpression === '-') {
+        if(QueryFilters.isNumeric(op)) {
+            op.value = -op.value;
+            return op;
+        } else {
+            return QueryFilters.ebvError();
+        }
+    }
+}

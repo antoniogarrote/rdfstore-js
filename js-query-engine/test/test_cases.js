@@ -2,6 +2,8 @@ var QueryEngine = require("./../src/query_engine").QueryEngine;
 var QuadBackend = require("./../../js-rdf-persistence/src/quad_backend").QuadBackend;
 var Lexicon = require("./../../js-rdf-persistence/src/lexicon").Lexicon;
 
+// basic
+
 exports.testBasePrefix1 = function(test) {
     new Lexicon.Lexicon(function(lexicon){
         new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
@@ -702,3 +704,301 @@ exports.testPrefixName1 = function(test) {
         });
     });
 }
+
+// boolena-effective-value
+
+exports.testDAWGBooleanLiteral = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/ns#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA {\
+                           :x1 :p    "1"^^xsd:integer .\
+                           :x2 :p    "foo" .\
+                           :x3 :p    "0.01"^^xsd:double .\
+                           :x4 :p    "true"^^xsd:boolean .\
+                           :y1 :p    "0"^^xsd:integer .\
+                           :y2 :p    "0.0"^^xsd:double .\
+                           :y3 :p    "" .\
+                           :y4 :p    "false"^^xsd:boolean .\
+                           }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example.org/ns#>\
+                                SELECT ?x WHERE {\
+                                    ?x :p "foo" .\
+                                    FILTER (true) .\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 1);
+                                    test.ok(results[0].x.value === "http://example.org/ns#x2");
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testDAWGBEV1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/ns#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA {\
+                           :x1 :p    "1"^^xsd:integer .\
+                           :x2 :p    "foo" .\
+                           :x3 :p    "0.01"^^xsd:double .\
+                           :x4 :p    "true"^^xsd:boolean .\
+                           :y1 :p    "0"^^xsd:integer .\
+                           :y2 :p    "0.0"^^xsd:double .\
+                           :y3 :p    "" .\
+                           :y4 :p    "false"^^xsd:boolean .\
+                           }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX  xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                PREFIX  : <http://example.org/ns#>\
+                                SELECT  ?a\
+                                WHERE\
+                                    { ?a :p ?v . \
+                                      FILTER (?v) .\
+                                    }', function(success, results){
+                                        test.ok(success === true);
+                                        test.ok(results.length === 4);
+                                        var acum = [];
+                                        for(var i=0; i<results.length; i++) {
+                                            acum.push(results[i].a.value);
+                                        }
+
+                                        acum.sort();
+                                        test.ok(acum[0]==="http://example.org/ns#x1");
+                                        test.ok(acum[1]==="http://example.org/ns#x2");
+                                        test.ok(acum[2]==="http://example.org/ns#x3");
+                                        test.ok(acum[3]==="http://example.org/ns#x4");
+                                        test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testDAWGBEV2 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/ns#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA {\
+                           :x1 :p    "1"^^xsd:integer .\
+                           :x2 :p    "foo" .\
+                           :x3 :p    "0.01"^^xsd:double .\
+                           :x4 :p    "true"^^xsd:boolean .\
+                           :y1 :p    "0"^^xsd:integer .\
+                           :y2 :p    "0.0"^^xsd:double .\
+                           :y3 :p    "" .\
+                           :y4 :p    "false"^^xsd:boolean .\
+                           }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX  xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                PREFIX  : <http://example.org/ns#>\
+                                SELECT  ?a\
+                                WHERE\
+                                    { ?a :p ?v . \
+                                      FILTER (! ?v ) .\
+                                    }', function(success, results){
+                                        test.ok(success === true);
+                                        test.ok(results.length === 4);
+                                        var acum = [];
+                                        for(var i=0; i<results.length; i++) {
+                                            acum.push(results[i].a.value);
+                                        }
+
+                                        acum.sort();
+                                        test.ok(acum[0]==="http://example.org/ns#y1");
+                                        test.ok(acum[1]==="http://example.org/ns#y2");
+                                        test.ok(acum[2]==="http://example.org/ns#y3");
+                                        test.ok(acum[3]==="http://example.org/ns#y4");
+                                        test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testDAWGBEV3 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/ns#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA {\
+                           :x1 :p    "1"^^xsd:integer .\
+                           :x2 :p    "foo" .\
+                           :x3 :p    "0.01"^^xsd:double .\
+                           :x4 :p    "true"^^xsd:boolean .\
+                           :y1 :p    "0"^^xsd:integer .\
+                           :y2 :p    "0.0"^^xsd:double .\
+                           :y3 :p    "" .\
+                           :y4 :p    "false"^^xsd:boolean .\
+                           }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX  xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                PREFIX  : <http://example.org/ns#>\
+                                SELECT  ?a\
+                                WHERE\
+                                    { ?a :p ?v . \
+                                      FILTER ("true"^^xsd:boolean && ?v) .\
+                                    }', function(success, results){
+                                        test.ok(success === true);
+                                        test.ok(results.length === 4);
+                                        var acum = [];
+                                        for(var i=0; i<results.length; i++) {
+                                            acum.push(results[i].a.value);
+                                        }
+
+                                        acum.sort();
+                                        test.ok(acum[0]==="http://example.org/ns#x1");
+                                        test.ok(acum[1]==="http://example.org/ns#x2");
+                                        test.ok(acum[2]==="http://example.org/ns#x3");
+                                        test.ok(acum[3]==="http://example.org/ns#x4");
+                                        test.done();
+                });
+            });
+        });
+    });
+}
+
+
+
+exports.testDAWGBEV4 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/ns#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA {\
+                           :x1 :p    "1"^^xsd:integer .\
+                           :x2 :p    "foo" .\
+                           :x3 :p    "0.01"^^xsd:double .\
+                           :x4 :p    "true"^^xsd:boolean .\
+                           :y1 :p    "0"^^xsd:integer .\
+                           :y2 :p    "0.0"^^xsd:double .\
+                           :y3 :p    "" .\
+                           :y4 :p    "false"^^xsd:boolean .\
+                           }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX  xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                PREFIX  : <http://example.org/ns#>\
+                                SELECT  ?a\
+                                WHERE\
+                                    { ?a :p ?v . \
+                                      FILTER ("false"^^xsd:boolean || ?v) .\
+                                    }', function(success, results){
+                                        test.ok(success === true);
+                                        test.ok(results.length === 4);
+                                        var acum = [];
+                                        for(var i=0; i<results.length; i++) {
+                                            acum.push(results[i].a.value);
+                                        }
+
+                                        acum.sort();
+                                        test.ok(acum[0]==="http://example.org/ns#x1");
+                                        test.ok(acum[1]==="http://example.org/ns#x2");
+                                        test.ok(acum[2]==="http://example.org/ns#x3");
+                                        test.ok(acum[3]==="http://example.org/ns#x4");
+                                        test.done();
+                });
+            });
+        });
+    });
+}
+
+
+
+exports.testDAWGBEV5 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/ns#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA {\
+                         :x1 :p    "1"^^xsd:integer .\
+                         :x2 :p    "foo" .\
+                         :x3 :p    "0.01"^^xsd:double .\
+                         :x4 :p    "true"^^xsd:boolean .\
+                         :y1 :p    "0"^^xsd:integer .\
+                         :y2 :p    "0.0"^^xsd:double .\
+                         :y3 :p    "" .\
+                         :y4 :p    "false"^^xsd:boolean .\
+                         :x1 :q    "true"^^xsd:boolean .\
+                         :x2 :q    "false"^^xsd:boolean .\
+                         :x3 :q    "foo"^^:unknown .\
+                           }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX  xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                PREFIX  : <http://example.org/ns#>\
+                                SELECT  ?a\
+                                WHERE\
+                                    { ?a :p ?v . \
+                                      OPTIONAL\
+                                        { ?a :q ?w } . \
+                                      FILTER (?w) .\
+                                    }', function(success, results){
+                                        test.ok(success === true);
+                                        test.ok(results.length === 1);
+                                        test.ok(results[0].a.value==="http://example.org/ns#x1");
+                                        test.done();
+                });
+            });
+        });
+    });
+}
+
+
+
+exports.testDAWGBEV6 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/ns#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA {\
+                         :x1 :p    "1"^^xsd:integer .\
+                         :x2 :p    "foo" .\
+                         :x3 :p    "0.01"^^xsd:double .\
+                         :x4 :p    "true"^^xsd:boolean .\
+                         :y1 :p    "0"^^xsd:integer .\
+                         :y2 :p    "0.0"^^xsd:double .\
+                         :y3 :p    "" .\
+                         :y4 :p    "false"^^xsd:boolean .\
+                         :x1 :q    "true"^^xsd:boolean .\
+                         :x2 :q    "false"^^xsd:boolean .\
+                         :x3 :q    "foo"^^:unknown .\
+                           }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX  xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                PREFIX  : <http://example.org/ns#>\
+                                SELECT  ?a ?w\
+                                WHERE\
+                                    { ?a :p ?v . \
+                                      OPTIONAL\
+                                        { ?a :q ?w } . \
+                                      FILTER ( ! ?w ) .\
+                                    }', function(success, results){
+                                        test.ok(success === true);
+                                        test.ok(results.length === 1);
+                                        test.ok(results[0].a.value==="http://example.org/ns#x2");
+                                        test.done();
+                });
+            });
+        });
+    });
+}
+

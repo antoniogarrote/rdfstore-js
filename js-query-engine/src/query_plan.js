@@ -307,6 +307,15 @@ QueryPlan.joinBindings = function(bindingsa, bindingsb) {
     return result;
 };
 
+QueryPlan.augmentMissingBindings = function(bindinga, bindingb) {
+    for(var pb in bindingb) {
+        if(bindinga[pb] == null) {
+            bindinga[pb] = null
+        }
+    }
+    return bindinga;
+};
+
 QueryPlan.leftOuterJoinBindings = function(bindingsa, bindingsb) {
     var result = [];
 
@@ -321,6 +330,10 @@ QueryPlan.leftOuterJoinBindings = function(bindingsa, bindingsb) {
             }
         }
         if(matched === false) {
+            // missing bindings must be present for further processing
+            // e.g. filtering by not present value (see DAWG tests
+            // bev-6)
+            QueryPlan.augmentMissingBindings(bindinga, bindingb);
             result.push(bindinga);
         }
     }

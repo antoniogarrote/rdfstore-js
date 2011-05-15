@@ -573,8 +573,10 @@ GroupGraphPatternSub "[51] GroupGraphPatternSub"
                   for(var j=0; j<currentBasicGraphPatterns.length; j++) {
                       triplesContext = triplesContext.concat(currentBasicGraphPatterns[j].triplesContext);
                   }
-                  compactedSubpatterns.push({token: 'basicgraphpattern',
-                                             triplesContext: triplesContext});
+                  if(triplesContext.length > 0) {  
+                      compactedSubpatterns.push({token: 'basicgraphpattern',
+                                                 triplesContext: triplesContext});
+                  }
                   currentBasicGraphPatterns = [];
               }
               compactedSubpatterns.push(subpatterns[i]);
@@ -592,8 +594,10 @@ GroupGraphPatternSub "[51] GroupGraphPatternSub"
           for(var j=0; j<currentBasicGraphPatterns.length; j++) {
               triplesContext = triplesContext.concat(currentBasicGraphPatterns[j].triplesContext);
           }
-          compactedSubpatterns.push({token: 'basicgraphpattern',
-                                     triplesContext: triplesContext});
+          if(triplesContext.length > 0) {
+            compactedSubpatterns.push({token: 'basicgraphpattern',
+                                       triplesContext: triplesContext});
+          }
       }
 
 //      if(compactedSubpatterns.length == 1) {
@@ -1411,16 +1415,16 @@ MultiplicativeExpression "[102] MultiplicativeExpression"
   [103]  	UnaryExpression	  ::=  	  '!' PrimaryExpression  |	'+' PrimaryExpression |	'-' PrimaryExpression |	PrimaryExpression
 */
 UnaryExpression "[103] UnaryExpression"
-  = '!' e:PrimaryExpression {
+  = '!' WS* e:PrimaryExpression {
       var ex = {};
       ex.token = 'expression';
       ex.expressionType = 'unaryexpression';
       ex.unaryexpression = "!";
-      ex.expression = v;
+      ex.expression = e;
 
       return ex;
   }
-  / '+' v:PrimaryExpression {
+  / '+' WS* v:PrimaryExpression {
       var ex = {};
       ex.token = 'expression';
       ex.expressionType = 'unaryexpression';
@@ -1429,7 +1433,7 @@ UnaryExpression "[103] UnaryExpression"
 
       return ex;
   }
-  / '-' v:PrimaryExpression {
+  / '-' WS* v:PrimaryExpression {
       var ex = {};
       ex.token = 'expression';
       ex.expressionType = 'unaryexpression';

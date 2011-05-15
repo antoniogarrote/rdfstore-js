@@ -4604,8 +4604,10 @@ SparqlParser.parser = (function(){
                             for(var j=0; j<currentBasicGraphPatterns.length; j++) {
                                 triplesContext = triplesContext.concat(currentBasicGraphPatterns[j].triplesContext);
                             }
+                             if(triplesContext.length > 0) {
                             compactedSubpatterns.push({token: 'basicgraphpattern',
                                                        triplesContext: triplesContext});
+          }
                             currentBasicGraphPatterns = [];
                         }
                         compactedSubpatterns.push(subpatterns[i]);
@@ -4623,8 +4625,10 @@ SparqlParser.parser = (function(){
                     for(var j=0; j<currentBasicGraphPatterns.length; j++) {
                         triplesContext = triplesContext.concat(currentBasicGraphPatterns[j].triplesContext);
                     }
+                    if(triplesContext.length > 0) {
                     compactedSubpatterns.push({token: 'basicgraphpattern',
                                                triplesContext: triplesContext});
+                    }
                 }
           
           //      if(compactedSubpatterns.length == 1) {
@@ -9714,63 +9718,85 @@ SparqlParser.parser = (function(){
         reportMatchFailures = false;
         var savedPos2 = pos;
         if (input.substr(pos, 1) === "!") {
-          var result12 = "!";
+          var result16 = "!";
           pos += 1;
         } else {
-          var result12 = null;
+          var result16 = null;
           if (reportMatchFailures) {
             matchFailed("\"!\"");
           }
         }
-        if (result12 !== null) {
-          var result13 = parse_PrimaryExpression();
-          if (result13 !== null) {
-            var result11 = [result12, result13];
+        if (result16 !== null) {
+          var result17 = [];
+          var result19 = parse_WS();
+          while (result19 !== null) {
+            result17.push(result19);
+            var result19 = parse_WS();
+          }
+          if (result17 !== null) {
+            var result18 = parse_PrimaryExpression();
+            if (result18 !== null) {
+              var result15 = [result16, result17, result18];
+            } else {
+              var result15 = null;
+              pos = savedPos2;
+            }
           } else {
-            var result11 = null;
+            var result15 = null;
             pos = savedPos2;
           }
         } else {
-          var result11 = null;
+          var result15 = null;
           pos = savedPos2;
         }
-        var result10 = result11 !== null
+        var result14 = result15 !== null
           ? (function(e) {
                 var ex = {};
                 ex.token = 'expression';
                 ex.expressionType = 'unaryexpression';
                 ex.unaryexpression = "!";
-                ex.expression = v;
+                ex.expression = e;
           
                 return ex;
-            })(result11[1])
+            })(result15[2])
           : null;
-        if (result10 !== null) {
-          var result0 = result10;
+        if (result14 !== null) {
+          var result0 = result14;
         } else {
           var savedPos1 = pos;
           if (input.substr(pos, 1) === "+") {
-            var result8 = "+";
+            var result10 = "+";
             pos += 1;
           } else {
-            var result8 = null;
+            var result10 = null;
             if (reportMatchFailures) {
               matchFailed("\"+\"");
             }
           }
-          if (result8 !== null) {
-            var result9 = parse_PrimaryExpression();
-            if (result9 !== null) {
-              var result7 = [result8, result9];
+          if (result10 !== null) {
+            var result11 = [];
+            var result13 = parse_WS();
+            while (result13 !== null) {
+              result11.push(result13);
+              var result13 = parse_WS();
+            }
+            if (result11 !== null) {
+              var result12 = parse_PrimaryExpression();
+              if (result12 !== null) {
+                var result9 = [result10, result11, result12];
+              } else {
+                var result9 = null;
+                pos = savedPos1;
+              }
             } else {
-              var result7 = null;
+              var result9 = null;
               pos = savedPos1;
             }
           } else {
-            var result7 = null;
+            var result9 = null;
             pos = savedPos1;
           }
-          var result6 = result7 !== null
+          var result8 = result9 !== null
             ? (function(v) {
                   var ex = {};
                   ex.token = 'expression';
@@ -9779,10 +9805,10 @@ SparqlParser.parser = (function(){
                   ex.expression = v;
             
                   return ex;
-              })(result7[1])
+              })(result9[2])
             : null;
-          if (result6 !== null) {
-            var result0 = result6;
+          if (result8 !== null) {
+            var result0 = result8;
           } else {
             var savedPos0 = pos;
             if (input.substr(pos, 1) === "-") {
@@ -9795,9 +9821,20 @@ SparqlParser.parser = (function(){
               }
             }
             if (result4 !== null) {
-              var result5 = parse_PrimaryExpression();
+              var result5 = [];
+              var result7 = parse_WS();
+              while (result7 !== null) {
+                result5.push(result7);
+                var result7 = parse_WS();
+              }
               if (result5 !== null) {
-                var result3 = [result4, result5];
+                var result6 = parse_PrimaryExpression();
+                if (result6 !== null) {
+                  var result3 = [result4, result5, result6];
+                } else {
+                  var result3 = null;
+                  pos = savedPos0;
+                }
               } else {
                 var result3 = null;
                 pos = savedPos0;
@@ -9815,7 +9852,7 @@ SparqlParser.parser = (function(){
                     ex.expression = v;
               
                     return ex;
-                })(result3[1])
+                })(result3[2])
               : null;
             if (result2 !== null) {
               var result0 = result2;
@@ -11870,7 +11907,7 @@ SparqlParser.parser = (function(){
                     return {token:'literal', value:s.value, lang:e.slice(1), type:null}
                 } else {
                     if(typeof(e) === "object") {
-                        e.shift();
+                        e.shift(); // remove the '^^' char
                         return {token:'literal', value:s.value, lang:null, type:e[0] }
                     } else {
                         return { token:'literal', value:s.value, lang:null, type:null }
@@ -14126,7 +14163,6 @@ SparqlParser.parser = (function(){
         var result0 = result1 !== null
           ? (function() {
           
-                GlobalBlankNodeCounter++;
                 return  {token: "triplesnodecollection", 
                          triplesContext:[], 
                          chainSubject:[{token:'uri', value:"http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"}]};

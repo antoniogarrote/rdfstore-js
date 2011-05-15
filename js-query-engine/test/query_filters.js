@@ -3,7 +3,6 @@ var QueryEngine = require("./../src/query_engine").QueryEngine;
 var QuadBackend = require("./../../js-rdf-persistence/src/quad_backend").QuadBackend;
 var Lexicon = require("./../../js-rdf-persistence/src/lexicon").Lexicon;
 
-
 var filter1 = {
     "token": "filter",
     "value": {

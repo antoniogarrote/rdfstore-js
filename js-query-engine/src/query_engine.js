@@ -95,7 +95,7 @@ QueryEngine.QueryEngine.prototype.applySingleOrderBy = function(orderFilters, mo
     Utils.repeat(0, orderFilters.length, function(k,env){
         var floop = arguments.callee;
         var orderFilter = orderFilters[env._i];
-        QueryFilters.collect(orderFilter.expression, [modifiedBindings], outEnv.outCache, that, function(success, results){
+        QueryFilters.collect(orderFilter.expression, [modifiedBindings], outEnv, that, function(success, results){
             if(success) {
                 env.acum = env.acum || [];
                 env.acum.push(results[0].value);
@@ -211,41 +211,51 @@ QueryEngine.QueryEngine.prototype.hasScheme = function(uri) {
     return uri.indexOf(":") != -1;
 };
 
-QueryEngine.QueryEngine.prototype.normalizeTerm = function(term, env, callback) {
-    if(term.token === 'uri') {
-        var uri = null;
-        //console.log("*** normalizing URI token:");
-        //console.log(term);
-        if(term.value == null) {
-            //console.log(" - URI has prefix and suffix");
-            //console.log(" - prefix:"+term.prefix);
-            //console.log(" - suffixx:"+term.suffix);
-            var prefix = term.prefix;
-            var suffix = term.suffix;
-            var resolvedPrefix = this.resolveNsInEnvironment(prefix, env);
-            if(resolvedPrefix != null) {
-                uri = resolvedPrefix+suffix;
-            }
+QueryEngine.QueryEngine.prototype.normalizeBaseUri = function(term, env) {
+    var uri = null;
+    //console.log("*** normalizing URI token:");
+    //console.log(term);
+    if(term.value == null) {
+        //console.log(" - URI has prefix and suffix");
+        //console.log(" - prefix:"+term.prefix);
+        //console.log(" - suffixx:"+term.suffix);
+        var prefix = term.prefix;
+        var suffix = term.suffix;
+        var resolvedPrefix = this.resolveNsInEnvironment(prefix, env);
+        if(resolvedPrefix != null) {
+            uri = resolvedPrefix+suffix;
+        }
+    } else {
+        //console.log(" - URI is not prefixed");
+        uri = term.value
+    }
+
+    if(uri===null) {
+        return null;
+    } else {
+        //console.log(" - resolved URI is "+uri);
+        if(!this.hasScheme(uri)) {
+            //console.log(" - URI is partial");
+            uri = this.applyBaseUri(uri, env);
         } else {
-            //console.log(" - URI is not prefixed");
-            uri = term.value
+            //console.log(" - URI is complete");
         }
 
-        if(uri===null) {
+        //console.log(" -> FINAL URI: "+uri);
+        // 1. resolve ns prefix if prefixed
+        // 2. check if fragment or full uri
+        // 3. apply base if fragment
+    }
+
+    return uri;
+}
+
+QueryEngine.QueryEngine.prototype.normalizeTerm = function(term, env, callback) {
+    if(term.token === 'uri') {
+        var uri = this.normalizeBaseUri(term, env);
+        if(uri == null) {
             callback(false, "The prefix "+prefix+" cannot be resolved in the current environment");
         } else {
-            //console.log(" - resolved URI is "+uri);
-            if(!this.hasScheme(uri)) {
-                //console.log(" - URI is partial");
-                uri = this.applyBaseUri(uri, env);
-            } else {
-                //console.log(" - URI is complete");
-            }
-
-            //console.log(" -> FINAL URI: "+uri);
-            // 1. resolve ns prefix if prefixed
-            // 2. check if fragment or full uri
-            // 3. apply base if fragment
             this.lexicon.registerUri(uri, function(oid){
                 callback(true, oid);
             });
@@ -343,7 +353,7 @@ QueryEngine.QueryEngine.prototype.normalizeQuad = function(quad, queryEnv, callb
     });
 };
 
-QueryEngine.QueryEngine.prototype.normalizeLiteral = function(term, env, callback) {
+QueryEngine.QueryEngine.prototype.baseValueLiteral = function(term, env) {
     var value = term.value;
     var lang = term.lang;
     var type = term.type;
@@ -372,6 +382,12 @@ QueryEngine.QueryEngine.prototype.normalizeLiteral = function(term, env, callbac
             indexedValue = '"' + QueryFilters.effectiveTypeValue(term) + '"^^<'+type+'>';
         }
     }
+
+    return indexedValue;
+};
+
+QueryEngine.QueryEngine.prototype.normalizeLiteral = function(term, env, callback) {
+    var indexedValue = this.baseValueLiteral(term, env);
 
     this.lexicon.registerLiteral(indexedValue, function(oid){
         callback(true, oid);
@@ -558,12 +574,13 @@ QueryEngine.QueryEngine.prototype.executeSelectUnit = function(projection, datas
         var that = this;
         this.executeSelectUnit(projection, dataset, pattern.value, env, function(success, results){
             if(success) {
-                QueryFilters.run(filter[0].value, results, env.outCache, that, callback);
+                QueryFilters.run(filter[0].value, results, env, that, callback);
             } else {
                 callback(false, results);
             }
         });
     } else {
+        console.log(pattern)
         callback(false, "Cannot execute query pattern " + pattern.kind + ". Not implemented yet.");
     }
 };
