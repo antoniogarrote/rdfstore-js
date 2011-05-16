@@ -1261,3 +1261,529 @@ exports.testCastBool = function(test) {
         });
     });
 }
+
+
+// expr builtin
+
+exports.testExprBuiltinIsLiteral1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA {\
+                         :x1 :p  "string" .\
+                         :x2 :p  "string"^^xsd:string .\
+                         :x3 :p  "string"@en .\
+                         :x4 :p  "lex"^^:unknownType .\
+                         :x5 :p  "1234"^^xsd:integer .\
+                         :x6 :p  <http://example/iri> .\
+                         :x7 :p  _:bNode .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX  xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                PREFIX  : <http://example/>\
+                                SELECT  ?x \
+                                WHERE\
+                                    { ?x :p ?v . \
+                                      FILTER ISLITERAL(?v) .\
+                                    }', function(success, results){
+                                        test.ok(success === true);
+                                        acum = [];
+                                        for(var i=0; i<results.length; i++) {
+                                            acum.push(results[i].x.value);
+                                        }
+
+                                        acum.sort();
+                                        test.ok(acum[0] === 'http://example/x1')
+                                        test.ok(acum[1] === 'http://example/x2')
+                                        test.ok(acum[2] === 'http://example/x3')
+                                        test.ok(acum[3] === 'http://example/x4')
+                                        test.ok(acum[4] === 'http://example/x5')
+                                        test.done();
+                });
+            });
+        });
+    });
+}
+
+
+
+
+exports.testExprBuiltinStr1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/things#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA {\
+                           :xi1 :p  "1"^^xsd:integer .\
+                           :xi2 :p  "1"^^xsd:integer .\
+                           :xi3 :p  "01"^^xsd:integer .\
+                           :xd1 :p  "1.0e0"^^xsd:double .\
+                           :xd2 :p  "1.0"^^xsd:double .\
+                           :xd3 :p  "1"^^xsd:double .\
+                           :xt1 :p  "zzz"^^:myType .\
+                           :xp1 :p  "zzz" .\
+                           :xp2 :p  "1" .\
+                           :xp2 :p  "" .\
+                           :xu :p  :z .\
+                           :xb :p  _:a .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX  xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                PREFIX  : <http://example.org/things#>\
+                                SELECT  ?x ?v\
+                                WHERE\
+                                    { ?x :p ?v . \
+                                      FILTER ( STR(?v) = "1" ) .\
+                                    }', function(success, results){
+                                        test.ok(success === true);
+                                        acum = [];
+                                        for(var i=0; i<results.length; i++) {
+                                            acum.push(results[i].x.value);
+                                        }
+ 
+                                        acum.sort();
+                                        test.ok(acum[0] === 'http://example.org/things#xd3')
+                                        test.ok(acum[1] === 'http://example.org/things#xi1')
+                                        test.ok(acum[2] === 'http://example.org/things#xi2')
+                                        test.ok(acum[3] === 'http://example.org/things#xp2')
+                                        test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testExprBuiltinStr2 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/things#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA {\
+                           :xi1 :p  "1"^^xsd:integer .\
+                           :xi2 :p  "1"^^xsd:integer .\
+                           :xi3 :p  "01"^^xsd:integer .\
+                           :xd1 :p  "1.0e0"^^xsd:double .\
+                           :xd2 :p  "1.0"^^xsd:double .\
+                           :xd3 :p  "1"^^xsd:double .\
+                           :xt1 :p  "zzz"^^:myType .\
+                           :xp1 :p  "zzz" .\
+                           :xp2 :p  "1" .\
+                           :xp2 :p  "" .\
+                           :xu :p  :z .\
+                           :xb :p  _:a .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX  xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                PREFIX  : <http://example.org/things#>\
+                                SELECT  ?x ?v\
+                                WHERE\
+                                    { ?x :p ?v . \
+                                      FILTER ( STR(?v) = "01" ) .\
+                                    }', function(success, results){
+                                        test.ok(success === true);
+                                        test.ok(results.length === 1);
+                                        test.ok(results[0].x.value === 'http://example.org/things#xi3')
+                                        test.ok(results[0].v.value === '01')
+                                        test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testExprBuiltinStr3 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/things#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA {\
+                           :xi1 :p  "1"^^xsd:integer .\
+                           :xi2 :p  "1"^^xsd:integer .\
+                           :xi3 :p  "01"^^xsd:integer .\
+                           :xd1 :p  "1.0e0"^^xsd:double .\
+                           :xd2 :p  "1.0"^^xsd:double .\
+                           :xd3 :p  "1"^^xsd:double .\
+                           :xt1 :p  "zzz"^^:myType .\
+                           :xp1 :p  "zzz" .\
+                           :xp2 :p  "1" .\
+                           :xp2 :p  "" .\
+                           :xu :p  :z .\
+                           :xb :p  _:a .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX  xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                PREFIX  : <http://example.org/things#>\
+                                SELECT  ?x ?v\
+                                WHERE\
+                                    { ?x :p ?v . \
+                                      FILTER ( STR(?v) = "zzz" ) .\
+                                    }', function(success, results){
+                                        test.ok(success === true);
+
+                                        test.ok(results.length === 2);
+                                        acum = [];
+
+                                        for(var i=0; i<results.length; i++) {
+                                            acum.push(results[i].x.value);
+                                        }
+
+                                        acum.sort();
+                                        test.ok(acum[0] === 'http://example.org/things#xp1')
+                                        test.ok(acum[1] === 'http://example.org/things#xt1')
+                                        test.done();
+                });
+            });
+        });
+    });
+}
+
+
+exports.testExprBuiltinStr4 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/things#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA {\
+                           :xi1 :p  "1"^^xsd:integer .\
+                           :xi2 :p  "1"^^xsd:integer .\
+                           :xi3 :p  "01"^^xsd:integer .\
+                           :xd1 :p  "1.0e0"^^xsd:double .\
+                           :xd2 :p  "1.0"^^xsd:double .\
+                           :xd3 :p  "1"^^xsd:double .\
+                           :xt1 :p  "zzz"^^:myType .\
+                           :xp1 :p  "zzz" .\
+                           :xp2 :p  "1" .\
+                           :xp2 :p  "" .\
+                           :xu :p  :z .\
+                           :xb :p  _:a .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX  xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                PREFIX  : <http://example.org/things#>\
+                                SELECT  ?x ?v\
+                                WHERE\
+                                    { ?x :p ?v . \
+                                      FILTER ( STR(?v) = "" ) .\
+                                    }', function(success, results){
+                                        test.ok(success === true);
+                                        test.ok(results.length === 1);
+                                        test.ok(results[0].x.value === 'http://example.org/things#xp2')
+                                        test.ok(results[0].v.value === '')
+                                        test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testExprBuiltinBlank1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/things#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA {\
+                           :xi1 :p  "1"^^xsd:integer .\
+                           :xi2 :p  "1"^^xsd:integer .\
+                           :xi3 :p  "01"^^xsd:integer .\
+                           :xd1 :p  "1.0e0"^^xsd:double .\
+                           :xd2 :p  "1.0"^^xsd:double .\
+                           :xd3 :p  "1"^^xsd:double .\
+                           :xt1 :p  "zzz"^^:myType .\
+                           :xp1 :p  "zzz" .\
+                           :xp2 :p  "1" .\
+                           :xp2 :p  "" .\
+                           :xu :p  :z .\
+                           :xb :p  _:a .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX  xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                PREFIX  : <http://example.org/things#>\
+                                SELECT  ?x ?v\
+                                WHERE\
+                                    { ?x :p ?v . \
+                                      FILTER ISBLANK(?v) .\
+                                    }', function(success, results){
+                                        test.ok(success === true);
+                                        test.ok(results.length === 1);
+                                        test.ok(results[0].x.value === 'http://example.org/things#xb')
+                                        test.done();
+                });
+            });
+        });
+    });
+}
+
+
+exports.testExprBuiltinDatatype1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/things#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA {\
+                           :xi1 :p  "1"^^xsd:integer .\
+                           :xi2 :p  "1"^^xsd:integer .\
+                           :xi3 :p  "01"^^xsd:integer .\
+                           :xd1 :p  "1.0e0"^^xsd:double .\
+                           :xd2 :p  "1.0"^^xsd:double .\
+                           :xd3 :p  "1"^^xsd:double .\
+                           :xt1 :p  "zzz"^^:myType .\
+                           :xp1 :p  "zzz" .\
+                           :xp2 :p  "1" .\
+                           :xp2 :p  "" .\
+                           :xu :p  :z .\
+                           :xb :p  _:a .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX  xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                PREFIX  : <http://example.org/things#>\
+                                SELECT  ?x ?v\
+                                WHERE\
+                                    { ?x :p ?v . \
+                                      FILTER ( DATATYPE(?v) = xsd:double ) .\
+                                    }', function(success, results){
+                                        test.ok(success === true);
+                                        test.ok(results.length === 3);
+                                        acum = [];
+
+                                        for(var i=0; i<results.length; i++) {
+                                            acum.push(results[i].x.value);
+                                        }
+
+                                        acum.sort();
+                                        test.ok(acum[0] === 'http://example.org/things#xd1')
+                                        test.ok(acum[1] === 'http://example.org/things#xd2')
+                                        test.ok(acum[2] === 'http://example.org/things#xd3')
+                                        test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testExprBuiltinDatatype2 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA {\
+                         :x1 :p  "string" .\
+                         :x2 :p  "string"^^xsd:string .\
+                         :x3 :p  "string"@en .\
+                         :x4 :p  "lex"^^:unknownType .\
+                         :x5 :p  "1234"^^xsd:integer .\
+                         :x6 :p  <http://example/iri> .\
+                         :x7 :p  _:bNode .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX  xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                PREFIX  : <http://example/>\
+                                SELECT  ?x\
+                                WHERE\
+                                    { ?x :p ?v . \
+                                      FILTER( DATATYPE(?v) != <http://example/NotADataTypeIRI> ).\
+                                    }', function(success, results){
+                                        test.ok(success === true);
+                                        
+                                        test.ok(results.length === 4);
+                                        acum = [];
+                                        for(var i=0; i<results.length; i++) {
+                                            acum.push(results[i].x.value);
+                                        }
+
+                                        acum.sort();
+                                        
+                                        test.ok(acum[0] === 'http://example/x1')
+                                        test.ok(acum[1] === 'http://example/x2')
+                                        test.ok(acum[2] === 'http://example/x4')
+                                        test.ok(acum[3] === 'http://example/x5')
+                                        test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testExprBuiltinDatatype3 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA {\
+                         :x1 :p  "string" .\
+                         :x2 :p  "string"^^xsd:string .\
+                         :x3 :p  "string"@en .\
+                         :x4 :p  "lex"^^:unknownType .\
+                         :x5 :p  "1234"^^xsd:integer .\
+                         :x6 :p  <http://example/iri> .\
+                         :x7 :p  _:bNode .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX  xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                PREFIX  : <http://example/>\
+                                SELECT  ?x\
+                                WHERE\
+                                    { ?x :p ?v . \
+                                      FILTER( DATATYPE(?v) = xsd:string ).\
+                                    }', function(success, results){
+                                        test.ok(success === true);
+                                        
+                                        test.ok(results.length === 2);
+                                        acum = [];
+                                        for(var i=0; i<results.length; i++) {
+                                            acum.push(results[i].x.value);
+                                        }
+
+                                        acum.sort();
+                                        
+                                        test.ok(acum[0] === 'http://example/x1')
+                                        test.ok(acum[1] === 'http://example/x2')
+                                        test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testExprBuiltinLang1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA {\
+                         :x1 :p  "string" .\
+                         :x2 :p  "string"^^xsd:string .\
+                         :x3 :p  "string"@en .\
+                         :x4 :p  "lex"^^:unknownType .\
+                         :x5 :p  "1234"^^xsd:integer .\
+                         :x6 :p  <http://example/iri> .\
+                         :x7 :p  _:bNode .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute("PREFIX  xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                PREFIX  : <http://example/>\
+                                SELECT  ?x\
+                                WHERE\
+                                    { ?x :p ?v . \
+                                      FILTER( LANG(?v) != '@NotALangTag@' ).\
+                                    }", function(success, results){
+                                        test.ok(success === true);
+                                        
+                                        test.ok(results.length === 5);
+                                        acum = [];
+                                        for(var i=0; i<results.length; i++) {
+                                            acum.push(results[i].x.value);
+                                        }
+
+                                        acum.sort();
+                                        
+                                        test.ok(acum[0] === 'http://example/x1')
+                                        test.ok(acum[1] === 'http://example/x2')
+                                        test.ok(acum[2] === 'http://example/x3')
+                                        test.ok(acum[3] === 'http://example/x4')
+                                        test.ok(acum[4] === 'http://example/x5')
+                                        test.done();
+                });
+            });
+        });
+    });
+}
+
+
+exports.testExprBuiltinLang2 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA {\
+                         :x1 :p  "string" .\
+                         :x2 :p  "string"^^xsd:string .\
+                         :x3 :p  "string"@en .\
+                         :x4 :p  "lex"^^:unknownType .\
+                         :x5 :p  "1234"^^xsd:integer .\
+                         :x6 :p  <http://example/iri> .\
+                         :x7 :p  _:bNode .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute("PREFIX  xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                PREFIX  : <http://example/>\
+                                SELECT  ?x\
+                                WHERE\
+                                    { ?x :p ?v . \
+                                      FILTER( LANG(?v) = '' ).\
+                                    }", function(success, results){
+                                        test.ok(success === true);
+
+                                        test.ok(results.length === 4);
+                                        acum = [];
+                                        for(var i=0; i<results.length; i++) {
+                                            acum.push(results[i].x.value);
+                                        }
+
+                                        acum.sort();
+                                        
+                                        test.ok(acum[0] === 'http://example/x1')
+                                        test.ok(acum[1] === 'http://example/x2')
+                                        test.ok(acum[2] === 'http://example/x4')
+                                        test.ok(acum[3] === 'http://example/x5')
+                                        test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testExprBuiltinLang3 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA {\
+                         :x1 :p  "string" .\
+                         :x2 :p  "string"^^xsd:string .\
+                         :x3 :p  "string"@en .\
+                         :x4 :p  "lex"^^:unknownType .\
+                         :x5 :p  "1234"^^xsd:integer .\
+                         :x6 :p  <http://example/iri> .\
+                         :x7 :p  _:bNode .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX  xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                PREFIX  : <http://example/>\
+                                SELECT  ?x\
+                                WHERE\
+                                    { ?x :p "string"@EN .\
+                                    }', function(success, results){
+                                        test.ok(success === true);
+                                        test.ok(results.length === 1);
+                                        test.ok(results[0].x.value === 'http://example/x3')
+                                        test.done();
+                });
+            });
+        });
+    });
+}

@@ -1620,7 +1620,24 @@ BuiltInCall "[106] BuiltInCall"
 
     return ex;
 }
+/ 'ISLITERAL' WS* '(' WS* arg:Expression WS* ')' {
+    var ex = {};
+    ex.token = 'expression';
+    ex.expressionType = 'builtincall';
+    ex.builtincall = 'isliteral';
+    ex.args = [arg];
 
+    return ex;
+}
+/ 'ISBLANK' WS* '(' WS* arg:Expression WS* ')' {
+    var ex = {};
+    ex.token = 'expression';
+    ex.expressionType = 'builtincall';
+    ex.builtincall = 'isblank';
+    ex.args = [arg];
+
+    return ex;
+}
 / RegexExpression
 
 /*
@@ -1884,9 +1901,9 @@ LANGTAG "[128] LANGTAG"
   = '@' a:[a-zA-Z]+ b:('-' [a-zA-Z0-9]+)*  {
 
       if(b.length===0) {
-          return "@"+a.join('');
+          return ("@"+a.join('')).toLowerCase();
       } else {
-          return "@"+a.join('')+"-"+b[0][1].join('');
+          return ("@"+a.join('')+"-"+b[0][1].join('')).toLowerCase();
       }
 }
 
@@ -1913,7 +1930,7 @@ DECIMAL "[130] DECIMAL"
       lit.token = "literal";
       lit.lang = null;
       lit.type = "http://www.w3.org/2001/XMLSchema#decimal";
-      lit.value = eval(flattenString([a,b,c]));
+      lit.value = flattenString([a,b,c]);
       return lit;
 }
   / a:'.' b:[0-9]+ {
@@ -1921,7 +1938,7 @@ DECIMAL "[130] DECIMAL"
       lit.token = "literal";
       lit.lang = null;
       lit.type = "http://www.w3.org/2001/XMLSchema#decimal";
-      lit.value = eval(flattenString([a,b]));
+      lit.value = flattenString([a,b]);
       return lit;
  }
 
@@ -1934,7 +1951,7 @@ DOUBLE "[131] DOUBLE"
       lit.token = "literal";
       lit.lang = null;
       lit.type = "http://www.w3.org/2001/XMLSchema#double";
-      lit.value = eval(flattenString([a,b,c,e]));
+      lit.value = flattenString([a,b,c,e]);
       return lit;
 }
   / a:'.' b:[0-9]+ c:EXPONENT {
@@ -1942,7 +1959,7 @@ DOUBLE "[131] DOUBLE"
       lit.token = "literal";
       lit.lang = null;
       lit.type = "http://www.w3.org/2001/XMLSchema#double";
-      lit.value = eval(flattenString([a,b,c]));
+      lit.value = flattenString([a,b,c]);
       return lit;
 }
   / a:[0-9]+ b:EXPONENT {
@@ -1950,7 +1967,7 @@ DOUBLE "[131] DOUBLE"
       lit.token = "literal";
       lit.lang = null;
       lit.type = "http://www.w3.org/2001/XMLSchema#double";
-      lit.value = eval(flattenString([a,b]));
+      lit.value = flattenString([a,b]);
       return lit;
 }
 
@@ -1958,36 +1975,36 @@ DOUBLE "[131] DOUBLE"
   [132]  	INTEGER_POSITIVE	  ::=  	'+' INTEGER
 */
 INTEGER_POSITIVE "[132] INTEGER_POSITIVE"
-  = '+' d:INTEGER { return d; }
+  = '+' d:INTEGER { d.value = "+"+d.value; return d; }
 
 /*
   [133]  	DECIMAL_POSITIVE	  ::=  	'+' DECIMAL
 */
 DECIMAL_POSITIVE "[133] DECIMAL_POSITIVE"
-  = '+' d:DECIMAL { return d }
+  = '+' d:DECIMAL { d.value = "+"+d.value; return d }
 
 /*
   [134]  	DOUBLE_POSITIVE	  ::=  	'+' DOUBLE
 */
 DOUBLE_POSITIVE "[134] DOUBLE_POSITIVE"
-  = '+' d:DOUBLE { return d }
+  = '+' d:DOUBLE { d.value = "+"+d.value; return d }
 
 /*
   [135]  	INTEGER_NEGATIVE	  ::=  	'-' INTEGER
 */
 INTEGER_NEGATIVE "[135] INTEGER_NEGATIVE"
-  = '-' d:INTEGER { d.value = - d.value; return d; }
+  = '-' d:INTEGER { d.value = "-"+d.value; return d; }
 
 /*
   [136]  	DECIMAL_NEGATIVE	  ::=  	'-' DECIMAL
 */
 DECIMAL_NEGATIVE "[136] DECIMAL_NEGATIVE"
-  = '-' d:DECIMAL { d.value = - d.value; return d; }
+  = '-' d:DECIMAL { d.value = "-"+d.value; return d; }
 /*
   [137]  	DOUBLE_NEGATIVE	  ::=  	'-' DOUBLE
 */
 DOUBLE_NEGATIVE "[137] DOUBLE_NEGATIVE"
-  = '-' d:DOUBLE { d.value = - d.value; return d; }
+  = '-' d:DOUBLE { d.value = "-"+d.value; return d; }
 
 /*
   [138]  	EXPONENT	  ::=  	[eE] [+-]? [0-9]+

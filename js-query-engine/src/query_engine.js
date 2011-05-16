@@ -364,14 +364,14 @@ QueryEngine.QueryEngine.prototype.baseValueLiteral = function(term, env) {
         var typeValue = type.value;
 
         if(typeValue != null) {
-            indexedValue = '"' + QueryFilters.effectiveTypeValue(term) + '"^^<' + typeValue + '>';
+            indexedValue = '"' + term.value + '"^^<' + typeValue + '>';
         } else {
             var typePrefix = type.prefix;
             var typeSuffix = type.suffix;
 
             var resolvedPrefix = this.resolveNsInEnvironment(typePrefix, env);
             term.type = resolvedPrefix+typeSuffix;
-            indexedValue = '"' + QueryFilters.effectiveTypeValue(term) + '"^^<' + resolvedPrefix + typeSuffix + '>';
+            indexedValue = '"' + term.value + '"^^<' + resolvedPrefix + typeSuffix + '>';
         }
     } else {
         if(lang == null && type == null) {
@@ -379,7 +379,7 @@ QueryEngine.QueryEngine.prototype.baseValueLiteral = function(term, env) {
         } else if(type == null) {
             indexedValue = '"' + value + '"' + "@" + lang;        
         } else {
-            indexedValue = '"' + QueryFilters.effectiveTypeValue(term) + '"^^<'+type+'>';
+            indexedValue = '"' + term.value + '"^^<'+type+'>';
         }
     }
 
@@ -706,6 +706,8 @@ QueryEngine.QueryEngine.prototype.executeUpdate = function(syntaxTree, callback)
             Utils.repeat(0, aqt.quads.length, function(k,env) {                
                 var quad = aqt.quads[env._i];
                 var floop = arguments.callee;
+                //console.log("INSERTING QUAD:")
+                //console.log(quad);
                 that._executeQuadInsert(quad, queryEnv, function(result, error) {
                     if(result === true) {
                         k(floop, env);
