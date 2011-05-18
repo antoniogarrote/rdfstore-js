@@ -68,7 +68,7 @@ Lexicon.Lexicon.prototype.registerLiteral = function(literal, callback) {
 
 Lexicon.Lexicon.prototype.parseLiteral = function(literalString) {
     var parts = literalString.lastIndexOf("@");
-    if(parts!=-1 && literalString[parts-1]==='"' && literalString.length - parts === 3) {
+    if(parts!=-1 && literalString[parts-1]==='"') {
         var value = literalString.substring(1,parts-1);
         var lang = literalString.substring(parts+1, literalString.length);
         return {token: "literal", value:value, lang:lang};
@@ -78,6 +78,7 @@ Lexicon.Lexicon.prototype.parseLiteral = function(literalString) {
     if(parts!=-1 && literalString[parts-1]==='"' && literalString[parts+2] === '<' && literalString[literalString.length-1] === '>') {
         var value = literalString.substring(1,parts-1);
         var type = literalString.substring(parts+3, literalString.length-1);
+
         return {token: "literal", value:value, type:type};
     }
 

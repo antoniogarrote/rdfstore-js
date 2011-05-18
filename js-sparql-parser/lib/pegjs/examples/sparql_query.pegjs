@@ -1638,6 +1638,32 @@ BuiltInCall "[106] BuiltInCall"
 
     return ex;
 }
+/ 'SAMETERM' WS*  '(' WS* e1:Expression WS* ',' WS* e2:Expression WS* ')' {
+    var ex = {};
+    ex.token = 'expression';
+    ex.expressionType = 'builtincall';
+    ex.builtincall = 'sameterm';
+    ex.args = [e1, e2];
+    return ex;
+}
+/ 'ISURI' WS* '(' WS* arg:Expression WS* ')' {
+    var ex = {};
+    ex.token = 'expression';
+    ex.expressionType = 'builtincall';
+    ex.builtincall = 'isuri';
+    ex.args = [arg];
+
+    return ex;
+}
+/ 'ISIRI' WS* '(' WS* arg:Expression WS* ')' {
+    var ex = {};
+    ex.token = 'expression';
+    ex.expressionType = 'builtincall';
+    ex.builtincall = 'isuri';
+    ex.args = [arg];
+
+    return ex;
+}
 / RegexExpression
 
 /*

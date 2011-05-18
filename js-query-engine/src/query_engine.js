@@ -359,7 +359,6 @@ QueryEngine.QueryEngine.prototype.baseValueLiteral = function(term, env) {
     var type = term.type;
 
     var indexedValue = null;
-
     if(value != null && type != null && typeof(type) != 'string') {
         var typeValue = type.value;
 
@@ -382,7 +381,6 @@ QueryEngine.QueryEngine.prototype.baseValueLiteral = function(term, env) {
             indexedValue = '"' + term.value + '"^^<'+type+'>';
         }
     }
-
     return indexedValue;
 };
 

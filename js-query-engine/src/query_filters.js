@@ -57,8 +57,6 @@ QueryFilters.boundVars = function(filterExpr) {
             return QueryFilters.boundVars(filterExpr.expression);
         } else if(expressionType == 'atomic') {           
             if(filterExpr.primaryexpression == 'var') {
-                //console.log("ATOMIC VAR:")
-                //console.log([filterExpr.value]);
                 return [filterExpr.value];
             } else {
                 // numeric, literal, etc...
@@ -135,7 +133,7 @@ QueryFilters.runFilter = function(filterExpr, bindings, queryEngine, env) {
         } else if(expressionType == 'multiplicativeexpression') {
             return QueryFilters.runMultiplication(filterExpr.factor, filterExpr.factors, bindings, queryEngine, env);
         } else if(expressionType == 'unaryexpression') {
-            return QueryFilters.runUnaryExpression(filterExpr.unaryexpression, filterExpr.expression, bindings);
+            return QueryFilters.runUnaryExpression(filterExpr.unaryexpression, filterExpr.expression, bindings, queryEngine, env);
         } else if(expressionType == 'irireforfunction') {
             return QueryFilters.runIriRefOrFunction(filterExpr.iriref, filterExpr.args, bindings, queryEngine, env);
         } else if(expressionType == 'atomic') {        
@@ -179,9 +177,6 @@ QueryFilters.isRDFTerm = function(val) {
 
 QueryFilters.RDFTermEquality = function(v1, v2, queryEngine, env) {
     if(v1.token === 'literal' && v2.token === 'literal') {
-        //console.log("RDF TERM EQUALITY");
-        //console.log(v1.value);
-        //console.log(v2.value);
         if(v1.lang == v2.lang && v1.type == v2.type && v1.value == v2.value) {
             return true;
         } else {
@@ -192,7 +187,7 @@ QueryFilters.RDFTermEquality = function(v1, v2, queryEngine, env) {
     } else if(v1.token === 'blank' && v2.token === 'blank') {
         return v1.value == v2.value;
     } else {
-        return false;
+        return QueryFilters.ebvError();
     }
 };
 
@@ -477,18 +472,12 @@ QueryFilters.runAndFunction = function(filterExpr, bindings, queryEngine, env) {
 
 
 QueryFilters.runEqualityFunction = function(op1, op2, bindings, queryEngine, env) {
-    //console.log("Equality Function");
-    //console.log(op1)
-    //console.log(op2)
     if(QueryFilters.isEbvError(op1) || QueryFilters.isEbvError(op2)) {
         return QueryFilters.ebvError();
     }
     if(QueryFilters.isNumeric(op1) && QueryFilters.isNumeric(op2)) {
         return QueryFilters.ebvBoolean(QueryFilters.effectiveTypeValue(op1) == QueryFilters.effectiveTypeValue(op2));
     } else if(QueryFilters.isSimpleLiteral(op1) && QueryFilters.isSimpleLiteral(op2)) {
-        //console.log("BOTH SIMPLE LITERALS")
-        //console.log(QueryFilters.effectiveTypeValue(op1))
-        //console.log(QueryFilters.effectiveTypeValue(op2))
         return QueryFilters.ebvBoolean(QueryFilters.effectiveTypeValue(op1) == QueryFilters.effectiveTypeValue(op2));       
     } else if(QueryFilters.isXsdType("string", op1) && QueryFilters.isXsdType("string", op2)) {
         return QueryFilters.ebvBoolean(QueryFilters.effectiveTypeValue(op1) == QueryFilters.effectiveTypeValue(op2));       
@@ -497,7 +486,6 @@ QueryFilters.runEqualityFunction = function(op1, op2, bindings, queryEngine, env
     } else if(QueryFilters.isXsdType("dateTime", op1) && QueryFilters.isXsdType("dateTime", op2)) {
         return QueryFilters.ebvBoolean(QueryFilters.effectiveTypeValue(op1).getTime() == QueryFilters.effectiveTypeValue(op2).getTime());
     } else if(QueryFilters.isRDFTerm(op1) && QueryFilters.isRDFTerm(op2)) {
-        //console.log("BOTH RDF TERMS")
         return QueryFilters.ebvBoolean(QueryFilters.RDFTermEquality(op1, op2, queryEngine, env));
     } else {
         return QueryFilters.ebvFalse();
@@ -740,8 +728,6 @@ QueryFilters.runBuiltInCall = function(builtincall, args, bindings, queryEngine,
     }
 
     if(builtincall === 'str') {
-        //console.log("STR")
-        //console.log(ops[0])
         if(ops[0].token === 'literal') {
             // lexical form literals
             return {token: 'literal', type:null, value:""+ops[0].value}; // type null? or "http://www.w3.org/2001/XMLSchema#string"
@@ -790,6 +776,29 @@ QueryFilters.runBuiltInCall = function(builtincall, args, bindings, queryEngine,
         } else {
             return QueryFilters.ebvFalse();
         }        
+    } else if(builtincall === 'isuri' || builtincall === 'isiri') {
+        if(ops[0].token === 'uri'){
+            return QueryFilters.ebvTrue();
+        } else {
+            return QueryFilters.ebvFalse();
+        }        
+    } else if(builtincall === 'sameterm') {
+        var op1 = ops[0];
+        var op2 = ops[1];
+        return QueryFilters.ebvBoolean(QueryFilters.RDFTermEquality(op1, op2, queryEngine, env));
+    } else if(builtincall === 'langmatches') {
+        var lang = ops[0];
+        var langRange = ops[1];
+
+        if(lang.token === 'literal' && langRange.token === 'literal'){
+            if(langRange.value === '*' && lang.value != '') {
+                return QueryFilters.ebvTrue();
+            } else {
+                return QueryFilters.ebvBoolean(lang.value.toLowerCase().indexOf(langRange.value.toLowerCase()) === 0)
+            }
+        } else {
+            return QueryFilters.ebvError();
+        }        
     } else {
         throw ("Builtin call "+builtincall+" not implemented yet");
     }
@@ -798,7 +807,7 @@ QueryFilters.runBuiltInCall = function(builtincall, args, bindings, queryEngine,
 QueryFilters.runUnaryExpression = function(unaryexpression, expression, bindings, queryEngine, env) {
     var op = QueryFilters.runFilter(expression, bindings,queryEngine, env);
     if(QueryFilters.isEbvError(op)) {
-        return factorOp;
+        return op;
     }
 
     if(unaryexpression === '!') {

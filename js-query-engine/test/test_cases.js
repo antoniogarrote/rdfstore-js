@@ -1787,3 +1787,483 @@ exports.testExprBuiltinLang3 = function(test) {
         });
     });
 }
+
+exports.testExprBuiltinisURI1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/things#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA {\
+                           :xi1 :p  "1"^^xsd:integer .\
+                           :xi2 :p  "1"^^xsd:integer .\
+                           :xi3 :p  "01"^^xsd:integer .\
+                           :xd1 :p  "1.0e0"^^xsd:double .\
+                           :xd2 :p  "1.0"^^xsd:double .\
+                           :xd3 :p  "1"^^xsd:double .\
+                           :xt1 :p  "zzz"^^:myType .\
+                           :xp1 :p  "zzz" .\
+                           :xp2 :p  "1" .\
+                           :xp2 :p  "" .\
+                           :xu :p  :z .\
+                           :xb :p  _:a .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX  xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                PREFIX  : <http://example.org/things#>\
+                                SELECT  ?x ?v\
+                                WHERE\
+                                    { ?x :p ?v . \
+                                      FILTER ( ISURI(?v) ) .\
+                                    }', function(success, results){
+                                        test.ok(success === true);
+                                        test.ok(results.length === 1);
+                                        acum = [];
+
+                                        for(var i=0; i<results.length; i++) {
+                                            acum.push(results[i].v.value);
+                                        }
+
+                                        acum.sort();
+                                        test.ok(acum[0] === 'http://example.org/things#z')
+                                        test.done();
+                });
+            });
+        });
+    });
+}
+
+
+exports.testExprBuiltinisIRI1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/things#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA {\
+                           :xi1 :p  "1"^^xsd:integer .\
+                           :xi2 :p  "1"^^xsd:integer .\
+                           :xi3 :p  "01"^^xsd:integer .\
+                           :xd1 :p  "1.0e0"^^xsd:double .\
+                           :xd2 :p  "1.0"^^xsd:double .\
+                           :xd3 :p  "1"^^xsd:double .\
+                           :xt1 :p  "zzz"^^:myType .\
+                           :xp1 :p  "zzz" .\
+                           :xp2 :p  "1" .\
+                           :xp2 :p  "" .\
+                           :xu :p  :z .\
+                           :xb :p  _:a .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX  xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                PREFIX  : <http://example.org/things#>\
+                                SELECT  ?x ?v\
+                                WHERE\
+                                    { ?x :p ?v . \
+                                      FILTER ( ISIRI(?v) ) .\
+                                    }', function(success, results){
+                                        test.ok(success === true);
+                                        test.ok(results.length === 1);
+                                        test.ok(results[0].v.value === 'http://example.org/things#z')
+                                        test.ok(results[0].x.value === 'http://example.org/things#xu')
+                                        test.done();
+                });
+            });
+        });
+    });
+}
+
+
+exports.testExprBuiltinLangMatches1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA {\
+                            :x :p1 "abc" .\
+                            :x :p2 <abc> .\
+                            :x :p3 "abc"@en .\
+                            :x :p4 "abc"@en-gb .\
+                            :x :p5 "abc"@fr .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX  xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                PREFIX  : <http://example.org/#>\
+                                SELECT  *\
+                                WHERE\
+                                    { :x ?p ?v . FILTER LANGMATCHES( LANG(?v), "en-GB") .\
+                                    }', function(success, results){
+                                        test.ok(success === true);
+                                        test.ok(results.length === 1);
+                                        test.ok(results[0].v.value === 'abc');
+                                        test.ok(results[0].p.value === 'http://example.org/#p4');
+                                        test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testExprBuiltinLangMatches2 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA {\
+                            :x :p1 "abc" .\
+                            :x :p2 <abc> .\
+                            :x :p3 "abc"@en .\
+                            :x :p4 "abc"@en-gb .\
+                            :x :p5 "abc"@fr .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX  xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                PREFIX  : <http://example.org/#>\
+                                SELECT  *\
+                                WHERE\
+                                    { :x ?p ?v . FILTER LANGMATCHES(LANG(?v), "en") . }', 
+                               function(success, results){
+                                   test.ok(success === true);
+                                   test.ok(results.length === 2);
+                                   acum = [];
+                                   for(var i=0; i<results.length; i++) {
+                                       acum.push(results[i].p.value);
+                                   }
+                                   acum.sort();
+                                   test.ok(acum[0]  === 'http://example.org/#p3');
+                                   test.ok(acum[1]  === 'http://example.org/#p4');
+                                   test.done();
+                });
+            });
+        });
+    });
+}
+
+
+exports.testExprBuiltinLangMatches2 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA {\
+                            :x :p1 "abc" .\
+                            :x :p2 <abc> .\
+                            :x :p3 "abc"@en .\
+                            :x :p4 "abc"@en-gb .\
+                            :x :p5 "abc"@fr .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX  xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                PREFIX  : <http://example.org/#>\
+                                SELECT  *\
+                                WHERE\
+                                    { :x ?p ?v . FILTER LANGMATCHES(LANG(?v), "en") . }', 
+                               function(success, results){
+                                   test.ok(success === true);
+                                   test.ok(results.length === 2);
+                                   acum = [];
+                                   for(var i=0; i<results.length; i++) {
+                                       acum.push(results[i].p.value);
+                                   }
+                                   acum.sort();
+                                   test.ok(acum[0]  === 'http://example.org/#p3');
+                                   test.ok(acum[1]  === 'http://example.org/#p4');
+                                   test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testExprBuiltinLangMatches3 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA {\
+                            :x :p1 "abc" .\
+                            :x :p2 <abc> .\
+                            :x :p3 "abc"@en .\
+                            :x :p4 "abc"@en-gb .\
+                            :x :p5 "abc"@fr .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX  xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                PREFIX  : <http://example.org/#>\
+                                SELECT  *\
+                                WHERE\
+                                    { :x ?p ?v .  FILTER LANGMATCHES(LANG(?v), "*") . }', 
+                               function(success, results){
+
+                                   test.ok(success === true);
+                                   test.ok(results.length === 3);
+                                   acum = [];
+                                   for(var i=0; i<results.length; i++) {
+                                       acum.push(results[i].p.value);
+                                   }
+                                   acum.sort();
+                                   test.ok(acum[0]  === 'http://example.org/#p3');
+                                   test.ok(acum[1]  === 'http://example.org/#p4');
+                                   test.ok(acum[2]  === 'http://example.org/#p5');
+                                   test.done();
+                });
+            });
+        });
+    });
+}
+
+
+exports.testExprBuiltinLangMatches4 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA {\
+                            :x :p1 "abc" .\
+                            :x :p2 <abc> .\
+                            :x :p3 "abc"@en .\
+                            :x :p4 "abc"@en-gb .\
+                            :x :p5 "abc"@fr .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX  xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                PREFIX  : <http://example.org/#>\
+                                SELECT  *\
+                                WHERE\
+                                    { :x ?p ?v .  FILTER( ! LANGMATCHES(LANG(?v), "*") ). }', 
+                               function(success, results){
+                                   test.ok(success === true);
+                                   test.ok(results.length === 1);
+                                   test.ok(results[0].p.value === "http://example.org/#p1");
+                                   test.done();
+                });
+            });
+        });
+    });
+}
+
+
+exports.testExprBuiltinLangMatchesBasic = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA {\
+                           :x :p3 "abc"@de .\
+                           :x :p4 "abc"@de-de .\
+                           :x :p5 "abc"@de-latn-de .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX  xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                PREFIX  : <http://example.org/#>\
+                                SELECT  *\
+                                WHERE\
+                                    { :x ?p ?v .  FILTER LANGMATCHES(LANG(?v), "de-de") . }', 
+                               function(success, results){
+                                   test.ok(success === true);
+                                   test.ok(results.length === 1);
+                                   test.ok(results[0].p.value === "http://example.org/#p4");
+                                   test.done();
+                });
+            });
+        });
+    });
+}
+
+
+exports.testExprBuiltinLangCaseInsensitiveEq = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/> \
+                         INSERT DATA {\
+                           :x2 :p "xyz"@en .\
+                           :x3 :p "xyz"@EN .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX  : <http://example/>\
+                                SELECT  * \
+                                WHERE\
+                                    { \
+                                      ?x1 :p ?v1 .\
+                                      ?x2 :p ?v2 .\
+                                      FILTER ( ?v1 = ?v2 )\
+                                    }', 
+                               function(success, results){
+                                   test.ok(success === true);
+                                   test.ok(results.length === 4);
+                                   test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testExprBuiltinLangCaseInsensitiveNe = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/> \
+                         INSERT DATA {\
+                           :x2 :p "xyz"@en .\
+                           :x3 :p "xyz"@EN .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX  : <http://example/>\
+                                SELECT  * \
+                                WHERE\
+                                    { \
+                                      ?x1 :p ?v1 .\
+                                      ?x2 :p ?v2 .\
+                                      FILTER ( ?v1 != ?v2 )\
+                                    }', 
+                               function(success, results){
+                                   test.ok(success === true);
+                                   test.ok(results.length === 0);
+                                   test.done();
+                });
+            });
+        });
+    });
+}
+
+
+exports.testExprBuiltinSameTermSimple = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/things#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :xi1 :p  "1"^^xsd:integer .\
+                           :xi2 :p  "1"^^xsd:integer .\
+                           :xi3 :p  "01"^^xsd:integer .\
+                           :xd1 :p  "1.0e0"^^xsd:double .\
+                           :xd2 :p  "1.0"^^xsd:double .\
+                           :xd3 :p  "1"^^xsd:double .\
+                           :xt1 :p  "zzz"^^:myType .\
+                           :xp1 :p  "zzz" .\
+                           :xp2 :p  "1" .\
+                           :xp2 :p  "" .\
+                           :xu :p  :z .\
+                           :xb :p  _:a .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX  : <http://example.org/things#>\
+                                PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT  * \
+                                WHERE\
+                                    { \
+                                      ?x1 :p ?v1 .\
+                                      ?x2 :p ?v2 .\
+                                      FILTER ( SAMETERM(?v1, ?v2) )\
+                                    }', 
+                               function(success, results){
+                                   test.ok(success === true);
+                                   test.ok(results.length === 14);
+                                   test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testExprBuiltinSameTermEq = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/things#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :xi1 :p  "1"^^xsd:integer .\
+                           :xi2 :p  "1"^^xsd:integer .\
+                           :xi3 :p  "01"^^xsd:integer .\
+                           :xd1 :p  "1.0e0"^^xsd:double .\
+                           :xd2 :p  "1.0"^^xsd:double .\
+                           :xd3 :p  "1"^^xsd:double .\
+                           :xt1 :p  "zzz"^^:myType .\
+                           :xp1 :p  "zzz" .\
+                           :xp2 :p  "1" .\
+                           :xp2 :p  "" .\
+                           :xu :p  :z .\
+                           :xb :p  _:a .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX  : <http://example.org/things#>\
+                                PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT  * \
+                                WHERE\
+                                    { \
+                                      ?x1 :p ?v1 .\
+                                      ?x2 :p ?v2 .\
+                                      FILTER ( SAMETERM(?v1, ?v2) && ?v1 = ?v2 )\
+                                    }', 
+                               function(success, results){
+                                   test.ok(success === true);
+                                   test.ok(results.length === 14);
+                                   test.done();
+                });
+            });
+        });
+    });
+}
+
+
+exports.testExprBuiltinSameTermNotEq = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/things#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :xi1 :p  "1"^^xsd:integer .\
+                           :xi2 :p  "1"^^xsd:integer .\
+                           :xi3 :p  "01"^^xsd:integer .\
+                           :xd1 :p  "1.0e0"^^xsd:double .\
+                           :xd2 :p  "1.0"^^xsd:double .\
+                           :xd3 :p  "1"^^xsd:double .\
+                           :xt1 :p  "zzz"^^:myType .\
+                           :xp1 :p  "zzz" .\
+                           :xp2 :p  "1" .\
+                           :xp2 :p  "" .\
+                           :xu :p  :z .\
+                           :xb :p  _:a .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX  : <http://example.org/things#>\
+                                PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT  * \
+                                WHERE\
+                                    { \
+                                      ?x1 :p ?v1 .\
+                                      ?x2 :p ?v2 .\
+                                      FILTER ( !SAMETERM(?v1, ?v2) && ?v1 = ?v2 )\
+                                    }', 
+                               function(success, results){
+                                   test.ok(success === true);
+                                   test.ok(results.length === 28);
+                                   test.done();
+                });
+            });
+        });
+    });
+}
