@@ -2267,3 +2267,103 @@ exports.testExprBuiltinSameTermNotEq = function(test) {
         });
     });
 }
+
+exports.testExprOpsUnplus1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA { \
+                           :x1 :p  "1"^^xsd:integer .\
+                           :x2 :p  "2"^^xsd:integer .\
+                           :x3 :p  "3"^^xsd:integer .\
+                           :x4 :p  "4"^^xsd:integer .\
+                         }';
+            engine.execute(query, function(success, result){
+
+                engine.execute('PREFIX : <http://example.org/>\
+                                SELECT ?s WHERE {\
+                                    ?s :p ?o .\
+                                    FILTER(?o = +3) .\
+                                }', 
+                               function(success, results){
+                                   test.ok(success === true);
+                                   test.ok(results.length === 1);
+                                   test.ok(results[0].s.value === "http://example.org/x3");
+                                   test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testExprOpsUnminus1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA { \
+                           :x1 :p  "1"^^xsd:integer .\
+                           :x2 :p  "2"^^xsd:integer .\
+                           :x3 :p  "3"^^xsd:integer .\
+                           :x4 :p  "4"^^xsd:integer .\
+                         }';
+            engine.execute(query, function(success, result){
+
+                engine.execute('PREFIX : <http://example.org/>\
+                                SELECT ?s WHERE {\
+                                    ?s :p ?o .\
+                                    FILTER(-?o = -2) .\
+                                }', 
+                               function(success, results){
+                                   test.ok(success === true);
+                                   test.ok(results.length === 1);
+                                   test.ok(results[0].s.value === "http://example.org/x2");
+                                   test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testExprOpsPlus1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA { \
+                           :x1 :p  "1"^^xsd:integer .\
+                           :x2 :p  "2"^^xsd:integer .\
+                           :x3 :p  "3"^^xsd:integer .\
+                           :x4 :p  "4"^^xsd:integer .\
+                         }';
+            engine.execute(query, function(success, result){
+
+                engine.execute('PREFIX : <http://example.org/>\
+                                SELECT ?s WHERE {\
+                                    ?s :p ?o .\
+                                    ?s2 :p ?o2 . \
+                                    FILTER(?o + ?o2 = 3) .\
+                                }', 
+                               function(success, results){
+                                   test.ok(success === true);
+                                   var acum = [];
+                                   for(var i=0; i<results.length; i++) {
+                                       acum.push(results[i].s.value)
+                                   }
+                                   acum.sort();
+                                   test.ok(results.length === 2);
+                                   test.ok(acum[0] === "http://example.org/x1");
+                                   test.ok(acum[1] === "http://example.org/x2");
+                                   test.done();
+                });
+            });
+        });
+    });
+}
