@@ -64,8 +64,8 @@ QuadBackend.QuadBackend.prototype._indexForPattern = function(pattern) {
             }
         }
     }
-
-    throw new Error("The pattern does not match any index");
+    
+    return 'SPOG' // If no other match, we erturn the more generic index
 }
 
 

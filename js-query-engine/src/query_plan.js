@@ -58,7 +58,11 @@ QueryPlan.variablesIntersectionBGP = function(bgpa, bgpb) {
 
 QueryPlan.executeAndBGPs = function(bgps, dataset, queryEngine, env, callback) {
     for(var i=0; i<bgps.length; i++) {
-        bgps[i].graph = dataset;
+        if(bgps[i].graph == null) {
+            bgps[i].graph = dataset;
+        } else if(dataset != null && dataset.length != 0) {
+            bgps[i].graph = dataset;
+        }
     }
 
     var pairs = Utils.partition(bgps,2);

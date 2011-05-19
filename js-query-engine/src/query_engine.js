@@ -176,6 +176,24 @@ QueryEngine.QueryEngine.prototype.applyGroupBy = function(key, direction, bindin
     return bindings;
 };
 
+QueryEngine.QueryEngine.prototype.removeDefaultGraphBindings = function(bindingsList) {
+    var acum = [];
+    for(var i=0; i<bindingsList.length; i++) {
+        var bindings = bindingsList[i];
+        var foundDefaultGraph = false;
+        for(var p in bindings) {
+            if(bindings[p] && bindings[p].defaultGraph === true) {
+                foundDefaultGraph = true;
+                continue;
+            }
+        }
+        if(!foundDefaultGraph) {
+            acum.push(bindings);
+        }
+    }
+
+    return acum;
+}
 QueryEngine.QueryEngine.prototype.projectBindings = function(projection, results) {
     if(projection[0].kind === '*') {
         return results;
@@ -199,7 +217,7 @@ QueryEngine.QueryEngine.prototype.projectBindings = function(projection, results
 };
 
 QueryEngine.QueryEngine.prototype.applyBaseUri = function(uriFragment, env) {
-    return env.base + uriFragment;
+    return (env.base||"") + uriFragment;
 };
 
 QueryEngine.QueryEngine.prototype.resolveNsInEnvironment = function(prefix, env) {
@@ -222,7 +240,7 @@ QueryEngine.QueryEngine.prototype.normalizeBaseUri = function(term, env) {
         var prefix = term.prefix;
         var suffix = term.suffix;
         var resolvedPrefix = this.resolveNsInEnvironment(prefix, env);
-        if(resolvedPrefix != null) {
+        if(resolvedPrefix != null) {            
             uri = resolvedPrefix+suffix;
         }
     } else {
@@ -511,7 +529,8 @@ QueryEngine.QueryEngine.prototype.executeQuery = function(syntaxTree, callback) 
     this.executeSelect(aqt,queryEnv,function(success, result){
         // @todo handle result here
         that.denormalizeBindingsList(result, function(success, result){
-            if(success) {
+            if(success) {                        
+                var result = that.removeDefaultGraphBindings(result); // default graph is not a valid binding
                 callback(true, result);
             } else {
                 callback(false, result);
@@ -564,6 +583,8 @@ QueryEngine.QueryEngine.prototype.executeSelectUnit = function(projection, datas
         this.executeAndBGP(projection, dataset, pattern, env, callback);
     } else if(pattern.kind === "UNION") {
         this.executeUNION(projection, dataset, pattern.value, env, callback);            
+    } else if(pattern.kind === "JOIN") {
+        this.executeJOIN(projection, dataset, pattern, env, callback);            
     } else if(pattern.kind === "LEFT_JOIN") {
         this.executeLEFT_JOIN(projection, dataset, pattern, env, callback);            
     } else if(pattern.kind === "FILTER") {
@@ -579,6 +600,8 @@ QueryEngine.QueryEngine.prototype.executeSelectUnit = function(projection, datas
         });
     } else {
         console.log(pattern)
+        console.log(pattern.lvalue)
+        console.log(pattern.rvalue)
         callback(false, "Cannot execute query pattern " + pattern.kind + ". Not implemented yet.");
     }
 };
@@ -624,7 +647,6 @@ QueryEngine.QueryEngine.prototype.executeAndBGP = function(projection, dataset, 
     var patterns = patterns.value;
     var that = this;
 
-    // @todo call QueryPlan to run the query
     QueryPlan.executeAndBGPs(patterns, dataset, this, env, function(success,result){
         if(success) {
             QueryFilters.checkFilters(patterns, result, env, that, callback);
@@ -667,6 +689,39 @@ QueryEngine.QueryEngine.prototype.executeLEFT_JOIN = function(projection, datase
     });
 };
 
+QueryEngine.QueryEngine.prototype.executeJOIN = function(projection, dataset, patterns, env, callback) {
+    var setQuery1 = patterns.lvalue;
+    var setQuery2 = patterns.rvalue;
+    var set1 = null;
+    var set2 = null;
+
+    var that = this;
+    var sets = [];
+
+    Utils.seq(function(k){
+        that.executeSelectUnit(projection, dataset, setQuery1, env, function(success, results){
+            if(success) {
+                set1 = results;
+                k();
+            } else {
+                return callback(false, results);
+            }
+        });
+    }, function(k) {
+        that.executeSelectUnit(projection, dataset, setQuery2, env, function(success, results){
+            if(success) {
+                set2 = results;
+                k();
+            } else {
+                return callback(false, results);
+            }
+        });
+    })(function(){
+        var result = QueryPlan.joinBindings(set1, set2);
+        QueryFilters.checkFilters(patterns, result, env, that, callback);
+    });
+};
+
 
 QueryEngine.QueryEngine.prototype.rangeQuery = function(quad, queryEnv, callback) {
     var that = this;
@@ -704,8 +759,6 @@ QueryEngine.QueryEngine.prototype.executeUpdate = function(syntaxTree, callback)
             Utils.repeat(0, aqt.quads.length, function(k,env) {                
                 var quad = aqt.quads[env._i];
                 var floop = arguments.callee;
-                //console.log("INSERTING QUAD:")
-                //console.log(quad);
                 that._executeQuadInsert(quad, queryEnv, function(result, error) {
                     if(result === true) {
                         k(floop, env);

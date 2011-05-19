@@ -21,7 +21,8 @@ Lexicon.Lexicon = function(callback){
     this.blankToOID = {};
     this.OIDToBlank = {};
 
-    this.oidCounter = 0;
+    this.defaultGraphOid = 0;
+    this.oidCounter = 1;
     
     if(callback != null) {
         callback(this);
@@ -92,23 +93,32 @@ Lexicon.Lexicon.prototype.parseUri = function(uriString) {
 
 Lexicon.Lexicon.prototype.retrieve = function(oid,callback) {
     try {
-        var maybeUri = this.OIDToUri['u'+oid];
-        if(maybeUri) {
-            callback(this.parseUri(maybeUri));
+        if(oid === this.defaultGraphOid) {
+            callback({ token: "uri", 
+                       value:"https://github.com/antoniogarrote/js-tools/types#default_graph",
+                       prefix: null,
+                       suffix: null,
+                       defaultGraph: true });
         } else {
-            var maybeLiteral = this.OIDToLiteral['l'+oid];
-            if(maybeLiteral) {
-                callback(this.parseLiteral(maybeLiteral));
-            } else {
-                var maybeBlank = this.OIDToBlank[""+oid];
-                if(maybeBlank) {
-                    callback({token:"blank", value:"_:"+oid});
-                } else {
-                    throw("Null value for OID");
-                }
-            }
+          var maybeUri = this.OIDToUri['u'+oid];
+          if(maybeUri) {
+              callback(this.parseUri(maybeUri));
+          } else {
+              var maybeLiteral = this.OIDToLiteral['l'+oid];
+              if(maybeLiteral) {
+                  callback(this.parseLiteral(maybeLiteral));
+              } else {
+                  var maybeBlank = this.OIDToBlank[""+oid];
+                  if(maybeBlank) {
+                      callback({token:"blank", value:"_:"+oid});
+                  } else {
+                      throw("Null value for OID");
+                  }
+              }
+          }
         }
     } catch(e) {
+        console.log("error in lexicon");
         console.log(e.message);
         console.log(e.stack);
         throw new Error("Unknown retrieving OID in lexicon:"+oid);
