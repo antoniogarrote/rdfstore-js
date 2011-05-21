@@ -44,6 +44,7 @@ SparqlParser.parser = (function(){
         "DOUBLE_NEGATIVE": parse_DOUBLE_NEGATIVE,
         "DOUBLE_POSITIVE": parse_DOUBLE_POSITIVE,
         "DatasetClause": parse_DatasetClause,
+        "DefaultGraphClause": parse_DefaultGraphClause,
         "DeleteClause": parse_DeleteClause,
         "DeleteData": parse_DeleteData,
         "DeleteWhere": parse_DeleteWhere,
@@ -643,11 +644,21 @@ SparqlParser.parser = (function(){
           pos = savedPos0;
         }
         var result0 = result1 !== null
-          ? (function(s, d, w, sm) {
+          ? (function(s, gs, w, sm) {
+          
+                var dataset = {named:[], default:[]};
+                for(var i=0; i<gs.length; i++) {
+                    var g = gs[i];
+                    if(g.kind === 'default') {
+                        dataset['default'].push(g.graph);
+                    } else {
+                        dataset['named'].push(g.graph)
+                    }
+                }
                 var query = {};
                 query.kind = 'select';
                 query.token = 'executableunit'
-                query.dataset = d;
+                query.dataset = dataset;
                 query.projection = s.vars;
                 query.modifier = s.modifier;
                 query.pattern = w
@@ -1463,25 +1474,36 @@ SparqlParser.parser = (function(){
         }
         if (result2 !== null) {
           var result3 = [];
-          var result7 = parse_WS();
-          while (result7 !== null) {
-            result3.push(result7);
-            var result7 = parse_WS();
+          var result9 = parse_WS();
+          while (result9 !== null) {
+            result3.push(result9);
+            var result9 = parse_WS();
           }
           if (result3 !== null) {
-            var result6 = parse_IRIref();
-            if (result6 !== null) {
-              var result4 = result6;
+            var result8 = parse_DefaultGraphClause();
+            if (result8 !== null) {
+              var result4 = result8;
             } else {
-              var result5 = parse_NamedGraphClause();
-              if (result5 !== null) {
-                var result4 = result5;
+              var result7 = parse_NamedGraphClause();
+              if (result7 !== null) {
+                var result4 = result7;
               } else {
                 var result4 = null;;
               };
             }
             if (result4 !== null) {
-              var result1 = [result2, result3, result4];
+              var result5 = [];
+              var result6 = parse_WS();
+              while (result6 !== null) {
+                result5.push(result6);
+                var result6 = parse_WS();
+              }
+              if (result5 !== null) {
+                var result1 = [result2, result3, result4, result5];
+              } else {
+                var result1 = null;
+                pos = savedPos0;
+              }
             } else {
               var result1 = null;
               pos = savedPos0;
@@ -1495,13 +1517,59 @@ SparqlParser.parser = (function(){
           pos = savedPos0;
         }
         var result0 = result1 !== null
-          ? (function(g) {
-                return g[0];
+          ? (function(gs) {
+                return gs;
           })(result1[2])
           : null;
         reportMatchFailures = savedReportMatchFailures;
         if (reportMatchFailures && result0 === null) {
           matchFailed("[12] DatasetClause");
+        }
+        
+        cache[cacheKey] = {
+          nextPos: pos,
+          result:  result0
+        };
+        return result0;
+      }
+      
+      function parse_DefaultGraphClause() {
+        var cacheKey = 'DefaultGraphClause@' + pos;
+        var cachedResult = cache[cacheKey];
+        if (cachedResult) {
+          pos = cachedResult.nextPos;
+          return cachedResult.result;
+        }
+        
+        var savedReportMatchFailures = reportMatchFailures;
+        reportMatchFailures = false;
+        var savedPos0 = pos;
+        var result2 = [];
+        var result4 = parse_WS();
+        while (result4 !== null) {
+          result2.push(result4);
+          var result4 = parse_WS();
+        }
+        if (result2 !== null) {
+          var result3 = parse_IRIref();
+          if (result3 !== null) {
+            var result1 = [result2, result3];
+          } else {
+            var result1 = null;
+            pos = savedPos0;
+          }
+        } else {
+          var result1 = null;
+          pos = savedPos0;
+        }
+        var result0 = result1 !== null
+          ? (function(s) {
+              return {graph:s , kind:'default', token:'graphClause'}
+          })(result1[1])
+          : null;
+        reportMatchFailures = savedReportMatchFailures;
+        if (reportMatchFailures && result0 === null) {
+          matchFailed("[13] DefaultGraphClause");
         }
         
         cache[cacheKey] = {
@@ -1523,26 +1591,42 @@ SparqlParser.parser = (function(){
         reportMatchFailures = false;
         var savedPos0 = pos;
         if (input.substr(pos, 5) === "NAMED") {
-          var result1 = "NAMED";
+          var result2 = "NAMED";
           pos += 5;
         } else {
-          var result1 = null;
+          var result2 = null;
           if (reportMatchFailures) {
             matchFailed("\"NAMED\"");
           }
         }
-        if (result1 !== null) {
-          var result2 = parse_IRIref();
-          if (result2 !== null) {
-            var result0 = [result1, result2];
+        if (result2 !== null) {
+          var result3 = [];
+          var result5 = parse_WS();
+          while (result5 !== null) {
+            result3.push(result5);
+            var result5 = parse_WS();
+          }
+          if (result3 !== null) {
+            var result4 = parse_IRIref();
+            if (result4 !== null) {
+              var result1 = [result2, result3, result4];
+            } else {
+              var result1 = null;
+              pos = savedPos0;
+            }
           } else {
-            var result0 = null;
+            var result1 = null;
             pos = savedPos0;
           }
         } else {
-          var result0 = null;
+          var result1 = null;
           pos = savedPos0;
         }
+        var result0 = result1 !== null
+          ? (function(s) {      
+                return {graph:s, kind:'named', token:'graphCluase'};
+          })(result1[2])
+          : null;
         reportMatchFailures = savedReportMatchFailures;
         if (reportMatchFailures && result0 === null) {
           matchFailed("[14] NamedGraphClause");
@@ -11474,7 +11558,6 @@ SparqlParser.parser = (function(){
                                       ex.expressionType = 'builtincall';
                                       ex.builtincall = 'sameterm';
                                       ex.args = [e1, e2];
-                                  
                                       return ex;
                                   })(result27[4], result27[8])
                                   : null;
@@ -11666,7 +11749,7 @@ SparqlParser.parser = (function(){
                                           var ex = {};
                                           ex.token = 'expression';
                                           ex.expressionType = 'builtincall';
-                                          ex.builtincall = 'isiri';
+                                          ex.builtincall = 'isuri';
                                           ex.args = [arg];
                                       
                                           return ex;
@@ -13380,9 +13463,9 @@ SparqlParser.parser = (function(){
           ? (function(a, b) {
           
                 if(b.length===0) {
-                    return "@"+a.join('').toLowerCase();
+                    return ("@"+a.join('')).toLowerCase();
                 } else {
-                    return "@"+a.join('')+"-"+b[0][1].join('').toLowerCase();
+                    return ("@"+a.join('')+"-"+b[0][1].join('')).toLowerCase();
                 }
           })(result1[1], result1[2])
           : null;

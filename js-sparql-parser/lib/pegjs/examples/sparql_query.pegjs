@@ -94,11 +94,30 @@ PrefixDecl "[5] PrefixDecl"
   [6]  	SelectQuery	  ::=  	SelectClause DatasetClause* WhereClause SolutionModifier BindingsClause
 */
 SelectQuery "[6] SelectQuery"
-  = s:SelectClause WS* d:DatasetClause* WS* w:WhereClause WS* sm:SolutionModifier WS* BindingsClause {
+  = s:SelectClause WS* gs:DatasetClause* WS* w:WhereClause WS* sm:SolutionModifier WS* BindingsClause {
+
+      var dataset = {named:[], default:[]};
+      for(var i=0; i<gs.length; i++) {
+          var g = gs[i];
+          if(g.kind === 'default') {
+              dataset['default'].push(g.graph);
+          } else {
+              dataset['named'].push(g.graph)
+          }
+      }
+
+
+      if(dataset['named'].length === 0 && dataset['default'].length === 0) {
+          dataset['default'].push({token:'uri', 
+                                   prefix:null, 
+                                   suffix:null, 
+                                   value:'https://github.com/antoniogarrote/js-tools/types#default_graph'});
+      }
+
       var query = {};
       query.kind = 'select';
       query.token = 'executableunit'
-      query.dataset = d;
+      query.dataset = dataset;
       query.projection = s.vars;
       query.modifier = s.modifier;
       query.pattern = w
@@ -166,21 +185,24 @@ AskQuery "[11] AskQuery"
   [12]  	DatasetClause	  ::=  	'FROM' ( DefaultGraphClause | NamedGraphClause )
 */
 DatasetClause "[12] DatasetClause"
-  = 'FROM' WS* g:( DefaultGraphClause / NamedGraphClause ) {
-      return g[0];
+  = 'FROM' WS* gs:( DefaultGraphClause / NamedGraphClause ) WS* {
+      return gs;
 }
 
 /*
   [13]  	DefaultGraphClause	  ::=  	SourceSelector
 */
-DefaultGraphClause "[13] DefaultGraphClause"
-  = SourceSelector
+DefaultGraphClause "[13] DefaultGraphClause" = WS* s:SourceSelector {
+    return {graph:s , kind:'default', token:'graphClause'}
+}
 
 /*
   [14]  	NamedGraphClause	  ::=  	'NAMED' SourceSelector
 */
 NamedGraphClause "[14] NamedGraphClause"
-  = 'NAMED' SourceSelector
+  = 'NAMED' WS* s:SourceSelector {      
+      return {graph:s, kind:'named', token:'graphCluase'};
+}
 
 /*
   [15]  	SourceSelector	  ::=  	IRIref

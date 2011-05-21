@@ -11,7 +11,6 @@ var QuadIndexCommon = require("./quad_index_common").QuadIndexCommon
 
 
 Lexicon.Lexicon = function(callback){
-
     this.uriToOID = {};
     this.OIDToUri = {};
 
@@ -22,6 +21,8 @@ Lexicon.Lexicon = function(callback){
     this.OIDToBlank = {};
 
     this.defaultGraphOid = 0;
+    this.defaultGraphUri = "https://github.com/antoniogarrote/js-tools/types#default_graph";
+    this.defaultGraphUriTerm = {"token": "uri", "prefix": null, "suffix": null, "value": this.defaultGraphUri, "oid": this.defaultGraphOid};
     this.oidCounter = 1;
     
     if(callback != null) {
@@ -30,7 +31,9 @@ Lexicon.Lexicon = function(callback){
 };
 
 Lexicon.Lexicon.prototype.registerUri = function(uri, callback) {
-    if(this.uriToOID[uri] == null){
+    if(uri === this.defaultGraphUri) {
+        callback(this.defaultGraphOid);
+    } else if(this.uriToOID[uri] == null){
         var oid = this.oidCounter
         var oidStr = 'u'+oid;
         this.oidCounter++;
@@ -95,7 +98,7 @@ Lexicon.Lexicon.prototype.retrieve = function(oid,callback) {
     try {
         if(oid === this.defaultGraphOid) {
             callback({ token: "uri", 
-                       value:"https://github.com/antoniogarrote/js-tools/types#default_graph",
+                       value:this.defaultGraphUri,
                        prefix: null,
                        suffix: null,
                        defaultGraph: true });
@@ -118,9 +121,14 @@ Lexicon.Lexicon.prototype.retrieve = function(oid,callback) {
           }
         }
     } catch(e) {
-        console.log("error in lexicon");
-        console.log(e.message);
-        console.log(e.stack);
+        console.log("error in lexicon retrieving OID:");
+        console.log(oid);
+        if(e.message) {
+            console.log(e.message); 
+        }
+        if(e.stack) {
+            console.log(e.stack);
+        }
         throw new Error("Unknown retrieving OID in lexicon:"+oid);
 
     }

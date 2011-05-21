@@ -2520,7 +2520,7 @@ exports.testExprOpsLe1 = function(test) {
     });
 }
 
-exports.testExprOpsGraph01 = function(test) {
+exports.testGraphGraph01 = function(test) {
     new Lexicon.Lexicon(function(lexicon){
         new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
             var engine = new QueryEngine.QueryEngine({backend: backend,
@@ -2564,7 +2564,7 @@ exports.testExprOpsGraph01 = function(test) {
     });
 }
 
-exports.testExprOpsGraph02 = function(test) {
+exports.testGraphGraph02 = function(test) {
     new Lexicon.Lexicon(function(lexicon){
         new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
             var engine = new QueryEngine.QueryEngine({backend: backend,
@@ -2592,7 +2592,7 @@ exports.testExprOpsGraph02 = function(test) {
 }
 
 
-exports.testExprOpsGraph03 = function(test) {
+exports.testGraphGraph03 = function(test) {
     new Lexicon.Lexicon(function(lexicon){
         new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
             var engine = new QueryEngine.QueryEngine({backend: backend,
@@ -2616,13 +2616,13 @@ exports.testExprOpsGraph03 = function(test) {
                                        test.ok(results[i].g.value === "data-g1.ttl");
                                    }
                                    test.done();
-                });
+                },[], [{"token": "uri", "prefix": null, "suffix": null, "value": "data-g1.ttl"}]);
             });
         });
     });
 }
 
-exports.testExprOpsGraph04 = function(test) {
+exports.testGraphGraph04 = function(test) {
     new Lexicon.Lexicon(function(lexicon){
         new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
             var engine = new QueryEngine.QueryEngine({backend: backend,
@@ -2647,7 +2647,7 @@ exports.testExprOpsGraph04 = function(test) {
     });
 }
 
-exports.testExprOpsGraph05 = function(test) {
+exports.testGraphGraph05 = function(test) {
     new Lexicon.Lexicon(function(lexicon){
         new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
             var engine = new QueryEngine.QueryEngine({backend: backend,
@@ -2655,15 +2655,17 @@ exports.testExprOpsGraph05 = function(test) {
             var query = 'PREFIX : <http://example/> \
                          PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
                          INSERT DATA { \
-                         :x :p  "1"^^xsd:integer .\
-                         :a :p  "9"^^xsd:integer .\
+                           GRAPH <data-g1.ttl> {\
+                             :x :p  "1"^^xsd:integer .\
+                             :a :p  "9"^^xsd:integer .\
+                           }\
                          }';
             engine.execute(query, function(success, result){
 
                 var query = 'PREFIX : <http://example/> \
                              PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
                              INSERT DATA { \
-                               GRAPH <data-g1.ttl> {\
+                               GRAPH <data-g2.ttl> {\
                                 :x :q "2"^^xsd:integer .\
                                }\
                              }';
@@ -2675,14 +2677,16 @@ exports.testExprOpsGraph05 = function(test) {
                                        test.ok(success === true);
                                        test.ok(results.length === 2);
                                        test.done();
-                                   });
+                                   },
+                                   [{"token": "uri", "prefix": null, "suffix": null, "value": "data-g1.ttl"}], 
+                                   [{"token": "uri", "prefix": null, "suffix": null, "value": "data-g2.ttl"}]);
                 });
             });
         });
     });
 }
 
-exports.testExprOpsGraph06 = function(test) {
+exports.testGraphGraph06 = function(test) {
     new Lexicon.Lexicon(function(lexicon){
         new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
             var engine = new QueryEngine.QueryEngine({backend: backend,
@@ -2690,15 +2694,17 @@ exports.testExprOpsGraph06 = function(test) {
             var query = 'PREFIX : <http://example/> \
                          PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
                          INSERT DATA { \
-                         :x :p  "1"^^xsd:integer .\
-                         :a :p  "9"^^xsd:integer .\
+                           GRAPH <data-g1.ttl> {\
+                             :x :p  "1"^^xsd:integer .\
+                             :a :p  "9"^^xsd:integer .\
+                           }\
                          }';
             engine.execute(query, function(success, result){
 
                 var query = 'PREFIX : <http://example/> \
                              PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
                              INSERT DATA { \
-                               GRAPH <data-g1.ttl> {\
+                               GRAPH <data-g2.ttl> {\
                                 :x :q "2"^^xsd:integer .\
                                }\
                              }';
@@ -2710,33 +2716,39 @@ exports.testExprOpsGraph06 = function(test) {
                                        test.ok(success === true);
                                        test.ok(results.length === 1);
                                        test.done();
-                                   });
+                                   }, [{"token": "uri", "prefix": null, "suffix": null, "value": "data-g1.ttl"}],
+                                      [{"token": "uri", "prefix": null, "suffix": null, "value": "data-g2.ttl"}]);
                 });
             });
         });
     });
 }
 
-exports.testExprOpsGraph07 = function(test) {
+exports.testGraphGraph07 = function(test) {
     new Lexicon.Lexicon(function(lexicon){
         new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
             var engine = new QueryEngine.QueryEngine({backend: backend,
                                                       lexicon: lexicon});      
+
             var query = 'PREFIX : <http://example/> \
                          PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
                          INSERT DATA { \
-                         :x :p  "1"^^xsd:integer .\
-                         :a :p  "9"^^xsd:integer .\
+                           GRAPH <data-g1.ttl> {\
+                             :x :p  "1"^^xsd:integer .\
+                             :a :p  "9"^^xsd:integer .\
+                           }\
                          }';
+
             engine.execute(query, function(success, result){
 
                 var query = 'PREFIX : <http://example/> \
                              PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
                              INSERT DATA { \
-                               GRAPH <data-g1.ttl> {\
+                               GRAPH <data-g2.ttl> {\
                                 :x :q "2"^^xsd:integer .\
                                }\
                              }';
+
                 engine.execute(query, function(success, result){
 
                     engine.execute('PREFIX : <http://example/>\
@@ -2746,18 +2758,23 @@ exports.testExprOpsGraph07 = function(test) {
                                       UNION \
                                        { GRAPH ?g { ?s ?p ?o } } \
                                     }', 
+
                                    function(success, results){
                                        test.ok(success === true);
                                        test.ok(results.length === 3);
                                        test.done();
-                                   });
+                                   }, 
+
+                                   [{"token": "uri", "prefix": null, "suffix": null, "value": "data-g1.ttl"}], 
+                                   [{"token": "uri", "prefix": null, "suffix": null, "value": "data-g2.ttl"}]);
                 });
             });
         });
     });
 }
 
-exports.testExprOpsGraph08 = function(test) {
+
+exports.testGraphGraph08 = function(test) {
     new Lexicon.Lexicon(function(lexicon){
         new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
             var engine = new QueryEngine.QueryEngine({backend: backend,
@@ -2765,8 +2782,10 @@ exports.testExprOpsGraph08 = function(test) {
             var query = 'PREFIX : <http://example/> \
                          PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
                          INSERT DATA { \
-                         :x :p  "1"^^xsd:integer .\
-                         :a :p  "9"^^xsd:integer .\
+                           GRAPH <data-g1.ttl> {\
+                             :x :p  "1"^^xsd:integer .\
+                             :a :p  "9"^^xsd:integer .\
+                           }\
                          }';
             engine.execute(query, function(success, result){
 
@@ -2795,14 +2814,15 @@ exports.testExprOpsGraph08 = function(test) {
                                        test.ok(results[0].v.value === "2");
                                        test.ok(results[0].g.value === "data-g2.ttl");
                                        test.done();
-                                   });
+                                   },[{"token": "uri", "prefix": null, "suffix": null, "value": "data-g1.ttl"}],
+                                     [{"token": "uri", "prefix": null, "suffix": null, "value": "data-g2.ttl"}]);
                 });
             });
         });
     });
 }
 
-exports.testExprOpsGraph09 = function(test) {
+exports.testGraphGraph09 = function(test) {
     new Lexicon.Lexicon(function(lexicon){
         new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
             var engine = new QueryEngine.QueryEngine({backend: backend,
@@ -2810,63 +2830,19 @@ exports.testExprOpsGraph09 = function(test) {
             var query = 'PREFIX : <http://example/> \
                          PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
                          INSERT DATA { \
-                         :x :p  "1"^^xsd:integer .\
-                         :a :p  "9"^^xsd:integer .\
-                         }';
+                           GRAPH <data-g3.ttl> { \
+                             _:x :p  "1"^^xsd:integer . \
+                             _:a :p  "9"^^xsd:integer . \
+                           } \
+                       }';
             engine.execute(query, function(success, result){
 
                 var query = 'PREFIX : <http://example/> \
                              PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
                              INSERT DATA { \
-                               GRAPH <data-g1.ttl> {\
-                                :x :q "2"^^xsd:integer .\
-                               }\
-                             }';
-                engine.execute(query, function(success, result){
-
-                    engine.execute('PREFIX : <http://example/>\
-                                    SELECT * \
-                                    { \
-                                      ?s ?p ?o \
-                                      GRAPH ?g { ?s ?q ?v } \
-                                    }', 
-                                   function(success, results){
-                                       test.ok(success === true);
-                                       test.ok(results.length === 1);
-                                       test.ok(results[0].s.value === "http://example/x");
-                                       test.ok(results[0].p.value === "http://example/p");
-                                       test.ok(results[0].o.value === "1");
-                                       test.ok(results[0].q.value === "http://example/q");
-                                       test.ok(results[0].v.value === "2");
-                                       test.ok(results[0].g.value === "data-g1.ttl");
-                                       test.done();
-                                   });
-                });
-            });
-        });
-    });
-}
-
-exports.testExprOpsGraph10 = function(test) {
-    new Lexicon.Lexicon(function(lexicon){
-        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
-            var engine = new QueryEngine.QueryEngine({backend: backend,
-                                                      lexicon: lexicon});      
-            var query = 'PREFIX : <http://example/> \
-                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
-                         INSERT DATA { \
-                           _:x :p "1"^^xsd:integer .\
-                           _:a :p "9"^^xsd:integer .\
-                         }';
-            engine.execute(query, function(success, result){
-
-                var query = 'PREFIX : <http://example/> \
-                             PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
-                             INSERT DATA { \
-                               GRAPH <data-g4.ttl> {\
-                                 _:x :p "1"^^xsd:integer .\
-                                 _:a :p "9"^^xsd:integer .\
-                               }\
+                               GRAPH <data-g4.ttl> { \
+                                _:x :q "2"^^xsd:integer . \
+                               } \
                              }';
                 engine.execute(query, function(success, result){
 
@@ -2880,15 +2856,61 @@ exports.testExprOpsGraph10 = function(test) {
                                        test.ok(success === true);
                                        test.ok(results.length === 0);
                                        test.done();
-                                   });
+                                   }, [{"token": "uri", "prefix": null, "suffix": null, "value": "data-g3.ttl"}], 
+                                      [{"token": "uri", "prefix": null, "suffix": null, "value": "data-g4.ttl"}]);
                 });
             });
         });
     });
 }
 
+  // withdrawn
+  //exports.testGraphGraph10 = function(test) {
+  //    new Lexicon.Lexicon(function(lexicon){
+  //        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+  //            var engine = new QueryEngine.QueryEngine({backend: backend,
+  //                                                      lexicon: lexicon});      
+  //            var query = 'PREFIX : <http://example/> \
+  //                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+  //                         INSERT DATA { \
+  //                           GRAPH <data-g3.ttl> {\
+  //                             _:x :p "1"^^xsd:integer .\
+  //                             _:a :p "9"^^xsd:integer .\
+  //                           }\
+  //                         }';
+  //            engine.execute(query, function(success, result){
+  // 
+  //                var query = 'PREFIX : <http://example/> \
+  //                             PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+  //                             INSERT DATA { \
+  //                               GRAPH <data-g3.ttl> {\
+  //                                 _:x :p "1"^^xsd:integer .\
+  //                                 _:a :p "9"^^xsd:integer .\
+  //                               }\
+  //                             }';
+  //                engine.execute(query, function(success, result){
+  // 
+  //                    engine.execute('PREFIX : <http://example/>\
+  //                                    SELECT * \
+  //                                    { \
+  //                                      ?s ?p ?o \
+  //                                      GRAPH ?g { ?s ?q ?v } \
+  //                                    }', 
+  //                                   function(success, results){
+  //                                       test.ok(success === true);
+  //                                       test.ok(results.length === 0);
+  //                                       test.done();
+  //                                   },
+  //                                   [{"token": "uri", "prefix": null, "suffix": null, "value": "data-g3.ttl"}], 
+  //                                   [{"token": "uri", "prefix": null, "suffix": null, "value": "data-g3.ttl"}]);
+  //                });
+  //            });
+  //        });
+  //    });
+  //}
 
-exports.testExprOpsGraph10b = function(test) {
+
+exports.testGraphGraph10b = function(test) {
     new Lexicon.Lexicon(function(lexicon){
         new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
             var engine = new QueryEngine.QueryEngine({backend: backend,
@@ -2896,8 +2918,10 @@ exports.testExprOpsGraph10b = function(test) {
             var query = 'PREFIX : <http://example/> \
                          PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
                          INSERT DATA { \
-                           _:x :p "1"^^xsd:integer .\
-                           _:a :p "9"^^xsd:integer .\
+                           GRAPH <data-g3-dup.ttl> { \
+                             _:x :p "1"^^xsd:integer . \
+                             _:a :p "9"^^xsd:integer . \
+                           } \
                          }';
             engine.execute(query, function(success, result){
 
@@ -2921,65 +2945,21 @@ exports.testExprOpsGraph10b = function(test) {
                                        test.ok(success === true);
                                        test.ok(results.length === 0);
                                        test.done();
-                                   });
+                                   },
+                                   [{"token": "uri", "prefix": null, "suffix": null, "value": "data-g3.ttl"}], 
+                                   [{"token": "uri", "prefix": null, "suffix": null, "value": "data-g3-dup.ttl"}]);
                 });
             });
         });
     });
 }
 
-exports.testExprOpsGraph10b = function(test) {
+
+exports.testGraphGraph11 = function(test) {
     new Lexicon.Lexicon(function(lexicon){
         new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
             var engine = new QueryEngine.QueryEngine({backend: backend,
                                                       lexicon: lexicon});      
-            var query = 'PREFIX : <http://example/> \
-                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
-                         INSERT DATA { \
-                           _:x :p "1"^^xsd:integer .\
-                           _:a :p "9"^^xsd:integer .\
-                         }';
-            engine.execute(query, function(success, result){
-
-                var query = 'PREFIX : <http://example/> \
-                             PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
-                             INSERT DATA { \
-                               GRAPH <data-g3-dup.ttl> {\
-                                 _:x :p "1"^^xsd:integer .\
-                                 _:a :p "9"^^xsd:integer .\
-                               }\
-                             }';
-                engine.execute(query, function(success, result){
-
-                    engine.execute('PREFIX : <http://example/>\
-                                    SELECT * \
-                                    { \
-                                      ?s ?p ?o \
-                                      GRAPH ?g { ?s ?q ?v } \
-                                    }', 
-                                   function(success, results){
-                                       test.ok(success === true);
-                                       test.ok(results.length === 0);
-                                       test.done();
-                                   });
-                });
-            });
-        });
-    });
-}
-
-exports.testExprOpsGraph11 = function(test) {
-    new Lexicon.Lexicon(function(lexicon){
-        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
-            var engine = new QueryEngine.QueryEngine({backend: backend,
-                                                      lexicon: lexicon});      
-            var query = 'PREFIX : <http://example/> \
-                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
-                         INSERT DATA { \
-                           :x :p "1"^^xsd:integer .\
-                           :a :p "9"^^xsd:integer .\
-                         }';
-            engine.execute(query, function(success, result){
 
                 var query = 'PREFIX : <http://example/> \
                              PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
@@ -3031,13 +3011,601 @@ exports.testExprOpsGraph11 = function(test) {
                                                function(success, results){
                                                    test.ok(success === true);
                                                    test.ok(results.length === 8);
-                                                   test.done();}
-                                               );
+                                                   test.done();
+                                               },[{"token": "uri", "prefix": null, "suffix": null, "value": "data-g1.ttl"}],
+                                               [{"token": "uri", "prefix": null, "suffix": null, "value": "data-g1.ttl"},
+                                                {"token": "uri", "prefix": null, "suffix": null, "value": "data-g2.ttl"},
+                                                {"token": "uri", "prefix": null, "suffix": null, "value": "data-g3.ttl"},
+                                                {"token": "uri", "prefix": null, "suffix": null, "value": "data-g4.ttl"}]);
                             });
                         });
                     });
                 });
             });
         });
+}
+
+exports.testDataset01 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA { \
+                           GRAPH <data-g1.ttl> {\
+                             :x :p  "1"^^xsd:integer .\
+                             :a :p  "9"^^xsd:integer .\
+                           }\
+                         }';
+            engine.execute(query, function(success, result){
+
+                engine.execute('PREFIX : <http://example/>\
+                                SELECT * \
+                                FROM <data-g1.ttl> \
+                                { ?s ?p ?o }', 
+                               function(success, results){
+                                   test.ok(success === true);
+                                   test.ok(results.length === 2);
+                                   acum = [];
+                                   for(var i=0; i<results.length; i++) {
+                                       acum.push(results[i].o.value)
+                                   }
+                                   acum.sort()
+                                   test.ok(acum[0]==="1")
+                                   test.ok(acum[1]==="9")
+                                   test.done();
+                               });
+            });
+        });
     });
 }
+
+
+exports.testDataset02 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA { \
+                           GRAPH <data-g1.ttl> {\
+                             :x :p  "1"^^xsd:integer .\
+                             :a :p  "9"^^xsd:integer .\
+                           }\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example/>\
+                                SELECT * \
+                                FROM NAMED <data-g1.ttl> \
+                                { ?s ?p ?o }', 
+                               function(success, results){
+                                   test.ok(success === true);
+                                   test.ok(results.length === 0);
+                                   test.done();
+                               });
+            });
+        });
+    });
+}
+
+
+
+exports.testDataset03 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA { \
+                           GRAPH <data-g1.ttl> {\
+                             :x :p  "1"^^xsd:integer .\
+                             :a :p  "9"^^xsd:integer .\
+                           }\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example/>\
+                                SELECT * \
+                                FROM NAMED <data-g1.ttl> \
+                                { GRAPH ?g { ?s ?p ?o } }', 
+                               function(success, results){
+                                   test.ok(success === true);
+                                   test.ok(results.length === 2);
+                                   acum = [];
+                                   for(var i=0; i<results.length; i++) {
+                                       acum.push(results[i].o.value)
+                                       test.ok(results[i].g.value === "data-g1.ttl")
+                                   }
+                                   acum.sort()
+                                   test.ok(acum[0]==="1")
+                                   test.ok(acum[1]==="9")
+
+                                   test.done();
+                               });
+            });
+        });
+    });
+}
+
+exports.testDataset04 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA { \
+                           GRAPH <data-g1.ttl> {\
+                             :x :p  "1"^^xsd:integer .\
+                             :a :p  "9"^^xsd:integer .\
+                           }\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example/>\
+                                SELECT * \
+                                FROM <data-g1.ttl> \
+                                { GRAPH ?g { ?s ?p ?o } }', 
+                               function(success, results){
+                                   test.ok(success === true);
+                                   test.ok(results.length === 0);
+                                   test.done();
+                               });
+            });
+        });
+    });
+}
+
+
+exports.testDataset05 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA { \
+                           GRAPH <data-g1.ttl> {\
+                             :x :p  "1"^^xsd:integer .\
+                             :a :p  "9"^^xsd:integer .\
+                           }\
+                         }';
+            engine.execute(query, function(success, result){
+
+                var query = 'PREFIX : <http://example/> \
+                             PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                             INSERT DATA { \
+                               GRAPH <data-g2.ttl> {\
+                                 :x :1  "2"^^xsd:integer .\
+                               }\
+                             }';
+                engine.execute(query, function(success, result){
+
+                    engine.execute('PREFIX : <http://example/>\
+                                    SELECT * \
+                                    FROM <data-g1.ttl> \
+                                    FROM NAMED <data-g2.ttl> \
+                                    { ?s ?p ?o }', 
+                                   function(success, results){
+                                       test.ok(success === true);
+                                       test.ok(results.length === 2);
+                                       acum = [];
+                                       for(var i=0; i<results.length; i++) {
+                                           acum.push(results[i].o.value)   
+                                       }
+                                       acum.sort()
+                                       test.ok(acum[0]==="1")
+                                       test.ok(acum[1]==="9")
+
+                                       test.done();
+                                   });
+                });
+            });
+        });
+    });
+}
+
+exports.testDataset06 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA { \
+                           GRAPH <data-g1.ttl> {\
+                             :x :p  "1"^^xsd:integer .\
+                             :a :p  "9"^^xsd:integer .\
+                           }\
+                         }';
+            engine.execute(query, function(success, result){
+
+                var query = 'PREFIX : <http://example/> \
+                             PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                             INSERT DATA { \
+                               GRAPH <data-g2.ttl> {\
+                                 :x :1  "2"^^xsd:integer .\
+                               }\
+                             }';
+                engine.execute(query, function(success, result){
+
+                    engine.execute('PREFIX : <http://example/>\
+                                    SELECT * \
+                                    FROM <data-g1.ttl> \
+                                    FROM NAMED <data-g2.ttl> \
+                                    { GRAPH ?g { ?s ?p ?o } }', 
+                                   function(success, results){
+                                       test.ok(success === true);
+                                       test.ok(results.length === 1);
+                                       test.ok(results[0].o.value === "2");
+                                       test.ok(results[0].g.value === "data-g2.ttl");
+                                       test.done();
+                                   });
+                });
+            });
+        });
+    });
+}
+
+
+
+
+exports.testDataset07 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA { \
+                           GRAPH <data-g1.ttl> {\
+                             :x :p  "1"^^xsd:integer .\
+                             :a :p  "9"^^xsd:integer .\
+                           }\
+                         }';
+            engine.execute(query, function(success, result){
+
+                var query = 'PREFIX : <http://example/> \
+                             PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                             INSERT DATA { \
+                               GRAPH <data-g2.ttl> {\
+                                 :x :1  "2"^^xsd:integer .\
+                               }\
+                             }';
+                engine.execute(query, function(success, result){
+
+                    engine.execute('PREFIX : <http://example/>\
+                                    SELECT * \
+                                    FROM <data-g1.ttl> \
+                                    FROM NAMED <data-g2.ttl> \
+                                    { { ?s ?p ?o } UNION { GRAPH ?g { ?s ?p ?o } } }', 
+                                   function(success, results){
+                                       test.ok(success === true);
+                                       test.ok(results.length === 3);
+                                       acum = [];
+                                       for(var i=0; i<results.length; i++) {
+                                           acum.push(results[i].o.value)   
+                                           if(results[i].o.value === "2") {
+                                               test.ok(results[i].g.value == "data-g2.ttl");
+                                           } else {
+                                               test.ok(results[i].g == null);
+                                           }
+                                       }
+                                       acum.sort()
+                                       test.ok(acum[0]==="1")
+                                       test.ok(acum[1]==="2")
+                                       test.ok(acum[2]==="9")
+
+                                       test.done();
+                                   });
+                });
+            });
+        });
+    });
+}
+
+exports.testDataset08 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA { \
+                           GRAPH <data-g1.ttl> {\
+                             :x :p  "1"^^xsd:integer .\
+                             :a :p  "9"^^xsd:integer .\
+                           }\
+                         }';
+            engine.execute(query, function(success, result){
+
+                var query = 'PREFIX : <http://example/> \
+                             PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                             INSERT DATA { \
+                               GRAPH <data-g2.ttl> {\
+                                 :x :1  "2"^^xsd:integer .\
+                               }\
+                             }';
+                engine.execute(query, function(success, result){
+
+                    engine.execute('PREFIX : <http://example/>\
+                                    SELECT * \
+                                    FROM <data-g1.ttl> \
+                                    FROM NAMED <data-g2.ttl> \
+                                    { ?s ?p ?o GRAPH ?g { ?s ?q ?v } }', 
+                                   function(success, results){
+                                       test.ok(success === true);
+                                       test.ok(results.length === 1);
+                                       test.ok(results[0].s.value === "http://example/x");
+                                       test.ok(results[0].p.value === "http://example/p");
+                                       test.ok(results[0].q.value === "http://example/1");
+                                       test.ok(results[0].o.value === "1");
+                                       test.ok(results[0].v.value === "2");
+                                       test.ok(results[0].g.value === "data-g2.ttl");
+                                       test.done();
+                                   });
+                });
+            });
+        });
+    });
+}
+
+
+
+exports.testDataset09 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA { \
+                           GRAPH <data-g3.ttl> {\
+                             _:x :p  "1"^^xsd:integer .\
+                             _:a :p  "9"^^xsd:integer .\
+                           }\
+                         }';
+            engine.execute(query, function(success, result){
+
+                engine.execute('PREFIX : <http://example/>\
+                                 SELECT * \
+                                 FROM <data-g3.ttl> \
+                                 FROM NAMED <data-g3.ttl> \
+                                 { ?s ?p ?o GRAPH ?g { ?s ?q ?v } }', 
+                                function(success, results){
+                                    test.ok(success === true);
+                                    test.done();
+                                });
+            });
+        });
+    });
+}
+
+
+
+exports.testDataset09b = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA { \
+                           GRAPH <data-g3.ttl> {\
+                             _:x :p  "1"^^xsd:integer .\
+                             _:a :p  "9"^^xsd:integer .\
+                           }\
+                         }';
+            engine.execute(query, function(success, result){
+
+                var query = 'PREFIX : <http://example/> \
+                             PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                             INSERT DATA { \
+                               GRAPH <data-g3-dup.ttl> {\
+                                 _:x :p  "1"^^xsd:integer .\
+                                 _:a :p  "9"^^xsd:integer .\
+                               }\
+                             }';
+                engine.execute(query, function(success, result){
+
+                    engine.execute('PREFIX : <http://example/>\
+                                    SELECT * \
+                                    FROM <data-g3-dup.ttl> \
+                                    FROM NAMED <data-g3.ttl> \
+                                    { ?s ?p ?o GRAPH ?g { ?s ?q ?v } }', 
+                                   function(success, results){
+                                       test.ok(success === true);
+                                       test.ok(results.length == 0);
+                                       test.done();
+                                   });
+                });
+            });
+        });
+    });
+}
+
+
+exports.testDataset11 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA { \
+                           GRAPH <data-g1.ttl> {\
+                             :x :p  "1"^^xsd:integer .\
+                             :a :p  "9"^^xsd:integer .\
+                           }\
+                         }';
+            engine.execute(query, function(success, result){
+
+                var query = 'PREFIX : <http://example/> \
+                             PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                             INSERT DATA { \
+                               GRAPH <data-g2.ttl> {\
+                                 :x :q  "2"^^xsd:integer .\
+                               }\
+                             }';
+                engine.execute(query, function(success, result){
+
+                var query = 'PREFIX : <http://example/> \
+                             PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                             INSERT DATA { \
+                               GRAPH <data-g3.ttl> {\
+                                 _:x :p  "1"^^xsd:integer .\
+                                 _:a :p  "9"^^xsd:integer .\
+                               }\
+                             }';
+                engine.execute(query, function(success, result){
+
+                var query = 'PREFIX : <http://example/> \
+                             PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                             INSERT DATA { \
+                               GRAPH <data-g4.ttl> {\
+                                 _:x :q  "2"^^xsd:integer .\
+                               }\
+                             }';
+                engine.execute(query, function(success, result){
+
+                    engine.execute('PREFIX : <http://example/>\
+                                    SELECT * \
+                                    FROM <data-g1.ttl>\
+                                    FROM NAMED <data-g1.ttl>\
+                                    FROM NAMED <data-g2.ttl>\
+                                    FROM NAMED <data-g3.ttl>\
+                                    FROM NAMED <data-g4.ttl>\
+                                    { \
+                                       { ?s ?p ?o }\
+                                      UNION\
+                                       { GRAPH ?g { ?s ?p ?o } }\
+                                    }', 
+                                   function(success, results){
+                                       test.ok(success === true);
+                                       test.ok(results.length===8);
+                                       test.done();
+                                   });
+                });
+                });
+                });
+            });
+        });
+    });
+}
+
+
+exports.testDataset12b = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA { \
+                           GRAPH <data-g1.ttl> {\
+                             :x :p  "1"^^xsd:integer .\
+                             :a :p  "9"^^xsd:integer .\
+                           }\
+                         }';
+            engine.execute(query, function(success, result){
+
+                var query = 'PREFIX : <http://example/> \
+                             PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                             INSERT DATA { \
+                               GRAPH <data-g2.ttl> {\
+                                 :x :q  "2"^^xsd:integer .\
+                               }\
+                             }';
+                engine.execute(query, function(success, result){
+
+                var query = 'PREFIX : <http://example/> \
+                             PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                             INSERT DATA { \
+                               GRAPH <data-g3.ttl> {\
+                                 _:x :p  "1"^^xsd:integer .\
+                                 _:a :p  "9"^^xsd:integer .\
+                               }\
+                             }';
+                engine.execute(query, function(success, result){
+
+                var query = 'PREFIX : <http://example/> \
+                             PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                             INSERT DATA { \
+                               GRAPH <data-g4.ttl> {\
+                                 _:x :q  "2"^^xsd:integer .\
+                               }\
+                             }';
+                engine.execute(query, function(success, result){
+
+
+                var query = 'PREFIX : <http://example/> \
+                             PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                             INSERT DATA { \
+                               GRAPH <data-g1-dup.ttl> {\
+                                 :x :q  "1"^^xsd:integer .\
+                                 :x :q  "9"^^xsd:integer .\
+                               }\
+                             }';
+                engine.execute(query, function(success, result){
+
+                var query = 'PREFIX : <http://example/> \
+                             PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                             INSERT DATA { \
+                               GRAPH <data-g2-dup.ttl> {\
+                                 :x :q  "2"^^xsd:integer .\
+                               }\
+                             }';
+                engine.execute(query, function(success, result){
+
+                var query = 'PREFIX : <http://example/> \
+                             PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                             INSERT DATA { \
+                               GRAPH <data-g3-dup.ttl> {\
+                                 _:x :p  "1"^^xsd:integer .\
+                                 _:x :p  "9"^^xsd:integer .\
+                               }\
+                             }';
+                engine.execute(query, function(success, result){
+
+                var query = 'PREFIX : <http://example/> \
+                             PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                             INSERT DATA { \
+                               GRAPH <data-g4-dup.ttl> {\
+                                 _:x :q  "2"^^xsd:integer .\
+                               }\
+                             }';
+                engine.execute(query, function(success, result){
+
+                    engine.execute('PREFIX : <http://example/>\
+                                    SELECT * \
+                                    FROM <data-g1-dup.ttl>\
+                                    FROM <data-g2-dup.ttl>\
+                                    FROM <data-g3-dup.ttl>\
+                                    FROM <data-g4-dup.ttl>\
+                                    FROM NAMED <data-g1.ttl>\
+                                    FROM NAMED <data-g2.ttl>\
+                                    FROM NAMED <data-g3.ttl>\
+                                    FROM NAMED <data-g4.ttl>\
+                                    { \
+                                       { ?s ?p ?o }\
+                                      UNION\
+                                       { GRAPH ?g { ?s ?p ?o } }\
+                                    }', 
+                                   function(success, results){
+                                       test.ok(success === true);
+                                       test.ok(results.length === 12);
+                                       test.done();
+                                   });
+                });
+                });
+                });
+                });
+                });
+                });
+                });
+            });
+        });
+    });
+}
+

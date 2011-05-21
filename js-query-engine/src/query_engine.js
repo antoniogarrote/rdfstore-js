@@ -176,15 +176,30 @@ QueryEngine.QueryEngine.prototype.applyGroupBy = function(key, direction, bindin
     return bindings;
 };
 
-QueryEngine.QueryEngine.prototype.removeDefaultGraphBindings = function(bindingsList) {
+QueryEngine.QueryEngine.prototype.removeDefaultGraphBindings = function(bindingsList, dataset) {
+    var onlyDefaultDatasets = [];
+    var namedDatasetsMap = {}
+    for(var i=0; i<dataset.named.length; i++) {
+        namedDatasetsMap[dataset.named[i].oid] = true;
+    }
+    for(var i=0; i<dataset.default.length; i++) {
+        if(namedDatasetsMap[dataset.default[i].oid] == null) {
+            onlyDefaultDatasets.push(dataset.default[i].oid);
+        }
+    }
     var acum = [];
     for(var i=0; i<bindingsList.length; i++) {
         var bindings = bindingsList[i];
         var foundDefaultGraph = false;
         for(var p in bindings) {
-            if(bindings[p] && bindings[p].defaultGraph === true) {
-                foundDefaultGraph = true;
-                continue;
+            for(var j=0; j<namedDatasetsMap.length; j++) {
+                if(bindings[p] === namedDatasetsMap[j]) {
+                    foundDefaultGraph = true;
+                    break;
+                }
+            }
+            if(foundDefaultGraph) {
+                break;
             }
         }
         if(!foundDefaultGraph) {
@@ -302,6 +317,29 @@ QueryEngine.QueryEngine.prototype.normalizeTerm = function(term, env, callback) 
     }
 };
 
+QueryEngine.QueryEngine.prototype.normalizeDatasets = function(datasets, env, callback) {
+    var that = this;
+    Utils.repeat(0, datasets.length, function(k,env) {
+        var floop = arguments.callee;
+        var dataset = datasets[env._i];
+        if(dataset.value === that.lexicon.defaultGraphUri) {
+            dataset.oid = that.lexicon.defaultGraphOid;
+            k(floop, env);
+        } else {
+            that.normalizeTerm(dataset, env, function(success, result){
+                if(success) {
+                    dataset.oid = result;
+                    k(floop, env);
+                } else {
+                    callback(success, result);
+                }
+            })      
+        }  
+    }, function(env) {
+        callback(true, "ok");
+    });
+}
+
 QueryEngine.QueryEngine.prototype.normalizeQuad = function(quad, queryEnv, callback) {
     var subject    = null;
     var predicate  = null;
@@ -309,22 +347,21 @@ QueryEngine.QueryEngine.prototype.normalizeQuad = function(quad, queryEnv, callb
     var graph      = null;
     var that       = this;
     var errorFound = false;
-
     Utils.seq(function(k){
         if(quad.graph == null) {
             graph = 0; // default graph
             k();
         } else {
-            that.normalizeTerm(quad.graph, queryEnv, function(result, oid){    
-                if(errorFound === false){
-                    if(result===true) {
-                        graph = oid;
-                    } else {
-                        errorFound = true;
-                    }
-                }
-                k();
-            });
+          that.normalizeTerm(quad.graph, queryEnv, function(result, oid){    
+              if(errorFound === false){
+                  if(result===true) {
+                      graph = oid;
+                  } else {
+                      errorFound = true;
+                  }
+              }
+              k();
+          });
         }
     }, function(k){
         that.normalizeTerm(quad.subject, queryEnv, function(result, oid){    
@@ -496,7 +533,7 @@ QueryEngine.QueryEngine.prototype.denormalizeBindings = function(bindings, callb
 
 // Queries execution
 
-QueryEngine.QueryEngine.prototype.execute = function(queryString, callback){
+QueryEngine.QueryEngine.prototype.execute = function(queryString, callback, defaultDataset, namedDataset){
     var syntaxTree = this.abstractQueryTree.parseQueryString(queryString);
     if(syntaxTree == null) {
         throw("Error parsing query string");
@@ -504,14 +541,14 @@ QueryEngine.QueryEngine.prototype.execute = function(queryString, callback){
        if(syntaxTree.token === 'query' && syntaxTree.kind == 'update')  {
            this.executeUpdate(syntaxTree, callback);
        } else if(syntaxTree.token === 'query' && syntaxTree.kind == 'query') {
-           this.executeQuery(syntaxTree, callback);
+           this.executeQuery(syntaxTree, callback, defaultDataset, namedDataset);
        }
     }
 };
 
 // Retrieval queries
 
-QueryEngine.QueryEngine.prototype.executeQuery = function(syntaxTree, callback) {
+QueryEngine.QueryEngine.prototype.executeQuery = function(syntaxTree, callback, defaultDataset, namedDataset) {
     var prologue = syntaxTree.prologue;
     var units = syntaxTree.units;
     var that = this;
@@ -523,14 +560,12 @@ QueryEngine.QueryEngine.prototype.executeQuery = function(syntaxTree, callback) 
     // retrieval queries only can have 1 executable unit
     var aqt = that.abstractQueryTree.parseExecutableUnit(units[0]);
 
-    // @todo process query here
     // can be anything else but a select???
     var that = this;
-    this.executeSelect(aqt,queryEnv,function(success, result){
+    this.executeSelect(aqt,queryEnv, defaultDataset, namedDataset, function(success, result){
         // @todo handle result here
         that.denormalizeBindingsList(result, function(success, result){
             if(success) {                        
-                var result = that.removeDefaultGraphBindings(result); // default graph is not a valid binding
                 callback(true, result);
             } else {
                 callback(false, result);
@@ -542,34 +577,49 @@ QueryEngine.QueryEngine.prototype.executeQuery = function(syntaxTree, callback) 
 
 // Select queries
 
-QueryEngine.QueryEngine.prototype.executeSelect = function(unit, env, callback) {
+QueryEngine.QueryEngine.prototype.executeSelect = function(unit, env, defaultDataset, namedDataset, callback) {
     if(unit.kind === "select") {
         var projection = unit.projection;
-        var dataset    = unit.dataset[0]; // more than one? why array?
+        var dataset    = unit.dataset;
         var modifier   = unit.modifier;
         var limit      = unit.limit;
         var offset     = unit.offset;
         var order      = unit.order;
         var that = this;
-        this.executeSelectUnit(projection, dataset, unit.pattern, env, function(success, result){
+
+        if(defaultDataset != null || namedDataset != null) {
+            dataset.default = defaultDataset || [];
+            dataset.named   = namedDataset || [];
+        } else if(dataset.default.length === 0 && dataset.named.length === 0) {
+            // We add the default graph to the default merged graph
+            dataset.default.push(this.lexicon.defaultGraphUriTerm);
+        }
+
+        that.normalizeDatasets(dataset.default.concat(dataset.named), env, function(success, results){
             if(success) {
+                that.executeSelectUnit(projection, dataset, unit.pattern, env, function(success, result){
+                  if(success) {
+                          var modifiedBindings = that.applyModifier(modifier, result)
+                          that.applyOrderBy(order, modifiedBindings, env, function(success, orderedBindings){
+                              if(success) {
+                                  // @todo group here!
+                                  var limitedBindings  = that.applyLimitOffset(offset, limit, orderedBindings);
+                                  var projectedBindings = that.projectBindings(projection, limitedBindings);
+                                  filteredBindings = that.removeDefaultGraphBindings(projectedBindings, dataset);
 
-                var modifiedBindings = that.applyModifier(modifier, result)
-                that.applyOrderBy(order, modifiedBindings, env, function(success, orderedBindings){
-                    if(success) {
-                        // @todo group here!
-                        var limitedBindings  = that.applyLimitOffset(offset, limit, orderedBindings);
-                        var projectedBindings = that.projectBindings(projection, limitedBindings);
-                        callback(true,projectedBindings);
-
-                    } else {
-                        callback(false, orderedBindings);
-                    }
-                });
+                                  callback(true,filteredBindings);                  
+                              } else {
+                                  callback(false, orderedBindings);
+                              }
+                          });
+                      } else {
+                          callback(false, result);
+                      }
+                  });
             } else {
-                callback(false, result);
+                callback(false,results);
             }
-        });
+        })
     } else {
         callback(false,"Cannot execute " + unit.kind + " query as a select query");
     }
@@ -718,6 +768,7 @@ QueryEngine.QueryEngine.prototype.executeJOIN = function(projection, dataset, pa
         });
     })(function(){
         var result = QueryPlan.joinBindings(set1, set2);
+
         QueryFilters.checkFilters(patterns, result, env, that, callback);
     });
 };

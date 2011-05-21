@@ -57,17 +57,17 @@ QueryPlan.variablesIntersectionBGP = function(bgpa, bgpb) {
 };
 
 QueryPlan.executeAndBGPs = function(bgps, dataset, queryEngine, env, callback) {
-    for(var i=0; i<bgps.length; i++) {
-        if(bgps[i].graph == null) {
-            bgps[i].graph = dataset;
-        } else if(dataset != null && dataset.length != 0) {
-            bgps[i].graph = dataset;
-        }
-    }
+    //for(var i=0; i<bgps.length; i++) {
+    //    if(bgps[i].graph == null) {
+    //        bgps[i].graph = dataset;
+    //    } else if(dataset != null && dataset.length != 0) {
+    //        bgps[i].graph = dataset;
+    //    }
+    //}
 
     var pairs = Utils.partition(bgps,2);
 
-    QueryPlan.buildBushyJoinTreeBase(pairs, queryEngine, env, function(success, results){
+    QueryPlan.buildBushyJoinTreeBase(pairs, dataset, queryEngine, env, function(success, results){
         if(success) {
             callback(true, results);
         } else {
@@ -76,15 +76,14 @@ QueryPlan.executeAndBGPs = function(bgps, dataset, queryEngine, env, callback) {
     });
 };
 
-QueryPlan.buildBushyJoinTreeBase = function(pairs, queryEngine, queryEnv, callback) {
+QueryPlan.buildBushyJoinTreeBase = function(pairs, dataset, queryEngine, queryEnv, callback) {
     var that = this;
     Utils.repeat(0, pairs.length, function(k, env) {
         var floop = arguments.callee;
         var pair = pairs[env._i];
         var bgpa = pair[0];
         var bgpb = pair[1];
-
-        QueryPlan.executeAndBGP(bgpa,bgpb, queryEngine, queryEnv, function(success, results){
+        QueryPlan.executeAndBGP(bgpa,bgpb, dataset, queryEngine, queryEnv, function(success, results){
             if(success) {
                 if(env.acum == null) {
                     env.acum = [];
@@ -137,42 +136,40 @@ QueryPlan.executeAndBindings = function(bindingsa, bindingsb) {
     }
 };
 
-QueryPlan.executeAndBGP = function(bgpa, bgpb, queryEngine, queryEnv, callback) {
+QueryPlan.executeAndBGP = function(bgpa, bgpb, dataset, queryEngine, queryEnv, callback) {
     if(bgpa==null) {
-        QueryPlan.executeEmptyJoinBGP(bgpb, queryEngine, queryEnv, callback);
+        QueryPlan.executeEmptyJoinBGP(bgpb, dataset, queryEngine, queryEnv, callback);
     } else if(bgpb==null) {
-        QueryPlan.executeEmptyJoinBGP(bgpa, queryEngine, queryEnv, callback);
+        QueryPlan.executeEmptyJoinBGP(bgpa, dataset, queryEngine, queryEnv, callback);
     } else {
         var joinVars = QueryPlan.variablesIntersectionBGP(bgpa,bgpb);
         if(joinVars.length === 0) {
             // range a, range b -> cartesian product
-            QueryPlan.executeCrossProductBGP(joinVars, bgpa, bgpb, queryEngine, queryEnv, callback);
+            QueryPlan.executeCrossProductBGP(joinVars, bgpa, bgpb, dataset, queryEngine, queryEnv, callback);
         } else {
             // join on intersection vars
-            QueryPlan.executeJoinBGP(joinVars, bgpa, bgpb, queryEngine, queryEnv, callback);
+            QueryPlan.executeJoinBGP(joinVars, bgpa, bgpb, dataset, queryEngine, queryEnv, callback);
         }
     }
 };
 
-QueryPlan.executeEmptyJoinBGP = function(bgp, queryEngine, queryEnv, callback) {
-    queryEngine.rangeQuery(bgp, queryEnv, function(success, results){
-        if(success) {
-            var bindings = QueryPlan.buildBindingsFromRange(results, bgp);
+QueryPlan.executeEmptyJoinBGP = function(bgp, dataset, queryEngine, queryEnv, callback) {
+    QueryPlan.executeBGPDatasets(bgp, dataset, queryEngine, queryEnv, function(success, bindings){
+        if(success == true) {
             callback(true, bindings);
         } else {
-            callback(false, results);
+            callback(false, bindings);
         }
     });
 };
 
-QueryPlan.executeJoinBGP = function(joinVars, bgpa, bgpb, queryEngine, queryEnv, callback) {
-    queryEngine.rangeQuery(bgpa, queryEnv, function(success, resultsa){
+QueryPlan.executeJoinBGP = function(joinVars, bgpa, bgpb, dataset, queryEngine, queryEnv, callback) {
+    QueryPlan.executeBGPDatasets(bgpa, dataset, queryEngine, queryEnv, function(success, bindingsa){
         if(success) {
-            var bindingsa = QueryPlan.buildBindingsFromRange(resultsa, bgpa);
-            queryEngine.rangeQuery(bgpb, queryEnv, function(success, resultsb){
+            QueryPlan.executeBGPDatasets(bgpb, dataset, queryEngine, queryEnv, function(success, bindingsb){
                 if(success) {
                     //queryEngine.copyDenormalizedBindings(bindingsa, queryEnv.outCache||[], function(success, denormBindingsa){
-                        var bindingsb = QueryPlan.buildBindingsFromRange(resultsb, bgpb);
+                        //var bindingsb = QueryPlan.buildBindingsFromRange(resultsb, bgpb);
                         //queryEngine.copyDenormalizedBindings(bindingsb, queryEnv.outCache||[], function(success, denormBindingsb){
                             var bindings = QueryPlan.joinBindings(bindingsa, bindingsb);
                             callback(true, bindings);
@@ -188,13 +185,73 @@ QueryPlan.executeJoinBGP = function(joinVars, bgpa, bgpb, queryEngine, queryEnv,
     });
 };
 
-QueryPlan.executeCrossProductBGP = function(joinVars, bgpa, bgpb, queryEngine, queryEnv, callback) {
-    queryEngine.rangeQuery(bgpa, queryEnv, function(success, resultsa){
-        if(success) {
-            var bindingsa = QueryPlan.buildBindingsFromRange(resultsa, bgpa);
-            queryEngine.rangeQuery(bgpb, queryEnv, function(success, resultsb){
+QueryPlan.executeBGPDatasets = function(bgp, dataset, queryEngine, queryEnv,callback) {
+    if(bgp.graph == null) {
+        //union through all default graph(s)
+        Utils.repeat(0, dataset.default.length, function(k, env) {
+            var floop = arguments.callee;
+            env.acum = env.acum || [];;
+            bgp.graph = dataset.default[env._i];//.oid
+            queryEngine.rangeQuery(bgp, queryEnv, function(success, results) {                
                 if(success) {
-                    var bindingsb = QueryPlan.buildBindingsFromRange(resultsb, bgpb);
+                    results = QueryPlan.buildBindingsFromRange(results, bgp);
+                    env.acum.push(results);
+                    k(floop, env);
+                } else {
+                    k(floop, env);              
+                }
+            });
+        }, function(env){
+            var acumBindings = QueryPlan.unionManyBindings(env.acum||[]);
+            callback(true, acumBindings);
+        });
+    } else if(bgp.graph.token === 'var') {
+        var graphVar = bgp.graph.value;
+        
+        // union through all named datasets
+        Utils.repeat(0, dataset.named.length, function(k, env) {
+            var floop = arguments.callee;
+            env.acum = env.acum || [];
+            bgp.graph = dataset.named[env._i];//.oid
+
+            queryEngine.rangeQuery(bgp, queryEnv, function(success, results) {
+                if(success) {
+                    results = QueryPlan.buildBindingsFromRange(results, bgp);
+                    // add the graph bound variable to the result 
+                    for(var i=0; i< results.length; i++) {
+                        results[i][graphVar] = dataset.named[env._i].oid;
+                    }
+                    env.acum.push(results);
+                    k(floop, env);
+                } else {
+                    callback(false, results);
+                }
+            });
+        }, function(env){
+            var acumBindings = QueryPlan.unionManyBindings(env.acum||[]);
+            callback(true, acumBindings);
+        });
+
+    } else {
+        // graph already has an active value, just match.
+        // Filtering the results will still be necessary
+        queryEngine.rangeQuery(bgp, queryEnv, function(success, results) {
+            if(success) {
+                results = QueryPlan.buildBindingsFromRange(results, bgp);
+                env.acum.push(results);
+                k(floop, env);
+            } else {
+                callback(false, results);
+            }
+        });
+    }
+};
+
+QueryPlan.executeCrossProductBGP = function(joinVars, bgpa, bgpb, dataset, queryEngine, queryEnv, callback) {
+    QueryPlan.executeBGPDatasets(bgpa, dataset, queryEngine, queryEnv, function(success, bindingsa){
+        if(success) {
+            QueryPlan.executeBGPDatasets(bgpb, dataset, queryEngine, queryEnv, function(success, bindingsb){
+                if(success) {
                     var bindings = QueryPlan.crossProductBindings(bindingsa, bindingsb);
                     callback(true, bindings);
                 } else {
@@ -362,3 +419,13 @@ QueryPlan.crossProductBindings = function(bindingsa, bindingsb) {
 QueryPlan.unionBindings = function(bindingsa, bindingsb) {
     return bindingsa.concat(bindingsb);
 };
+
+QueryPlan.unionManyBindings = function(bindingLists) {
+    var acum = [];
+    for(var i=0; i<bindingLists.length; i++) {
+        var bindings = bindingLists[i];
+        acum = QueryPlan.unionBindings(acum, bindings);
+    }
+
+    return acum;
+}
