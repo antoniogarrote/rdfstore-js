@@ -80,6 +80,10 @@ QueryFilters.run = function(filterExpr, bindings, nullifyFilters, env, queryEngi
                 // ebv can be directly a RDFTerm (e.g. atomic expression in filter)
                 // this additional call to ebv will return -> true/false/error
                 var ebv = QueryFilters.ebv(ebv);
+                //console.log("EBV:")
+                //console.log(ebv)
+                //console.log("FOR:")
+                //console.log(thisDenormBindings)
                 if(QueryFilters.isEbvError(ebv)) {
                     // error
                     if(nullifyFilters) {
@@ -91,6 +95,10 @@ QueryFilters.run = function(filterExpr, bindings, nullifyFilters, env, queryEngi
                     filteredBindings.push(bindings[i]);
                 } else {
                     // false
+                    if(nullifyFilters) {
+                        var thisBindings = {"__nullify__": true, "bindings": bindings[i]};
+                        filteredBindings.push(thisBindings);
+                    }
                 }
             }
             callback(true, filteredBindings);

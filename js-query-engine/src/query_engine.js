@@ -734,7 +734,17 @@ QueryEngine.QueryEngine.prototype.executeLEFT_JOIN = function(projection, datase
         });
     })(function(){
         var result = QueryPlan.leftOuterJoinBindings(set1, set2);
+        //console.log("SETS:")
+        //console.log(set1)
+        //console.log(set2)
+        //console.log("---")
+        //console.log(result);
+        //console.log(patterns.filter[0])
+
         QueryFilters.checkFilters(patterns, result, true, env, that, function(success, bindings){
+            //console.log("---")
+            //console.log(bindings)
+            //console.log("\r\n")
             if(success) {
                 if(set1.length>1 && set2.length>1) {
                     var vars = [];

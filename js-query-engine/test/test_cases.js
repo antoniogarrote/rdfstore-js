@@ -4352,11 +4352,259 @@ exports.testOpenCmp02 = function(test) {
                                     FILTER ( ?v1 < ?v2 || ?v1 = ?v2 || ?v1 > ?v2 )\
                                 }', function(success, results){
                                     test.ok(success === true);
-                                    test.ok(results.length===3);
+                                    // @todo
+                                    // add some assertions for the values
+                                    test.ok(results.length===3);                                    
                                     test.done();
                 });
             });
         });
     });
 }
+
+exports.testOptionalFilterFilter001 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX x: <http://example.org/ns#>\
+                         PREFIX : <http://example.org/books#> \
+                         PREFIX dc: <http://purl.org/dc/elements/1.1/>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :book1 dc:title "TITLE 1" .\
+                           :book1 x:price  "10"^^xsd:integer .\
+                           :book2 dc:title "TITLE 2" .\
+                           :book2 x:price  "20"^^xsd:integer .\
+                           :book3 dc:title "TITLE 3" .\
+                         }';
+            engine.execute(query, function(success, result){
+                // modified version to avoid problems with timezones
+                engine.execute('PREFIX x:     <http://example.org/ns#>\
+                                PREFIX dc: <http://purl.org/dc/elements/1.1/>\
+                                SELECT ?title ?price         \
+                                WHERE                        \
+                                { ?book dc:title ?title .    \
+                                  OPTIONAL                   \
+                                    { ?book x:price ?price . \
+                                      FILTER (?price < 15) . \
+                                    } .                      \
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    acum = [];
+                                    for(var i=0; i<results.length; i++) {
+                                        acum.push(results[i].title.value)
+                                        if(results[i].title.value === "TITLE 2") {
+                                            test.ok(results[i].price==null);
+                                        } else if(results[i].title.value === "TITLE 3") {
+                                            test.ok(results[i].price == null);
+                                        } else {
+                                            test.ok(results[i].title.value === "TITLE 1");
+                                            test.ok(results[i].price.value === '10');
+                                        }
+                                    }
+
+                                    acum.sort();
+                                    test.ok(acum[0]==="TITLE 1");
+                                    test.ok(acum[1]==="TITLE 2");
+                                    test.ok(acum[2]==="TITLE 3");
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testOptionalFilterFilter002 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX x: <http://example.org/ns#>\
+                         PREFIX : <http://example.org/books#> \
+                         PREFIX dc: <http://purl.org/dc/elements/1.1/>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :book1 dc:title "TITLE 1" .\
+                           :book1 x:price  "10"^^xsd:integer .\
+                           :book2 dc:title "TITLE 2" .\
+                           :book2 x:price  "20"^^xsd:integer .\
+                           :book3 dc:title "TITLE 3" .\
+                         }';
+            engine.execute(query, function(success, result){
+                // modified version to avoid problems with timezones
+                engine.execute('PREFIX x:     <http://example.org/ns#>\
+                                PREFIX dc: <http://purl.org/dc/elements/1.1/>\
+                                SELECT ?title ?price\
+                                WHERE                \
+                                { ?book dc:title ?title .\
+                                  OPTIONAL               \
+                                    { ?book x:price ?price } . \
+                                  FILTER (?price < 15)  . \
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 1);                                    
+                                    test.ok(results[0].title.value === "TITLE 1");
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+
+exports.testOptionalFilterFilter003 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX x: <http://example.org/ns#>\
+                         PREFIX : <http://example.org/books#> \
+                         PREFIX dc: <http://purl.org/dc/elements/1.1/>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :book1 dc:title "TITLE 1" .\
+                           :book1 x:price  "10"^^xsd:integer .\
+                           :book2 dc:title "TITLE 2" .\
+                           :book2 x:price  "20"^^xsd:integer .\
+                           :book3 dc:title "TITLE 3" .\
+                         }';
+            engine.execute(query, function(success, result){
+                // modified version to avoid problems with timezones
+                engine.execute('PREFIX x:     <http://example.org/ns#>\
+                                PREFIX dc: <http://purl.org/dc/elements/1.1/>\
+                                SELECT ?title ?price\
+                                WHERE                \
+                                { ?book dc:title ?title .\
+                                  OPTIONAL\
+                                    { ?book x:price ?price } . \
+                                  FILTER ( ( ! BOUND(?price) ) || ( ?price < 15 ) ) .\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 2);
+                                    acum = [];
+                                    for(var i=0; i<results.length; i++) {
+                                        acum.push(results[i].title.value)
+                                        if(results[i].title.value === "TITLE 3") {
+                                            test.ok(results[i].price == null);
+                                        } else {
+                                            test.ok(results[i].title.value === "TITLE 1");
+                                            test.ok(results[i].price.value === '10');
+                                        }
+                                    }
+                                    test.ok(acum[0]==="TITLE 1");
+                                    test.ok(acum[1]==="TITLE 3");
+                                    
+                                    acum.sort();
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testOptionalFilterFilter004 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX x: <http://example.org/ns#>\
+                         PREFIX : <http://example.org/books#> \
+                         PREFIX dc: <http://purl.org/dc/elements/1.1/>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :book1 dc:title "TITLE 1" .\
+                           :book1 x:price  "10"^^xsd:integer .\
+                           :book2 dc:title "TITLE 2" .\
+                           :book2 x:price  "20"^^xsd:integer .\
+                           :book3 dc:title "TITLE 3" .\
+                         }';
+            engine.execute(query, function(success, result){
+                // modified version to avoid problems with timezones
+                engine.execute('PREFIX x:     <http://example.org/ns#>\
+                                PREFIX dc: <http://purl.org/dc/elements/1.1/>\
+                                SELECT ?title ?price\
+                                WHERE                \
+                                { ?book dc:title ?title .\
+                                  OPTIONAL\
+                                    { ?book x:price ?price . \
+                                      FILTER (?price < 15 && ?title = "TITLE 2") .\
+                                    } .\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 3);
+                                    acum = [];
+                                    for(var i=0; i<results.length; i++) {
+                                        acum.push(results[i].title.value)
+                                        test.ok(results[i].price == null);
+                                    }
+                                    acum.sort();
+                                    
+                                    test.ok(acum[0]==="TITLE 1");
+                                    test.ok(acum[1]==="TITLE 2");
+                                    test.ok(acum[2]==="TITLE 3");
+                                    
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+
+     // Not approved
+     //exports.testOptionalFilterFilter005 = function(test) {
+     //    new Lexicon.Lexicon(function(lexicon){
+     //        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+     //            var engine = new QueryEngine.QueryEngine({backend: backend,
+     //                                                      lexicon: lexicon});      
+     //            var query = 'PREFIX x: <http://example.org/ns#>\
+     //                         PREFIX : <http://example.org/books#> \
+     //                         PREFIX dc: <http://purl.org/dc/elements/1.1/>\
+     //                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+     //                         INSERT DATA {\
+     //                           :book1 dc:title "TITLE 1" .\
+     //                           :book1 x:price  "10"^^xsd:integer .\
+     //                           :book2 dc:title "TITLE 2" .\
+     //                           :book2 x:price  "20"^^xsd:integer .\
+     //                           :book3 dc:title "TITLE 3" .\
+     //                         }';
+     //            engine.execute(query, function(success, result){
+     //                // modified version to avoid problems with timezones
+     //                engine.execute('PREFIX x:     <http://example.org/ns#>\
+     //                                PREFIX dc: <http://purl.org/dc/elements/1.1/>\
+     //                                SELECT ?title ?price\
+     //                                WHERE                \
+     //                                { ?book dc:title ?title .\
+     //                                  OPTIONAL\
+     //                                    {\
+     //                                      { \
+     //                                        ?book x:price ?price . \
+     //                                        FILTER (?title = "TITLE 2") .\
+     //                                      }\
+     //                                    } .\
+     //                                }', function(success, results){
+     //                                    test.ok(success === true);
+     //                                    test.ok(results.length === 3);
+     //                                    acum = [];
+     //                                    for(var i=0; i<results.length; i++) {
+     //                                        acum.push(results[i].title.value)
+     //                                        if(results[i].title.value === "TITLE 2") {
+     //                                            test.ok(results[i].price.value === '20');
+     //                                        } else {
+     //                                            test.ok(results[i].price === null);
+     //                                        }
+     //                                    }
+     //                                    acum.sort();
+     //                                    
+     //                                    test.ok(acum[0]==="TITLE 1");
+     //                                    test.ok(acum[1]==="TITLE 2");
+     //                                    test.ok(acum[2]==="TITLE 3");
+     //                                    
+     //                                    test.done();
+     //                });
+     //            });
+     //        });
+     //    });
+     //}
 
