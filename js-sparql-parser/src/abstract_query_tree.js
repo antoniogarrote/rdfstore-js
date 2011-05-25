@@ -89,7 +89,7 @@ AbstractQueryTree.AbstractQueryTree.prototype._buildGroupGraphPattern = function
                 g = { kind:'LEFT_JOIN',
                       lvalue: g,
                       rvalue: parsedPattern,
-                      filter: true }
+                      filter: true };
             }
         } else {
             var parsedPattern = this.build(pattern,env);
@@ -98,7 +98,7 @@ AbstractQueryTree.AbstractQueryTree.prototype._buildGroupGraphPattern = function
             } else {
                 g = { kind: 'JOIN',
                       lvalue: g,
-                      rvalue: parsedPattern }
+                      rvalue: parsedPattern };
             }
         }
     }
@@ -109,8 +109,16 @@ AbstractQueryTree.AbstractQueryTree.prototype._buildGroupGraphPattern = function
                      filter: f,
                      value: g};
         } else if(g.kind === 'LEFT_JOIN' && g.filter === true) {
-            g.filter = f;
-            return g;
+            return { kind: 'FILTER',
+                     filter: f,
+                     value: g};
+
+//            g.filter = f;
+//            return g;
+        } else if(g.kind === 'LEFT_JOIN') {
+            return { kind: 'FILTER',
+                     filter: f,
+                     value: g};
         } else if(g.kind === 'JOIN') {
             return { kind: 'FILTER',
                      filter: f,

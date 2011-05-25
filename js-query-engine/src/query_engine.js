@@ -493,7 +493,7 @@ QueryEngine.QueryEngine.prototype.copyDenormalizedBindings = function(bindingsLi
                 if(inOut!= null) {
                     denorm[variables[env._i]] = inOut;
                     k(floop, env);
-                } else {
+                } else {                    
                     that.lexicon.retrieve(oid, function(val){
                         out[oid] = val;
                         denorm[variables[env._i]] = val;
@@ -538,11 +538,12 @@ QueryEngine.QueryEngine.prototype.execute = function(queryString, callback, defa
     if(syntaxTree == null) {
         throw("Error parsing query string");
     } else {
-       if(syntaxTree.token === 'query' && syntaxTree.kind == 'update')  {
-           this.executeUpdate(syntaxTree, callback);
-       } else if(syntaxTree.token === 'query' && syntaxTree.kind == 'query') {
-           this.executeQuery(syntaxTree, callback, defaultDataset, namedDataset);
-       }
+        if(syntaxTree.token === 'query' && syntaxTree.kind == 'update')  {
+            this.executeUpdate(syntaxTree, callback);
+        } else if(syntaxTree.token === 'query' && syntaxTree.kind == 'query') {
+            //console.log(JSON.stringify(syntaxTree));
+            this.executeQuery(syntaxTree, callback, defaultDataset, namedDataset);
+        }
     }
 };
 
@@ -643,15 +644,12 @@ QueryEngine.QueryEngine.prototype.executeSelectUnit = function(projection, datas
         var that = this;
         this.executeSelectUnit(projection, dataset, pattern.value, env, function(success, results){
             if(success) {
-                QueryFilters.run(filter[0].value, results, env, that, callback);
+                QueryFilters.run(filter[0].value, results, false, env, that, callback);
             } else {
                 callback(false, results);
             }
         });
     } else {
-        console.log(pattern)
-        console.log(pattern.lvalue)
-        console.log(pattern.rvalue)
         callback(false, "Cannot execute query pattern " + pattern.kind + ". Not implemented yet.");
     }
 };
@@ -689,7 +687,7 @@ QueryEngine.QueryEngine.prototype.executeUNION = function(projection, dataset, p
         });
     })(function(){
         var result = QueryPlan.unionBindings(set1, set2);
-        QueryFilters.checkFilters(patterns, result, env, that, callback);
+        QueryFilters.checkFilters(patterns, result, false, env, that, callback);
     });
 };
 
@@ -699,7 +697,7 @@ QueryEngine.QueryEngine.prototype.executeAndBGP = function(projection, dataset, 
 
     QueryPlan.executeAndBGPs(patterns, dataset, this, env, function(success,result){
         if(success) {
-            QueryFilters.checkFilters(patterns, result, env, that, callback);
+            QueryFilters.checkFilters(patterns, result, false, env, that, callback);
         } else {
             callback(false, result);
         }
@@ -709,6 +707,7 @@ QueryEngine.QueryEngine.prototype.executeAndBGP = function(projection, dataset, 
 QueryEngine.QueryEngine.prototype.executeLEFT_JOIN = function(projection, dataset, patterns, env, callback) {
     var setQuery1 = patterns.lvalue;
     var setQuery2 = patterns.rvalue;
+
     var set1 = null;
     var set2 = null;
 
@@ -735,7 +734,39 @@ QueryEngine.QueryEngine.prototype.executeLEFT_JOIN = function(projection, datase
         });
     })(function(){
         var result = QueryPlan.leftOuterJoinBindings(set1, set2);
-        QueryFilters.checkFilters(patterns, result, env, that, callback);
+        QueryFilters.checkFilters(patterns, result, true, env, that, function(success, bindings){
+            if(success) {
+                if(set1.length>1 && set2.length>1) {
+                    var vars = [];
+                    var vars1 = {}
+                    for(var p in set1[0]) {
+                        vars1[p] = true;
+                    }
+                    for(var p in set2[0]) {
+                        if(vars1[p] != true) {
+                            vars.push(p);
+                        }
+                    }
+                    acum = [];
+                    for(var i=0; i<bindings.length; i++) {
+                        if(bindings[i]["__nullify__"] === true) {
+                            for(var j=0; j<vars.length; j++) {
+                                bindings[i]["bindings"][vars[j]] = null;
+                            }
+                            acum.push(bindings[i]["bindings"]);
+                        } else {
+                            acum.push(bindings[i]);
+                        }
+                    }
+                
+                    callback(true, acum);
+                } else {
+                    callback(true, bindings);
+                }
+            } else {
+                callback(false, bindings);
+            }
+        });
     });
 };
 
@@ -769,7 +800,7 @@ QueryEngine.QueryEngine.prototype.executeJOIN = function(projection, dataset, pa
     })(function(){
         var result = QueryPlan.joinBindings(set1, set2);
 
-        QueryFilters.checkFilters(patterns, result, env, that, callback);
+        QueryFilters.checkFilters(patterns, result, false, env, that, callback);
     });
 };
 

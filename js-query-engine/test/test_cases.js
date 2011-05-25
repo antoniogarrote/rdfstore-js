@@ -918,8 +918,6 @@ exports.testDAWGBEV4 = function(test) {
     });
 }
 
-
-
 exports.testDAWGBEV5 = function(test) {
     new Lexicon.Lexicon(function(lexicon){
         new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
@@ -943,7 +941,7 @@ exports.testDAWGBEV5 = function(test) {
             engine.execute(query, function(success, result){
                 engine.execute('PREFIX  xsd: <http://www.w3.org/2001/XMLSchema#>\
                                 PREFIX  : <http://example.org/ns#>\
-                                SELECT  ?a\
+                                SELECT  ?a ?w\
                                 WHERE\
                                     { ?a :p ?v . \
                                       OPTIONAL\
@@ -1600,7 +1598,6 @@ exports.testExprBuiltinDatatype2 = function(test) {
                                       FILTER( DATATYPE(?v) != <http://example/NotADataTypeIRI> ).\
                                     }', function(success, results){
                                         test.ok(success === true);
-                                        
                                         test.ok(results.length === 4);
                                         acum = [];
                                         for(var i=0; i<results.length; i++) {
@@ -2249,14 +2246,14 @@ exports.testExprBuiltinSameTermNotEq = function(test) {
                            :xb :p  _:a .\
                          }';
             engine.execute(query, function(success, result){
-                engine.execute('PREFIX  : <http://example.org/things#>\
-                                PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                engine.execute('PREFIX  : <http://example.org/things#> \
+                                PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
                                 SELECT  * \
-                                WHERE\
+                                WHERE \
                                     { \
-                                      ?x1 :p ?v1 .\
-                                      ?x2 :p ?v2 .\
-                                      FILTER ( !SAMETERM(?v1, ?v2) && ?v1 = ?v2 )\
+                                      ?x1 :p ?v1 . \
+                                      ?x2 :p ?v2 . \
+                                      FILTER ( !SAMETERM(?v1, ?v2)  && ?v1 = ?v2) \
                                     }', 
                                function(success, results){
                                    test.ok(success === true);
@@ -3603,6 +3600,760 @@ exports.testDataset12b = function(test) {
                 });
                 });
                 });
+                });
+            });
+        });
+    });
+}
+
+exports.testOpenEq01 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/ns#> \
+                         PREFIX t: <http://example/t#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x1 :p "a"^^t:type1 .\
+                           :x2 :p "b"^^t:type1 .\
+                           :y1 :p "a"^^t:type2 .\
+                           :y2 :p "b"^^t:type2 .\
+                           :z1 :p "1"^^xsd:integer .\
+                           :z2 :p "01"^^xsd:integer .\
+                           :z3 :p "2"^^xsd:integer .\
+                           :z4 :p "02"^^xsd:integer .}';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX :     <http://example.org/ns#>\
+                                PREFIX  t:      <http://example/t#>\
+                                PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT * { ?x :p "001"^^xsd:integer }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 0);
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testOpenEq01 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/ns#> \
+                         PREFIX t: <http://example/t#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x1 :p "a"^^t:type1 .\
+                           :x2 :p "b"^^t:type1 .\
+                           :y1 :p "a"^^t:type2 .\
+                           :y2 :p "b"^^t:type2 .\
+                           :z1 :p "1"^^xsd:integer .\
+                           :z2 :p "01"^^xsd:integer .\
+                           :z3 :p "2"^^xsd:integer .\
+                           :z4 :p "02"^^xsd:integer .}';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX :     <http://example.org/ns#>\
+                                PREFIX  t:      <http://example/t#>\
+                                PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT * { ?x :p "001"^^xsd:integer }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 0);
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testOpenEq02 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/ns#> \
+                         PREFIX t: <http://example/t#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x1 :p "a"^^t:type1 .\
+                           :x2 :p "b"^^t:type1 .\
+                           :y1 :p "a"^^t:type2 .\
+                           :y2 :p "b"^^t:type2 .\
+                           :z1 :p "1"^^xsd:integer .\
+                           :z2 :p "01"^^xsd:integer .\
+                           :z3 :p "2"^^xsd:integer .\
+                           :z4 :p "02"^^xsd:integer .}';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX :     <http://example.org/ns#>\
+                                PREFIX  t:      <http://example/t#>\
+                                PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT * { ?x :p "a"^^t:type1 }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 1);
+                                    test.ok(results[0].x.value === "http://example.org/ns#x1");
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testOpenEq03 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/ns#> \
+                         PREFIX t: <http://example/t#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x1 :p "a"^^t:type1 .\
+                           :x2 :p "b"^^t:type1 .\
+                           :y1 :p "a"^^t:type2 .\
+                           :y2 :p "b"^^t:type2 .\
+                           :z1 :p "1"^^xsd:integer .\
+                           :z2 :p "01"^^xsd:integer .\
+                           :z3 :p "2"^^xsd:integer .\
+                           :z4 :p "02"^^xsd:integer .}';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX :     <http://example.org/ns#>\
+                                PREFIX  t:      <http://example/t#>\
+                                PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT * { ?x :p ?v \
+                                FILTER ( ?v = 1 ) }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 2);
+                                    var acum = [];
+                                    for(var i=0; i<results.length; i++) {
+                                        acum.push(results[i].v.value);
+                                    }
+                                    acum.sort();
+
+                                    test.ok(acum[0]==="01");
+                                    test.ok(acum[1]==="1");
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testOpenEq04 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/ns#> \
+                         PREFIX t: <http://example/t#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x1 :p "a"^^t:type1 .\
+                           :x2 :p "b"^^t:type1 .\
+                           :y1 :p "a"^^t:type2 .\
+                           :y2 :p "b"^^t:type2 .\
+                           :z1 :p "1"^^xsd:integer .\
+                           :z2 :p "01"^^xsd:integer .\
+                           :z3 :p "2"^^xsd:integer .\
+                           :z4 :p "02"^^xsd:integer .}';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX :     <http://example.org/ns#>\
+                                PREFIX  t:      <http://example/t#>\
+                                PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT * { ?x :p ?v \
+                                FILTER ( ?v != 1 ) }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 2);
+                                    var acum = [];
+                                    for(var i=0; i<results.length; i++) {
+                                        acum.push(results[i].v.value);
+                                    }
+                                    acum.sort();
+ 
+                                    test.ok(acum[0]==="02");
+                                    test.ok(acum[1]==="2");
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+
+exports.testOpenEq05 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/ns#> \
+                         PREFIX t: <http://example/t#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x1 :p "a"^^t:type1 .\
+                           :x2 :p "b"^^t:type1 .\
+                           :y1 :p "a"^^t:type2 .\
+                           :y2 :p "b"^^t:type2 .\
+                           :z1 :p "1"^^xsd:integer .\
+                           :z2 :p "01"^^xsd:integer .\
+                           :z3 :p "2"^^xsd:integer .\
+                           :z4 :p "02"^^xsd:integer .}';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX :     <http://example.org/ns#>\
+                                PREFIX  t:      <http://example/t#>\
+                                PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT * { ?x :p ?v \
+                                FILTER ( ?v = "a"^^t:type1 ) }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 1);
+                                    test.ok(results[0].v.value === "a");
+                                    test.ok(results[0].v.type === "http://example/t#type1");
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testOpenEq06 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/ns#> \
+                         PREFIX t: <http://example/t#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x1 :p "a"^^t:type1 .\
+                           :x2 :p "b"^^t:type1 .\
+                           :y1 :p "a"^^t:type2 .\
+                           :y2 :p "b"^^t:type2 .\
+                           :z1 :p "1"^^xsd:integer .\
+                           :z2 :p "01"^^xsd:integer .\
+                           :z3 :p "2"^^xsd:integer .\
+                           :z4 :p "02"^^xsd:integer .}';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX :     <http://example.org/ns#>\
+                                PREFIX  t:      <http://example/t#>\
+                                PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT * { ?x :p ?v \
+                                FILTER ( ?v != "a"^^t:type1 ) }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 0);
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testOpenEq07 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/ns#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x1 :p "xyz" .\
+                           :x2 :p "xyz"@en .\
+                           :x3 :p "xyz"@EN .\
+                           :x4 :p "xyz"^^xsd:string .\
+                           :x5 :p "xyz"^^xsd:integer .\
+                           :x6 :p "xyz"^^:unknown .\
+                           :x7 :p _:xyz .\
+                           :x8 :p :xyz .\
+                           :y1 :q "abc" .\
+                           :y2 :q "abc"@en .\
+                           :y3 :q "abc"@EN .\
+                           :y4 :q "abc"^^xsd:string .\
+                           :y5 :q "abc"^^xsd:integer .\
+                           :y6 :q "abc"^^:unknown .\
+                           :y7 :q _:abc .\
+                           :y8 :q :abc .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX :     <http://example.org/ns#>\
+                                PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT * { \
+                                  ?x1 :p ?v1 .\
+                                  ?x2 :p ?v2 .\
+                                  FILTER ( ?v1 = ?v2 )\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length == 12);
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testOpenEq08 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x1 :p "xyz" .\
+                           :x2 :p "xyz"@en .\
+                           :x3 :p "xyz"@EN .\
+                           :x4 :p "xyz"^^xsd:string .\
+                           :x5 :p "xyz"^^xsd:integer .\
+                           :x6 :p "xyz"^^:unknown .\
+                           :x7 :p _:xyz .\
+                           :x8 :p :xyz .\
+                           :y1 :q "abc" .\
+                           :y2 :q "abc"@en .\
+                           :y3 :q "abc"@EN .\
+                           :y4 :q "abc"^^xsd:string .\
+                           :y5 :q "abc"^^xsd:integer .\
+                           :y6 :q "abc"^^:unknown .\
+                           :y7 :q _:abc .\
+                           :y8 :q :abc .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX :     <http://example.org/>\
+                                PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT * { \
+                                  ?x1 :p ?v1 .\
+                                  ?x2 :p ?v2 .\
+                                  FILTER ( ?v1 != ?v2 )\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length===42);
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+
+exports.testOpenEq09 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/ns#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x1 :p "xyz" .\
+                           :x2 :p "xyz"@en .\
+                           :x3 :p "xyz"@EN .\
+                           :x4 :p "xyz"^^xsd:string .\
+                           :x5 :p "xyz"^^xsd:integer .\
+                           :x6 :p "xyz"^^:unknown .\
+                           :x7 :p _:xyz .\
+                           :x8 :p :xyz .\
+                           :y1 :q "abc" .\
+                           :y2 :q "abc"@en .\
+                           :y3 :q "abc"@EN .\
+                           :y4 :q "abc"^^xsd:string .\
+                           :y5 :q "abc"^^xsd:integer .\
+                           :y6 :q "abc"^^:unknown .\
+                           :y7 :q _:abc .\
+                           :y8 :q :abc .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX :     <http://example.org/ns#>\
+                                PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT * { \
+                                  ?x :p ?v1 .\
+                                  ?y :q ?v2 .\
+                                  FILTER ( ?v1 = ?v2 )\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 0);
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testOpenEq10 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/ns#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x1 :p "xyz" .\
+                           :x2 :p "xyz"@en .\
+                           :x3 :p "xyz"@EN .\
+                           :x4 :p "xyz"^^xsd:string .\
+                           :x5 :p "xyz"^^xsd:integer .\
+                           :x6 :p "xyz"^^:unknown .\
+                           :x7 :p _:xyz .\
+                           :x8 :p :xyz .\
+                           :y1 :q "abc" .\
+                           :y2 :q "abc"@en .\
+                           :y3 :q "abc"@EN .\
+                           :y4 :q "abc"^^xsd:string .\
+                           :y5 :q "abc"^^xsd:integer .\
+                           :y6 :q "abc"^^:unknown .\
+                           :y7 :q _:abc .\
+                           :y8 :q :abc .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX :     <http://example.org/ns#>\
+                                PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT * { \
+                                  ?x :p ?v1 .\
+                                  ?y :q ?v2 .\
+                                  FILTER ( ?v1 != ?v2 )\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    results.sort(function(a,b){
+                                        if(""+a.v1.value+a.v1.type+a.v1.lang === ""+b.v1.value+b.v1.type+b.v1.lang) {
+                                            return 0;
+                                        } else if(""+a.v1.value+a.v1.type+a.v1.lang < ""+b.v1.value+b.v1.type+b.v1.lang) {
+                                            return -1;
+                                        } else {
+                                            return 1;
+                                        }
+                                    });
+                                    test.ok(results.length===52);
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testOpenEq11 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/ns#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x1 :p "xyz" .\
+                           :x2 :p "xyz"@en .\
+                           :x3 :p "xyz"@EN .\
+                           :x4 :p "xyz"^^xsd:string .\
+                           :x5 :p "xyz"^^xsd:integer .\
+                           :x6 :p "xyz"^^:unknown .\
+                           :x7 :p _:xyz .\
+                           :x8 :p :xyz .\
+                           :y1 :q "abc" .\
+                           :y2 :q "abc"@en .\
+                           :y3 :q "abc"@EN .\
+                           :y4 :q "abc"^^xsd:string .\
+                           :y5 :q "abc"^^xsd:integer .\
+                           :y6 :q "abc"^^:unknown .\
+                           :y7 :q _:abc .\
+                           :y8 :q :abc .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX :     <http://example.org/ns#>\
+                                PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT * { \
+                                  ?x :p ?v1 .\
+                                  ?y :q ?v2 .\
+                                  FILTER ( ?v1 != ?v2 || ?v1 = ?v2 )\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    results.sort(function(a,b){
+                                        if(""+a.v1.value+a.v1.type+a.v1.lang === ""+b.v1.value+b.v1.type+b.v1.lang) {
+                                            return 0;
+                                        } else if(""+a.v1.value+a.v1.type+a.v1.lang < ""+b.v1.value+b.v1.type+b.v1.lang) {
+                                            return -1;
+                                        } else {
+                                            return 1;
+                                        }
+                                    });
+                                    test.ok(results.length===52);
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testOpenEq12 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/ns#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x1 :p "xyz" .\
+                           :x2 :p "xyz"@en .\
+                           :x3 :p "xyz"@EN .\
+                           :x4 :p "xyz"^^xsd:string .\
+                           :x5 :p "xyz"^^xsd:integer .\
+                           :x6 :p "xyz"^^:unknown .\
+                           :x7 :p _:xyz .\
+                           :x8 :p :xyz .\
+                           :y1 :q "abc" .\
+                           :y2 :q "abc"@en .\
+                           :y3 :q "abc"@EN .\
+                           :y4 :q "abc"^^xsd:string .\
+                           :y5 :q "abc"^^xsd:integer .\
+                           :y6 :q "abc"^^:unknown .\
+                           :y7 :q _:abc .\
+                           :y8 :q :abc .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX :     <http://example.org/ns#>\
+                                PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT ?x ?v1 ?y ?v2 ?v3 { \
+                                  ?x :p ?v1 .\
+                                  ?y :p ?v2 .\
+                                  OPTIONAL { ?y :p ?v3 . FILTER( ?v1 != ?v3 || ?v1 = ?v3 )}\
+                                  FILTER (!BOUND(?v3))\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length===10);
+                                    for(var i=0; i<results.length; i++) {
+                                        var result = results[i];
+                                        test.ok(results.v3==null)
+                                    }                                    
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testOpenDate1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/ns#> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :dt1 :r "2006-08-23T09:00:00+01:00"^^xsd:dateTime .\
+                           :d1 :r "2006-08-23"^^xsd:date .\
+                           :d2 :r "2006-08-23Z"^^xsd:date .\
+                           :d3 :r "2006-08-23+00:00"^^xsd:date .\
+                           :d4 :r "2001-01-01"^^xsd:date .\
+                           :d5 :r "2001-01-01Z"^^xsd:date .\
+                           :d6 :s "2006-08-23"^^xsd:date .\
+                           :d7 :s "2006-08-24Z"^^xsd:date .\
+                           :d8 :s "2000-01-01"^^xsd:date .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX :     <http://example.org/ns#>\
+                                PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT * { \
+                                  ?x :r ?v .\
+                                  FILTER ( ?v = "2006-08-23"^^xsd:date )\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length===1);
+                                    test.ok(results[0].v.value==="2006-08-23");
+                                    test.ok(results[0].x.value=="http://example.org/ns#d1")
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+
+
+exports.testOpenDate2 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :dt1 :r "2006-08-23T09:00:00+01:00"^^xsd:dateTime .\
+                           :d1 :r "2006-08-23"^^xsd:date .\
+                           :d2 :r "2006-08-23Z"^^xsd:date .\
+                           :d3 :r "2006-08-23+00:00"^^xsd:date .\
+                           :d4 :r "2001-01-01"^^xsd:date .\
+                           :d5 :r "2001-01-01Z"^^xsd:date .\
+                           :d6 :s "2006-08-23"^^xsd:date .\
+                           :d7 :s "2006-08-24Z"^^xsd:date .\
+                           :d8 :s "2000-01-01"^^xsd:date .\
+                         }';
+            engine.execute(query, function(success, result){
+                // modified version to avoid problems with timezones
+                engine.execute('PREFIX :     <http://example/>\
+                                PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT * { \
+                                  ?x :r ?v .\
+                                  FILTER ( ?v != "2006-08-23"^^xsd:date )\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length===3);
+                                    acum = [];
+                                    for(var i=0; i<results.length; i++) {
+                                        acum.push(results[i].x.value);
+                                    }
+                                    acum.sort();
+                                    test.ok(acum[0] === "http://example/d4");
+                                    test.ok(acum[1] === "http://example/d5");
+                                    test.ok(acum[2] === "http://example/dt1");
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+
+exports.testOpenDate3 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :dt1 :r "2006-08-23T09:00:00+01:00"^^xsd:dateTime .\
+                           :d1 :r "2006-08-23"^^xsd:date .\
+                           :d2 :r "2006-08-23Z"^^xsd:date .\
+                           :d3 :r "2006-08-23+00:00"^^xsd:date .\
+                           :d4 :r "2001-01-01"^^xsd:date .\
+                           :d5 :r "2001-01-01Z"^^xsd:date .\
+                           :d6 :s "2006-08-23"^^xsd:date .\
+                           :d7 :s "2006-08-24Z"^^xsd:date .\
+                           :d8 :s "2000-01-01"^^xsd:date .\
+}';
+            engine.execute(query, function(success, result){
+                // modified version to avoid problems with timezones
+                engine.execute('PREFIX :     <http://example/>\
+                                PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT * { \
+                                  ?x :r ?v .\
+                                  FILTER ( ?v > "2006-08-22"^^xsd:date )\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length===3);
+                                    acum = [];
+                                    for(var i=0; i<results.length; i++) {
+                                        acum.push(results[i].x.value);
+                                    }
+                                    acum.sort();
+                                    test.ok(acum[0] === "http://example/d1");
+                                    test.ok(acum[1] === "http://example/d2");
+                                    test.ok(acum[2] === "http://example/d3");
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testOpenDate4 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :dt1 :r "2006-08-23T09:00:00+01:00"^^xsd:dateTime .\
+                           :d1 :r "2006-08-23"^^xsd:date .\
+                           :d2 :r "2006-08-23Z"^^xsd:date .\
+                           :d3 :r "2006-08-23+00:00"^^xsd:date .\
+                           :d4 :r "2001-01-01"^^xsd:date .\
+                           :d5 :r "2001-01-01Z"^^xsd:date .\
+                           :d6 :s "2006-08-23"^^xsd:date .\
+                           :d7 :s "2006-08-24Z"^^xsd:date .\
+                           :d8 :s "2000-01-01"^^xsd:date .\
+}';
+            engine.execute(query, function(success, result){
+                // modified version to avoid problems with timezones
+                engine.execute('PREFIX :     <http://example/>\
+                                PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT ?x ?date { \
+                                  ?x :s ?date .\
+                                  FILTER ( DATATYPE(?date) = xsd:date  )\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length===3);
+                                    acum = [];
+                                    for(var i=0; i<results.length; i++) {
+                                        acum.push(results[i].x.value);
+                                    }
+                                    acum.sort();
+                                    test.ok(acum[0] === "http://example/d6");
+                                    test.ok(acum[1] === "http://example/d7");
+                                    test.ok(acum[2] === "http://example/d8");
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testOpenCmp01 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x1 :p [ :v1 "v1" ; :v2 "v2" ] .\
+                           :x2 :p [ :v1 "1"^^xsd:integer ; :v2 "v2" ] .\
+                           :x3 :p [ :v1 "x"^^:unknown ; :v2 "x"^^:unknown ] .\
+                           :x4 :p [ :v1 <test:abc> ; :v2 <test:abc> ] .\
+                           :x5 :p [ :v1 "2006-08-23T09:00:00+01:00"^^xsd:dateTime ;\
+                                    :v2 "2006-08-22"^^xsd:date ].\
+                         }';
+            engine.execute(query, function(success, result){
+                // modified version to avoid problems with timezones
+                engine.execute('PREFIX :     <http://example/>\
+                                PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT ?x ?v1 ?v2\
+                                {\
+                                    ?x :p [ :v1 ?v1 ; :v2 ?v2 ] .\
+                                    FILTER ( ?v1 < ?v2 || ?v1 > ?v2 )\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length===1);
+                                    test.ok(results[0].x.value === "http://example/x1");
+                                    test.ok(results[0].v1.value === "v1");
+                                    test.ok(results[0].v2.value === "v2");
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testOpenCmp02 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x1 :p [ :v1 "v1" ; :v2 "v2" ] .\
+                           :x2 :p [ :v1 "1"^^xsd:integer ; :v2 "v2" ] .\
+                           :x3 :p [ :v1 "x"^^:unknown ; :v2 "x"^^:unknown ] .\
+                           :x4 :p [ :v1 <test:abc> ; :v2 <test:abc> ] .\
+                           :x5 :p [ :v1 "2006-08-23T09:00:00+01:00"^^xsd:dateTime ;\
+                                    :v2 "2006-08-22"^^xsd:date ].\
+                         }';
+            engine.execute(query, function(success, result){
+                // modified version to avoid problems with timezones
+                engine.execute('PREFIX :     <http://example/>\
+                                PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT ?x ?v1 ?v2\
+                                {\
+                                    ?x :p [ :v1 ?v1 ; :v2 ?v2 ] .\
+                                    FILTER ( ?v1 < ?v2 || ?v1 = ?v2 || ?v1 > ?v2 )\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length===3);
+                                    test.done();
                 });
             });
         });
