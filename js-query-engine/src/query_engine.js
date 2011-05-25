@@ -57,10 +57,13 @@ QueryEngine.QueryEngine.prototype.applyModifier = function(modifier, projectedBi
                     if(obj.type != null) {
                         key = key + obj.type;
                     }
-                } else {
+                } else if(obj.value) {
                     key  = key + p + obj.value;
+                } else {
+                    key = key + p + obj;
                 }
             }
+
             if(map[key] == null) {
                 // this will preserve the order in projectedBindings
                 result.push(bindings) 
@@ -78,12 +81,14 @@ QueryEngine.QueryEngine.prototype.applyLimitOffset = function(offset, limit, bin
         return bindings;
     }
 
-    if(limit == null) {
-        limit = bindings.length;
-    }
-
     if (offset == null) {
         offset = 0;
+    }
+
+    if(limit == null) {
+        limit = bindings.length;
+    } else {
+        limit = offset + limit;
     }
 
     return bindings.slice(offset, limit);
@@ -125,7 +130,7 @@ QueryEngine.QueryEngine.prototype.applyOrderBy = function(order, modifiedBinding
                 }
             });
         }, function(env) {
-            var results = env.acum;
+            var results = env.acum || [];
             results.sort(function(a,b){
                 return that.compareFilteredBindings(a, b, order);
             });
@@ -145,10 +150,10 @@ QueryEngine.QueryEngine.prototype.compareFilteredBindings = function(a, b, order
     var found = false;
     var i = 0
     while(!found) {
-        var direction = order[i].direction;
         if(i==a.value.length) {
             return 0;
         }
+        var direction = order[i].direction;
 
         if(QueryFilters.runEqualityFunction(a.value[i], b.value[i], []).value == true) {
             i++;
@@ -600,13 +605,13 @@ QueryEngine.QueryEngine.prototype.executeSelect = function(unit, env, defaultDat
             if(success) {
                 that.executeSelectUnit(projection, dataset, unit.pattern, env, function(success, result){
                   if(success) {
-                          var modifiedBindings = that.applyModifier(modifier, result)
-                          that.applyOrderBy(order, modifiedBindings, env, function(success, orderedBindings){
+                          that.applyOrderBy(order, result, env, function(success, orderedBindings){
                               if(success) {
                                   // @todo group here!
-                                  var limitedBindings  = that.applyLimitOffset(offset, limit, orderedBindings);
-                                  var projectedBindings = that.projectBindings(projection, limitedBindings);
-                                  filteredBindings = that.removeDefaultGraphBindings(projectedBindings, dataset);
+                                  var projectedBindings = that.projectBindings(projection, orderedBindings);
+                                  modifiedBindings = that.applyModifier(modifier, projectedBindings);
+                                  var limitedBindings  = that.applyLimitOffset(offset, limit, modifiedBindings);
+                                  filteredBindings = that.removeDefaultGraphBindings(limitedBindings, dataset);
 
                                   callback(true,filteredBindings);                  
                               } else {

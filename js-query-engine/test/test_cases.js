@@ -4719,3 +4719,532 @@ exports.testRegexRegex004 = function(test) {
         });
     });
 }
+
+exports.testSolutionSeqLimit1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.com/ns#>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x :num  "1"^^xsd:integer .\
+                           :x :num  "2"^^xsd:integer .\
+                           :x :num  "3"^^xsd:integer .\
+                           :x :num  "4"^^xsd:integer .\
+                           :x :num  "1.5"^^xsd:decimal .\
+                           :y :num  "1"^^xsd:integer .\
+                           :y :num  "2"^^xsd:integer .\
+                           :y :num  "3"^^xsd:integer .\
+                           :x :str  "aaa" .\
+                           :x :str  "002" .\
+                           :x :str  "1" .\
+                           :x :str  "AAA" .\
+                           :x :str  "" .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX xsd:     <http://www.w3.org/2001/XMLSchema#>\
+                                PREFIX : <http://example.com/ns#>\
+                                SELECT ?v\
+                                WHERE { [] :num ?v }\
+                                ORDER BY ?v\
+                                LIMIT 1', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 1);
+                                    test.ok(results[0].v.value === "1");
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testSolutionSeqLimit2 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.com/ns#>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x :num  "1"^^xsd:integer .\
+                           :x :num  "2"^^xsd:integer .\
+                           :x :num  "3"^^xsd:integer .\
+                           :x :num  "4"^^xsd:integer .\
+                           :x :num  "1.5"^^xsd:decimal .\
+                           :y :num  "1"^^xsd:integer .\
+                           :y :num  "2"^^xsd:integer .\
+                           :y :num  "3"^^xsd:integer .\
+                           :x :str  "aaa" .\
+                           :x :str  "002" .\
+                           :x :str  "1" .\
+                           :x :str  "AAA" .\
+                           :x :str  "" .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX xsd:     <http://www.w3.org/2001/XMLSchema#>\
+                                PREFIX : <http://example.com/ns#>\
+                                SELECT ?v\
+                                WHERE { [] :num ?v }\
+                                ORDER BY ?v\
+                                LIMIT 100', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 8);
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testSolutionSeqLimit3 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.com/ns#>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x :num  "1"^^xsd:integer .\
+                           :x :num  "2"^^xsd:integer .\
+                           :x :num  "3"^^xsd:integer .\
+                           :x :num  "4"^^xsd:integer .\
+                           :x :num  "1.5"^^xsd:decimal .\
+                           :y :num  "1"^^xsd:integer .\
+                           :y :num  "2"^^xsd:integer .\
+                           :y :num  "3"^^xsd:integer .\
+                           :x :str  "aaa" .\
+                           :x :str  "002" .\
+                           :x :str  "1" .\
+                           :x :str  "AAA" .\
+                           :x :str  "" .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX xsd:     <http://www.w3.org/2001/XMLSchema#>\
+                                PREFIX : <http://example.com/ns#>\
+                                SELECT ?v\
+                                WHERE { [] :num ?v }\
+                                ORDER BY ?v\
+                                LIMIT 0', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 0);
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testSolutionSeqLimit4 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.com/ns#>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x :num  "1"^^xsd:integer .\
+                           :x :num  "2"^^xsd:integer .\
+                           :x :num  "3"^^xsd:integer .\
+                           :x :num  "4"^^xsd:integer .\
+                           :x :num  "1.5"^^xsd:decimal .\
+                           :y :num  "1"^^xsd:integer .\
+                           :y :num  "2"^^xsd:integer .\
+                           :y :num  "3"^^xsd:integer .\
+                           :x :str  "aaa" .\
+                           :x :str  "002" .\
+                           :x :str  "1" .\
+                           :x :str  "AAA" .\
+                           :x :str  "" .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX xsd:     <http://www.w3.org/2001/XMLSchema#>\
+                                PREFIX : <http://example.com/ns#>\
+                                SELECT DISTINCT ?v\
+                                WHERE { [] :num ?v }\
+                                ORDER BY ?v\
+                                LIMIT 100', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 5);
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testSolutionSeqOffset1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.com/ns#>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x :num  "1"^^xsd:integer .\
+                           :x :num  "2"^^xsd:integer .\
+                           :x :num  "3"^^xsd:integer .\
+                           :x :num  "4"^^xsd:integer .\
+                           :x :num  "1.5"^^xsd:decimal .\
+                           :y :num  "1"^^xsd:integer .\
+                           :y :num  "2"^^xsd:integer .\
+                           :y :num  "3"^^xsd:integer .\
+                           :x :str  "aaa" .\
+                           :x :str  "002" .\
+                           :x :str  "1" .\
+                           :x :str  "AAA" .\
+                           :x :str  "" .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX xsd:     <http://www.w3.org/2001/XMLSchema#>\
+                                PREFIX : <http://example.com/ns#>\
+                                SELECT ?v\
+                                WHERE { [] :num ?v }\
+                                ORDER BY ?v\
+                                OFFSET 1', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results[0].v.value==="1");
+                                    test.ok(results[1].v.value==="1.5");
+                                    test.ok(results[2].v.value==="2");
+                                    test.ok(results[3].v.value==="2");
+                                    test.ok(results[4].v.value==="3");
+                                    test.ok(results[5].v.value==="3");
+                                    test.ok(results[6].v.value==="4");
+                                    test.ok(results.length === 7);
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testSolutionSeqOffset2 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.com/ns#>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x :num  "1"^^xsd:integer .\
+                           :x :num  "2"^^xsd:integer .\
+                           :x :num  "3"^^xsd:integer .\
+                           :x :num  "4"^^xsd:integer .\
+                           :x :num  "1.5"^^xsd:decimal .\
+                           :y :num  "1"^^xsd:integer .\
+                           :y :num  "2"^^xsd:integer .\
+                           :y :num  "3"^^xsd:integer .\
+                           :x :str  "aaa" .\
+                           :x :str  "002" .\
+                           :x :str  "1" .\
+                           :x :str  "AAA" .\
+                           :x :str  "" .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX xsd:     <http://www.w3.org/2001/XMLSchema#>\
+                                PREFIX : <http://example.com/ns#>\
+                                SELECT ?v\
+                                WHERE { [] :num ?v }\
+                                ORDER BY ?v\
+                                OFFSET 0', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results[0].v.value==="1");
+                                    test.ok(results[1].v.value==="1");
+                                    test.ok(results[2].v.value==="1.5");
+                                    test.ok(results[3].v.value==="2");
+                                    test.ok(results[4].v.value==="2");
+                                    test.ok(results[5].v.value==="3");
+                                    test.ok(results[6].v.value==="3");
+                                    test.ok(results[7].v.value==="4");
+                                    test.ok(results.length === 8);
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testSolutionSeqOffset3 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.com/ns#>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x :num  "1"^^xsd:integer .\
+                           :x :num  "2"^^xsd:integer .\
+                           :x :num  "3"^^xsd:integer .\
+                           :x :num  "4"^^xsd:integer .\
+                           :x :num  "1.5"^^xsd:decimal .\
+                           :y :num  "1"^^xsd:integer .\
+                           :y :num  "2"^^xsd:integer .\
+                           :y :num  "3"^^xsd:integer .\
+                           :x :str  "aaa" .\
+                           :x :str  "002" .\
+                           :x :str  "1" .\
+                           :x :str  "AAA" .\
+                           :x :str  "" .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX xsd:     <http://www.w3.org/2001/XMLSchema#>\
+                                PREFIX : <http://example.com/ns#>\
+                                SELECT ?v\
+                                WHERE { [] :num ?v }\
+                                ORDER BY ?v\
+                                OFFSET 100', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 0);
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testSolutionSeqOffset4 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.com/ns#>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x :num  "1"^^xsd:integer .\
+                           :x :num  "2"^^xsd:integer .\
+                           :x :num  "3"^^xsd:integer .\
+                           :x :num  "4"^^xsd:integer .\
+                           :x :num  "1.5"^^xsd:decimal .\
+                           :y :num  "1"^^xsd:integer .\
+                           :y :num  "2"^^xsd:integer .\
+                           :y :num  "3"^^xsd:integer .\
+                           :x :str  "aaa" .\
+                           :x :str  "002" .\
+                           :x :str  "1" .\
+                           :x :str  "AAA" .\
+                           :x :str  "" .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX xsd:     <http://www.w3.org/2001/XMLSchema#>\
+                                PREFIX : <http://example.com/ns#>\
+                                SELECT DISTINCT ?v\
+                                WHERE { [] :num ?v }\
+                                ORDER BY ?v\
+                                OFFSET 2', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 3);
+                                    test.ok(results[0].v.value==="2");
+                                    test.ok(results[1].v.value==="3");
+                                    test.ok(results[2].v.value==="4");                                    
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testSolutionSeqSlice1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.com/ns#>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x :num  "1"^^xsd:integer .\
+                           :x :num  "2"^^xsd:integer .\
+                           :x :num  "3"^^xsd:integer .\
+                           :x :num  "4"^^xsd:integer .\
+                           :x :num  "1.5"^^xsd:decimal .\
+                           :y :num  "1"^^xsd:integer .\
+                           :y :num  "2"^^xsd:integer .\
+                           :y :num  "3"^^xsd:integer .\
+                           :x :str  "aaa" .\
+                           :x :str  "002" .\
+                           :x :str  "1" .\
+                           :x :str  "AAA" .\
+                           :x :str  "" .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX xsd:     <http://www.w3.org/2001/XMLSchema#>\
+                                PREFIX : <http://example.com/ns#>\
+                                SELECT ?v\
+                                WHERE { [] :num ?v }\
+                                ORDER BY ?v\
+                                LIMIT 1\
+                                OFFSET 1', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 1);
+                                    test.ok(results[0].v.value==="1");
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testSolutionSeqSlice2 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.com/ns#>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x :num  "1"^^xsd:integer .\
+                           :x :num  "2"^^xsd:integer .\
+                           :x :num  "3"^^xsd:integer .\
+                           :x :num  "4"^^xsd:integer .\
+                           :x :num  "1.5"^^xsd:decimal .\
+                           :y :num  "1"^^xsd:integer .\
+                           :y :num  "2"^^xsd:integer .\
+                           :y :num  "3"^^xsd:integer .\
+                           :x :str  "aaa" .\
+                           :x :str  "002" .\
+                           :x :str  "1" .\
+                           :x :str  "AAA" .\
+                           :x :str  "" .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX xsd:     <http://www.w3.org/2001/XMLSchema#>\
+                                PREFIX : <http://example.com/ns#>\
+                                SELECT ?v\
+                                WHERE { [] :num ?v }\
+                                ORDER BY ?v\
+                                OFFSET 1\
+                                LIMIT 2', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 2);
+                                    test.ok(results[0].v.value==="1");
+                                    test.ok(results[1].v.value==="1.5");
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testSolutionSeqSlice3 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.com/ns#>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x :num  "1"^^xsd:integer .\
+                           :x :num  "2"^^xsd:integer .\
+                           :x :num  "3"^^xsd:integer .\
+                           :x :num  "4"^^xsd:integer .\
+                           :x :num  "1.5"^^xsd:decimal .\
+                           :y :num  "1"^^xsd:integer .\
+                           :y :num  "2"^^xsd:integer .\
+                           :y :num  "3"^^xsd:integer .\
+                           :x :str  "aaa" .\
+                           :x :str  "002" .\
+                           :x :str  "1" .\
+                           :x :str  "AAA" .\
+                           :x :str  "" .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX xsd:     <http://www.w3.org/2001/XMLSchema#>\
+                                PREFIX : <http://example.com/ns#>\
+                                SELECT ?v\
+                                WHERE { [] ?p ?v }\
+                                ORDER BY ?v\
+                                OFFSET 100\
+                                LIMIT 1', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 0);
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testSolutionSeqSlice4 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.com/ns#>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x :num  "1"^^xsd:integer .\
+                           :x :num  "2"^^xsd:integer .\
+                           :x :num  "3"^^xsd:integer .\
+                           :x :num  "4"^^xsd:integer .\
+                           :x :num  "1.5"^^xsd:decimal .\
+                           :y :num  "1"^^xsd:integer .\
+                           :y :num  "2"^^xsd:integer .\
+                           :y :num  "3"^^xsd:integer .\
+                           :x :str  "aaa" .\
+                           :x :str  "002" .\
+                           :x :str  "1" .\
+                           :x :str  "AAA" .\
+                           :x :str  "" .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX xsd:     <http://www.w3.org/2001/XMLSchema#>\
+                                PREFIX : <http://example.com/ns#>\
+                                SELECT ?v\
+                                WHERE { [] :num ?v }\
+                                ORDER BY ?v\
+                                OFFSET 2\
+                                LIMIT 5', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 5);
+                                    test.ok(results[0].v.value==="1.5");
+                                    test.ok(results[1].v.value==="2");
+                                    test.ok(results[2].v.value==="2");
+                                    test.ok(results[3].v.value==="3");
+                                    test.ok(results[4].v.value==="3");
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testSolutionSeqSlice5 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.com/ns#>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x :num  "1"^^xsd:integer .\
+                           :x :num  "2"^^xsd:integer .\
+                           :x :num  "3"^^xsd:integer .\
+                           :x :num  "4"^^xsd:integer .\
+                           :x :num  "1.5"^^xsd:decimal .\
+                           :y :num  "1"^^xsd:integer .\
+                           :y :num  "2"^^xsd:integer .\
+                           :y :num  "3"^^xsd:integer .\
+                           :x :str  "aaa" .\
+                           :x :str  "002" .\
+                           :x :str  "1" .\
+                           :x :str  "AAA" .\
+                           :x :str  "" .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX xsd:     <http://www.w3.org/2001/XMLSchema#>\
+                                PREFIX : <http://example.com/ns#>\
+                                SELECT DISTINCT ?v\
+                                WHERE { [] :num ?v }\
+                                ORDER BY ?v\
+                                OFFSET 2\
+                                LIMIT 5', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 3);
+                                    test.ok(results[0].v.value==="2");
+                                    test.ok(results[1].v.value==="3");
+                                    test.ok(results[2].v.value==="4");
+                                    test.done();
+                });
+            });
+        });
+    });
+}
