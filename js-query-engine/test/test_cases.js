@@ -4180,7 +4180,6 @@ exports.testOpenDate2 = function(test) {
                            :d8 :s "2000-01-01"^^xsd:date .\
                          }';
             engine.execute(query, function(success, result){
-                // modified version to avoid problems with timezones
                 engine.execute('PREFIX :     <http://example/>\
                                 PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>\
                                 SELECT * { \
@@ -4224,7 +4223,6 @@ exports.testOpenDate3 = function(test) {
                            :d8 :s "2000-01-01"^^xsd:date .\
 }';
             engine.execute(query, function(success, result){
-                // modified version to avoid problems with timezones
                 engine.execute('PREFIX :     <http://example/>\
                                 PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>\
                                 SELECT * { \
@@ -4267,7 +4265,6 @@ exports.testOpenDate4 = function(test) {
                            :d8 :s "2000-01-01"^^xsd:date .\
 }';
             engine.execute(query, function(success, result){
-                // modified version to avoid problems with timezones
                 engine.execute('PREFIX :     <http://example/>\
                                 PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>\
                                 SELECT ?x ?date { \
@@ -4307,7 +4304,6 @@ exports.testOpenCmp01 = function(test) {
                                     :v2 "2006-08-22"^^xsd:date ].\
                          }';
             engine.execute(query, function(success, result){
-                // modified version to avoid problems with timezones
                 engine.execute('PREFIX :     <http://example/>\
                                 PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>\
                                 SELECT ?x ?v1 ?v2\
@@ -4343,7 +4339,6 @@ exports.testOpenCmp02 = function(test) {
                                     :v2 "2006-08-22"^^xsd:date ].\
                          }';
             engine.execute(query, function(success, result){
-                // modified version to avoid problems with timezones
                 engine.execute('PREFIX :     <http://example/>\
                                 PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>\
                                 SELECT ?x ?v1 ?v2\
@@ -4379,7 +4374,6 @@ exports.testOptionalFilterFilter001 = function(test) {
                            :book3 dc:title "TITLE 3" .\
                          }';
             engine.execute(query, function(success, result){
-                // modified version to avoid problems with timezones
                 engine.execute('PREFIX x:     <http://example.org/ns#>\
                                 PREFIX dc: <http://purl.org/dc/elements/1.1/>\
                                 SELECT ?title ?price         \
@@ -4432,7 +4426,6 @@ exports.testOptionalFilterFilter002 = function(test) {
                            :book3 dc:title "TITLE 3" .\
                          }';
             engine.execute(query, function(success, result){
-                // modified version to avoid problems with timezones
                 engine.execute('PREFIX x:     <http://example.org/ns#>\
                                 PREFIX dc: <http://purl.org/dc/elements/1.1/>\
                                 SELECT ?title ?price\
@@ -4470,7 +4463,6 @@ exports.testOptionalFilterFilter003 = function(test) {
                            :book3 dc:title "TITLE 3" .\
                          }';
             engine.execute(query, function(success, result){
-                // modified version to avoid problems with timezones
                 engine.execute('PREFIX x:     <http://example.org/ns#>\
                                 PREFIX dc: <http://purl.org/dc/elements/1.1/>\
                                 SELECT ?title ?price\
@@ -4520,7 +4512,6 @@ exports.testOptionalFilterFilter004 = function(test) {
                            :book3 dc:title "TITLE 3" .\
                          }';
             engine.execute(query, function(success, result){
-                // modified version to avoid problems with timezones
                 engine.execute('PREFIX x:     <http://example.org/ns#>\
                                 PREFIX dc: <http://purl.org/dc/elements/1.1/>\
                                 SELECT ?title ?price\
@@ -4608,3 +4599,123 @@ exports.testOptionalFilterFilter004 = function(test) {
      //    });
      //}
 
+
+exports.testRegexRegex001 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         PREFIX ex: <http://example.com/#>\
+                         INSERT DATA {\
+                           ex:foo rdf:value "abcDEFghiJKL" , "ABCdefGHIjkl", "0123456789",\
+                                   <http://example.com/uri>, "http://example.com/literal" .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                                PREFIX ex: <http://example.com/#>\
+                                SELECT ?val\
+                                WHERE                \
+                                { \
+                                  ex:foo rdf:value ?val .\
+                                  FILTER REGEX(?val, "GHI")\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 1);
+                                    test.ok(results[0].val.value === "ABCdefGHIjkl")
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testRegexRegex002 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         PREFIX ex: <http://example.com/#>\
+                         INSERT DATA {\
+                           ex:foo rdf:value "abcDEFghiJKL" , "ABCdefGHIjkl", "0123456789",\
+                                   <http://example.com/uri>, "http://example.com/literal" .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                                PREFIX ex: <http://example.com/#>\
+                                SELECT ?val\
+                                WHERE                \
+                                { \
+                                  ex:foo rdf:value ?val .\
+                                  FILTER REGEX(?val, "DeFghI", "i")\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 2);
+                                    test.ok(results[0].val.value.toLowerCase() === "ABCdefGHIjkl".toLowerCase())
+                                    test.ok(results[1].val.value.toLowerCase() === "ABCdefGHIjkl".toLowerCase())
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testRegexRegex003 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         PREFIX ex: <http://example.com/#>\
+                         INSERT DATA {\
+                           ex:foo rdf:value "abcDEFghiJKL" , "ABCdefGHIjkl", "0123456789",\
+                                   <http://example.com/uri>, "http://example.com/literal" .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                                PREFIX ex: <http://example.com/#>\
+                                SELECT ?val\
+                                WHERE                \
+                                { \
+                                  ex:foo rdf:value ?val .\
+                                  FILTER REGEX(?val, "example\.com")\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 1);
+                                    test.ok(results[0].val.value.toLowerCase() === "http://example.com/literal")
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testRegexRegex004 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         PREFIX ex: <http://example.com/#>\
+                         INSERT DATA {\
+                           ex:foo rdf:value "abcDEFghiJKL" , "ABCdefGHIjkl", "0123456789",\
+                                   <http://example.com/uri>, "http://example.com/literal" .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                                PREFIX ex: <http://example.com/#>\
+                                SELECT ?val\
+                                WHERE                \
+                                { \
+                                  ex:foo rdf:value ?val .\
+                                  FILTER REGEX(STR(?val), "example\.com")\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 2);
+                                    test.done();
+                });
+            });
+        });
+    });
+}

@@ -1691,18 +1691,14 @@ BuiltInCall "[106] BuiltInCall"
 /*
   [107]  	RegexExpression	  ::=  	'REGEX' '(' Expression ',' Expression ( ',' Expression )? ')'
 */
-RegexExpression "[107] RegexExpression"
-  = 'REGEX' '(' e1:Expression ',' e2:Expression eo:( ',' Expression)? ')' {
-      var optionalExpressions = [];
-      for(var i=0; i<eo.length; i++) {
-          optionalExpressions.push(eo[i][1]);
-      }
+RegexExpression "[107] RegexExpression"  
+  = 'REGEX' WS* '(' WS* e1:Expression WS* ',' WS* e2:Expression WS* eo:( ',' WS* Expression)?  WS* ')' {
       var regex = {};
       regex.token = 'expression';
       regex.expressionType = 'regex';
-      regex.expression1 = e1;
-      regex.expression2 = e2;
-      regex.optionalExpression = optionalExpressions;
+      regex.text = e1;
+      regex.pattern = e2;
+      regex.flags = eo[2];
 
       return regex;
 }

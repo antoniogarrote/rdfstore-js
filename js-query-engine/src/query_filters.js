@@ -146,6 +146,8 @@ QueryFilters.runFilter = function(filterExpr, bindings, queryEngine, env) {
             return QueryFilters.runUnaryExpression(filterExpr.unaryexpression, filterExpr.expression, bindings, queryEngine, env);
         } else if(expressionType == 'irireforfunction') {
             return QueryFilters.runIriRefOrFunction(filterExpr.iriref, filterExpr.args, bindings, queryEngine, env);
+        } else if(expressionType == 'regex') {
+            return QueryFilters.runRegex(filterExpr.text, filterExpr.pattern, filterExpr.flags, bindings, queryEngine, env)
         } else if(expressionType == 'atomic') {        
             if(filterExpr.primaryexpression == 'var') {
                 // lookup the var in the bindings
@@ -1149,6 +1151,61 @@ QueryFilters.runUnaryExpression = function(unaryexpression, expression, bindings
             return QueryFilters.ebvError();
         }
     }
+};
+
+QueryFilters.runRegex = function(text, pattern, flags, bindings, queryEngine, env) {
+
+    if(text != null) {
+        text = QueryFilters.runFilter(text, bindings, queryEngine, env);
+    } else {
+        return QueryFilters.ebvError();
+    }
+
+    if(pattern != null) {
+        pattern = QueryFilters.runFilter(pattern, bindings, queryEngine, env);
+    } else {
+        return QueryFilters.ebvError();
+    }
+
+    if(flags != null) {
+        flags = QueryFilters.runFilter(flags, bindings, queryEngine, env);
+    }
+
+
+    if(pattern != null && pattern.token === 'literal' && (flags == null || flags.token === 'literal')) {
+        pattern = pattern.value;
+        flags = (flags == null) ? null : flags.value;
+    } else {
+        return QueryFilters.ebvError();
+    }
+
+    if(text!= null && text.token == 'var') {
+        if(bindings[text.value] != null) {
+            text = bindings[text.value];
+        } else {
+            return QueryFilters.ebvError();
+        }
+    } else if(text!=null && text.token === 'literal') {
+        if(text.type == null || QueryFilters.isXsdType("string",text)) {
+            text = text.value
+        } else {
+            return QueryFilters.ebvError();
+        }
+    } else {
+        return QueryFilters.ebvError();
+    }
+
+    var regex;
+    if(flags == null) {
+        regex = new RegExp(pattern);                    
+    } else {
+        regex = new RegExp(pattern,flags.toLowerCase());
+    }
+    if(regex.exec(text)) {
+        return QueryFilters.ebvTrue();
+    } else {
+        return QueryFilters.ebvFalse();
+    }    
 };
 
 QueryFilters.normalizeLiteralDatatype = function(literal, queryEngine, env) {
