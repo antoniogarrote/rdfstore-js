@@ -1417,38 +1417,100 @@ SparqlParser.parser = (function(){
         var savedReportMatchFailures = reportMatchFailures;
         reportMatchFailures = false;
         var savedPos0 = pos;
-        if (input.substr(pos, 3) === "ASK") {
-          var result1 = "ASK";
-          pos += 3;
-        } else {
-          var result1 = null;
-          if (reportMatchFailures) {
-            matchFailed("\"ASK\"");
-          }
+        var result2 = [];
+        var result11 = parse_WS();
+        while (result11 !== null) {
+          result2.push(result11);
+          var result11 = parse_WS();
         }
-        if (result1 !== null) {
-          var result2 = [];
-          var result4 = parse_DatasetClause();
-          while (result4 !== null) {
-            result2.push(result4);
-            var result4 = parse_DatasetClause();
+        if (result2 !== null) {
+          if (input.substr(pos, 3) === "ASK") {
+            var result3 = "ASK";
+            pos += 3;
+          } else {
+            var result3 = null;
+            if (reportMatchFailures) {
+              matchFailed("\"ASK\"");
+            }
           }
-          if (result2 !== null) {
-            var result3 = parse_WhereClause();
-            if (result3 !== null) {
-              var result0 = [result1, result2, result3];
+          if (result3 !== null) {
+            var result4 = [];
+            var result10 = parse_WS();
+            while (result10 !== null) {
+              result4.push(result10);
+              var result10 = parse_WS();
+            }
+            if (result4 !== null) {
+              var result5 = [];
+              var result9 = parse_DatasetClause();
+              while (result9 !== null) {
+                result5.push(result9);
+                var result9 = parse_DatasetClause();
+              }
+              if (result5 !== null) {
+                var result6 = [];
+                var result8 = parse_WS();
+                while (result8 !== null) {
+                  result6.push(result8);
+                  var result8 = parse_WS();
+                }
+                if (result6 !== null) {
+                  var result7 = parse_WhereClause();
+                  if (result7 !== null) {
+                    var result1 = [result2, result3, result4, result5, result6, result7];
+                  } else {
+                    var result1 = null;
+                    pos = savedPos0;
+                  }
+                } else {
+                  var result1 = null;
+                  pos = savedPos0;
+                }
+              } else {
+                var result1 = null;
+                pos = savedPos0;
+              }
             } else {
-              var result0 = null;
+              var result1 = null;
               pos = savedPos0;
             }
           } else {
-            var result0 = null;
+            var result1 = null;
             pos = savedPos0;
           }
         } else {
-          var result0 = null;
+          var result1 = null;
           pos = savedPos0;
         }
+        var result0 = result1 !== null
+          ? (function(gs, w) {
+                var dataset = {named:[], default:[]};
+                for(var i=0; i<gs.length; i++) {
+                    var g = gs[i];
+                    if(g.kind === 'default') {
+                        dataset['default'].push(g.graph);
+                    } else {
+                        dataset['named'].push(g.graph)
+                    }
+                }
+          
+          
+                if(dataset['named'].length === 0 && dataset['default'].length === 0) {
+                    dataset['default'].push({token:'uri', 
+                                             prefix:null, 
+                                             suffix:null, 
+                                             value:'https://github.com/antoniogarrote/js-tools/types#default_graph'});
+                }
+          
+                var query = {};
+                query.kind = 'ask';
+                query.token = 'executableunit'
+                query.dataset = dataset;
+                query.pattern = w
+          
+                return query
+          })(result1[3], result1[5])
+          : null;
         reportMatchFailures = savedReportMatchFailures;
         if (reportMatchFailures && result0 === null) {
           matchFailed("[11] AskQuery");

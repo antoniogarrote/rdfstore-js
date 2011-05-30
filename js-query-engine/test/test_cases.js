@@ -5834,6 +5834,7 @@ exports.testAlgebraFilterScope1 = function(test) {
                                     }
 
                                     acum.sort();
+
                                     test.ok(results[0]= "1 1");
                                     test.ok(results[1]= "1 2");
                                     test.ok(results[2]= "1 3");
@@ -5890,5 +5891,109 @@ exports.testAlgebraFilterScope2 = function(test) {
             });
         });
     });
-}
+};
+
+exports.testAlgebraAsk1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x :p "1"^^xsd:integer .\
+                           :x :p "2"^^xsd:integer .\
+                           :x :p "3"^^xsd:integer .\
+                           :y :p :a .\
+                           :a :q :r .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example/> \
+                                  ASK { :x :p 1 }', function(success, results){
+                                      test.ok(success === true);
+                                      test.ok(results === true);
+                                      test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testAlgebraAsk2 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x :p "1"^^xsd:integer .\
+                           :x :p "2"^^xsd:integer .\
+                           :x :p "3"^^xsd:integer .\
+                           :y :p :a .\
+                           :a :q :r .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example/> \
+                                  ASK { :x :p 99 }', function(success, results){
+                                      test.ok(success === true);
+                                      test.ok(results === false);
+                                      test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testAlgebraAsk7 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x :p "1"^^xsd:integer .\
+                           :x :p "2"^^xsd:integer .\
+                           :x :p "3"^^xsd:integer .\
+                           :y :p :a .\
+                           :a :q :r .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example/> \
+                                  ASK { :x :p ?x }', function(success, results){
+                                      test.ok(success === true);
+                                      test.ok(results === true);
+                                      test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testAlgebraAsk8 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x :p "1"^^xsd:integer .\
+                           :x :p "2"^^xsd:integer .\
+                           :x :p "3"^^xsd:integer .\
+                           :y :p :a .\
+                           :a :q :r .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example/> \
+                                  ASK { :x :p ?x . FILTER(?x = 99) }', function(success, results){
+                                      test.ok(success === true);
+                                      test.ok(results === false);
+                                      test.done();
+                });
+            });
+        });
+    });
+};
 

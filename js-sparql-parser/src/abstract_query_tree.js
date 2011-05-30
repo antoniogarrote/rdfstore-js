@@ -22,6 +22,8 @@ AbstractQueryTree.AbstractQueryTree.prototype.parseQueryString = function(query_
 AbstractQueryTree.AbstractQueryTree.prototype.parseExecutableUnit = function(executableUnit) {
     if(executableUnit.kind === 'select') {
         return this.parseSelect(executableUnit);
+    } else if(executableUnit.kind === 'ask') {
+        return this.parseSelect(executableUnit);        
     } else if(executableUnit.kind === 'insertdata') {
         return this.parseInsertData(executableUnit);        
     } else {

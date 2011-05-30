@@ -179,7 +179,33 @@ DescribeQuery "[10] DescribeQuery"
 [11]  	AskQuery	  ::=  	'ASK' DatasetClause* WhereClause
 */
 AskQuery "[11] AskQuery"
-  = 'ASK' DatasetClause* WhereClause
+  = WS* 'ASK' WS* gs:DatasetClause* WS* w:WhereClause {
+      var dataset = {named:[], default:[]};
+      for(var i=0; i<gs.length; i++) {
+          var g = gs[i];
+          if(g.kind === 'default') {
+              dataset['default'].push(g.graph);
+          } else {
+              dataset['named'].push(g.graph)
+          }
+      }
+
+
+      if(dataset['named'].length === 0 && dataset['default'].length === 0) {
+          dataset['default'].push({token:'uri', 
+                                   prefix:null, 
+                                   suffix:null, 
+                                   value:'https://github.com/antoniogarrote/js-tools/types#default_graph'});
+      }
+
+      var query = {};
+      query.kind = 'ask';
+      query.token = 'executableunit'
+      query.dataset = dataset;
+      query.pattern = w
+
+      return query
+}
 
 /*
   [12]  	DatasetClause	  ::=  	'FROM' ( DefaultGraphClause | NamedGraphClause )

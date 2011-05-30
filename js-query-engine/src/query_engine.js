@@ -523,8 +523,8 @@ QueryEngine.QueryEngine.prototype.denormalizeBindings = function(bindings, callb
         var oid = bindings[variables[env._i]];
         if(oid == null) {
             // this can be null, e.g. union different variables (check SPARQL recommendation examples UNION)
-              bindings[variables[env._i]] = null;
-              k(floop, env);
+            bindings[variables[env._i]] = null;
+            k(floop, env);
         } else {
             that.lexicon.retrieve(oid, function(val){
                 bindings[variables[env._i]] = val;
@@ -563,31 +563,50 @@ QueryEngine.QueryEngine.prototype.executeQuery = function(syntaxTree, callback, 
     var queryEnv = {blanks:{}, outCache:{}};
     this.registerNsInEnvironment(prologue, queryEnv);
 
-    // retrieval queries only can have 1 executable unit
+    // retrieval queries can only have 1 executable unit
     var aqt = that.abstractQueryTree.parseExecutableUnit(units[0]);
 
     // can be anything else but a select???
     var that = this;
-    this.executeSelect(aqt,queryEnv, defaultDataset, namedDataset, function(success, result){
-        if(success) {
-            that.denormalizeBindingsList(result, function(success, result){
-                if(success) {                        
-                    callback(true, result);
+    if(aqt.kind === 'select') {
+      this.executeSelect(aqt, queryEnv, defaultDataset, namedDataset, function(success, result){
+          if(success) {
+              that.denormalizeBindingsList(result, function(success, result){
+                  if(success) {                        
+                      callback(true, result);
+                  } else {
+                      callback(false, result);
+                  }
+              });
+          } else {
+              callback(false, result);
+          }
+      });
+    } else if(aqt.kind === 'ask') {
+        aqt.projection = [{"token": "variable", "kind": "*"}];
+        this.executeSelect(aqt, queryEnv, defaultDataset, namedDataset, function(success, result){
+            if(success) {
+                if(success) {              
+                    if(result.length>0) {
+                        callback(true, true);
+                    } else {
+                        callback(true, false);
+                    }
                 } else {
                     callback(false, result);
                 }
-            });
-        } else {
-            callback(false, result);
-        }
-    });
+            } else {
+                callback(false, result);
+            }
+        });
+    }
 };
 
 
 // Select queries
 
 QueryEngine.QueryEngine.prototype.executeSelect = function(unit, env, defaultDataset, namedDataset, callback) {
-    if(unit.kind === "select") {
+    if(unit.kind === "select" || unit.kind === "ask") {
         var projection = unit.projection;
         var dataset    = unit.dataset;
         var modifier   = unit.modifier;
@@ -712,104 +731,6 @@ QueryEngine.QueryEngine.prototype.executeAndBGP = function(projection, dataset, 
         }
     });
 };
-/*
-QueryEngine.QueryEngine.prototype.executeLEFT_JOIN = function(projection, dataset, patterns, env, callback) {
-    var setQuery1 = patterns.lvalue;
-    var setQuery2 = patterns.rvalue;
-
-    var set1 = null;
-    var set2 = null;
-
-    var that = this;
-    var sets = [];
-
-    Utils.seq(function(k){
-        that.executeSelectUnit(projection, dataset, setQuery1, env, function(success, results){
-            if(success) {
-                set1 = results;
-                k();
-            } else {
-                return callback(false, results);
-            }
-        });
-    }, function(k) {
-        that.executeSelectUnit(projection, dataset, setQuery2, env, function(success, results){
-            if(success) {
-                set2 = results;
-                k();
-            } else {
-                return callback(false, results);
-            }
-        });
-    })(function(){
-        var result = QueryPlan.leftOuterJoinBindings(set1, set2);
-        //console.log("SETS:")
-        //console.log(set1)
-        //console.log(set2)
-        //console.log("---")
-        //console.log(result);
-
-        QueryFilters.checkFilters(patterns, result, true, env, that, function(success, bindings){
-            //console.log("---")
-            //console.log(bindings)
-            //console.log("\r\n")
-            if(success) {
-                if(set1.length>1 && set2.length>1) {
-                    var vars = [];
-                    var vars1 = {}
-                    for(var p in set1[0]) {
-                        vars1[p] = true;
-                    }
-                    for(var p in set2[0]) {
-                        if(vars1[p] != true) {
-                            vars.push(p);
-                        }
-                    }
-                    acum = [];
-                    duplicates = {};
-                    for(var i=0; i<bindings.length; i++) {
-                        if(bindings[i]["__nullify__"] === true) {
-                            for(var j=0; j<vars.length; j++) {
-                                bindings[i]["bindings"][vars[j]] = null;
-                            }                            
-                            var idx = [];
-                            var idxColl = []
-                            for(var p in bindings[i]["bindings"]) {
-                                idx.push(bindings[i]["bindings"][p]);
-                                idx.sort();
-                                idxColl.push(idx.join(""))
-                            }
-                            // reject duplicates -> (set union)
-                            if(duplicates[idx.join("")]==null) {
-                                for(var j=0; j<idxColl.length; j++) {
-                                    duplicates[idxColl[j]] = true;
-                                }
-                                acum.push(bindings[i]["bindings"]);
-                            }
-                        } else {
-                            acum.push(bindings[i]);
-                            var idx = [];
-                            var idxColl = []
-                            for(var p in bindings[i]) {
-                                idx.push(bindings[i][p]);
-                                idx.sort();
-                                duplicates[idx.join("")] = true
-                            }
-
-                        }
-                    }
-                
-                    callback(true, acum);
-                } else {
-                    callback(true, bindings);
-                }
-            } else {
-                callback(false, bindings);
-            }
-        });
-    });
-};
-*/
 
 QueryEngine.QueryEngine.prototype.executeLEFT_JOIN = function(projection, dataset, patterns, env, callback) {
     var setQuery1 = patterns.lvalue;
