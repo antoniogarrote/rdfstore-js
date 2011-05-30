@@ -238,8 +238,7 @@ QueryPlan.executeBGPDatasets = function(bgp, dataset, queryEngine, queryEnv,call
         queryEngine.rangeQuery(bgp, queryEnv, function(success, results) {
             if(success) {
                 results = QueryPlan.buildBindingsFromRange(results, bgp);
-                env.acum.push(results);
-                k(floop, env);
+                callback(true,results);
             } else {
                 callback(false, results);
             }
@@ -377,6 +376,32 @@ QueryPlan.augmentMissingBindings = function(bindinga, bindingb) {
     return bindinga;
 };
 
+/*
+QueryPlan.diff = function(bindingsa, biundingsb) {
+    var result = [];
+
+    for(var i=0; i< bindingsa.length; i++) {
+        var bindinga = bindingsa[i];
+        var matched = false;
+        for(var j=0; j<bindingsb.length; j++) {
+            var bindingb = bindingsb[j];
+            if(QueryPlan.areCompatibleBindings(bindinga, bindingb)){
+                matched = true;
+                result.push(QueryPlan.mergeBindings(bindinga, bindingb));
+            }
+        }
+        if(matched === false) {
+            // missing bindings must be present for further processing
+            // e.g. filtering by not present value (see DAWG tests
+            // bev-6)
+            QueryPlan.augmentMissingBindings(bindinga, bindingb);
+            result.push(bindinga);
+        }
+    }
+
+    return result;    
+};
+*/
 QueryPlan.leftOuterJoinBindings = function(bindingsa, bindingsb) {
     var result = [];
 
@@ -394,6 +419,7 @@ QueryPlan.leftOuterJoinBindings = function(bindingsa, bindingsb) {
             // missing bindings must be present for further processing
             // e.g. filtering by not present value (see DAWG tests
             // bev-6)
+            // augmentMissingBindings set their value to null.
             QueryPlan.augmentMissingBindings(bindinga, bindingb);
             result.push(bindinga);
         }

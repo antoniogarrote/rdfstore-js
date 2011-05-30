@@ -5248,3 +5248,647 @@ exports.testSolutionSeqSlice5 = function(test) {
         });
     });
 }
+
+exports.testAlgebraJoinCombo1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         INSERT DATA {\
+                           :x1 :p "1"^^xsd:integer .\
+                           :x1 :r "4"^^xsd:integer .\
+                           :x2 :p "2"^^xsd:integer .\
+                           :x2 :r "10"^^xsd:integer .\
+                           :x2 :x "1"^^xsd:integer .\
+                           :x3 :q "3"^^xsd:integer .\
+                           :x3 :q "4"^^xsd:integer .\
+                           :x3 :s "1"^^xsd:integer .\
+                           :x3 :t :s .\
+                           :p a rdf:Property .\
+                           :x1 :z :p .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example/>\
+                                SELECT ?a ?y ?d ?z\
+                                {\
+                                      ?a :p ?c OPTIONAL { ?a :r ?d }. \
+                                      ?a ?p 1 { ?p a ?y } UNION { ?a ?z ?p } \
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 2);
+                                    acum = [];
+                                    results.sort(function(a,b){
+                                        if(a.y.value == "http://www.w3.org/1999/02/22-rdf-syntax-ns#Property") {
+                                            return -1;
+                                        } else {
+                                            return 1;
+                                        }
+                                    });
+                                    test.ok(results[0].a.value === "http://example/x1")
+                                    test.ok(results[0].y.value === "http://www.w3.org/1999/02/22-rdf-syntax-ns#Property")
+                                    test.ok(results[0].d.value === "4")
+                                    test.ok(results[1].a.value === "http://example/x1")
+                                    test.ok(results[1].z.value === "http://example/z")
+                                    test.ok(results[1].d.value === "4")
+
+                                    test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testAlgebraJoinCombo1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         INSERT DATA {\
+                           :x1 :p "1"^^xsd:integer .\
+                           :x1 :r "4"^^xsd:integer .\
+                           :x2 :p "2"^^xsd:integer .\
+                           :x2 :r "10"^^xsd:integer .\
+                           :x2 :x "1"^^xsd:integer .\
+                           :x3 :q "3"^^xsd:integer .\
+                           :x3 :q "4"^^xsd:integer .\
+                           :x3 :s "1"^^xsd:integer .\
+                           :x3 :t :s .\
+                           :p a rdf:Property .\
+                           :x1 :z :p .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example/> \
+                                SELECT ?a ?y ?d ?z \
+                                {\
+                                  ?a :p ?c OPTIONAL { ?a :r ?d }.\
+                                  ?a ?p 1 { ?p a ?y } UNION { ?a ?z ?p }\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 2);
+                                    acum = [];
+                                    results.sort(function(a,b){
+                                        if(a.y.value == "http://www.w3.org/1999/02/22-rdf-syntax-ns#Property") {
+                                            return -1;
+                                        } else {
+                                            return 1;
+                                        }
+                                    });
+                                    test.ok(results[0].a.value === "http://example/x1")
+                                    test.ok(results[0].y.value === "http://www.w3.org/1999/02/22-rdf-syntax-ns#Property")
+                                    test.ok(results[0].d.value === "4")
+                                    test.ok(results[1].a.value === "http://example/x1")
+                                    test.ok(results[1].z.value === "http://example/z")
+                                    test.ok(results[1].d.value === "4")
+
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testAlgebraJoinCombo2 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         INSERT DATA {\
+                           GRAPH <join-combo-graph-2.ttl> {\
+                             :x1 :p "1"^^xsd:integer .\
+                             :x1 :r "4"^^xsd:integer .\
+                             :x2 :p "2"^^xsd:integer .\
+                             :x2 :r "10"^^xsd:integer .\
+                             :x2 :x "1"^^xsd:integer .\
+                             :x3 :q "3"^^xsd:integer .\
+                             :x3 :q "4"^^xsd:integer .\
+                             :x3 :s "1"^^xsd:integer .\
+                             :x3 :t :s .\
+                             :p a rdf:Property .\
+                             :x1 :z :p .\
+                           }\
+                         }';
+            engine.execute(query, function(success, result){
+
+
+
+                var query2 = 'PREFIX : <http://example/>\
+                              PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                              PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                              INSERT DATA {\
+                                    GRAPH <join-combo-graph-1.ttl> {\
+                                       :b :p "1"^^xsd:integer .\
+                                      _:a :p "9"^^xsd:integer .\
+                                    }\
+                                  }';
+                engine.execute(query2, function(success, result){
+
+                    engine.execute('PREFIX : <http://example/>\
+                                    SELECT ?x ?y ?z \
+                                    { \
+                                      GRAPH ?g { ?x ?p 1 } { ?x :p ?y } UNION { ?p a ?z }\
+                                    }', function(success, results){
+                                        test.ok(success === true);
+                                        test.ok(results.length === 1);
+                                        test.ok(results[0].x.value === "http://example/b");
+                                        test.ok(results[0].z.value === "http://www.w3.org/1999/02/22-rdf-syntax-ns#Property");
+                                        test.done();
+                                    },
+                                   [{"token": "uri", "prefix": null, "suffix": null, "value": "join-combo-graph-2.ttl"}], 
+                                   [{"token": "uri", "prefix": null, "suffix": null, "value": "join-combo-graph-1.ttl"}]);
+                });
+            });
+        });
+    });
+};
+
+exports.testAlgebraOpt1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                            :x1 :p "1"^^xsd:integer .\
+                            :x2 :p "2"^^xsd:integer .\
+                            :x3 :q "3"^^xsd:integer .\
+                            :x3 :q "4"^^xsd:integer .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example/> \
+                                SELECT * \
+                                {\
+                                  :x1 :p ?v .\
+                                  OPTIONAL\
+                                  {\
+                                    :x3 :q ?w .\
+                                    OPTIONAL { :x2 :p ?v }\
+                                  }\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 1);
+                                    test.ok(results[0].v.value === "1");
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testAlgebraOpt2 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                            :x1 :p "1"^^xsd:integer .\
+                            :x2 :p "2"^^xsd:integer .\
+                            :x3 :q "3"^^xsd:integer .\
+                            :x3 :q "4"^^xsd:integer .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example/> \
+                                SELECT * \
+                                {\
+                                  :x1 :p ?v .\
+                                  OPTIONAL { :x3 :q ?w }\
+                                  OPTIONAL { :x3 :q ?w  . :x2 :p ?v }\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    results.sort(function(a,b) {
+                                        if(a.w.value === "4") {
+                                            return 1;
+                                        } else {
+                                            return -1;
+                                        }
+                                    });
+                                    
+                                    test.ok(results[0].v.value === "1")
+                                    test.ok(results[0].w.value === "3")
+                                    test.ok(results[1].v.value === "1")
+                                    test.ok(results[1].w.value === "4")
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testAlgebraOptFilter1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                            :x1 :p "1"^^xsd:integer .\
+                            :x2 :p "2"^^xsd:integer .\
+                            :x3 :q "3"^^xsd:integer .\
+                            :x3 :q "4"^^xsd:integer .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example/> \
+                                SELECT * \
+                                {\
+                                  ?x :p ?v .\
+                                  OPTIONAL\
+                                  { \
+                                    ?y :q ?w .\
+                                    FILTER(?v=2)\
+                                  }\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 3);
+                                    acum = [];
+                                    for(var i=0; i<results.length; i++) {
+                                        if(results[i].x.value === "http://example/x1") {
+                                            test.ok(results[i].v.value === "1");
+                                        } else {
+                                            test.ok(results[i].x.value === "http://example/x2");
+                                            acum.push(results[i].w.value);
+                                            test.ok(results[i].v.value === "2");
+                                        }
+                                    }
+                                    acum.sort();
+
+                                    test.ok(acum[0] === "3");
+                                    test.ok(acum[1] === "4");
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testAlgebraOptFilter2 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                            :x1 :p "1"^^xsd:integer .\
+                            :x2 :p "2"^^xsd:integer .\
+                            :x3 :q "3"^^xsd:integer .\
+                            :x3 :q "4"^^xsd:integer .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example/> \
+                                SELECT * \
+                                {\
+                                  ?x :p ?v .\
+                                  OPTIONAL\
+                                  { \
+                                    ?y :q ?w .\
+                                    FILTER(?v=2)\
+                                    FILTER(?w=3)\
+                                  }\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length===2);
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testAlgebraOptFilter3 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                            :x1 :p "1"^^xsd:integer .\
+                            :x2 :p "2"^^xsd:integer .\
+                            :x3 :q "3"^^xsd:integer .\
+                            :x3 :q "4"^^xsd:integer .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example/> \
+                                SELECT * \
+                                {\
+                                    :x :p ?v . \
+                                    { :x :q ?w \
+                                      OPTIONAL {  :x :p ?v2 FILTER(?v = 1) }\
+                                    } \
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 0);
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testAlgebraFilterPlacement1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x :p "1"^^xsd:integer .\
+                           :x :p "2"^^xsd:integer .\
+                           :x :p "3"^^xsd:integer .\
+                           :x :p "4"^^xsd:integer .\
+                           :x :q "1"^^xsd:integer .\
+                           :x :q "2"^^xsd:integer .\
+                           :x :q "3"^^xsd:integer .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example/> \
+                                SELECT * \
+                                {\
+                                    ?s :p ?v . \
+                                    FILTER (?v = 2)\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length===1);
+                                    test.ok(results[0].v.value==="2");
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testAlgebraFilterPlacement2 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x :p "1"^^xsd:integer .\
+                           :x :p "2"^^xsd:integer .\
+                           :x :p "3"^^xsd:integer .\
+                           :x :p "4"^^xsd:integer .\
+                           :x :q "1"^^xsd:integer .\
+                           :x :q "2"^^xsd:integer .\
+                           :x :q "3"^^xsd:integer .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example/> \
+                                SELECT * \
+                                {\
+                                    FILTER (?v = 2)\
+                                    ?s :p ?v .\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length===1);
+                                    test.ok(results[0].v.value==="2");
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testAlgebraFilterPlacement3 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x :p "1"^^xsd:integer .\
+                           :x :p "2"^^xsd:integer .\
+                           :x :p "3"^^xsd:integer .\
+                           :x :p "4"^^xsd:integer .\
+                           :x :q "1"^^xsd:integer .\
+                           :x :q "2"^^xsd:integer .\
+                           :x :q "3"^^xsd:integer .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example/> \
+                                SELECT * \
+                                {\
+                                    FILTER (?v = 2)\
+                                    FILTER (?w = 3)\
+                                    ?s :p ?v .\
+                                    ?s :q ?w .\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length===1);
+                                    test.ok(results[0].v.value==="2");
+                                    test.ok(results[0].w.value==="3");
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testAlgebraNested1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x :p "1"^^xsd:integer .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example/> \
+                                SELECT ?v \
+                                {\
+                                  :x :p ?v . FILTER(?v = 1)\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length===1);
+                                    test.ok(results[0].v.value==="1");
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testAlgebraNested1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x :p "1"^^xsd:integer .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example/> \
+                                SELECT ?v \
+                                {\
+                                  :x :p ?v . FILTER(?v = 1)\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length===1);
+                                    test.ok(results[0].v.value==="1");
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testAlgebraNested2 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x :p "1"^^xsd:integer .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example/> \
+                                SELECT ?v \
+                                {\
+                                  :x :p ?v . { FILTER(?v = 1) } \
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length===0);
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testAlgebraNested2 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x :p "1"^^xsd:integer .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example/> \
+                                SELECT ?v \
+                                {\
+                                  :x :p ?v . { FILTER(?v = 1) } \
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length===0);
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testAlgebraFilterScope1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x :p "1"^^xsd:integer .\
+                           :x :p "2"^^xsd:integer .\
+                           :x :p "3"^^xsd:integer .\
+                           :x :p "4"^^xsd:integer .\
+                           :x :q "1"^^xsd:integer .\
+                           :x :q "2"^^xsd:integer .\
+                           :x :q "3"^^xsd:integer .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example/> \
+                                SELECT * \
+                                {\
+                                    :x :p ?v . \
+                                    { :x :q ?w \
+                                      OPTIONAL {  :x :p ?v2 FILTER(?v = 1) }\
+                                    }\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length===12);
+                                    acum = [];
+                                    for(var i=0; i<results.length; i++) {
+                                        acum.push(results[i].v.value+" "+results[i].w.value);
+                                    }
+
+                                    acum.sort();
+                                    test.ok(results[0]= "1 1");
+                                    test.ok(results[1]= "1 2");
+                                    test.ok(results[2]= "1 3");
+
+                                    test.ok(results[3]= "2 1");
+                                    test.ok(results[4]= "2 2");
+                                    test.ok(results[5]= "2 3");
+
+                                    test.ok(results[6]= "3 1");
+                                    test.ok(results[7]= "3 2");
+                                    test.ok(results[8]= "3 3");
+
+                                    test.ok(results[9]= "4 1");
+                                    test.ok(results[10]= "4 2");
+                                    test.ok(results[11]= "4 3");
+
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testAlgebraFilterScope2 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           _:B1 :name "paul" .\
+                           _:B1 :phone "777-3426". \
+                           _:B2 :name "john" . \
+                           _:B2 :email <mailto:john@acd.edu> .\
+                           _:B3 :name "george". \
+                           _:B3 :webPage <http://www.george.edu/> .\
+                           _:B4 :name "ringo". \
+                           _:B4 :email <mailto:ringo@acd.edu> .\
+                           _:B4 :webPage <http://www.starr.edu/> .\
+                           _:B4 :phone "888-4537".\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example/> \
+                                SELECT * \
+                                {\
+                                   ?X  :name "paul"\
+                                   {?Y :name "george" . OPTIONAL { ?X :email ?Z } }\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length===0);
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+

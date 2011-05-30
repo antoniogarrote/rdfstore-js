@@ -6,12 +6,41 @@ var QueryFilters = exports.QueryFilters;
 var Utils = require("./../../js-trees/src/utils").Utils;
 
 QueryFilters.checkFilters = function(pattern, bindings, nullifyErrors, queryEnv, queryEngine, callback) {
+
     var filters = pattern.filter;
-    if(filters && filters[0]) {
-        QueryFilters.run(filters[0].value, bindings, nullifyErrors, queryEnv, queryEngine, callback);
-    } else {
-        callback(true, bindings);
+    var nullified = [];
+    if(filters==null || pattern.length != null) {
+        return callback(true, bindings);
     }
+
+    Utils.repeat(0, filters.length, function(k,env) {                
+        var filter = filters[env._i];
+        var floop = arguments.callee;
+
+        QueryFilters.run(filter.value, bindings, nullifyErrors, queryEnv, queryEngine, function(success, filteredBindings){
+            if(success) {
+                var acum = [];
+                for(var i=0; i<filteredBindings.length; i++) {
+                    if(filteredBindings[i]["__nullify__"]!=null) {
+                        nullified.push(filteredBindings[i]);
+                    } else {
+                        acum.push(filteredBindings[i]);
+                    }
+                }
+                bindings = acum;
+                k(floop, env);
+            } else {
+                callback(false, filteredBindings);
+            }
+        })
+    }, function(env){
+        callback(true,bindings.concat(nullified));
+    });
+//    if(filters && filters[0]) {
+//        QueryFilters.run(filters[0].value, bindings, nullifyErrors, queryEnv, queryEngine, callback);
+//    } else {
+//        callback(true, bindings);
+//    }
 };
 
 QueryFilters.boundVars = function(filterExpr) {

@@ -569,7 +569,7 @@ GroupGraphPattern "[50] GroupGraphPattern"
   [51]  	GroupGraphPatternSub	  ::=  	TriplesBlock? ( GraphPatternNotTriples '.'? TriplesBlock? )*
 */
 GroupGraphPatternSub "[51] GroupGraphPatternSub"
-  = tb:TriplesBlock? tbs:( GraphPatternNotTriples WS* '.'? WS* TriplesBlock? )* {
+  = tb:TriplesBlock? WS* tbs:( GraphPatternNotTriples WS* '.'? WS* TriplesBlock? )* {
       var subpatterns = [];
       if(tb != null && tb != []) {
           subpatterns.push(tb);
