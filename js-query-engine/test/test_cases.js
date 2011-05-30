@@ -5997,3 +5997,78 @@ exports.testAlgebraAsk8 = function(test) {
     });
 };
 
+exports.testBnodeCoreferenceDAWGBnodeCoref001 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
+                         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\
+                         INSERT DATA {\
+                           _:alice\
+                               rdf:type        foaf:Person ;\
+                               foaf:name       "Alice" ;\
+                               foaf:mbox       <mailto:alice@work> ;\
+                               foaf:knows      _:bob ;\
+                               .\
+                           _:bob\
+                               rdf:type        foaf:Person ;\
+                               foaf:name       "Bob" ; \
+                               foaf:knows      _:alice ;\
+                               foaf:mbox       <mailto:bob@work> ;\
+                               foaf:mbox       <mailto:bob@home> ;\
+                               .\
+                           _:eve\
+                               rdf:type      foaf:Person ;\
+                               foaf:name     "Eve" ; \
+                               foaf:knows    _:fred ;\
+                               .\
+                           _:fred\
+                               rdf:type      foaf:Person ;\
+                               foaf:mbox     <mailto:fred@edu> .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                                PREFIX  foaf:       <http://xmlns.com/foaf/0.1/>\
+                                SELECT ?x ?y\
+                                WHERE {\
+                                  ?x foaf:knows ?y .\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 3);
+                                    var found = false;
+                                    var tmpx1 = null;
+                                    var tmpy1 = null;
+                                    var tmpx2 = null;
+                                    var tmpy2 = null;
+
+                                    for(var i=0; i<results.length; i++) {
+                                        if(i===0) {
+                                            tmpx1 = results[0].x.value;
+                                            tmpy1 = results[0].y.value;
+                                        } else if(i===1) {
+                                            tmpx2 = results[1].x.value;
+                                            tmpy2 = results[1].y.value;
+                                            if(tmpx2 === tmpy1 && tmpy2 === tmpx1) {
+                                                found = true;
+                                            }
+                                        } else if(found === false) {
+                                            var tmpx3 = results[2].x.value;
+                                            var tmpy3 = results[2].y.value;
+                                            if(tmpx3 === tmpy1 && tmpy3 === tmpx1) {
+                                                found = true;
+                                            } else if(tmpx3 === tmpy2 && tmpy3 === tmpx2) {
+                                                found = true;
+                                            }
+                                        }
+                                    }
+
+                                    test.ok(found === true);
+                                    test.done();
+                });
+            });
+        });
+    });
+};
+

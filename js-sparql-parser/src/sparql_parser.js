@@ -6341,7 +6341,7 @@ SparqlParser.parser = (function(){
                 for(var i=0; i<rest.length; i++) {
                     var tok = rest[i][3];
                     var newVerb  = tok[0];
-                    var newObjsList = tok[2];
+                    var newObjsList = tok[2] || [];
           
                     for(var j=0; j<newObjsList.length; j++) {
                      if(newObjsList[j].triplesContext != null) {
