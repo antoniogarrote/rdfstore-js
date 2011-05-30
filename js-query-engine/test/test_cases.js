@@ -6072,3 +6072,48 @@ exports.testBnodeCoreferenceDAWGBnodeCoref001 = function(test) {
     });
 };
 
+exports.testBoundDAWGBoundQuery001 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/ns#>\
+                         INSERT DATA {\
+                           :a1 :b :c1 .\
+                           :c1 :d :e .\
+                           :a2 :b :c2 .\
+                           :c2 :b :f .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example.org/ns#> \
+                                SELECT  ?a ?c\
+                                WHERE\
+                                    { ?a :b ?c . \
+                                      OPTIONAL\
+                                        { ?c :d ?e } . \
+                                      FILTER (! BOUND(?e)) \
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 2);
+                                    results.sort(function(a,b){
+                                        if(a.a.value === b.a.value) {
+                                            return 0;
+                                        } else if(a.a.value < b.a.value) {
+                                            return -1;
+                                        } else {
+                                            return 1;
+                                        }
+                                    });
+
+                                    test.ok(results[0].a.value === "http://example.org/ns#a2")
+                                    test.ok(results[0].c.value === "http://example.org/ns#c2")
+
+                                    test.ok(results[1].a.value === "http://example.org/ns#c2")
+                                    test.ok(results[1].c.value === "http://example.org/ns#f")
+
+                                    test.done();
+                });
+            });
+        });
+    });
+};
