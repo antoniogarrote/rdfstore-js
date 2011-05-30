@@ -167,7 +167,44 @@ SelectClause "[8] SelectClause"
   [9]  	ConstructQuery	  ::=  	'CONSTRUCT' ConstructTemplate DatasetClause* WhereClause SolutionModifier
 */
 ConstructQuery "[9] ConstructQuery"
-  = 'CONSTRUCT' ConstructTemplate DatasetClause* WhereClause SolutionModifier
+  = WS* 'CONSTRUCT' WS* t:ConstructTemplate WS* gs:DatasetClause* WS* w:WhereClause WS* sm:SolutionModifier {
+      var dataset = {named:[], default:[]};
+      for(var i=0; i<gs.length; i++) {
+          var g = gs[i];
+          if(g.kind === 'default') {
+              dataset['default'].push(g.graph);
+          } else {
+              dataset['named'].push(g.graph)
+          }
+      }
+
+
+      if(dataset['named'].length === 0 && dataset['default'].length === 0) {
+          dataset['default'].push({token:'uri', 
+                                   prefix:null, 
+                                   suffix:null, 
+                                   value:'https://github.com/antoniogarrote/js-tools/types#default_graph'});
+      }
+
+      var query = {};
+      query.kind = 'construct';
+      query.token = 'executableunit'
+      query.dataset = dataset;
+      query.template = t;
+      query.pattern = w
+      
+      if(sm!=null && sm.limit!=null) {
+          query.limit = sm.limit;
+      }
+      if(sm!=null && sm.offset!=null) {
+          query.offset = sm.offset;
+      }
+      if(sm!=null && (sm.order!=null && sm.order!="")) {
+          query.order = sm.order;
+      }
+      return query
+
+}
 
 /*
   [10]  	DescribeQuery	  ::=  	'DESCRIBE' ( VarOrIRIref+ | '*' ) DatasetClause* WhereClause? SolutionModifier
@@ -575,7 +612,6 @@ TriplesTemplate "[49] TriplesTemplate"
 
      return {token:'triplestemplate',
              triplesContext: triples}
-
 }
 
 /*
@@ -854,14 +890,29 @@ ExpressionList "[63] ExpressionList"
   [64]  	ConstructTemplate	  ::=  	'{' ConstructTriples? '}'
 */
 ConstructTemplate "[64] ConstructTemplate"
-  = '{' ConstructTriples? '}'
+  = '{' WS* ts:ConstructTriples? WS* '}' {
+      return ts;
+}
 
 
 /*
   [65]  	ConstructTriples	  ::=  	TriplesSameSubject ( '.' ConstructTriples? )?
 */
 ConstructTriples "[65] ConstructTriples"
-  = TriplesSameSubject ( '.' ConstructTriples? )?
+  = b:TriplesSameSubject bs:( WS* '.' WS* ConstructTriples? )? {
+     var triples = b.triplesContext;
+     var toTest = null;
+      if(typeof(bs) === 'object') {
+            if(bs.length != null) {
+                  if(bs[3].triplesContext!=null) {
+                     triples = triples.concat(bs[3].triplesContext);
+              }
+           }
+      }
+
+     return {token:'triplestemplate',
+             triplesContext: triples}
+}
 
 /*
   [66]  	TriplesSameSubject	  ::=  	VarOrTerm PropertyListNotEmpty |	TriplesNode PropertyList
@@ -870,17 +921,19 @@ TriplesSameSubject "[66] TriplesSameSubject"
   = WS* s:VarOrTerm WS* pairs:PropertyListNotEmpty {
       var triplesContext = pairs.triplesContext;
       var subject = s;
-      for(var i=0; i< pairs.pairs.length; i++) {
-          var pair = pairs.pairs[i];
-          var triple = null;
-          if(subject.token && subject.token==='triplesnodecollection') {
-              triple = {subject: subject.chainSubject[0], predicate: pair[0], object: pair[1]}
-              triplesContext.push(triple);
-              triplesContext = triplesContext.concat(subject.triplesContext);
-          } else {
-              triple = {subject: subject, predicate: pair[0], object: pair[1]}
-              triplesContext.push(triple);
-          }
+      if(pairs.pairs) {
+        for(var i=0; i< pairs.pairs.length; i++) {
+            var pair = pairs.pairs[i];
+            var triple = null;
+            if(subject.token && subject.token==='triplesnodecollection') {
+                triple = {subject: subject.chainSubject[0], predicate: pair[0], object: pair[1]}
+                triplesContext.push(triple);
+                triplesContext = triplesContext.concat(subject.triplesContext);
+            } else {
+                triple = {subject: subject, predicate: pair[0], object: pair[1]}
+                triplesContext.push(triple);
+            }
+        }
       }
 
       var token = {};
@@ -894,23 +947,25 @@ TriplesSameSubject "[66] TriplesSameSubject"
       var triplesContext = tn.triplesContext;
       var subject = tn.chainSubject;
 
-      for(var i=0; i< pairs.pairs.length; i++) {
-          var pair = pairs.pairs[i];
-          if(tn.token === "triplesnodecollection") {
-              for(var j=0; j<subject.length; j++) {
-                  var subj = subject[j];
-                  if(subj.triplesContext != null) {
-                      var triple = {subject: subj.chainSubject, predicate: pair[0], object: pair[1]}
-                      triplesContext.concat(subj.triplesContext);
-                  } else {
-                      var triple = {subject: subject[j], predicate: pair[0], object: pair[1]}
-                      triplesContext.push(triple);
-                  }
-              }
-          } else {
-              var triple = {subject: subject, predicate: pair[0], object: pair[1]}
-              triplesContext.push(triple);
-          }
+      if(pairs.pairs) {
+        for(var i=0; i< pairs.pairs.length; i++) {
+            var pair = pairs.pairs[i];
+            if(tn.token === "triplesnodecollection") {
+                for(var j=0; j<subject.length; j++) {
+                    var subj = subject[j];
+                    if(subj.triplesContext != null) {
+                        var triple = {subject: subj.chainSubject, predicate: pair[0], object: pair[1]}
+                        triplesContext.concat(subj.triplesContext);
+                    } else {
+                        var triple = {subject: subject[j], predicate: pair[0], object: pair[1]}
+                        triplesContext.push(triple);
+                    }
+                }
+            } else {
+                var triple = {subject: subject, predicate: pair[0], object: pair[1]}
+                triplesContext.push(triple);
+            }
+        }
       }
 
       var token = {};

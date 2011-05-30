@@ -6117,3 +6117,243 @@ exports.testBoundDAWGBoundQuery001 = function(test) {
         });
     });
 };
+
+exports.testConstructConstruct1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
+                         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\
+                         INSERT DATA {\
+                         _:alice\
+                             rdf:type        foaf:Person ;\
+                             foaf:name       "Alice" ;\
+                             foaf:mbox       <mailto:alice@work> ;\
+                             foaf:knows      _:bob ;\
+                             .\
+                         _:bob\
+                             rdf:type        foaf:Person ;\
+                             foaf:name       "Bob" ; \
+                             foaf:knows      _:alice ;\
+                             foaf:mbox       <mailto:bob@work> ;\
+                             foaf:mbox       <mailto:bob@home> ;\
+                             .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                                PREFIX  foaf:       <http://xmlns.com/foaf/0.1/>\
+                                CONSTRUCT { ?s ?p ?o . }\
+                                WHERE {\
+                                  ?s ?p ?o .\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.some(function(triple){
+                                        return triple.predicate.toString()=== "http://xmlns.com/foaf/0.1/name" &&
+                                            triple.object.nominalValue === "Alice";
+                                    }));
+
+                                    test.ok(results.some(function(triple){
+                                        return triple.predicate.toString()=== "http://www.w3.org/1999/02/22-rdf-syntax-ns#type" &&
+                                            triple.object.nominalValue === "http://xmlns.com/foaf/0.1/Person";
+                                    }));
+
+                                    test.ok(results.some(function(triple){
+                                        return triple.predicate.toString()=== "http://xmlns.com/foaf/0.1/name" &&
+                                            triple.object.nominalValue === "Bob";
+                                    }));
+
+                                    test.ok(results.some(function(triple){
+                                        return triple.predicate.toString()=== "http://xmlns.com/foaf/0.1/mbox" &&
+                                            triple.object.nominalValue === "mailto:alice@work";
+                                    }));
+
+                                    test.ok(results.some(function(triple){
+                                        return triple.predicate.toString()=== "http://xmlns.com/foaf/0.1/mbox" &&
+                                            triple.object.nominalValue === "mailto:bob@work";
+                                    }));
+
+                                    test.ok(results.some(function(triple){
+                                        return triple.predicate.toString()=== "http://xmlns.com/foaf/0.1/mbox" &&
+                                            triple.object.nominalValue === "mailto:bob@home";
+                                    }));
+                                    
+                                    test.ok(results.toArray().length===9);
+                                    test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testConstructConstruct2 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
+                         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\
+                         INSERT DATA {\
+                         _:alice\
+                             rdf:type        foaf:Person ;\
+                             foaf:name       "Alice" ;\
+                             foaf:mbox       <mailto:alice@work> ;\
+                             foaf:knows      _:bob ;\
+                             .\
+                         _:bob\
+                             rdf:type        foaf:Person ;\
+                             foaf:name       "Bob" ; \
+                             foaf:knows      _:alice ;\
+                             foaf:mbox       <mailto:bob@work> ;\
+                             foaf:mbox       <mailto:bob@home> ;\
+                             .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                                PREFIX  foaf:       <http://xmlns.com/foaf/0.1/>\
+                                CONSTRUCT { ?s foaf:name ?o . }\
+                                WHERE {\
+                                  ?s foaf:name ?o .\
+                                }', function(success, results){
+                                    test.ok(success === true);
+
+                                    test.ok(results.some(function(triple){
+                                        return triple.predicate.toString()=== "http://xmlns.com/foaf/0.1/name" &&
+                                            triple.object.nominalValue === "Alice";
+                                    }));
+
+                                    test.ok(results.some(function(triple){
+                                        return triple.predicate.toString()=== "http://xmlns.com/foaf/0.1/name" &&
+                                            triple.object.nominalValue === "Bob";
+                                    }));
+
+                                    test.ok(results.toArray().length===2);
+                                    test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testConstructConstruct3 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
+                         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\
+                         INSERT DATA {\
+                         _:alice\
+                             rdf:type        foaf:Person ;\
+                             foaf:name       "Alice" ;\
+                             foaf:mbox       <mailto:alice@work> ;\
+                             foaf:knows      _:bob ;\
+                             .\
+                         _:bob\
+                             rdf:type        foaf:Person ;\
+                             foaf:name       "Bob" ; \
+                             foaf:knows      _:alice ;\
+                             foaf:mbox       <mailto:bob@home> ;\
+                             .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                                PREFIX  foaf:       <http://xmlns.com/foaf/0.1/>\
+                                CONSTRUCT { [ rdf:subject ?s ;\
+                                              rdf:predicate ?p ;\
+                                              rdf:object ?o ] . }\
+                                WHERE {\
+                                  ?s ?p ?o .\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.toArray().length === 24);
+                                    test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testConstructConstruct4 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
+                         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\
+                         INSERT DATA {\
+                         _:alice\
+                             rdf:type        foaf:Person ;\
+                             foaf:name       "Alice" ;\
+                             foaf:mbox       <mailto:alice@work> ;\
+                             foaf:knows      _:bob ;\
+                             .\
+                         _:bob\
+                             rdf:type        foaf:Person ;\
+                             foaf:name       "Bob" ; \
+                             foaf:knows      _:alice ;\
+                             foaf:mbox       <mailto:bob@home> ;\
+                             .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                                PREFIX  foaf:       <http://xmlns.com/foaf/0.1/>\
+                                CONSTRUCT { _:a rdf:subject ?s ;\
+                                                rdf:predicate ?p ;\
+                                                rdf:object ?o  . }\
+                                WHERE {\
+                                  ?s ?p ?o .\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.toArray().length === 24);
+                                    test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testConstructConstruct5 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x :p :a .\
+                           :x :p :b .\
+                           :x :p :c .\
+                           :x :p "1"^^xsd:integer .\
+                           :a :q "2"^^xsd:integer .\
+                           :a :r "2"^^xsd:integer .\
+                           :b :q "2"^^xsd:integer .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example/>\
+                                CONSTRUCT { ?x :p2 ?v }\
+                                WHERE\
+                                {\
+                                  ?x :p ?o .\
+                                  OPTIONAL {?o :q ?v }\
+                                }', function(success, results){
+                                    //console.log(results);
+                                    test.ok(success === true);
+                                    console.log(results.toArray().length);
+                                    results.forEach(function(triple){
+                                        console.log(triple.subject.toString());
+                                        console.log(triple.predicate.toString());
+                                        console.log(triple.object.toString());
+                                        console.log("----");
+                                    });
+                                    test.ok(results.toArray().length === 1);
+                                    test.done();
+                });
+            });
+        });
+    });
+};

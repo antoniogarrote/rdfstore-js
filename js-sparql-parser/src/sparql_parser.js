@@ -1255,50 +1255,145 @@ SparqlParser.parser = (function(){
         var savedReportMatchFailures = reportMatchFailures;
         reportMatchFailures = false;
         var savedPos0 = pos;
-        if (input.substr(pos, 9) === "CONSTRUCT") {
-          var result1 = "CONSTRUCT";
-          pos += 9;
-        } else {
-          var result1 = null;
-          if (reportMatchFailures) {
-            matchFailed("\"CONSTRUCT\"");
-          }
+        var result2 = [];
+        var result17 = parse_WS();
+        while (result17 !== null) {
+          result2.push(result17);
+          var result17 = parse_WS();
         }
-        if (result1 !== null) {
-          var result2 = parse_ConstructTemplate();
-          if (result2 !== null) {
-            var result3 = [];
-            var result6 = parse_DatasetClause();
-            while (result6 !== null) {
-              result3.push(result6);
-              var result6 = parse_DatasetClause();
+        if (result2 !== null) {
+          if (input.substr(pos, 9) === "CONSTRUCT") {
+            var result3 = "CONSTRUCT";
+            pos += 9;
+          } else {
+            var result3 = null;
+            if (reportMatchFailures) {
+              matchFailed("\"CONSTRUCT\"");
             }
-            if (result3 !== null) {
-              var result4 = parse_WhereClause();
-              if (result4 !== null) {
-                var result5 = parse_SolutionModifier();
-                if (result5 !== null) {
-                  var result0 = [result1, result2, result3, result4, result5];
+          }
+          if (result3 !== null) {
+            var result4 = [];
+            var result16 = parse_WS();
+            while (result16 !== null) {
+              result4.push(result16);
+              var result16 = parse_WS();
+            }
+            if (result4 !== null) {
+              var result5 = parse_ConstructTemplate();
+              if (result5 !== null) {
+                var result6 = [];
+                var result15 = parse_WS();
+                while (result15 !== null) {
+                  result6.push(result15);
+                  var result15 = parse_WS();
+                }
+                if (result6 !== null) {
+                  var result7 = [];
+                  var result14 = parse_DatasetClause();
+                  while (result14 !== null) {
+                    result7.push(result14);
+                    var result14 = parse_DatasetClause();
+                  }
+                  if (result7 !== null) {
+                    var result8 = [];
+                    var result13 = parse_WS();
+                    while (result13 !== null) {
+                      result8.push(result13);
+                      var result13 = parse_WS();
+                    }
+                    if (result8 !== null) {
+                      var result9 = parse_WhereClause();
+                      if (result9 !== null) {
+                        var result10 = [];
+                        var result12 = parse_WS();
+                        while (result12 !== null) {
+                          result10.push(result12);
+                          var result12 = parse_WS();
+                        }
+                        if (result10 !== null) {
+                          var result11 = parse_SolutionModifier();
+                          if (result11 !== null) {
+                            var result1 = [result2, result3, result4, result5, result6, result7, result8, result9, result10, result11];
+                          } else {
+                            var result1 = null;
+                            pos = savedPos0;
+                          }
+                        } else {
+                          var result1 = null;
+                          pos = savedPos0;
+                        }
+                      } else {
+                        var result1 = null;
+                        pos = savedPos0;
+                      }
+                    } else {
+                      var result1 = null;
+                      pos = savedPos0;
+                    }
+                  } else {
+                    var result1 = null;
+                    pos = savedPos0;
+                  }
                 } else {
-                  var result0 = null;
+                  var result1 = null;
                   pos = savedPos0;
                 }
               } else {
-                var result0 = null;
+                var result1 = null;
                 pos = savedPos0;
               }
             } else {
-              var result0 = null;
+              var result1 = null;
               pos = savedPos0;
             }
           } else {
-            var result0 = null;
+            var result1 = null;
             pos = savedPos0;
           }
         } else {
-          var result0 = null;
+          var result1 = null;
           pos = savedPos0;
         }
+        var result0 = result1 !== null
+          ? (function(t, gs, w, sm) {
+                var dataset = {named:[], default:[]};
+                for(var i=0; i<gs.length; i++) {
+                    var g = gs[i];
+                    if(g.kind === 'default') {
+                        dataset['default'].push(g.graph);
+                    } else {
+                        dataset['named'].push(g.graph)
+                    }
+                }
+          
+          
+                if(dataset['named'].length === 0 && dataset['default'].length === 0) {
+                    dataset['default'].push({token:'uri', 
+                                             prefix:null, 
+                                             suffix:null, 
+                                             value:'https://github.com/antoniogarrote/js-tools/types#default_graph'});
+                }
+          
+                var query = {};
+                query.kind = 'construct';
+                query.token = 'executableunit'
+                query.dataset = dataset;
+                query.template = t;
+                query.pattern = w
+                
+                if(sm!=null && sm.limit!=null) {
+                    query.limit = sm.limit;
+                }
+                if(sm!=null && sm.offset!=null) {
+                    query.offset = sm.offset;
+                }
+                if(sm!=null && (sm.order!=null && sm.order!="")) {
+                    query.order = sm.order;
+                }
+                return query
+          
+          })(result1[3], result1[5], result1[7], result1[9])
+          : null;
         reportMatchFailures = savedReportMatchFailures;
         if (reportMatchFailures && result0 === null) {
           matchFailed("[9] ConstructQuery");
@@ -4429,7 +4524,6 @@ SparqlParser.parser = (function(){
           
                return {token:'triplestemplate',
                        triplesContext: triples}
-          
           })(result1[0], result1[1])
           : null;
         reportMatchFailures = savedReportMatchFailures;
@@ -5865,41 +5959,68 @@ SparqlParser.parser = (function(){
         reportMatchFailures = false;
         var savedPos0 = pos;
         if (input.substr(pos, 1) === "{") {
-          var result1 = "{";
+          var result2 = "{";
           pos += 1;
         } else {
-          var result1 = null;
+          var result2 = null;
           if (reportMatchFailures) {
             matchFailed("\"{\"");
           }
         }
-        if (result1 !== null) {
-          var result4 = parse_ConstructTriples();
-          var result2 = result4 !== null ? result4 : '';
-          if (result2 !== null) {
-            if (input.substr(pos, 1) === "}") {
-              var result3 = "}";
-              pos += 1;
-            } else {
-              var result3 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"}\"");
+        if (result2 !== null) {
+          var result3 = [];
+          var result9 = parse_WS();
+          while (result9 !== null) {
+            result3.push(result9);
+            var result9 = parse_WS();
+          }
+          if (result3 !== null) {
+            var result8 = parse_ConstructTriples();
+            var result4 = result8 !== null ? result8 : '';
+            if (result4 !== null) {
+              var result5 = [];
+              var result7 = parse_WS();
+              while (result7 !== null) {
+                result5.push(result7);
+                var result7 = parse_WS();
               }
-            }
-            if (result3 !== null) {
-              var result0 = [result1, result2, result3];
+              if (result5 !== null) {
+                if (input.substr(pos, 1) === "}") {
+                  var result6 = "}";
+                  pos += 1;
+                } else {
+                  var result6 = null;
+                  if (reportMatchFailures) {
+                    matchFailed("\"}\"");
+                  }
+                }
+                if (result6 !== null) {
+                  var result1 = [result2, result3, result4, result5, result6];
+                } else {
+                  var result1 = null;
+                  pos = savedPos0;
+                }
+              } else {
+                var result1 = null;
+                pos = savedPos0;
+              }
             } else {
-              var result0 = null;
+              var result1 = null;
               pos = savedPos0;
             }
           } else {
-            var result0 = null;
+            var result1 = null;
             pos = savedPos0;
           }
         } else {
-          var result0 = null;
+          var result1 = null;
           pos = savedPos0;
         }
+        var result0 = result1 !== null
+          ? (function(ts) {
+                return ts;
+          })(result1[2])
+          : null;
         reportMatchFailures = savedReportMatchFailures;
         if (reportMatchFailures && result0 === null) {
           matchFailed("[64] ConstructTemplate");
@@ -5923,42 +6044,80 @@ SparqlParser.parser = (function(){
         var savedReportMatchFailures = reportMatchFailures;
         reportMatchFailures = false;
         var savedPos0 = pos;
-        var result1 = parse_TriplesSameSubject();
-        if (result1 !== null) {
+        var result2 = parse_TriplesSameSubject();
+        if (result2 !== null) {
           var savedPos1 = pos;
-          if (input.substr(pos, 1) === ".") {
-            var result4 = ".";
-            pos += 1;
-          } else {
-            var result4 = null;
-            if (reportMatchFailures) {
-              matchFailed("\".\"");
-            }
+          var result5 = [];
+          var result11 = parse_WS();
+          while (result11 !== null) {
+            result5.push(result11);
+            var result11 = parse_WS();
           }
-          if (result4 !== null) {
-            var result6 = parse_ConstructTriples();
-            var result5 = result6 !== null ? result6 : '';
-            if (result5 !== null) {
-              var result3 = [result4, result5];
+          if (result5 !== null) {
+            if (input.substr(pos, 1) === ".") {
+              var result6 = ".";
+              pos += 1;
             } else {
-              var result3 = null;
+              var result6 = null;
+              if (reportMatchFailures) {
+                matchFailed("\".\"");
+              }
+            }
+            if (result6 !== null) {
+              var result7 = [];
+              var result10 = parse_WS();
+              while (result10 !== null) {
+                result7.push(result10);
+                var result10 = parse_WS();
+              }
+              if (result7 !== null) {
+                var result9 = parse_ConstructTriples();
+                var result8 = result9 !== null ? result9 : '';
+                if (result8 !== null) {
+                  var result4 = [result5, result6, result7, result8];
+                } else {
+                  var result4 = null;
+                  pos = savedPos1;
+                }
+              } else {
+                var result4 = null;
+                pos = savedPos1;
+              }
+            } else {
+              var result4 = null;
               pos = savedPos1;
             }
           } else {
-            var result3 = null;
+            var result4 = null;
             pos = savedPos1;
           }
-          var result2 = result3 !== null ? result3 : '';
-          if (result2 !== null) {
-            var result0 = [result1, result2];
+          var result3 = result4 !== null ? result4 : '';
+          if (result3 !== null) {
+            var result1 = [result2, result3];
           } else {
-            var result0 = null;
+            var result1 = null;
             pos = savedPos0;
           }
         } else {
-          var result0 = null;
+          var result1 = null;
           pos = savedPos0;
         }
+        var result0 = result1 !== null
+          ? (function(b, bs) {
+               var triples = b.triplesContext;
+               var toTest = null;
+                if(typeof(bs) === 'object') {
+                      if(bs.length != null) {
+                            if(bs[3].triplesContext!=null) {
+                               triples = triples.concat(bs[3].triplesContext);
+                        }
+                     }
+                }
+          
+               return {token:'triplestemplate',
+                       triplesContext: triples}
+          })(result1[0], result1[1])
+          : null;
         reportMatchFailures = savedReportMatchFailures;
         if (reportMatchFailures && result0 === null) {
           matchFailed("[65] ConstructTriples");
@@ -6021,17 +6180,19 @@ SparqlParser.parser = (function(){
           ? (function(s, pairs) {
                 var triplesContext = pairs.triplesContext;
                 var subject = s;
-                for(var i=0; i< pairs.pairs.length; i++) {
-                    var pair = pairs.pairs[i];
-                    var triple = null;
-                    if(subject.token && subject.token==='triplesnodecollection') {
-                        triple = {subject: subject.chainSubject[0], predicate: pair[0], object: pair[1]}
-                        triplesContext.push(triple);
-                        triplesContext = triplesContext.concat(subject.triplesContext);
-                    } else {
-                        triple = {subject: subject, predicate: pair[0], object: pair[1]}
-                        triplesContext.push(triple);
-                    }
+                if(pairs.pairs) {
+                  for(var i=0; i< pairs.pairs.length; i++) {
+                      var pair = pairs.pairs[i];
+                      var triple = null;
+                      if(subject.token && subject.token==='triplesnodecollection') {
+                          triple = {subject: subject.chainSubject[0], predicate: pair[0], object: pair[1]}
+                          triplesContext.push(triple);
+                          triplesContext = triplesContext.concat(subject.triplesContext);
+                      } else {
+                          triple = {subject: subject, predicate: pair[0], object: pair[1]}
+                          triplesContext.push(triple);
+                      }
+                  }
                 }
           
                 var token = {};
@@ -6086,23 +6247,25 @@ SparqlParser.parser = (function(){
                   var triplesContext = tn.triplesContext;
                   var subject = tn.chainSubject;
             
-                  for(var i=0; i< pairs.pairs.length; i++) {
-                      var pair = pairs.pairs[i];
-                      if(tn.token === "triplesnodecollection") {
-                          for(var j=0; j<subject.length; j++) {
-                              var subj = subject[j];
-                              if(subj.triplesContext != null) {
-                                  var triple = {subject: subj.chainSubject, predicate: pair[0], object: pair[1]}
-                                  triplesContext.concat(subj.triplesContext);
-                              } else {
-                                  var triple = {subject: subject[j], predicate: pair[0], object: pair[1]}
-                                  triplesContext.push(triple);
-                              }
-                          }
-                      } else {
-                          var triple = {subject: subject, predicate: pair[0], object: pair[1]}
-                          triplesContext.push(triple);
-                      }
+                  if(pairs.pairs) {
+                    for(var i=0; i< pairs.pairs.length; i++) {
+                        var pair = pairs.pairs[i];
+                        if(tn.token === "triplesnodecollection") {
+                            for(var j=0; j<subject.length; j++) {
+                                var subj = subject[j];
+                                if(subj.triplesContext != null) {
+                                    var triple = {subject: subj.chainSubject, predicate: pair[0], object: pair[1]}
+                                    triplesContext.concat(subj.triplesContext);
+                                } else {
+                                    var triple = {subject: subject[j], predicate: pair[0], object: pair[1]}
+                                    triplesContext.push(triple);
+                                }
+                            }
+                        } else {
+                            var triple = {subject: subject, predicate: pair[0], object: pair[1]}
+                            triplesContext.push(triple);
+                        }
+                    }
                   }
             
                   var token = {};

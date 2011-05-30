@@ -8,6 +8,7 @@ var Utils = require("./../../js-trees/src/utils").Utils;
 var QuadIndexCommon = require("./../../js-rdf-persistence/src/quad_index_common").QuadIndexCommon;
 var QueryPlan = require("./query_plan").QueryPlan;
 var QueryFilters = require("./query_filters").QueryFilters;
+var RDFJSInterface = require("./rdf_js_interface").RDFJSInterface;
 
 QueryEngine.QueryEngine = function(params) {
     if(arguments.length != 0) {
@@ -599,6 +600,48 @@ QueryEngine.QueryEngine.prototype.executeQuery = function(syntaxTree, callback, 
                 callback(false, result);
             }
         });
+    } else if(aqt.kind === 'construct') {
+        aqt.projection = [{"token": "variable", "kind": "*"}];
+        var that = this;
+        this.executeSelect(aqt, queryEnv, defaultDataset, namedDataset, function(success, result){
+            if(success) {
+                if(success) {              
+                    that.denormalizeBindingsList(result, function(success, result){
+                        if(success) { 
+                            var graph = new RDFJSInterface.Graph();
+                            
+                            // CONSTRUCT WHERE {} case
+                            if(aqt.template == null) {
+                                aqt.template = {triplesContext: aqt.pattern};
+                            }
+
+                            for(var i=0; i<result.length; i++) {
+                                var bindings = result[i];
+                                for(var j=0; j<aqt.template.triplesContext.length; j++) {
+                                    var tripleTemplate = aqt.template.triplesContext[j];                                    
+                                    var s = RDFJSInterface.buildRDFResource(tripleTemplate.subject,bindings,that,queryEnv);
+                                    var p = RDFJSInterface.buildRDFResource(tripleTemplate.predicate,bindings,that,queryEnv);
+                                    var o = RDFJSInterface.buildRDFResource(tripleTemplate.object,bindings,that,queryEnv);
+                                    if(s!=null && p!=null && o!=null) {
+                                        var triple = new RDFJSInterface.Triple(s,p,o);
+                                        graph.add(triple);
+                                    //} else {
+                                    //    return callback(false, "Error creating output graph")
+                                    }
+                                }
+                            }
+                            callback(true,graph);
+                        } else {
+                            callback(false, result);
+                        }
+                    });
+                } else {
+                    callback(false, result);
+                }
+            } else {
+                callback(false, result);
+            }
+        });
     }
 };
 
@@ -606,7 +649,7 @@ QueryEngine.QueryEngine.prototype.executeQuery = function(syntaxTree, callback, 
 // Select queries
 
 QueryEngine.QueryEngine.prototype.executeSelect = function(unit, env, defaultDataset, namedDataset, callback) {
-    if(unit.kind === "select" || unit.kind === "ask") {
+    if(unit.kind === "select" || unit.kind === "ask" || unit.kind === "construct") {
         var projection = unit.projection;
         var dataset    = unit.dataset;
         var modifier   = unit.modifier;

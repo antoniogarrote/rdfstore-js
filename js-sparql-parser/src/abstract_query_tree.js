@@ -24,10 +24,12 @@ AbstractQueryTree.AbstractQueryTree.prototype.parseExecutableUnit = function(exe
         return this.parseSelect(executableUnit);
     } else if(executableUnit.kind === 'ask') {
         return this.parseSelect(executableUnit);        
+    } else if(executableUnit.kind === 'construct') {
+        return this.parseSelect(executableUnit);        
     } else if(executableUnit.kind === 'insertdata') {
         return this.parseInsertData(executableUnit);        
     } else {
-        throw new Error('unknown executable unit' + executableUnit.kind);
+        throw new Error('unknown executable unit: ' + executableUnit.kind);
     }
 };
 
