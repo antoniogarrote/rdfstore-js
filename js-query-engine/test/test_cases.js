@@ -6341,19 +6341,12 @@ exports.testConstructConstruct5 = function(test) {
                                   ?x :p ?o .\
                                   OPTIONAL {?o :q ?v }\
                                 }', function(success, results){
-                                    //console.log(results);
-                                    test.ok(success === true);
-                                    console.log(results.toArray().length);
-                                    results.forEach(function(triple){
-                                        console.log(triple.subject.toString());
-                                        console.log(triple.predicate.toString());
-                                        console.log(triple.object.toString());
-                                        console.log("----");
-                                    });
-                                    test.ok(results.toArray().length === 1);
+                                      test.ok(success === true);
+                                      test.ok(results.toArray().length === 1);
                                     test.done();
                 });
             });
         });
     });
 };
+

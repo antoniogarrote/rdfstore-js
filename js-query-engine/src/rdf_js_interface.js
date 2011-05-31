@@ -133,7 +133,7 @@ RDFJSInterface.Graph.prototype.add = function(triple) {
         this.duplicates[id] = true;
         this.triples.push(triple);
     //} else {
-    //    console.log("DUPLIATED:"+id);
+    //    console.log("DUPLICATED:"+id);
     }
 
 };

@@ -615,10 +615,28 @@ QueryEngine.QueryEngine.prototype.executeQuery = function(syntaxTree, callback, 
                                 aqt.template = {triplesContext: aqt.pattern};
                             }
 
+                            var blankIdCounter = 1;
                             for(var i=0; i<result.length; i++) {
                                 var bindings = result[i];
+                                var blankMap = {};
                                 for(var j=0; j<aqt.template.triplesContext.length; j++) {
+                                    // fresh IDs for blank nodes in the construct template
+                                    var components = ['subject', 'predicate', 'object'];
                                     var tripleTemplate = aqt.template.triplesContext[j];                                    
+                                    for( var p=0; p<components.length; p++) {
+                                        var component = components[p];
+                                        if(tripleTemplate[component].token === 'blank') {
+                                            if(blankMap[tripleTemplate[component].value] != null) {
+                                                tripleTemplate[component].value = blankMap[tripleTemplate[component].value];
+                                            } else {
+                                                var blankId = "_:b"+blankIdCounter;
+                                                blankIdCounter++;
+                                                blankMap[tripleTemplate[component].value] = blankId;
+                                                tripleTemplate[component].value = blankId;
+                                            }
+                                        }
+                                    }
+                                    //console.log(tripleTemplate);
                                     var s = RDFJSInterface.buildRDFResource(tripleTemplate.subject,bindings,that,queryEnv);
                                     var p = RDFJSInterface.buildRDFResource(tripleTemplate.predicate,bindings,that,queryEnv);
                                     var o = RDFJSInterface.buildRDFResource(tripleTemplate.object,bindings,that,queryEnv);
