@@ -6350,3 +6350,475 @@ exports.testConstructConstruct5 = function(test) {
     });
 };
 
+exports.testDistinctDistinctStar1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x1 :p "abc" .\
+                           :x1 :q "abc" .\
+                           :x2 :p "abc" .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX :         <http://example/> \
+                                PREFIX xsd:      <http://www.w3.org/2001/XMLSchema#> \
+                                SELECT DISTINCT * \
+                                WHERE { \
+                                  { ?s :p ?o } UNION { ?s :q ?o }\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    results.sort(function(a,b) {
+                                        if(a.s.value === "http://example/x1") {
+                                            return -1;
+                                        } else {
+                                            return 1;
+                                        }
+                                    });
+
+                                    test.ok(results[0].s.value === "http://example/x1");
+                                    test.ok(results[0].o.value === "abc");
+                                    test.ok(results[1].s.value === "http://example/x2");
+                                    test.ok(results[1].o.value === "abc");
+                                    test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testDistinctNoDistinct1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x1 :p1 "1"^^xsd:integer .\
+                           :x1 :p2 "1"^^xsd:integer .\
+                           :x2 :p1 "1"^^xsd:integer .\
+                           :x2 :p2 "1"^^xsd:integer .\
+                           :x3 :p1 "01"^^xsd:integer .\
+                           :x3 :p2 "01"^^xsd:integer .\
+                           :x4 :p1 "+1"^^xsd:integer .\
+                           :x4 :p2 "+1"^^xsd:integer .\
+                           :y1 :p1 "1.0"^^xsd:decimal .\
+                           :y1 :p2 "1.0"^^xsd:decimal .\
+                           :y2 :p1 "+1.0"^^xsd:decimal .\
+                           :y2 :p2 "+1.0"^^xsd:decimal .\
+                           :y3 :p1 "01.0"^^xsd:decimal .\
+                           :y3 :p2 "01.0"^^xsd:decimal .\
+                           :z1 :p1 "1.0e0"^^xsd:double .\
+                           :z1 :p2 "1.0e0"^^xsd:double .\
+                           :z2 :p1 "1.0e0"^^xsd:double .\
+                           :z2 :p2 "1.0e0"^^xsd:double .\
+                           :z3 :p1 "1.3e0"^^xsd:double .\
+                           :z3 :p2 "1.3e0"^^xsd:double .\
+                           :z4 :p1 "1.3e0"^^xsd:double .\
+                           :z5 :p1 "1.3e0"^^xsd:float .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('SELECT ?v \
+                                WHERE { \
+                                  ?x ?p ?v\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 22);
+                                    test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testDistinctDistinct1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x1 :p1 "1"^^xsd:integer .\
+                           :x1 :p2 "1"^^xsd:integer .\
+                           :x2 :p1 "1"^^xsd:integer .\
+                           :x2 :p2 "1"^^xsd:integer .\
+                           :x3 :p1 "01"^^xsd:integer .\
+                           :x3 :p2 "01"^^xsd:integer .\
+                           :x4 :p1 "+1"^^xsd:integer .\
+                           :x4 :p2 "+1"^^xsd:integer .\
+                           :y1 :p1 "1.0"^^xsd:decimal .\
+                           :y1 :p2 "1.0"^^xsd:decimal .\
+                           :y2 :p1 "+1.0"^^xsd:decimal .\
+                           :y2 :p2 "+1.0"^^xsd:decimal .\
+                           :y3 :p1 "01.0"^^xsd:decimal .\
+                           :y3 :p2 "01.0"^^xsd:decimal .\
+                           :z1 :p1 "1.0e0"^^xsd:double .\
+                           :z1 :p2 "1.0e0"^^xsd:double .\
+                           :z2 :p1 "1.0e0"^^xsd:double .\
+                           :z2 :p2 "1.0e0"^^xsd:double .\
+                           :z3 :p1 "1.3e0"^^xsd:double .\
+                           :z3 :p2 "1.3e0"^^xsd:double .\
+                           :z4 :p1 "1.3e0"^^xsd:double .\
+                           :z5 :p1 "1.3e0"^^xsd:float .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX :      <http://example/> \
+                                PREFIX xsd:   <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT DISTINCT ?v \
+                                WHERE { \
+                                  ?x ?p ?v\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 9);
+                                    test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testDistinctNoDistinct2 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x1 :p "abc" .\
+                           :x1 :q "abc" .\
+                           :x2 :p "abc"@en .\
+                           :x2 :q "abc"@en .\
+                           :x3 :p "ABC" .\
+                           :x3 :q "ABC" .\
+                           :x4 :p "ABC"@en .\
+                           :x4 :q "ABC"@en .\
+                           :x5 :p "abc"^^xsd:string .\
+                           :x5 :q "abc"^^xsd:string .\
+                           :x6 :p "ABC"^^xsd:string .\
+                           :x6 :q "ABC"^^xsd:string .\
+                           :x7 :p "" .\
+                           :x7 :q "" .\
+                           :x8 :p ""@en .\
+                           :x8 :q ""@en .\
+                           :x9 :p ""^^xsd:string .\
+                           :x9 :q ""^^xsd:string .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('SELECT ?v \
+                                WHERE { \
+                                  ?x ?p ?v .\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 18);
+                                    test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testDistinctDistinct2 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x1 :p "abc" .\
+                           :x1 :q "abc" .\
+                           :x2 :p "abc"@en .\
+                           :x2 :q "abc"@en .\
+                           :x3 :p "ABC" .\
+                           :x3 :q "ABC" .\
+                           :x4 :p "ABC"@en .\
+                           :x4 :q "ABC"@en .\
+                           :x5 :p "abc"^^xsd:string .\
+                           :x5 :q "abc"^^xsd:string .\
+                           :x6 :p "ABC"^^xsd:string .\
+                           :x6 :q "ABC"^^xsd:string .\
+                           :x7 :p "" .\
+                           :x7 :q "" .\
+                           :x8 :p ""@en .\
+                           :x8 :q ""@en .\
+                           :x9 :p ""^^xsd:string .\
+                           :x9 :q ""^^xsd:string .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX :      <http://example/> \
+                                PREFIX xsd:   <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT DISTINCT ?v \
+                                { \
+                                  ?x ?p ?v .\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 9);
+                                    test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testDistinctNoDistinct3 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x1 :p1 :z1 .\
+                           :x1 :p1 _:a .\
+                           :x1 :p2 :z1 .\
+                           :x1 :p2 _:a .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('SELECT ?v \
+                                { \
+                                  ?x ?p ?v .\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 4);
+                                    test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testDistinctDistinct3 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x1 :p1 :z1 .\
+                           :x1 :p1 _:a .\
+                           :x1 :p2 :z1 .\
+                           :x1 :p2 _:a .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX :      <http://example/> \
+                                PREFIX xsd:   <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT DISTINCT ?v \
+                                { \
+                                  ?x ?p ?v .\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 2);
+                                    test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testDistinctNoDistinct4 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x1 :p1 :z1 .\
+                           :x1 :p1 :z2 .\
+                           :x1 :p1 _:a .\
+                           :x1 :p2 :z1 .\
+                           :x1 :p2 :z2 .\
+                           :x1 :p2 _:a .\
+                           :z1 :q  :r .\
+                           _:a :q  :s .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX :      <http://example/> \
+                                PREFIX xsd:   <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT ?v \
+                                { \
+                                    :x1 ?p ?o\
+                                    OPTIONAL { ?o :q ?v }\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 6);
+                                    test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testDistinctDistinct4 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x1 :p1 :z1 .\
+                           :x1 :p1 :z2 .\
+                           :x1 :p1 _:a .\
+                           :x1 :p2 :z1 .\
+                           :x1 :p2 :z2 .\
+                           :x1 :p2 _:a .\
+                           :z1 :q  :r .\
+                           _:a :q  :s .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX :      <http://example/> \
+                                PREFIX xsd:   <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT DISTINCT ?v \
+                                { \
+                                    :x1 ?p ?o\
+                                    OPTIONAL { ?o :q ?v }\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 3);
+                                    test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testDistinctNoDistinct9 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x1 :p1 "1"^^xsd:integer .\
+                           :x1 :p2 "1"^^xsd:integer .\
+                           :x2 :p1 "1"^^xsd:integer .\
+                           :x2 :p2 "1"^^xsd:integer .\
+                           :x3 :p1 "01"^^xsd:integer .\
+                           :x3 :p2 "01"^^xsd:integer .\
+                           :x4 :p1 "+1"^^xsd:integer .\
+                           :x4 :p2 "+1"^^xsd:integer .\
+                           :y1 :p1 "1.0"^^xsd:decimal .\
+                           :y1 :p2 "1.0"^^xsd:decimal .\
+                           :y2 :p1 "+1.0"^^xsd:decimal .\
+                           :y2 :p2 "+1.0"^^xsd:decimal .\
+                           :y3 :p1 "01.0"^^xsd:decimal .\
+                           :y3 :p2 "01.0"^^xsd:decimal .\
+                           :z1 :p1 "1.0e0"^^xsd:double .\
+                           :z1 :p2 "1.0e0"^^xsd:double .\
+                           :z2 :p1 "1.0e0"^^xsd:double .\
+                           :z2 :p2 "1.0e0"^^xsd:double .\
+                           :z3 :p1 "1.3e0"^^xsd:double .\
+                           :z3 :p2 "1.3e0"^^xsd:double .\
+                           :z4 :p1 "1.3e0"^^xsd:double .\
+                           :z5 :p1 "1.3e0"^^xsd:float .\
+                           :x1 :p "abc" .\
+                           :x1 :q "abc" .\
+                           :x2 :p "abc"@en .\
+                           :x2 :q "abc"@en .\
+                           :x3 :p "ABC" .\
+                           :x3 :q "ABC" .\
+                           :x4 :p "ABC"@en .\
+                           :x4 :q "ABC"@en .\
+                           :x5 :p "abc"^^xsd:string .\
+                           :x5 :q "abc"^^xsd:string .\
+                           :x6 :p "ABC"^^xsd:string .\
+                           :x6 :q "ABC"^^xsd:string .\
+                           :x7 :p "" .\
+                           :x7 :q "" .\
+                           :x8 :p ""@en .\
+                           :x8 :q ""@en .\
+                           :x9 :p ""^^xsd:string .\
+                           :x9 :q ""^^xsd:string .\
+                           :x1 :p1 :z1 .\
+                           :x1 :p1 _:a .\
+                           :x1 :p2 :z1 .\
+                           :x1 :p2 _:a .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('SELECT ?v \
+                                { \
+                                  ?x ?p ?v .\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 44);
+                                    test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testDistinctDistinct9 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :x1 :p1 "1"^^xsd:integer .\
+                           :x1 :p2 "1"^^xsd:integer .\
+                           :x2 :p1 "1"^^xsd:integer .\
+                           :x2 :p2 "1"^^xsd:integer .\
+                           :x3 :p1 "01"^^xsd:integer .\
+                           :x3 :p2 "01"^^xsd:integer .\
+                           :x4 :p1 "+1"^^xsd:integer .\
+                           :x4 :p2 "+1"^^xsd:integer .\
+                           :y1 :p1 "1.0"^^xsd:decimal .\
+                           :y1 :p2 "1.0"^^xsd:decimal .\
+                           :y2 :p1 "+1.0"^^xsd:decimal .\
+                           :y2 :p2 "+1.0"^^xsd:decimal .\
+                           :y3 :p1 "01.0"^^xsd:decimal .\
+                           :y3 :p2 "01.0"^^xsd:decimal .\
+                           :z1 :p1 "1.0e0"^^xsd:double .\
+                           :z1 :p2 "1.0e0"^^xsd:double .\
+                           :z2 :p1 "1.0e0"^^xsd:double .\
+                           :z2 :p2 "1.0e0"^^xsd:double .\
+                           :z3 :p1 "1.3e0"^^xsd:double .\
+                           :z3 :p2 "1.3e0"^^xsd:double .\
+                           :z4 :p1 "1.3e0"^^xsd:double .\
+                           :z5 :p1 "1.3e0"^^xsd:float .\
+                           :x1 :p "abc" .\
+                           :x1 :q "abc" .\
+                           :x2 :p "abc"@en .\
+                           :x2 :q "abc"@en .\
+                           :x3 :p "ABC" .\
+                           :x3 :q "ABC" .\
+                           :x4 :p "ABC"@en .\
+                           :x4 :q "ABC"@en .\
+                           :x5 :p "abc"^^xsd:string .\
+                           :x5 :q "abc"^^xsd:string .\
+                           :x6 :p "ABC"^^xsd:string .\
+                           :x6 :q "ABC"^^xsd:string .\
+                           :x7 :p "" .\
+                           :x7 :q "" .\
+                           :x8 :p ""@en .\
+                           :x8 :q ""@en .\
+                           :x9 :p ""^^xsd:string .\
+                           :x9 :q ""^^xsd:string .\
+                           :x1 :p1 :z1 .\
+                           :x1 :p1 _:a .\
+                           :x1 :p2 :z1 .\
+                           :x1 :p2 _:a .\
+                         }';
+            engine.execute(query, function(success, result){
+                engine.execute('SELECT DISTINCT ?v \
+                                { \
+                                  ?x ?p ?v .\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 20);
+                                    test.done();
+                });
+            });
+        });
+    });
+};

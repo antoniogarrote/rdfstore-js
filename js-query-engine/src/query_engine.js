@@ -48,7 +48,9 @@ QueryEngine.QueryEngine.prototype.applyModifier = function(modifier, projectedBi
             for(var p in bindings) {
                 // hashing the object
                 var obj = bindings[p];
-                if(obj.token == 'literal') {
+                if(obj == null) {
+                    key = key+p+'null';
+                } else if(obj.token == 'literal') {
                     if(obj.value != null) {
                         key = key + obj.value;
                     }
