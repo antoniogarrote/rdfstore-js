@@ -7217,36 +7217,145 @@ exports.testExprEqualsEqGraph4 = function(test) {
     });
 };
 
-exports.testExprEqualsEqGraph5 = function(test) {
+exports.testI18nKanji1 = function(test) {
     new Lexicon.Lexicon(function(lexicon){
         new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
             var engine = new QueryEngine.QueryEngine({backend: backend,
                                                       lexicon: lexicon});      
-            var query = 'PREFIX : <http://example/>\
-                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+            var query = 'PREFIX owl: <http://www.w3.org/2002/07/owl#>\
+                         PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
+                         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\
+                         PREFIX 食: <http://www.w3.org/2001/sw/DataAccess/tests/data/i18n/kanji.ttl#>\
                          INSERT DATA {\
-                           :xi1 :p  "1"^^xsd:integer .\
-                           :xi2 :p  "1"^^xsd:integer .\
-                           :xi3 :p  "01"^^xsd:integer .\
-                           :xd1 :p  "1.0e0"^^xsd:double .\
-                           :xd2 :p  "1.0"^^xsd:double .\
-                           :xd3 :p  "1"^^xsd:double .\
-                           :xt1 :p  "zzz"^^:myType .\
-                           :xp1 :p  "zzz" .\
-                           :xp2 :p  "1" .\
-                           :xu :p  :z .\
+                           _:alice foaf:name "Alice" ;\
+                                   食:食べる   食:納豆 .\
+                           _:bob   foaf:name "Bob" ;\
+                                   食:食べる   食:海老 .\
                          }';
+
             engine.execute(query, function(success, result){
-                engine.execute('PREFIX  xsd: <http://www.w3.org/2001/XMLSchema#>\
-                                PREFIX  : <http://example/>\
-                                SELECT  ?x\
-                                WHERE\
-                                    { ?x :p ?v . \
-                                      FILTER ( ?v = :z  ) .\
-                                    }', function(success, results){
+                engine.execute('PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
+                                PREFIX 食: <http://www.w3.org/2001/sw/DataAccess/tests/data/i18n/kanji.ttl#>\
+                                SELECT ?name ?food WHERE {\
+                                  [ foaf:name ?name ;\
+                                    食:食べる ?food ] . }', function(success, results){
+                                        test.ok(success === true);
+                                        test.ok(results.length === 2);
+                                        test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testI18nKanji2 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX owl: <http://www.w3.org/2002/07/owl#>\
+                         PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
+                         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\
+                         PREFIX 食: <http://www.w3.org/2001/sw/DataAccess/tests/data/i18n/kanji.ttl#>\
+                         INSERT DATA {\
+                           _:alice foaf:name "Alice" ;\
+                                   食:食べる   食:納豆 .\
+                           _:bob   foaf:name "Bob" ;\
+                                   食:食べる   食:海老 .\
+                         }';
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
+                                PREFIX 食: <http://www.w3.org/2001/sw/DataAccess/tests/data/i18n/kanji.ttl#>\
+                                SELECT ?name WHERE {\
+                                  [ foaf:name ?name ;\
+                                    食:食べる 食:海老 ] . }', function(success, results){
                                         test.ok(success === true);
                                         test.ok(results.length === 1);
                                         test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testI18nNormalization1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX owl: <http://www.w3.org/2002/07/owl#>\
+                         PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
+                         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\
+                         PREFIX HR: <http://www.w3.org/2001/sw/DataAccess/tests/data/i18n/normalization.ttl#>\
+                         INSERT DATA {\
+                           [] foaf:name "Alice" ;\
+                             HR:resumé "Alice\'s normalized resumé"  .\
+                           [] foaf:name "Bob" ;\
+                             HR:resumé "Bob\'s non-normalized resumé" .\
+                           [] foaf:name "Eve" ;\
+                             HR:resumé "Eve\'s normalized resumé" ;\
+                             HR:resumé "Eve\'s non-normalized resumé" .\
+                         }';
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
+                                PREFIX HR: <http://www.w3.org/2001/sw/DataAccess/tests/data/i18n/normalization.ttl#>\
+                                SELECT ?name WHERE {\
+                                  [ foaf:name ?name; \
+                                    HR:resumé ?resume ] . }', function(success, results){
+                                        test.ok(success === true);
+                                        test.ok(results.length === 2);
+                                        test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testI18nNormalization2 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/vocab#>\
+                         INSERT DATA {\
+                           :s1 :p <example://a/b/c/%7Bfoo%7D#xyz>.\
+                           :s2 :p <eXAMPLE://a/./b/../b/%63/%7bfoo%7d#xyz>.\
+                         }';
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example/vocab#>\
+                                PREFIX p1: <eXAMPLE://a/./b/../b/%63/%7bfoo%7d#>\
+                                SELECT ?S WHERE { ?S :p p1:xyz }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 1);
+                                    test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testI18nNormalization3 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/vocab#>\
+                         INSERT DATA {\
+                           :s3 :p <http://example.com:80/#abc>.\
+                           :s4 :p <http://example.com/#abc>.\
+                           :s5 :p <http://example.com/#abc>.\
+                         }';
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example/vocab#>\
+                                PREFIX p2: <http://example.com:80/#>\
+                                SELECT ?S WHERE { ?S :p p2:abc }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 1);
+                                    test.done();
                 });
             });
         });
