@@ -7818,3 +7818,92 @@ exports.testOptionalUnion001 = function(test) {
         });
     });
 };
+
+exports.testReducedReduced1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         PREFIX : <http://example/>\
+                         INSERT DATA {\
+                           :x1 :p "abc" .\
+                           :x1 :q "abc" .\
+                           :x2 :p "abc" .\
+                         }';
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX :         <http://example/> \
+                                PREFIX xsd:      <http://www.w3.org/2001/XMLSchema#> \
+                                SELECT REDUCED * \
+                                WHERE { \
+                                  { ?s :p ?o } UNION { ?s :q ?o }\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    results.sort(function(a,b){
+                                        if(a.s.value === b.s.value) {
+                                            return 0;
+                                        } else if(a.s.value < b.s.value) {
+                                            return -1;
+                                        } else {
+                                            return 1;
+                                        }
+                                    });
+
+                                    test.ok(results[0].s.value === "http://example/x1");
+                                    test.ok(results[1].s.value === "http://example/x1");
+                                    test.ok(results[2].s.value === "http://example/x2");
+
+                                    test.ok(results[0].o.value === "abc");
+                                    test.ok(results[1].o.value === "abc");
+                                    test.ok(results[2].o.value === "abc");
+                                    test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testReducedReduced2 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         PREFIX : <http://example/>\
+                         INSERT DATA {\
+                           :x1 :p "abc" .\
+                           :x1 :q "abc" .\
+                           :x2 :p "abc"@en .\
+                           :x2 :q "abc"@en .\
+                           :x3 :p "ABC" .\
+                           :x3 :q "ABC" .\
+                           :x4 :p "ABC"@en .\
+                           :x4 :q "ABC"@en .\
+                           :x5 :p "abc"^^xsd:string .\
+                           :x5 :q "abc"^^xsd:string .\
+                           :x6 :p "ABC"^^xsd:string .\
+                           :x6 :q "ABC"^^xsd:string .\
+                           :x7 :p "" .\
+                           :x7 :q "" .\
+                           :x8 :p ""@en .\
+                           :x8 :q ""@en .\
+                           :x9 :p ""^^xsd:string .\
+                           :x9 :q ""^^xsd:string .\
+                         }';
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX :         <http://example/> \
+                                PREFIX xsd:      <http://www.w3.org/2001/XMLSchema#> \
+                                SELECT REDUCED ?v \
+                                WHERE { \
+                                  ?x ?p ?v .\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 18);
+                                    test.done();
+                });
+            });
+        });
+    });
+};
