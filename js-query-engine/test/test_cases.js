@@ -7361,3 +7361,460 @@ exports.testI18nNormalization3 = function(test) {
         });
     });
 };
+
+exports.testOptionalOptionalComplex1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
+                         INSERT DATA {\
+                          <tag:alice@example:foafUri> \
+                              foaf:mbox   <mailto:alice@example.net>;\
+                              foaf:name   "Alice";\
+                              foaf:nick   "WhoMe?";\
+                              foaf:depiction   <http://example.com/alice.png> .\
+                          <tag:bert@example:foafUri> \
+                              foaf:mbox   <mailto:bert@example.net> ;\
+                              foaf:nick   "BigB" ;\
+                              foaf:name   "Bert" .\
+                          <tag:eve@example:foafUri>\
+                              foaf:mbox   <mailto:eve@example.net> ;\
+                              foaf:firstName   "Eve" .\
+                          <tag:john@example:foafUri>\
+                              foaf:mbox   <mailto:john@example.net> ;\
+                              foaf:nick   "jDoe";\
+                              foaf:isPrimaryTopicOf <http://example.com/people/johnDoe> .\
+                         }';
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX  foaf:   <http://xmlns.com/foaf/0.1/>\
+                                SELECT ?person ?nick ?page ?img ?name ?firstN\
+                                { \
+                                    ?person foaf:nick ?nick\
+                                    OPTIONAL { ?person foaf:isPrimaryTopicOf ?page } \
+                                    OPTIONAL { \
+                                        ?person foaf:name ?name \
+                                        { ?person foaf:depiction ?img } UNION \
+                                        { ?person foaf:firstName ?firstN } \
+                                    } FILTER ( BOUND(?page) || BOUND(?img) || BOUND(?firstN) ) \
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 2);
+                                    results.sort(function(a,b){
+                                        if(a.person.value < b.person.value) {
+                                            return -1;
+                                        } else if(a.person.value > b.person.value) {
+                                            return 1;
+                                        } else {
+                                            return 0;
+                                        }
+                                    });
+                                    test.ok(results[0].person.value === "tag:alice@example:foafUri");
+                                    test.ok(results[0].nick.value === "WhoMe?");
+                                    test.ok(results[0].img.value === "http://example.com/alice.png");
+                                    test.ok(results[0].name.value === "Alice");
+                                    test.ok(results[0].page === null);
+                                    test.ok(results[0].firstN === null);
+                                    test.ok(results[1].person.value === "tag:john@example:foafUri");
+                                    test.ok(results[1].nick.value === "jDoe");
+                                    test.ok(results[1].img === null);
+                                    test.ok(results[1].name === null);
+                                    test.ok(results[1].page.value === "http://example.com/people/johnDoe");
+                                    test.ok(results[1].firstN === null);
+                                    test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testOptionalOptionalComplex2 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         PREFIX foaf:       <http://xmlns.com/foaf/0.1/> \
+                         PREFIX ex:        <http://example.org/things#> \
+                         PREFIX xsd:        <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA {\
+                           GRAPH <complex-data-2.ttl> {\
+                             _:a rdf:type foaf:Person ;\
+                                 foaf:name "Eve" ;\
+                                 ex:empId "9"^^xsd:integer .\
+                             _:b rdf:type foaf:Person ;\
+                                 foaf:name "Alice" ;\
+                                 ex:empId "29"^^xsd:integer ;\
+                                 ex:healthplan ex:HealthPlanD .\
+                             _:c rdf:type foaf:Person ;\
+                                 foaf:name "Fred" ;\
+                                 ex:empId "27"^^xsd:integer .\
+                             _:e foaf:name "Bob" ;\
+                                 ex:empId "23"^^xsd:integer ;\
+                                 ex:healthplan ex:HealthPlanC .\
+                             _:f foaf:name "Bob" ;\
+                                 ex:empId "30"^^xsd:integer;\
+                                 ex:healthplan ex:HealthPlanB .\
+                             _:g rdf:type foaf:Person; \
+                                 ex:ssn "000000000";\
+                                 foaf:name   "Bert";\
+                                 ex:department "DeptA" ;\
+                                 ex:healthplan ex:HealthPlanA .\
+                           }\
+                         }';
+
+            engine.execute(query, function(success, result){
+
+            var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
+                         INSERT DATA {\
+                           GRAPH <complex-data-1.ttl> {\
+                            <tag:alice@example:foafUri> \
+                                foaf:mbox   <mailto:alice@example.net>;\
+                                foaf:name   "Alice";\
+                                foaf:nick   "WhoMe?";\
+                                foaf:depiction   <http://example.com/alice.png> .\
+                            <tag:bert@example:foafUri> \
+                                foaf:mbox   <mailto:bert@example.net> ;\
+                                foaf:nick   "BigB" ;\
+                                foaf:name   "Bert" .\
+                            <tag:eve@example:foafUri>\
+                                foaf:mbox   <mailto:eve@example.net> ;\
+                                foaf:firstName   "Eve" .\
+                            <tag:john@example:foafUri>\
+                                foaf:mbox   <mailto:john@example.net> ;\
+                                foaf:nick   "jDoe";\
+                                foaf:isPrimaryTopicOf <http://example.com/people/johnDoe> .\
+                           }\
+                         }';
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX  foaf:   <http://xmlns.com/foaf/0.1/>\
+                                PREFIX    ex:   <http://example.org/things#>\
+                                SELECT ?id ?ssn\
+                                WHERE \
+                                { \
+                                    ?person \
+                                        a foaf:Person;\
+                                        foaf:name ?name . \
+                                    GRAPH ?x { \
+                                        [] foaf:name ?name;\
+                                           foaf:nick ?nick\
+                                    } \
+                                    OPTIONAL { \
+                                        { ?person ex:empId ?id } UNION { ?person ex:ssn ?ssn } \
+                                    } \
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 2);
+                                    results.sort(function(a,b){
+                                        if(a.id == null) {
+                                            return -1;
+                                        } else {
+                                            return 1;
+                                        }
+                                    });
+                                    test.ok(results[0].id == null);
+                                    test.ok(results[0].ssn.value === "000000000");
+                                    test.ok(results[1].id.value === "29");
+                                    test.ok(results[1].ssn == null);
+                                    test.done();
+                },[{"token": "uri", "prefix": null, "suffix": null, "value": "complex-data-2.ttl"}], 
+                  [{"token": "uri", "prefix": null, "suffix": null, "value": "complex-data-1.ttl"}]);
+            });
+            });
+        });
+    });
+};
+
+exports.testOptionalOptionalComplex3 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         PREFIX foaf:       <http://xmlns.com/foaf/0.1/> \
+                         PREFIX ex:        <http://example.org/things#> \
+                         PREFIX xsd:        <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA {\
+                           GRAPH <complex-data-2.ttl> {\
+                             _:a rdf:type foaf:Person ;\
+                                 foaf:name "Eve" ;\
+                                 ex:empId "9"^^xsd:integer .\
+                             _:b rdf:type foaf:Person ;\
+                                 foaf:name "Alice" ;\
+                                 ex:empId "29"^^xsd:integer ;\
+                                 ex:healthplan ex:HealthPlanD .\
+                             _:c rdf:type foaf:Person ;\
+                                 foaf:name "Fred" ;\
+                                 ex:empId "27"^^xsd:integer .\
+                             _:e foaf:name "Bob" ;\
+                                 ex:empId "23"^^xsd:integer ;\
+                                 ex:healthplan ex:HealthPlanC .\
+                             _:f foaf:name "Bob" ;\
+                                 ex:empId "30"^^xsd:integer;\
+                                 ex:healthplan ex:HealthPlanB .\
+                             _:g rdf:type foaf:Person; \
+                                 ex:ssn "000000000";\
+                                 foaf:name   "Bert";\
+                                 ex:department "DeptA" ;\
+                                 ex:healthplan ex:HealthPlanA .\
+                           }\
+                         }';
+
+            engine.execute(query, function(success, result){
+
+            var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
+                         INSERT DATA {\
+                           GRAPH <complex-data-1.ttl> {\
+                            <tag:alice@example:foafUri> \
+                                foaf:mbox   <mailto:alice@example.net>;\
+                                foaf:name   "Alice";\
+                                foaf:nick   "WhoMe?";\
+                                foaf:depiction   <http://example.com/alice.png> .\
+                            <tag:bert@example:foafUri> \
+                                foaf:mbox   <mailto:bert@example.net> ;\
+                                foaf:nick   "BigB" ;\
+                                foaf:name   "Bert" .\
+                            <tag:eve@example:foafUri>\
+                                foaf:mbox   <mailto:eve@example.net> ;\
+                                foaf:firstName   "Eve" .\
+                            <tag:john@example:foafUri>\
+                                foaf:mbox   <mailto:john@example.net> ;\
+                                foaf:nick   "jDoe";\
+                                foaf:isPrimaryTopicOf <http://example.com/people/johnDoe> .\
+                           }\
+                         }';
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX  foaf:   <http://xmlns.com/foaf/0.1/>\
+                                PREFIX    ex:   <http://example.org/things#>\
+                                SELECT ?name ?nick ?plan ?dept\
+                                WHERE \
+                                { \
+                                    ?person \
+                                        a foaf:Person;\
+                                        foaf:name ?name . \
+                                    GRAPH ?x { \
+                                        [] foaf:name ?name;\
+                                           foaf:nick ?nick\
+                                    } \
+                                    OPTIONAL { \
+                                        ?person ex:healthplan ?plan \
+                                        OPTIONAL { ?person ex:department ?dept } \
+                                    } \
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 2);
+                                    results.sort(function(a,b){
+                                        if(a.name.value === b.name.value) {
+                                            return 0;
+                                        } else {
+                                            if(a.name.value < b.name.value) {
+                                                return -1;
+                                            } else {
+                                                return 1;
+                                            }
+                                        }
+                                    });
+
+                                    test.ok(results[0].name.value === "Alice");
+                                    test.ok(results[0].nick.value === "WhoMe?");
+                                    test.ok(results[0].plan.value === "http://example.org/things#HealthPlanD");
+                                    test.ok(results[0].dept == null);
+                                    test.ok(results[1].name.value === "Bert");
+                                    test.ok(results[1].nick.value === "BigB");
+                                    test.ok(results[1].plan.value === "http://example.org/things#HealthPlanA");
+                                    test.ok(results[1].dept.value == "DeptA");
+                                    test.done();
+                },[{"token": "uri", "prefix": null, "suffix": null, "value": "complex-data-2.ttl"}], 
+                  [{"token": "uri", "prefix": null, "suffix": null, "value": "complex-data-1.ttl"}]);
+            });
+            });
+        });
+    });
+};
+
+exports.testOptionalOptionalComplex4 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         PREFIX foaf:       <http://xmlns.com/foaf/0.1/> \
+                         PREFIX ex:        <http://example.org/things#> \
+                         PREFIX xsd:        <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA {\
+                           GRAPH <complex-data-2.ttl> {\
+                             _:a rdf:type foaf:Person ;\
+                                 foaf:name "Eve" ;\
+                                 ex:empId "9"^^xsd:integer .\
+                             _:b rdf:type foaf:Person ;\
+                                 foaf:name "Alice" ;\
+                                 ex:empId "29"^^xsd:integer ;\
+                                 ex:healthplan ex:HealthPlanD .\
+                             _:c rdf:type foaf:Person ;\
+                                 foaf:name "Fred" ;\
+                                 ex:empId "27"^^xsd:integer .\
+                             _:e foaf:name "Bob" ;\
+                                 ex:empId "23"^^xsd:integer ;\
+                                 ex:healthplan ex:HealthPlanC .\
+                             _:f foaf:name "Bob" ;\
+                                 ex:empId "30"^^xsd:integer;\
+                                 ex:healthplan ex:HealthPlanB .\
+                             _:g rdf:type foaf:Person; \
+                                 ex:ssn "000000000";\
+                                 foaf:name   "Bert";\
+                                 ex:department "DeptA" ;\
+                                 ex:healthplan ex:HealthPlanA .\
+                           }\
+                         }';
+
+            engine.execute(query, function(success, result){
+
+            var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
+                         INSERT DATA {\
+                           GRAPH <complex-data-1.ttl> {\
+                            <tag:alice@example:foafUri> \
+                                foaf:mbox   <mailto:alice@example.net>;\
+                                foaf:name   "Alice";\
+                                foaf:nick   "WhoMe?";\
+                                foaf:depiction   <http://example.com/alice.png> .\
+                            <tag:bert@example:foafUri> \
+                                foaf:mbox   <mailto:bert@example.net> ;\
+                                foaf:nick   "BigB" ;\
+                                foaf:name   "Bert" .\
+                            <tag:eve@example:foafUri>\
+                                foaf:mbox   <mailto:eve@example.net> ;\
+                                foaf:firstName   "Eve" .\
+                            <tag:john@example:foafUri>\
+                                foaf:mbox   <mailto:john@example.net> ;\
+                                foaf:nick   "jDoe";\
+                                foaf:isPrimaryTopicOf <http://example.com/people/johnDoe> .\
+                           }\
+                         }';
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX  foaf:   <http://xmlns.com/foaf/0.1/>\
+                                PREFIX    ex:   <http://example.org/things#>\
+                                SELECT ?name ?plan ?dept ?img \
+                                WHERE \
+                                { \
+                                    ?person foaf:name ?name  \
+                                    { ?person ex:healthplan ?plan } UNION { ?person ex:department ?dept } \
+                                    OPTIONAL { \
+                                        ?person a foaf:Person\
+                                        GRAPH ?g { \
+                                            [] foaf:name ?name;\
+                                               foaf:depiction ?img \
+                                        } \
+                                    } \
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 5);
+                                    test.done();
+                },[{"token": "uri", "prefix": null, "suffix": null, "value": "complex-data-2.ttl"}], 
+                  [{"token": "uri", "prefix": null, "suffix": null, "value": "complex-data-1.ttl"}]);
+            });
+            });
+        });
+    });
+};
+
+exports.testOptionaOptional001 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
+                         INSERT DATA {\
+                           _:a foaf:mbox   <mailto:alice@example.net> .\
+                           _:a foaf:name   "Alice" .\
+                           _:a foaf:nick   "WhoMe?" .\
+                           _:b foaf:mbox   <mailto:bert@example.net> .\
+                           _:b foaf:name   "Bert" .\
+                           _:e foaf:mbox   <mailto:eve@example.net> .\
+                           _:e foaf:nick   "DuckSoup" .\
+                         }';
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX  foaf:   <http://xmlns.com/foaf/0.1/>\
+                                SELECT ?mbox ?name\
+                                   {\
+                                     { ?x foaf:mbox ?mbox }\
+                                     OPTIONAL { ?x foaf:name  ?name } .\
+                                   }', function(success, results){
+                                       test.ok(success === true);
+                                       test.ok(results.length === 3);
+                                       test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testOptionaOptional002 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
+                         INSERT DATA {\
+                           _:a foaf:mbox   <mailto:alice@example.net> .\
+                           _:a foaf:name   "Alice" .\
+                           _:a foaf:nick   "WhoMe?" .\
+                           _:b foaf:mbox   <mailto:bert@example.net> .\
+                           _:b foaf:name   "Bert" .\
+                           _:e foaf:mbox   <mailto:eve@example.net> .\
+                           _:e foaf:nick   "DuckSoup" .\
+                         }';
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX  foaf:   <http://xmlns.com/foaf/0.1/>\
+                                SELECT ?mbox ?name\
+                                   {\
+                                       ?x foaf:mbox ?mbox .\
+                                       OPTIONAL { ?x foaf:name  ?name } .\
+                                       OPTIONAL { ?x foaf:nick  ?nick } .\
+                                   }', function(success, results){
+                                       test.ok(success === true);
+                                       test.ok(results.length === 3);
+                                       test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testOptionalUnion001 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
+                         INSERT DATA {\
+                           _:a foaf:mbox   <mailto:alice@example.net> .\
+                           _:a foaf:name   "Alice" .\
+                           _:a foaf:nick   "WhoMe?" .\
+                           _:b foaf:mbox   <mailto:bert@example.net> .\
+                           _:b foaf:name   "Bert" .\
+                           _:e foaf:mbox   <mailto:eve@example.net> .\
+                           _:e foaf:nick   "DuckSoup" .\
+                         }';
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX  foaf:   <http://xmlns.com/foaf/0.1/>\
+                                SELECT ?mbox ?name\
+                                   {\
+                                     { ?x foaf:mbox ?mbox }\
+                                   UNION \
+                                     { ?x foaf:mbox ?mbox . ?x foaf:name  ?name }\
+                                   }', function(success, results){
+                                       test.ok(success === true);
+                                       test.ok(results.length === 5)
+                                       test.done();
+                });
+            });
+        });
+    });
+};
