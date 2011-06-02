@@ -7907,3 +7907,487 @@ exports.testReducedReduced2 = function(test) {
         });
     });
 };
+
+exports.testSortSort1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
+                         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         INSERT DATA {\
+                           _:a foaf:name "Eve".\
+                           _:b foaf:name "Alice" .\
+                           _:c foaf:name "Fred" .\
+                           _:e foaf:name "Bob" .\
+                         }';
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX foaf:      <http://xmlns.com/foaf/0.1/> \
+                                SELECT ?name \
+                                WHERE { ?x foaf:name ?name }\
+                                ORDER BY ?name', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results[0].name.value === "Alice");
+                                    test.ok(results[1].name.value === "Bob");
+                                    test.ok(results[2].name.value === "Eve");
+                                    test.ok(results[3].name.value === "Fred");
+                                    test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testSortSort2 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
+                         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         INSERT DATA {\
+                           _:a foaf:name "Eve".\
+                           _:b foaf:name "Alice" .\
+                           _:c foaf:name "Fred" .\
+                           _:e foaf:name "Bob" .\
+                         }';
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX foaf:      <http://xmlns.com/foaf/0.1/> \
+                                SELECT ?name \
+                                WHERE { ?x foaf:name ?name }\
+                                ORDER BY DESC(?name)', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results[3].name.value === "Alice");
+                                    test.ok(results[2].name.value === "Bob");
+                                    test.ok(results[1].name.value === "Eve");
+                                    test.ok(results[0].name.value === "Fred");
+                                    test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testSortSort3 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
+                         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         INSERT DATA {\
+                           _:a rdf:type foaf:Person ;\
+                               foaf:name "Eve" ;\
+                               foaf:mbox <mailto:eve@work.example> .\
+                           _:b rdf:type foaf:Person ;\
+                               foaf:name "Alice" ;\
+                               foaf:mbox <mailto:alice@work.example> .\
+                           _:c rdf:type foaf:Person ;\
+                               foaf:mbox <mailto:fred@work.example> ;\
+                               foaf:name "Fred" .\
+                           _:e foaf:name "Bob" .\
+                         }';
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX foaf: <http://xmlns.com/foaf/0.1/> \
+                                SELECT ?name ?mbox\
+                                WHERE { ?x foaf:name ?name .\
+                                    OPTIONAL { ?x foaf:mbox ?mbox }\
+                                      }\
+                                ORDER BY ASC(?mbox)', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results[0].mbox === null);
+                                    test.ok(results[1].mbox.value === 'mailto:alice@work.example');
+                                    test.ok(results[2].mbox.value === 'mailto:eve@work.example');
+                                    test.ok(results[3].mbox.value === 'mailto:fred@work.example');
+                                    test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testSortSort4 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
+                         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         PREFIX ex: <http://example.org/things#>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           _:a rdf:type foaf:Person ;\
+                               foaf:name "Eve" ;\
+                               ex:empId "9"^^xsd:integer .\
+                           _:b rdf:type foaf:Person ;\
+                               foaf:name "Alice" ;\
+                               ex:empId "29"^^xsd:integer .\
+                           _:c rdf:type foaf:Person ;\
+                               foaf:name "Fred" ;\
+                               ex:empId "27"^^xsd:integer .\
+                           _:e foaf:name "Bob" ;\
+                               ex:empId "23"^^xsd:integer .\
+                           _:f foaf:name "Bob" ;\
+                               ex:empId "30"^^xsd:integer .\
+                         }';
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX foaf: <http://xmlns.com/foaf/0.1/> \
+                                PREFIX ex: <http://example.org/things#>\
+                                SELECT ?name ?emp\
+                                WHERE { ?x foaf:name ?name ;\
+                                            ex:empId ?emp\
+                                      }\
+                                ORDER BY ASC(?emp)', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results[0].emp.value == '9');
+                                    test.ok(results[1].emp.value == '23');
+                                    test.ok(results[2].emp.value == '27');
+                                    test.ok(results[3].emp.value == '29');
+                                    test.ok(results[4].emp.value == '30');
+                                    test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testSortSort5 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
+                         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         PREFIX ex: <http://example.org/things#>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           _:a rdf:type foaf:Person ;\
+                               foaf:name "Eve" ;\
+                               ex:empId "9"^^xsd:integer .\
+                           _:b rdf:type foaf:Person ;\
+                               foaf:name "Alice" ;\
+                               ex:empId "29"^^xsd:integer .\
+                           _:c rdf:type foaf:Person ;\
+                               foaf:name "Fred" ;\
+                               ex:empId "27"^^xsd:integer .\
+                           _:e foaf:name "Bob" ;\
+                               ex:empId "23"^^xsd:integer .\
+                           _:f foaf:name "Bob" ;\
+                               ex:empId "30"^^xsd:integer .\
+                         }';
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX foaf: <http://xmlns.com/foaf/0.1/> \
+                                PREFIX ex: <http://example.org/things#>\
+                                SELECT ?name ?emp\
+                                WHERE { ?x foaf:name ?name ;\
+                                            ex:empId ?emp\
+                                      }\
+                                ORDER BY ?name DESC(?emp)', function(success, results){
+                                    test.ok(success === true);
+
+                                    test.ok(results.length === 5);
+
+                                    test.ok(results[0].name.value === 'Alice');
+                                    test.ok(results[0].emp.value === '29');
+ 
+                                    test.ok(results[1].name.value === 'Bob');
+                                    test.ok(results[1].emp.value === '30');
+ 
+                                    test.ok(results[2].name.value === 'Bob');
+                                    test.ok(results[2].emp.value === '23');
+ 
+                                    test.ok(results[3].name.value === 'Eve');
+                                    test.ok(results[3].emp.value === '9');
+ 
+                                    test.ok(results[4].name.value === 'Fred');
+                                    test.ok(results[4].emp.value === '27');
+
+                                    test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testSortSort6 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
+                         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         PREFIX ex: <http://example.org/things#>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           _:a rdf:type foaf:Person ;\
+                               foaf:name "Eve" ;\
+                               ex:address <http://example.org/eve> .\
+                           _:b rdf:type foaf:Person ;\
+                               foaf:name "Alice" ;\
+                               ex:address "Fascination Street 11" .\
+                           _:c rdf:type foaf:Person ;\
+                               foaf:name "Fred" ;\
+                               ex:address "fred@work.example" .\
+                           _:e foaf:name "Bob" ;\
+                               ex:address <mailto:bob@work.example> .\
+                         }';
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX ex: <http://example.org/things#>\
+                                SELECT ?address\
+                                WHERE { ?x ex:address ?address }\
+                                ORDER BY ASC(?address)', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results[0].address.value === "http://example.org/eve");
+                                    test.ok(results[1].address.value === "mailto:bob@work.example");
+                                    test.ok(results[2].address.value === "Fascination Street 11");
+                                    test.ok(results[3].address.value === "fred@work.example");
+                                    test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testSortSort7 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
+                         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         PREFIX ex: <http://example.org/things#>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           _:a rdf:type foaf:Person ;\
+                               foaf:name "Eve" ;\
+                               ex:empId "9"^^xsd:integer .\
+                           _:b rdf:type foaf:Person ;\
+                               foaf:name "Alice" ;\
+                               ex:empId "29"^^xsd:integer .\
+                           _:c rdf:type foaf:Person ;\
+                               foaf:name "Fred" ;\
+                               ex:empId "27"^^xsd:integer .\
+                           _:e foaf:name "Bob" ;\
+                               ex:empId "23.0"^^xsd:float .\
+                         }';
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX ex: <http://example.org/things#>\
+                                PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
+                                SELECT ?name ?emp\
+                                WHERE { ?x foaf:name ?name ;\
+                                           ex:empId ?emp\
+                                      }\
+                                ORDER BY ASC(?emp)', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results[0].emp.value === "9");
+                                    test.ok(results[1].emp.value === "23.0");
+                                    test.ok(results[2].emp.value === "27");
+                                    test.ok(results[3].emp.value === "29");
+                                    test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testSortSort8 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
+                         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         PREFIX ex: <http://example.org/things#>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           _:a foaf:name "Eve" ;\
+                               ex:empId "9"^^xsd:integer .\
+                           _:f foaf:name "John" ;\
+                               ex:empId [ ex:number "29"^^xsd:integer ] .\
+                           _:g foaf:name "Dirk" ;\
+                               ex:empId <http://example.org/dirk01> .\
+                         }';
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX ex: <http://example.org/things#>\
+                                PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
+                                SELECT ?name ?emp\
+                                WHERE { ?x foaf:name ?name ;\
+                                           ex:empId ?emp\
+                                      }\
+                                ORDER BY ASC(?emp)', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 3);
+                                    test.ok(results[0].emp.token === "blank");
+                                    test.ok(results[1].emp.token === "uri");
+                                    test.ok(results[2].emp.token === "literal");
+                                    test.done();
+                });
+            });
+        });
+    });
+};
+
+
+exports.testSortSort9 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
+                         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           _:a foaf:name "Eve"^^xsd:string .\
+                           _:b foaf:name "Alice"^^xsd:string .\
+                           _:c foaf:name "Fred"^^xsd:string .\
+                           _:e foaf:name "Bob"^^xsd:string .\
+                         }';
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
+                                SELECT ?name\
+                                WHERE { ?x foaf:name ?name }\
+                                ORDER BY ?name', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 4);
+                                    test.ok(results[0].name.value === "Alice");
+                                    test.ok(results[1].name.value === "Bob");
+                                    test.ok(results[2].name.value === "Eve");
+                                    test.ok(results[3].name.value === "Fred");
+                                    test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testSortSort10 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
+                         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           _:a foaf:name "Eve"^^xsd:string .\
+                           _:b foaf:name "Alice"^^xsd:string .\
+                           _:c foaf:name "Fred"^^xsd:string .\
+                           _:e foaf:name "Bob"^^xsd:string .\
+                         }';
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
+                                SELECT ?name\
+                                WHERE { ?x foaf:name ?name }\
+                                ORDER BY DESC(?name)', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 4);
+                                    test.ok(results[3].name.value === "Alice");
+                                    test.ok(results[2].name.value === "Bob");
+                                    test.ok(results[1].name.value === "Eve");
+                                    test.ok(results[0].name.value === "Fred");
+                                    test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testSortSortNumbers = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :s1 :p "1"^^xsd:integer; :q "2"^^xsd:integer .\
+                           :s2 :p "10"^^xsd:integer; :q "20"^^xsd:integer .\
+                           :s3 :p "100"^^xsd:integer; :q "200"^^xsd:integer .\
+                         }';
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example.org/>\
+                                SELECT ?s WHERE {\
+                                  ?s :p ?o1 ; :q ?o2 .\
+                                } ORDER BY (?o1 + ?o2)', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 3);
+                                    test.ok(results[0].s.value === "http://example.org/s1");
+                                    test.ok(results[1].s.value === "http://example.org/s2");
+                                    test.ok(results[2].s.value === "http://example.org/s3");
+                                    test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testSortSortBuiltin = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :s1 :p "2"^^xsd:integer .\
+                           :s2 :p "300"^^xsd:integer .\
+                           :s3 :p "10"^^xsd:integer .\
+                         }';
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example.org/>\
+                                SELECT ?s WHERE {\
+                                  ?s :p ?o .\
+                                } ORDER BY STR(?o)', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 3);
+                                    test.ok(results[0].s.value === "http://example.org/s3");
+                                    test.ok(results[1].s.value === "http://example.org/s1");
+                                    test.ok(results[2].s.value === "http://example.org/s2");
+                                    test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testSortSortFunction = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example.org/>\
+                         INSERT DATA {\
+                           :s1 :p "2" .\
+                           :s2 :p "300" .\
+                           :s3 :p "10" .\
+                         }';
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example.org/>\
+                                PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT ?s WHERE {\
+                                  ?s :p ?o .\
+                                } ORDER BY xsd:integer(?o)', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length === 3);
+                                    test.ok(results[0].s.value === "http://example.org/s1");
+                                    test.ok(results[1].s.value === "http://example.org/s3");
+                                    test.ok(results[2].s.value === "http://example.org/s2");
+                                    test.done();
+                });
+            });
+        });
+    });
+};

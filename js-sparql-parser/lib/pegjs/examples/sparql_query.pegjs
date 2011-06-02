@@ -340,7 +340,7 @@ OrderCondition "[23] OrderCondition"
   = ( direction:( 'ASC' / 'DESC' ) WS* e:BrackettedExpression WS* ) {
       return { direction: direction, expression:e };
 }
-/ e:( Constraint / Var ) {
+/ e:( Constraint / Var ) WS* {
     if(e.token === 'var') {
         e = { token:'expression', 
               expressionType:'atomic',
@@ -826,8 +826,9 @@ Constraint "[60] Constraint"
 FunctionCall "[61] FunctionCall"
   = i:IRIref args:ArgList {
       var fcall = {};
-      fcall.token = "functioncall";
-      fcall.fn = i;
+      fcall.token = "expression";
+      fcall.expressionType = 'irireforfunction'
+      fcall.iriref = i;
       fcall.args = args.value;
 
       return fcall;
@@ -2259,8 +2260,6 @@ PN_PREFIX "[151] PN_PREFIX"
 */
 
 PN_LOCAL "[152] PN_LOCAL"
-  = base:(PN_CHARS_U / [0-9]) rest:(PN_CHARS / '.')* { if(rest[rest.length-1] == '.'){
-                                                       throw new Error("Wrong PN_LOCAL, cannot finish with '.'")
-                                                     } else {
-                                                         return base + rest.join('');
-                                                     }}
+  = base:(PN_CHARS_U / [0-9]) rest:(PN_CHARS / '.')* { 
+                                                       return base + rest.join('');
+                                                     }

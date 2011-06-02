@@ -135,7 +135,7 @@ QueryEngine.QueryEngine.prototype.applyOrderBy = function(order, modifiedBinding
         }, function(env) {
             var results = env.acum || [];
             results.sort(function(a,b){
-                return that.compareFilteredBindings(a, b, order);
+                return that.compareFilteredBindings(a, b, order, outEnv);
             });
             var toReturn = [];
             for(var i=0; i<results.length; i++) {
@@ -149,7 +149,7 @@ QueryEngine.QueryEngine.prototype.applyOrderBy = function(order, modifiedBinding
     }
 };
 
-QueryEngine.QueryEngine.prototype.compareFilteredBindings = function(a, b, order) {
+QueryEngine.QueryEngine.prototype.compareFilteredBindings = function(a, b, order, env) {
     var found = false;
     var i = 0
     while(!found) {
@@ -157,25 +157,100 @@ QueryEngine.QueryEngine.prototype.compareFilteredBindings = function(a, b, order
             return 0;
         }
         var direction = order[i].direction;
+        var filterResult;
 
-        if(QueryFilters.runEqualityFunction(a.value[i], b.value[i], []).value == true) {
+        // unbound first
+        if(a.value[i] == null && b.value[i] == null) {
+            //console.log("BOTH NULL")
             i++;
-        } else {
-            var filterResult = QueryFilters.runTotalGtFunction(a.value[i], b.value[i], []);
-            if(filterResult.value == true) {
-                if(direction === "ASC") {
-                    return 1;
-                } else {
-                    return -1;
-                }
+            continue;
+        }else if(a.value[i] == null) {
+            //console.log("ONE NULL")
+            filterResult = {value: false};
+        } else if(b.value[i] == null) {
+            //console.log("ONE NULL")
+            filterResult = {value: true};
+        } else 
+
+        // blanks
+        if(a.value[i].token === 'blank' && b.value[i].token === 'blank') {
+            //console.log("BOTH BLANK")
+            i++;
+            continue;
+        } else if(a.value[i].token === 'blank') { 
+            //console.log("ONE BLANK")
+            filterResult = {value: false};            
+        } else if(b.value[i].token === 'blank') {
+            //console.log("ONE BLANK")
+            filterResult = {value: true};        
+        } else 
+
+        // uris
+        if(a.value[i].token === 'uri' && b.value[i].token === 'uri') {
+            //console.log("TWO URIS")
+            if(QueryFilters.runEqualityFunction(a.value[i], b.value[i], [], this, env).value == true) {
+                i++;
+                continue;
             } else {
-                if(direction === "ASC") {
-                    return -1;
-                } else {
-                    return 1;
-                }
-            }       
+                filterResult = QueryFilters.runTotalGtFunction(a.value[i], b.value[i], []);
+            }
+        } else if(a.value[i].token === 'uri') { 
+            //console.log("ONE BLANK")
+            filterResult = {value: false};            
+        } else if(b.value[i].token === 'uri') {
+            //console.log("ONE BLANK")
+            filterResult = {value: true};        
+        } else 
+
+        // simple literals
+        if(a.value[i].token === 'literal' && b.value[i].token === 'literal' && a.value[i].type == null && b.value[i].type == null) {
+            //console.log("TWO SIMPLE LITERALS")
+            if(QueryFilters.runEqualityFunction(a.value[i], b.value[i], [], this, env).value == true) {
+                i++;
+                continue;
+            } else {
+                filterResult = QueryFilters.runTotalGtFunction(a.value[i], b.value[i], []);
+            }
+        } else if(a.value[i].token === 'literal' && a.value[i].type == null) { 
+            //console.log("ONE LITERAL")
+            filterResult = {value: false};            
+        } else if(b.value[i].token === 'literal' && b.value[i].type == null) {
+            //console.log("ONE LITERAL")
+            filterResult = {value: true};        
+        } else 
+
+        // literals
+        if(QueryFilters.runEqualityFunction(a.value[i], b.value[i], [], this, env).value == true) {
+            i++;
+            continue;
+        } else {
+            //console.log("TWO TYPED LITERALS")
+            filterResult = QueryFilters.runTotalGtFunction(a.value[i], b.value[i], []);
         }     
+
+        //console.log("VAL "+i);
+        //console.log(a.value[i]);
+        //console.log(b.value[i]);
+        //console.log("------------")
+        //console.log(filterResult);
+        // choose value for comparisong based on the direction
+        if(filterResult.value == true) {
+            if(direction === "ASC") {
+                //console.log("ASC 1");
+                return 1;
+            } else {
+                //console.log("DESC -1");
+                return -1;
+            }
+        } else {
+            if(direction === "ASC") {
+                //console.log("ASC -1");
+                return -1;
+            } else {
+                //console.log("DESC 1");
+                return 1;
+            }
+        }       
     }
 };
 

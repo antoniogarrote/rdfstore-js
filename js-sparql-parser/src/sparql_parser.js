@@ -2287,86 +2287,104 @@ SparqlParser.parser = (function(){
         
         var savedReportMatchFailures = reportMatchFailures;
         reportMatchFailures = false;
-        var savedPos0 = pos;
+        var savedPos1 = pos;
         if (input.substr(pos, 3) === "ASC") {
-          var result14 = "ASC";
+          var result17 = "ASC";
           pos += 3;
         } else {
-          var result14 = null;
+          var result17 = null;
           if (reportMatchFailures) {
             matchFailed("\"ASC\"");
           }
         }
-        if (result14 !== null) {
-          var result7 = result14;
+        if (result17 !== null) {
+          var result10 = result17;
         } else {
           if (input.substr(pos, 4) === "DESC") {
-            var result13 = "DESC";
+            var result16 = "DESC";
             pos += 4;
           } else {
-            var result13 = null;
+            var result16 = null;
             if (reportMatchFailures) {
               matchFailed("\"DESC\"");
             }
           }
-          if (result13 !== null) {
-            var result7 = result13;
+          if (result16 !== null) {
+            var result10 = result16;
           } else {
-            var result7 = null;;
+            var result10 = null;;
           };
         }
-        if (result7 !== null) {
-          var result8 = [];
-          var result12 = parse_WS();
-          while (result12 !== null) {
-            result8.push(result12);
-            var result12 = parse_WS();
+        if (result10 !== null) {
+          var result11 = [];
+          var result15 = parse_WS();
+          while (result15 !== null) {
+            result11.push(result15);
+            var result15 = parse_WS();
           }
-          if (result8 !== null) {
-            var result9 = parse_BrackettedExpression();
-            if (result9 !== null) {
-              var result10 = [];
-              var result11 = parse_WS();
-              while (result11 !== null) {
-                result10.push(result11);
-                var result11 = parse_WS();
+          if (result11 !== null) {
+            var result12 = parse_BrackettedExpression();
+            if (result12 !== null) {
+              var result13 = [];
+              var result14 = parse_WS();
+              while (result14 !== null) {
+                result13.push(result14);
+                var result14 = parse_WS();
               }
-              if (result10 !== null) {
-                var result6 = [result7, result8, result9, result10];
+              if (result13 !== null) {
+                var result9 = [result10, result11, result12, result13];
               } else {
-                var result6 = null;
-                pos = savedPos0;
+                var result9 = null;
+                pos = savedPos1;
               }
             } else {
-              var result6 = null;
+              var result9 = null;
+              pos = savedPos1;
+            }
+          } else {
+            var result9 = null;
+            pos = savedPos1;
+          }
+        } else {
+          var result9 = null;
+          pos = savedPos1;
+        }
+        var result8 = result9 !== null
+          ? (function(direction, e) {
+                return { direction: direction, expression:e };
+          })(result9[0], result9[2])
+          : null;
+        if (result8 !== null) {
+          var result0 = result8;
+        } else {
+          var savedPos0 = pos;
+          var result7 = parse_Constraint();
+          if (result7 !== null) {
+            var result3 = result7;
+          } else {
+            var result6 = parse_Var();
+            if (result6 !== null) {
+              var result3 = result6;
+            } else {
+              var result3 = null;;
+            };
+          }
+          if (result3 !== null) {
+            var result4 = [];
+            var result5 = parse_WS();
+            while (result5 !== null) {
+              result4.push(result5);
+              var result5 = parse_WS();
+            }
+            if (result4 !== null) {
+              var result2 = [result3, result4];
+            } else {
+              var result2 = null;
               pos = savedPos0;
             }
           } else {
-            var result6 = null;
+            var result2 = null;
             pos = savedPos0;
-          }
-        } else {
-          var result6 = null;
-          pos = savedPos0;
-        }
-        var result5 = result6 !== null
-          ? (function(direction, e) {
-                return { direction: direction, expression:e };
-          })(result6[0], result6[2])
-          : null;
-        if (result5 !== null) {
-          var result0 = result5;
-        } else {
-          var result4 = parse_Constraint();
-          if (result4 !== null) {
-            var result2 = result4;
-          } else {
-            var result3 = parse_Var();
-            if (result3 !== null) {
-              var result2 = result3;
-            } else {
-              var result2 = null;;
-            };
           }
           var result1 = result2 !== null
             ? (function(e) {
@@ -2377,7 +2395,7 @@ SparqlParser.parser = (function(){
                           value: e };
                 }
                 return { direction: 'ASC', expression:e };
-            })(result2)
+            })(result2[0])
             : null;
           if (result1 !== null) {
             var result0 = result1;
@@ -5621,9 +5639,10 @@ SparqlParser.parser = (function(){
         var result0 = result1 !== null
           ? (function(i, args) {
                 var fcall = {};
-                fcall.token = "functioncall";
-                fcall.fn = i;
-                fcall.args = args.value;
+              fcall.token = "expression";
+              fcall.expressionType = 'irireforfunction'
+              fcall.iriref = i;
+              fcall.args = args.value;
           
                 return fcall;
           })(result1[0], result1[1])
@@ -15988,11 +16007,9 @@ SparqlParser.parser = (function(){
           pos = savedPos0;
         }
         var result0 = result1 !== null
-          ? (function(base, rest) { if(rest[rest.length-1] == '.'){
-                                                                 throw new Error("Wrong PN_LOCAL, cannot finish with '.'")
-                                                               } else {
+          ? (function(base, rest) { 
                                                                    return base + rest.join('');
-                                                               }})(result1[0], result1[1])
+                                                               })(result1[0], result1[1])
           : null;
         reportMatchFailures = savedReportMatchFailures;
         if (reportMatchFailures && result0 === null) {
