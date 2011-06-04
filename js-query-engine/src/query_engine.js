@@ -9,12 +9,14 @@ var QuadIndexCommon = require("./../../js-rdf-persistence/src/quad_index_common"
 var QueryPlan = require("./query_plan").QueryPlan;
 var QueryFilters = require("./query_filters").QueryFilters;
 var RDFJSInterface = require("./rdf_js_interface").RDFJSInterface;
+var RDFLoader = require("../../js-communication/src/rdf_loader").RDFLoader;
 
 QueryEngine.QueryEngine = function(params) {
     if(arguments.length != 0) {
         this.backend = params.backend;
         this.lexicon = params.lexicon;
         this.abstractQueryTree = new AbstractQueryTree.AbstractQueryTree();
+        this.rdfLoader = new RDFLoader.RDFLoader(params['communication']);
     }
 };
 
@@ -395,8 +397,7 @@ QueryEngine.QueryEngine.prototype.normalizeTerm = function(term, env, callback) 
     } else if(term.token === 'var') {
         callback(true, term.value);
     } else {
-        //@todo handle here variables and blank nodes
-        callback(false, 'Token of kind '+term.token+' cannot be normalized');
+          callback(false, 'Token of kind '+term.token+' cannot be normalized');
     }
 };
 
@@ -617,6 +618,7 @@ QueryEngine.QueryEngine.prototype.denormalizeBindings = function(bindings, callb
 // Queries execution
 
 QueryEngine.QueryEngine.prototype.execute = function(queryString, callback, defaultDataset, namedDataset){
+    //console.log(queryString);
     var syntaxTree = this.abstractQueryTree.parseQueryString(queryString);
     if(syntaxTree == null) {
         throw("Error parsing query string");
@@ -1053,10 +1055,140 @@ QueryEngine.QueryEngine.prototype.executeUpdate = function(syntaxTree, callback)
             }, function(env) {
                 callback(true);
             });
+        } else if(aqt.kind === 'load') {
+            // @todo
+            // NAMESPACES!!! -> this must be denormalized
+            // NORMALIZE * must be splitted bewteen denormalization and registry;
+            var graph = {'uri': aqt.sourceGraph.value};
+            if(aqt.destinyGraph != null) {
+                graph = {'uri': aqt.destinyGraph.value};
+            }
+            var that = this;
+            this.rdfLoader.load(aqt.sourceGraph.value, graph, function(success, result){
+                if(success == false) {
+                    console.log("Error loading graph");
+                    console.log(result);
+                } else {
+                    that.batchLoad(result, callback);
+                }
+            });
         } else {
             throw new Error("not supported execution unit");
         }
     }
+};
+
+QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
+    var that = this;
+    var subject    = null;
+    var predicate  = null;
+    var object     = null;
+    var graph      = null;
+
+    Utils.repeat(0, quads.length, function(kk,env){
+        if(env.success == null) {
+            env.success = true;
+            env.counter = 0;
+        }
+        var floop = arguments.callee;
+        var quad = quads[env._i];
+
+        if(env.success) {
+          Utils.seq(function(k) {
+              // subject
+              if(quad.subject['uri']) {
+                  that.lexicon.registerUri(quad.subject.uri, function(oid){
+                      subject = oid;
+                      k();
+                  });
+              } else if(quad.subject['literal']) {
+                  that.lexicon.registerLiteral(quad.subject.literal, function(oid){
+                      subject = oid;                    
+                      k();
+                  });
+              } else {
+                  that.lexicon.registerBlank(quad.subject.blank, function(oid){
+                      subject = oid;
+                      k();
+                  });
+              }
+          }, function(k) {
+              // predicate
+              if(quad.predicate['uri']) {
+                  that.lexicon.registerUri(quad.predicate.uri, function(oid){
+                      predicate = oid;
+                      k();
+                  });
+              } else if(quad.predicate['literal']) {
+                  that.lexicon.registerLiteral(quad.predicate.literal, function(oid){
+                      predicate = oid;                    
+                      k();
+                  });
+              } else {
+                  that.lexicon.registerBlank(quad.predicate.blank, function(oid){
+                      predicate = oid;
+                      k();
+                  });
+              }
+          }, function(k) {
+              // object
+              if(quad.object['uri']) {
+                  that.lexicon.registerUri(quad.object.uri, function(oid){
+                      object = oid;
+                      k();
+                  });
+              } else if(quad.object['literal']) {
+                  that.lexicon.registerLiteral(quad.object.literal, function(oid){
+                      object = oid;                    
+                      k();
+                  });
+              } else {
+                  that.lexicon.registerBlank(quad.object.blank, function(oid){
+                      object = oid;
+                      k();
+                  });
+              }
+          }, function(k) {
+              // graph
+              if(quad.graph['uri']) {
+                  that.lexicon.registerUri(quad.graph.uri, function(oid){
+                      graph = oid;
+                      k();
+                  });
+              } else if(quad.graph['literal']) {
+                  that.lexicon.registerLiteral(quad.graph.literal, function(oid){
+                      graph = oid;                    
+                      k();
+                  });
+              } else {
+                  that.lexicon.registerBlank(quad.graph.blank, function(oid){
+                      graph = oid;
+                      k();
+                  });
+              }
+          })(function(result){
+              var quad = {subject: subject, predicate:predicate, object:object, graph: graph};
+              var key = new QuadIndexCommon.NodeKey(quad);
+              that.backend.index(key, function(result, error){
+                  if(result == true){
+                      env.counter = env.counter + 1;
+                      kk(floop, env);
+                  } else {
+                      env.success = false;
+                      kk(floop, env);
+                  }
+              });            
+          });
+        } else {
+            kk(floop, env);
+        }
+    }, function(env){
+        if(env.success) {
+            callback(true, env.counter);
+        } else {
+            callback(false, "error loading quads");
+        }
+    });
 };
 
 // Low level operations for update queries

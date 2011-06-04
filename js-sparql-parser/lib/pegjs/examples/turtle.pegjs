@@ -108,14 +108,21 @@ TriplesBlock "[54] TriplesBlock"
   [66]  	TriplesSameSubject	  ::=  	VarOrTerm PropertyListNotEmpty |	TriplesNode PropertyList
 */
 TriplesSameSubject "[66] TriplesSameSubject"
-  = WS* s:GraphTerm WS* pairs:PropertyListNotEmpty {
+  = WS* s:VarOrTerm WS* pairs:PropertyListNotEmpty {
       var triplesContext = pairs.triplesContext;
       var subject = s;
-      if(pairs.pairs != null) {
+      if(pairs.pairs) {
         for(var i=0; i< pairs.pairs.length; i++) {
             var pair = pairs.pairs[i];
-            var triple = {subject: subject, predicate: pair[0], object: pair[1]}
-            triplesContext.push(triple);
+            var triple = null;
+            if(subject.token && subject.token==='triplesnodecollection') {
+                triple = {subject: subject.chainSubject[0], predicate: pair[0], object: pair[1]}
+                triplesContext.push(triple);
+                triplesContext = triplesContext.concat(subject.triplesContext);
+            } else {
+                triple = {subject: subject, predicate: pair[0], object: pair[1]}
+                triplesContext.push(triple);
+            }
         }
       }
 
@@ -130,13 +137,13 @@ TriplesSameSubject "[66] TriplesSameSubject"
       var triplesContext = tn.triplesContext;
       var subject = tn.chainSubject;
 
-      if(pairs.pairs != null) {
+      if(pairs.pairs) {
         for(var i=0; i< pairs.pairs.length; i++) {
             var pair = pairs.pairs[i];
             if(tn.token === "triplesnodecollection") {
                 for(var j=0; j<subject.length; j++) {
                     var subj = subject[j];
-                    if(typeof(subj) === 'object') {
+                    if(subj.triplesContext != null) {
                         var triple = {subject: subj.chainSubject, predicate: pair[0], object: pair[1]}
                         triplesContext.concat(subj.triplesContext);
                     } else {
@@ -173,8 +180,13 @@ PropertyListNotEmpty "[67] PropertyListNotEmpty"
       for( var i=0; i<ol.length; i++) {
 
          if(ol[i].triplesContext != null) {
-              triplesContext = triplesContext.concat(ol[i].triplesContext);
-             pairs.push([v, ol[i].chainSubject]);
+             triplesContext = triplesContext.concat(ol[i].triplesContext);
+             if(ol[i].token==='triplesnodecollection' && ol[i].chainSubject.length != null) {
+                 pairs.push([v, ol[i].chainSubject[0]]);
+             } else {
+                 pairs.push([v, ol[i].chainSubject]);
+             }
+
           } else {
               pairs.push([v, ol[i]])
           }
@@ -185,16 +197,14 @@ PropertyListNotEmpty "[67] PropertyListNotEmpty"
       for(var i=0; i<rest.length; i++) {
           var tok = rest[i][3];
           var newVerb  = tok[0];
-          var newObjsList = tok[2];
+          var newObjsList = tok[2] || [];
 
-          if (newObjsList != null) {
-            for(var j=0; j<newObjsList.length; j++) {
-             if(newObjsList[j].triplesContext != null) {
-                triplesContext = triplesContext.concat(newObjsList[j].triplesContext);
-               pairs.push([newVerb, newObjsList[j].chainSubject]);
-              } else {
-                pairs.push([newVerb, newObjsList[j]])
-              }
+          for(var j=0; j<newObjsList.length; j++) {
+           if(newObjsList[j].triplesContext != null) {
+              triplesContext = triplesContext.concat(newObjsList[j].triplesContext);
+             pairs.push([newVerb, newObjsList[j].chainSubject]);
+            } else {
+              pairs.push([newVerb, newObjsList[j]])
             }
           }
       }
@@ -215,17 +225,15 @@ PropertyList "[68] PropertyList"
 /*
   [69]  	ObjectList	  ::=  	Object ( ',' Object )*
 */
+/*
+  [69]  	ObjectList	  ::=  	Object ( ',' Object )*
+*/
 ObjectList "[69] ObjectList"
   = obj:Object WS* objs:( ',' WS* Object )* {
 
         var toReturn = [];
-        if(typeof(obj)==='object' && obj.token==='triplesnodecollection') {
-            for(var i=0; i<obj.chainSubject.length; i++) {
-                toReturn.push(obj.chainSubject[i]);
-            }
-        } else {
-            toReturn.push(obj);
-        }
+
+        toReturn.push(obj);
 
         for(var i=0; i<objs.length; i++) {
             for(var j=0; j<objs[i].length; j++) {
@@ -245,14 +253,33 @@ Object "[70] Object"
   = GraphNode
 
 /*
-  [71]  	Verb	  ::=  	Var | 'a'
+  [71]  	Verb	  ::=  	VarOrIRIref | 'a'
 */
 Verb "[71] Verb"
-  = IRIref
+  = VarOrIRIref
   / 'a' {
       return{token: 'uri', prefix:null, suffix:null, value:"http://www.w3.org/1999/02/22-rdf-syntax-ns#type"}
   }
 
+/*
+  @todo
+  @incomplete
+  @semantics
+  // support for property paths must be added
+  [72]  	TriplesSameSubjectPath	  ::=  	VarOrTerm PropertyListNotEmptyPath |	TriplesNode PropertyListPath
+*/
+TriplesSameSubjectPath "[72] TriplesSameSubjectPath"
+  = TriplesSameSubject
+// Property paths not supported yet :(
+//  = VarOrTerm PropertyListNotEmptyPath
+//  / TriplesNode PropertyListPath
+
+
+/*
+  [73]  	PropertyListNotEmptyPath	  ::=  	( VerbPath | VerbSimple ) ObjectList ( ';' ( ( VerbPath | VerbSimple ) ObjectList )? )*
+*/
+PropertyListNotEmptyPath "[73] PropertyListNotEmptyPath"
+  = ( VerbPath / VerbSimple ) ObjectList ( ';' ( ( VerbPath / VerbSimple ) ObjectList)? )*
 
 /*
   [74]  	PropertyListPath	  ::=  	PropertyListNotEmpty?
@@ -260,6 +287,80 @@ Verb "[71] Verb"
 PropertyListPath "[74] PropertyListPath"
   = PropertyListNotEmpty?
 
+/*
+  [75]  	VerbPath	  ::=  	Path
+*/
+VerbPath "[75]"
+  = p:Path {
+      var path = {};
+      path.token = 'path';
+      path.value = p;
+
+      return p;
+}
+
+/*
+  [76]  	VerbSimple	  ::=  	Var
+*/
+VerbSimple "[76] VerbSimple"
+  = Var
+
+/*
+  [77]  	Path	  ::=  	PathAlternative
+  @todo
+  @fix
+*/
+Path "[77] Path"
+  = PathAlternative
+
+/*
+  [78]  	PathAlternative	  ::=  	PathSequence ( '|' PathSequence )*
+*/
+PathAlternative "[78] PathAlternative"
+  = PathSequence ( '|' PathSequence)*
+
+/*
+  [79]  	PathSequence	  ::=  	PathEltOrInverse ( '/' PathEltOrInverse )*
+*/
+PathSequence "[79] PathSequence"
+    = PathEltOrInverse ( '/' PathEltOrInverse)*
+
+/*
+  [80]  	PathElt	  ::=  	PathPrimary PathMod?
+*/
+PathElt "[88] PathElt"
+  = PathPrimary PathMod?
+
+/*
+  [81]  	PathEltOrInverse	  ::=  	PathElt | '^' PathElt
+*/
+
+PathEltOrInverse "[81] PathEltOrInverse"
+  = PathElt / '^' PathElt
+
+/*
+  [82]  	PathMod	  ::=  	( '*' | '?' | '+' | '{' ( Integer ( ',' ( '}' | Integer '}' ) | '}' ) | ',' Integer '}' ) )
+*/
+PathMod "[82] PathMod"
+  = ( '*' / '?' / '+' / '{' ( Integer ( ',' ( '}' / Integer '}' ) / '}' ) / ',' Integer '}' ) )
+
+/*
+ [83]  	PathPrimary	  ::=  	( IRIref | 'a' | '!' PathNegatedPropertySet | '(' Path ')' )
+*/
+PathPrimary "[83] PathPrimary"
+  = ( IRIref / 'a' / '!' PathNegatedPropertySet / '(' Path ')' )
+
+/*
+  [84]	PathNegatedPropertySet	  ::=	( PathOneInPropertySet | '(' ( PathOneInPropertySet ( '|' PathOneInPropertySet )* )? ')' )
+*/
+PathNegatedPropertySet
+  = ( PathOneInPropertySet / '(' ( PathOneInPropertySet	 ('|' PathOneInPropertySet)* )? ')' )
+
+/*
+  [85]	PathOneInPropertySet	  ::=	( IRIref | 'a' | '^' ( IRIref | 'a' ) )
+*/
+PathOneInPropertySet "[85] PathOneInPropertySet"
+  = ( IRIref / 'a' / '^' (IRIref / 'a') )
 
 /*
   [86] 	Integer	  ::=  	INTEGER
@@ -277,17 +378,58 @@ TriplesNode "[87] TriplesNode"
       triplesContext = [];
       chainSubject = [];
 
-      for(var i=0; i<c.length; i++) {
-          var node = c[i];
+      var triple = null;
 
-          if(node.triplesContext == null) {
-              chainSubject.push(node);
-          } else {
-              triplesContext.concat(node.triplesContext);
-              chainSubject.push(node.chainSubject);
-          }
+      // catch NIL
+      /*
+      if(c.length == 1 && c[0].token && c[0].token === 'nil') {
+          GlobalBlankNodeCounter++;
+          return  {token: "triplesnodecollection", 
+                   triplesContext:[{subject: {token:'blank', label:("_:"+GlobalBlankNodeCounter)},
+                                    predicate:{token:'uri', prefix:null, suffix:null, value:'http://www.w3.org/1999/02/22-rdf-syntax-ns#rest'},
+                                    object:  {token:'blank', label:("_:"+(GlobalBlankNodeCounter+1))}}], 
+                   chainSubject:{token:'blank', label:("_:"+GlobalBlankNodeCounter)}};
+
       }
-      return {token:"triplesnodecollection", triplesContext:triplesContext, chainSubject:chainSubject}
+      */
+
+      // other cases
+      for(var i=0; i<c.length; i++) {
+          GlobalBlankNodeCounter++;
+          //_:b0  rdf:first  1 ;
+          //rdf:rest   _:b1 .
+          var nextObject = null;
+          if(c[i].chainSubject == null && c[i].triplesContext == null) {
+              nextObject = c[i];
+          } else {
+              nextObject = c[i].chainSubject;
+              triplesContext = triplesContext.concat(nextSubject.triplesContext);
+          }
+          var currentSubject = null;
+          triple = {subject: {token:'blank', label:("_:"+GlobalBlankNodeCounter)},
+                    predicate:{token:'uri', prefix:null, suffix:null, value:'http://www.w3.org/1999/02/22-rdf-syntax-ns#first'},
+                    object:nextObject };
+
+          if(i==0) {
+              chainSubject.push(triple.subject);
+          }
+
+          triplesContext.push(triple);
+
+          if(i===(c.length-1)) {
+              triple = {subject: {token:'blank', label:("_:"+GlobalBlankNodeCounter)},
+                        predicate:{token:'uri', prefix:null, suffix:null, value:'http://www.w3.org/1999/02/22-rdf-syntax-ns#rest'},
+                        object:   {token:'uri', prefix:null, suffix:null, value:'http://www.w3.org/1999/02/22-rdf-syntax-ns#nil'}};
+          } else {
+              triple = {subject: {token:'blank', label:("_:"+GlobalBlankNodeCounter)},
+                        predicate:{token:'uri', prefix:null, suffix:null, value:'http://www.w3.org/1999/02/22-rdf-syntax-ns#rest'},
+                        object:  {token:'blank', label:("_:"+(GlobalBlankNodeCounter+1))} };
+          }
+
+          triplesContext.push(triple);
+      }
+
+      return {token:"triplesnodecollection", triplesContext:triplesContext, chainSubject:chainSubject};
 }
   / BlankNodePropertyList
 
@@ -328,10 +470,32 @@ Collection "[89] Collection"
   [90]  	GraphNode	  ::=  	VarOrTerm |	TriplesNode
 */
 GraphNode "[90] GraphNode"
-  = gn:(WS* GraphTerm WS* / WS* TriplesNode WS*) {
+  = gn:(WS* VarOrTerm WS* / WS* TriplesNode WS*) {
   return gn[1];
 }
 
+/*
+  [91]  	VarOrTerm	  ::=  	Var | GraphTerm
+*/
+VarOrTerm "[91] VarOrTerm"
+  = (Var / GraphTerm)
+
+/*
+  [92]  	VarOrIRIref	  ::=  	Var | IRIref
+*/
+VarOrIRIref "[92] VarOrIRIref"
+  = (Var /IRIref)
+
+/*
+  [93]  	Var	  ::=  	VAR1 | VAR2
+*/
+Var "[93] Var"
+  = v:(VAR1 / VAR2) {
+      var term = {};
+      term.token = 'var';
+      term.value = v;
+      return term;
+  }
 
 /*
   [94]  	GraphTerm	  ::=  	IRIref |	RDFLiteral |	NumericLiteral |	BooleanLiteral |	BlankNode |	NIL
@@ -392,8 +556,8 @@ RDFLiteral "[112] RDFLiteral"
           return {token:'literal', value:s.value, lang:e.slice(1), type:null}
       } else {
           if(typeof(e) === "object") {
-              e.shift();
-              return {token:'literal', value:s.value, lang:null, type:e }
+              e.shift(); // remove the '^^' char
+              return {token:'literal', value:s.value, lang:null, type:e[0] }
           } else {
               return { token:'literal', value:s.value, lang:null, type:null }
           }
@@ -457,10 +621,10 @@ BooleanLiteral "[117] BooleanLiteral"
   [118]  	String	  ::=  	STRING_LITERAL1 | STRING_LITERAL2 | STRING_LITERAL_LONG1 | STRING_LITERAL_LONG2
 */
 String "[118] String"
-  = s:STRING_LITERAL1 { return {token:'string', value:s} }
-  / s:STRING_LITERAL2 { return {token:'string', value:s} }
-  / s:STRING_LITERAL_LONG1 { return {token:'string', value:s} }
+  = s:STRING_LITERAL_LONG1 { return {token:'string', value:s} }
   / s:STRING_LITERAL_LONG2 { return {token:'string', value:s} }
+  / s:STRING_LITERAL1 { return {token:'string', value:s} }
+  / s:STRING_LITERAL2 { return {token:'string', value:s} }
 
 /*
   [119]  	IRIref	  ::=  	IRI_REF |	PrefixedName
@@ -485,9 +649,11 @@ BlankNode "[121] BlankNode"
 
 /*
   [122]  	IRI_REF	  ::=  	'<' ([^<>"{}|^`\]-[#x00-#x20])* '>'
+  @todo check this rule
+  @incomplete
 */
 IRI_REF "[122] IRI_REF"
-  = '<' iri_ref:[^<>\"\{\} | ^\\ | \S]* '>' { return iri_ref.join('') }
+  = '<' iri_ref:[^<>\"\{\} | ^\\]* '>' { return iri_ref.join('') }
 
 /*
   [123]  	PNAME_NS	  ::=  	PN_PREFIX? ':'
@@ -508,15 +674,27 @@ BLANK_NODE_LABEL "[125] BLANK_NODE_LABEL"
   = '_:' l:PN_LOCAL { return l }
 
 /*
+  [126]  	VAR1	  ::=  	'?' VARNAME
+*/
+VAR1 "[126] VAR1"
+  = '?' v:VARNAME { return v }
+
+/*
+  [127]  	VAR2	  ::=  	'$' VARNAME
+*/
+VAR2 "[127] VAR2"
+  = '$' v:VARNAME { return v }
+
+/*
   [128]  	LANGTAG	  ::=  	'@' [a-zA-Z]+ ('-' [a-zA-Z0-9]+)*
 */
 LANGTAG "[128] LANGTAG"
   = '@' a:[a-zA-Z]+ b:('-' [a-zA-Z0-9]+)*  {
 
       if(b.length===0) {
-          return "@"+a.join('');
+          return ("@"+a.join('')).toLowerCase();
       } else {
-          return "@"+a.join('')+"-"+b[0][1].join('');
+          return ("@"+a.join('')+"-"+b[0][1].join('')).toLowerCase();
       }
 }
 
@@ -543,7 +721,7 @@ DECIMAL "[130] DECIMAL"
       lit.token = "literal";
       lit.lang = null;
       lit.type = "http://www.w3.org/2001/XMLSchema#decimal";
-      lit.value = eval(flattenString([a,b,c]));
+      lit.value = flattenString([a,b,c]);
       return lit;
 }
   / a:'.' b:[0-9]+ {
@@ -551,7 +729,7 @@ DECIMAL "[130] DECIMAL"
       lit.token = "literal";
       lit.lang = null;
       lit.type = "http://www.w3.org/2001/XMLSchema#decimal";
-      lit.value = eval(flattenString([a,b]));
+      lit.value = flattenString([a,b]);
       return lit;
  }
 
@@ -564,7 +742,7 @@ DOUBLE "[131] DOUBLE"
       lit.token = "literal";
       lit.lang = null;
       lit.type = "http://www.w3.org/2001/XMLSchema#double";
-      lit.value = eval(flattenString([a,b,c,e]));
+      lit.value = flattenString([a,b,c,e]);
       return lit;
 }
   / a:'.' b:[0-9]+ c:EXPONENT {
@@ -572,7 +750,7 @@ DOUBLE "[131] DOUBLE"
       lit.token = "literal";
       lit.lang = null;
       lit.type = "http://www.w3.org/2001/XMLSchema#double";
-      lit.value = eval(flattenString([a,b,c]));
+      lit.value = flattenString([a,b,c]);
       return lit;
 }
   / a:[0-9]+ b:EXPONENT {
@@ -580,7 +758,7 @@ DOUBLE "[131] DOUBLE"
       lit.token = "literal";
       lit.lang = null;
       lit.type = "http://www.w3.org/2001/XMLSchema#double";
-      lit.value = eval(flattenString([a,b]));
+      lit.value = flattenString([a,b]);
       return lit;
 }
 
@@ -588,36 +766,36 @@ DOUBLE "[131] DOUBLE"
   [132]  	INTEGER_POSITIVE	  ::=  	'+' INTEGER
 */
 INTEGER_POSITIVE "[132] INTEGER_POSITIVE"
-  = '+' d:INTEGER { return d; }
+  = '+' d:INTEGER { d.value = "+"+d.value; return d; }
 
 /*
   [133]  	DECIMAL_POSITIVE	  ::=  	'+' DECIMAL
 */
 DECIMAL_POSITIVE "[133] DECIMAL_POSITIVE"
-  = '+' d:DECIMAL { return d }
+  = '+' d:DECIMAL { d.value = "+"+d.value; return d }
 
 /*
   [134]  	DOUBLE_POSITIVE	  ::=  	'+' DOUBLE
 */
 DOUBLE_POSITIVE "[134] DOUBLE_POSITIVE"
-  = '+' d:DOUBLE { return d }
+  = '+' d:DOUBLE { d.value = "+"+d.value; return d }
 
 /*
   [135]  	INTEGER_NEGATIVE	  ::=  	'-' INTEGER
 */
 INTEGER_NEGATIVE "[135] INTEGER_NEGATIVE"
-  = '-' d:INTEGER { d.value = - d.value; return d; }
+  = '-' d:INTEGER { d.value = "-"+d.value; return d; }
 
 /*
   [136]  	DECIMAL_NEGATIVE	  ::=  	'-' DECIMAL
 */
 DECIMAL_NEGATIVE "[136] DECIMAL_NEGATIVE"
-  = '-' d:DECIMAL { d.value = - d.value; return d; }
+  = '-' d:DECIMAL { d.value = "-"+d.value; return d; }
 /*
   [137]  	DOUBLE_NEGATIVE	  ::=  	'-' DOUBLE
 */
 DOUBLE_NEGATIVE "[137] DOUBLE_NEGATIVE"
-  = '-' d:DOUBLE { d.value = - d.value; return d; }
+  = '-' d:DOUBLE { d.value = "-"+d.value; return d; }
 
 /*
   [138]  	EXPONENT	  ::=  	[eE] [+-]? [0-9]+
@@ -642,7 +820,7 @@ STRING_LITERAL2 "[140] STRING_LITERAL2"
   [141]  	STRING_LITERAL_LONG1	  ::=  	"'''" ( ( "'" | "''" )? ( [^'\] | ECHAR ) )* "'''"
 */
 STRING_LITERAL_LONG1 "[141] STRING_LITERAL_LONG1"
-  = ''''' content:([^\'\\] / ECHAR)* '''''  { return flattenString(content) }
+  = "'''" content:([^\'\\] / ECHAR)* "'''"  { return flattenString(content) }
 
 /*
   @todo check
@@ -662,7 +840,12 @@ ECHAR "[143] ECHAR"
 */
 
 NIL "[144] NIL"
-  = '(' WS* ')'
+  = '(' WS* ')' {
+
+      return  {token: "triplesnodecollection", 
+               triplesContext:[], 
+               chainSubject:[{token:'uri', value:"http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"}]};
+}
 
 /*
   [145]  	WS	  ::=  	#x20 | #x9 | #xD | #xA
@@ -672,13 +855,14 @@ WS "[145] WS"
   / [\u0009]
   / [\u000D]
   / [\u000A]
-  / comment
+  / COMMENT
+
 
 /*
-[10]	comment 	::= 	'#' ( [^#xA#xD] )*
+  comment 	::= 	'#' ( [^#xA#xD] )*
 */
-comment
-  = '#' [^\u000A\u000D]*
+COMMENT " COMMENT"
+  = '#'( [^#xA#xD] )*
 
 /*
   [146]  	ANON	  ::=  	'[' WS* ']'
@@ -714,6 +898,13 @@ PN_CHARS_U "[148] PN_CHARS_U"
   / '_'
 
 /*
+  [149]  	VARNAME	  ::=  	( PN_CHARS_U | [0-9] ) ( PN_CHARS_U | [0-9] | #x00B7 | [#x0300-#x036F] | [#x203F-#x2040] )*
+*/
+
+VARNAME "[149] VARNAME"
+  = init:( PN_CHARS_U / [0-9] ) rpart:( PN_CHARS_U / [0-9] / [\u00B7] / [\u0300-\u036F] / [\u203F-\u2040])* { return init+rpart.join('') }
+
+/*
   [150]  	PN_CHARS	  ::=  	PN_CHARS_U | '-' | [0-9] | #x00B7 | [#x0300-#x036F] | [#x203F-#x2040]
 */
 
@@ -741,8 +932,6 @@ PN_PREFIX "[151] PN_PREFIX"
 */
 
 PN_LOCAL "[152] PN_LOCAL"
-  = base:(PN_CHARS_U / [0-9]) rest:(PN_CHARS / '.')* { if(rest[rest.length-1] == '.'){
-                                                       throw new Error("Wrong PN_LOCAL, cannot finish with '.'")
-                                                     } else {
-                                                         return base + rest.join('');
-                                                     }}
+  = base:(PN_CHARS_U / [0-9]) rest:(PN_CHARS / '.')* { 
+                                                       return base + rest.join('');
+                                                     }

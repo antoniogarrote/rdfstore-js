@@ -8391,3 +8391,518 @@ exports.testSortSortFunction = function(test) {
         });
     });
 };
+
+exports.testTypePromotionTypePromotion01 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX t: <http://www.w3.org/2001/sw/DataAccess/tests/data/TypePromotion/tP-0#>\
+                         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                               t:decimal1		rdf:value	"1"^^xsd:decimal .\
+                               t:float1		        rdf:value	"1"^^xsd:float .\
+                               t:double1		rdf:value	"1"^^xsd:double .\
+                               t:booleanT		rdf:value	"true"^^xsd:boolean .\
+                               t:dateTime1		rdf:value	"2005-01-14T12:34:56"^^xsd:dateTime .\
+                                t:integer1		rdf:value	"1"^^xsd:integer .\
+                                 t:nonPositiveIntegerN1	rdf:value	"-1"^^xsd:nonPositiveInteger .\
+                                  t:negativeIntegerN1	rdf:value	"-1"^^xsd:negativeInteger .\
+                                 t:long1		rdf:value	"1"^^xsd:long .\
+                                  t:int1		rdf:value	"1"^^xsd:int .\
+                                   t:short1		rdf:value	"1"^^xsd:short .\
+                                    t:byte1		rdf:value	"1"^^xsd:byte .\
+                                 t:nonNegativeInteger1	rdf:value	"1"^^xsd:nonNegativeInteger .\
+                                  t:unsignedLong1	rdf:value	"1"^^xsd:unsignedLong .\
+                                   t:unsignedInt1	rdf:value	"1"^^xsd:unsignedInt .\
+                                    t:unsignedShort1	rdf:value	"1"^^xsd:unsignedShort .\
+                                     t:unsignedByte1	rdf:value	"1"^^xsd:unsignedByte .\
+                                  t:positiveInteger1	rdf:value	"1"^^xsd:positiveInteger .\
+                         }';
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX t: <http://www.w3.org/2001/sw/DataAccess/tests/data/TypePromotion/tP-0#>\
+                                PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                                PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                ASK\
+                                 WHERE { t:double1 rdf:value ?l .\
+                                         t:double1 rdf:value ?r .\
+                                         FILTER ( DATATYPE(?l + ?r) = xsd:double ) }', function(success, results){
+                                             test.ok(results);
+                                             test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testTypePromotionTypePromotion02 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX t: <http://www.w3.org/2001/sw/DataAccess/tests/data/TypePromotion/tP-0#>\
+                         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                               t:decimal1		rdf:value	"1"^^xsd:decimal .\
+                               t:float1		        rdf:value	"1"^^xsd:float .\
+                               t:double1		rdf:value	"1"^^xsd:double .\
+                               t:booleanT		rdf:value	"true"^^xsd:boolean .\
+                               t:dateTime1		rdf:value	"2005-01-14T12:34:56"^^xsd:dateTime .\
+                                t:integer1		rdf:value	"1"^^xsd:integer .\
+                                 t:nonPositiveIntegerN1	rdf:value	"-1"^^xsd:nonPositiveInteger .\
+                                  t:negativeIntegerN1	rdf:value	"-1"^^xsd:negativeInteger .\
+                                 t:long1		rdf:value	"1"^^xsd:long .\
+                                  t:int1		rdf:value	"1"^^xsd:int .\
+                                   t:short1		rdf:value	"1"^^xsd:short .\
+                                    t:byte1		rdf:value	"1"^^xsd:byte .\
+                                 t:nonNegativeInteger1	rdf:value	"1"^^xsd:nonNegativeInteger .\
+                                  t:unsignedLong1	rdf:value	"1"^^xsd:unsignedLong .\
+                                   t:unsignedInt1	rdf:value	"1"^^xsd:unsignedInt .\
+                                    t:unsignedShort1	rdf:value	"1"^^xsd:unsignedShort .\
+                                     t:unsignedByte1	rdf:value	"1"^^xsd:unsignedByte .\
+                                  t:positiveInteger1	rdf:value	"1"^^xsd:positiveInteger .\
+                         }';
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX t: <http://www.w3.org/2001/sw/DataAccess/tests/data/TypePromotion/tP-0#>\
+                                PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                                PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                ASK\
+                                 WHERE { \
+                                     t:double1 rdf:value ?l .\
+                                     t:float1 rdf:value ?r .\
+                                     FILTER ( datatype(?l + ?r) = xsd:double )\
+                                 }', function(success, results){
+                                             test.ok(results);
+                                             test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testTypePromotionTypePromotion03 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX t: <http://www.w3.org/2001/sw/DataAccess/tests/data/TypePromotion/tP-0#>\
+                         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                               t:decimal1		rdf:value	"1"^^xsd:decimal .\
+                               t:float1		        rdf:value	"1"^^xsd:float .\
+                               t:double1		rdf:value	"1"^^xsd:double .\
+                               t:booleanT		rdf:value	"true"^^xsd:boolean .\
+                               t:dateTime1		rdf:value	"2005-01-14T12:34:56"^^xsd:dateTime .\
+                                t:integer1		rdf:value	"1"^^xsd:integer .\
+                                 t:nonPositiveIntegerN1	rdf:value	"-1"^^xsd:nonPositiveInteger .\
+                                  t:negativeIntegerN1	rdf:value	"-1"^^xsd:negativeInteger .\
+                                 t:long1		rdf:value	"1"^^xsd:long .\
+                                  t:int1		rdf:value	"1"^^xsd:int .\
+                                   t:short1		rdf:value	"1"^^xsd:short .\
+                                    t:byte1		rdf:value	"1"^^xsd:byte .\
+                                 t:nonNegativeInteger1	rdf:value	"1"^^xsd:nonNegativeInteger .\
+                                  t:unsignedLong1	rdf:value	"1"^^xsd:unsignedLong .\
+                                   t:unsignedInt1	rdf:value	"1"^^xsd:unsignedInt .\
+                                    t:unsignedShort1	rdf:value	"1"^^xsd:unsignedShort .\
+                                     t:unsignedByte1	rdf:value	"1"^^xsd:unsignedByte .\
+                                  t:positiveInteger1	rdf:value	"1"^^xsd:positiveInteger .\
+                         }';
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX t: <http://www.w3.org/2001/sw/DataAccess/tests/data/TypePromotion/tP-0#>\
+                                PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                                PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                ASK\
+                                 WHERE { \
+                                    t:double1 rdf:value ?l .\
+                                    t:decimal1 rdf:value ?r .\
+                                    FILTER ( datatype(?l + ?r) = xsd:double )\
+                                 }', function(success, results){
+                                             test.ok(results);
+                                             test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testTypePromotionTypePromotion04 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX t: <http://www.w3.org/2001/sw/DataAccess/tests/data/TypePromotion/tP-0#>\
+                         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                               t:decimal1		rdf:value	"1"^^xsd:decimal .\
+                               t:float1		        rdf:value	"1"^^xsd:float .\
+                               t:double1		rdf:value	"1"^^xsd:double .\
+                               t:booleanT		rdf:value	"true"^^xsd:boolean .\
+                               t:dateTime1		rdf:value	"2005-01-14T12:34:56"^^xsd:dateTime .\
+                                t:integer1		rdf:value	"1"^^xsd:integer .\
+                                 t:nonPositiveIntegerN1	rdf:value	"-1"^^xsd:nonPositiveInteger .\
+                                  t:negativeIntegerN1	rdf:value	"-1"^^xsd:negativeInteger .\
+                                 t:long1		rdf:value	"1"^^xsd:long .\
+                                  t:int1		rdf:value	"1"^^xsd:int .\
+                                   t:short1		rdf:value	"1"^^xsd:short .\
+                                    t:byte1		rdf:value	"1"^^xsd:byte .\
+                                 t:nonNegativeInteger1	rdf:value	"1"^^xsd:nonNegativeInteger .\
+                                  t:unsignedLong1	rdf:value	"1"^^xsd:unsignedLong .\
+                                   t:unsignedInt1	rdf:value	"1"^^xsd:unsignedInt .\
+                                    t:unsignedShort1	rdf:value	"1"^^xsd:unsignedShort .\
+                                     t:unsignedByte1	rdf:value	"1"^^xsd:unsignedByte .\
+                                  t:positiveInteger1	rdf:value	"1"^^xsd:positiveInteger .\
+                         }';
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX t: <http://www.w3.org/2001/sw/DataAccess/tests/data/TypePromotion/tP-0#>\
+                                PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                                PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                ASK\
+                                 WHERE { \
+                                   t:float1 rdf:value ?l .\
+                                   t:float1 rdf:value ?r .\
+                                   FILTER ( datatype(?l + ?r) = xsd:float )\
+                                 }', function(success, results){
+                                             test.ok(results);
+                                             test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testTypePromotionTypePromotion05 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX t: <http://www.w3.org/2001/sw/DataAccess/tests/data/TypePromotion/tP-0#>\
+                         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                               t:decimal1		rdf:value	"1"^^xsd:decimal .\
+                               t:float1		        rdf:value	"1"^^xsd:float .\
+                               t:double1		rdf:value	"1"^^xsd:double .\
+                               t:booleanT		rdf:value	"true"^^xsd:boolean .\
+                               t:dateTime1		rdf:value	"2005-01-14T12:34:56"^^xsd:dateTime .\
+                                t:integer1		rdf:value	"1"^^xsd:integer .\
+                                 t:nonPositiveIntegerN1	rdf:value	"-1"^^xsd:nonPositiveInteger .\
+                                  t:negativeIntegerN1	rdf:value	"-1"^^xsd:negativeInteger .\
+                                 t:long1		rdf:value	"1"^^xsd:long .\
+                                  t:int1		rdf:value	"1"^^xsd:int .\
+                                   t:short1		rdf:value	"1"^^xsd:short .\
+                                    t:byte1		rdf:value	"1"^^xsd:byte .\
+                                 t:nonNegativeInteger1	rdf:value	"1"^^xsd:nonNegativeInteger .\
+                                  t:unsignedLong1	rdf:value	"1"^^xsd:unsignedLong .\
+                                   t:unsignedInt1	rdf:value	"1"^^xsd:unsignedInt .\
+                                    t:unsignedShort1	rdf:value	"1"^^xsd:unsignedShort .\
+                                     t:unsignedByte1	rdf:value	"1"^^xsd:unsignedByte .\
+                                  t:positiveInteger1	rdf:value	"1"^^xsd:positiveInteger .\
+                         }';
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX t: <http://www.w3.org/2001/sw/DataAccess/tests/data/TypePromotion/tP-0#>\
+                                PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                                PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                ASK\
+                                 WHERE { \
+                                   t:float1 rdf:value ?l .\
+                                   t:decimal1 rdf:value ?r .\
+                                   FILTER ( datatype(?l + ?r) = xsd:float ) \
+                                 }', function(success, results){
+                                             test.ok(results);
+                                             test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testTypePromotionTypePromotion06 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX t: <http://www.w3.org/2001/sw/DataAccess/tests/data/TypePromotion/tP-0#>\
+                         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                               t:decimal1		rdf:value	"1"^^xsd:decimal .\
+                               t:float1		        rdf:value	"1"^^xsd:float .\
+                               t:double1		rdf:value	"1"^^xsd:double .\
+                               t:booleanT		rdf:value	"true"^^xsd:boolean .\
+                               t:dateTime1		rdf:value	"2005-01-14T12:34:56"^^xsd:dateTime .\
+                                t:integer1		rdf:value	"1"^^xsd:integer .\
+                                 t:nonPositiveIntegerN1	rdf:value	"-1"^^xsd:nonPositiveInteger .\
+                                  t:negativeIntegerN1	rdf:value	"-1"^^xsd:negativeInteger .\
+                                 t:long1		rdf:value	"1"^^xsd:long .\
+                                  t:int1		rdf:value	"1"^^xsd:int .\
+                                   t:short1		rdf:value	"1"^^xsd:short .\
+                                    t:byte1		rdf:value	"1"^^xsd:byte .\
+                                 t:nonNegativeInteger1	rdf:value	"1"^^xsd:nonNegativeInteger .\
+                                  t:unsignedLong1	rdf:value	"1"^^xsd:unsignedLong .\
+                                   t:unsignedInt1	rdf:value	"1"^^xsd:unsignedInt .\
+                                    t:unsignedShort1	rdf:value	"1"^^xsd:unsignedShort .\
+                                     t:unsignedByte1	rdf:value	"1"^^xsd:unsignedByte .\
+                                  t:positiveInteger1	rdf:value	"1"^^xsd:positiveInteger .\
+                         }';
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX t: <http://www.w3.org/2001/sw/DataAccess/tests/data/TypePromotion/tP-0#>\
+                                PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                                PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                ASK\
+                                 WHERE { \
+                                   t:decimal1 rdf:value ?l .\
+                                   t:decimal1 rdf:value ?r .\
+                                   FILTER ( datatype(?l + ?r) = xsd:decimal )\
+                                 }', function(success, results){
+                                             test.ok(results);
+                                             test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testTypePromotionTypePromotion07 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX t: <http://www.w3.org/2001/sw/DataAccess/tests/data/TypePromotion/tP-0#>\
+                         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                               t:decimal1		rdf:value	"1"^^xsd:decimal .\
+                               t:float1		        rdf:value	"1"^^xsd:float .\
+                               t:double1		rdf:value	"1"^^xsd:double .\
+                               t:booleanT		rdf:value	"true"^^xsd:boolean .\
+                               t:dateTime1		rdf:value	"2005-01-14T12:34:56"^^xsd:dateTime .\
+                                t:integer1		rdf:value	"1"^^xsd:integer .\
+                                 t:nonPositiveIntegerN1	rdf:value	"-1"^^xsd:nonPositiveInteger .\
+                                  t:negativeIntegerN1	rdf:value	"-1"^^xsd:negativeInteger .\
+                                 t:long1		rdf:value	"1"^^xsd:long .\
+                                  t:int1		rdf:value	"1"^^xsd:int .\
+                                   t:short1		rdf:value	"1"^^xsd:short .\
+                                    t:byte1		rdf:value	"1"^^xsd:byte .\
+                                 t:nonNegativeInteger1	rdf:value	"1"^^xsd:nonNegativeInteger .\
+                                  t:unsignedLong1	rdf:value	"1"^^xsd:unsignedLong .\
+                                   t:unsignedInt1	rdf:value	"1"^^xsd:unsignedInt .\
+                                    t:unsignedShort1	rdf:value	"1"^^xsd:unsignedShort .\
+                                     t:unsignedByte1	rdf:value	"1"^^xsd:unsignedByte .\
+                                  t:positiveInteger1	rdf:value	"1"^^xsd:positiveInteger .\
+                         }';
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX t: <http://www.w3.org/2001/sw/DataAccess/tests/data/TypePromotion/tP-0#>\
+                                PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                                PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                ASK\
+                                 WHERE { \
+                                    t:nonNegativeInteger1 rdf:value ?l .\
+                                    t:short1 rdf:value ?r .\
+                                    FILTER ( datatype(?l + ?r) = xsd:integer )\
+                                 }', function(success, results){
+                                             test.ok(results);
+                                             test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testTypePromotionTypePromotion08 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX t: <http://www.w3.org/2001/sw/DataAccess/tests/data/TypePromotion/tP-0#>\
+                         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                               t:decimal1		rdf:value	"1"^^xsd:decimal .\
+                               t:float1		        rdf:value	"1"^^xsd:float .\
+                               t:double1		rdf:value	"1"^^xsd:double .\
+                               t:booleanT		rdf:value	"true"^^xsd:boolean .\
+                               t:dateTime1		rdf:value	"2005-01-14T12:34:56"^^xsd:dateTime .\
+                                t:integer1		rdf:value	"1"^^xsd:integer .\
+                                 t:nonPositiveIntegerN1	rdf:value	"-1"^^xsd:nonPositiveInteger .\
+                                  t:negativeIntegerN1	rdf:value	"-1"^^xsd:negativeInteger .\
+                                 t:long1		rdf:value	"1"^^xsd:long .\
+                                  t:int1		rdf:value	"1"^^xsd:int .\
+                                   t:short1		rdf:value	"1"^^xsd:short .\
+                                    t:byte1		rdf:value	"1"^^xsd:byte .\
+                                 t:nonNegativeInteger1	rdf:value	"1"^^xsd:nonNegativeInteger .\
+                                  t:unsignedLong1	rdf:value	"1"^^xsd:unsignedLong .\
+                                   t:unsignedInt1	rdf:value	"1"^^xsd:unsignedInt .\
+                                    t:unsignedShort1	rdf:value	"1"^^xsd:unsignedShort .\
+                                     t:unsignedByte1	rdf:value	"1"^^xsd:unsignedByte .\
+                                  t:positiveInteger1	rdf:value	"1"^^xsd:positiveInteger .\
+                         }';
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX t: <http://www.w3.org/2001/sw/DataAccess/tests/data/TypePromotion/tP-0#>\
+                                PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                                PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                ASK\
+                                 WHERE { \
+                                   t:nonPositiveIntegerN1 rdf:value ?l .\
+                                   t:short1 rdf:value ?r .\
+                                   FILTER ( datatype(?l + ?r) = xsd:integer )\
+                                 }', function(success, results){
+                                             test.ok(results);
+                                             test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testTypePromotionTypePromotion09 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX t: <http://www.w3.org/2001/sw/DataAccess/tests/data/TypePromotion/tP-0#>\
+                         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                               t:decimal1		rdf:value	"1"^^xsd:decimal .\
+                               t:float1		        rdf:value	"1"^^xsd:float .\
+                               t:double1		rdf:value	"1"^^xsd:double .\
+                               t:booleanT		rdf:value	"true"^^xsd:boolean .\
+                               t:dateTime1		rdf:value	"2005-01-14T12:34:56"^^xsd:dateTime .\
+                                t:integer1		rdf:value	"1"^^xsd:integer .\
+                                 t:nonPositiveIntegerN1	rdf:value	"-1"^^xsd:nonPositiveInteger .\
+                                  t:negativeIntegerN1	rdf:value	"-1"^^xsd:negativeInteger .\
+                                 t:long1		rdf:value	"1"^^xsd:long .\
+                                  t:int1		rdf:value	"1"^^xsd:int .\
+                                   t:short1		rdf:value	"1"^^xsd:short .\
+                                    t:byte1		rdf:value	"1"^^xsd:byte .\
+                                 t:nonNegativeInteger1	rdf:value	"1"^^xsd:nonNegativeInteger .\
+                                  t:unsignedLong1	rdf:value	"1"^^xsd:unsignedLong .\
+                                   t:unsignedInt1	rdf:value	"1"^^xsd:unsignedInt .\
+                                    t:unsignedShort1	rdf:value	"1"^^xsd:unsignedShort .\
+                                     t:unsignedByte1	rdf:value	"1"^^xsd:unsignedByte .\
+                                  t:positiveInteger1	rdf:value	"1"^^xsd:positiveInteger .\
+                         }';
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX t: <http://www.w3.org/2001/sw/DataAccess/tests/data/TypePromotion/tP-0#>\
+                                PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                                PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                ASK\
+                                 WHERE { \
+                                    t:negativeIntegerN1 rdf:value ?l .\
+                                    t:short1 rdf:value ?r .\
+                                    FILTER ( datatype(?l + ?r) = xsd:integer )\
+                                 }', function(success, results){
+                                             test.ok(results);
+                                             test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testTypePromotionTypePromotion10 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX t: <http://www.w3.org/2001/sw/DataAccess/tests/data/TypePromotion/tP-0#>\
+                         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                               t:decimal1		rdf:value	"1"^^xsd:decimal .\
+                               t:float1		        rdf:value	"1"^^xsd:float .\
+                               t:double1		rdf:value	"1"^^xsd:double .\
+                               t:booleanT		rdf:value	"true"^^xsd:boolean .\
+                               t:dateTime1		rdf:value	"2005-01-14T12:34:56"^^xsd:dateTime .\
+                                t:integer1		rdf:value	"1"^^xsd:integer .\
+                                 t:nonPositiveIntegerN1	rdf:value	"-1"^^xsd:nonPositiveInteger .\
+                                  t:negativeIntegerN1	rdf:value	"-1"^^xsd:negativeInteger .\
+                                 t:long1		rdf:value	"1"^^xsd:long .\
+                                  t:int1		rdf:value	"1"^^xsd:int .\
+                                   t:short1		rdf:value	"1"^^xsd:short .\
+                                    t:byte1		rdf:value	"1"^^xsd:byte .\
+                                 t:nonNegativeInteger1	rdf:value	"1"^^xsd:nonNegativeInteger .\
+                                  t:unsignedLong1	rdf:value	"1"^^xsd:unsignedLong .\
+                                   t:unsignedInt1	rdf:value	"1"^^xsd:unsignedInt .\
+                                    t:unsignedShort1	rdf:value	"1"^^xsd:unsignedShort .\
+                                     t:unsignedByte1	rdf:value	"1"^^xsd:unsignedByte .\
+                                  t:positiveInteger1	rdf:value	"1"^^xsd:positiveInteger .\
+                         }';
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX t: <http://www.w3.org/2001/sw/DataAccess/tests/data/TypePromotion/tP-0#>\
+                                PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                                PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                ASK\
+                                 WHERE { \
+                                   t:long1 rdf:value ?l .\
+                                   t:short1 rdf:value ?r .\
+                                   FILTER ( datatype(?l + ?r) = xsd:integer )\
+                                 }', function(success, results){
+                                             test.ok(results);
+                                             test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testTypePromotionTypePromotion11 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX t: <http://www.w3.org/2001/sw/DataAccess/tests/data/TypePromotion/tP-0#>\
+                         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                               t:decimal1		rdf:value	"1"^^xsd:decimal .\
+                               t:float1		        rdf:value	"1"^^xsd:float .\
+                               t:double1		rdf:value	"1"^^xsd:double .\
+                               t:booleanT		rdf:value	"true"^^xsd:boolean .\
+                               t:dateTime1		rdf:value	"2005-01-14T12:34:56"^^xsd:dateTime .\
+                                t:integer1		rdf:value	"1"^^xsd:integer .\
+                                 t:nonPositiveIntegerN1	rdf:value	"-1"^^xsd:nonPositiveInteger .\
+                                  t:negativeIntegerN1	rdf:value	"-1"^^xsd:negativeInteger .\
+                                 t:long1		rdf:value	"1"^^xsd:long .\
+                                  t:int1		rdf:value	"1"^^xsd:int .\
+                                   t:short1		rdf:value	"1"^^xsd:short .\
+                                    t:byte1		rdf:value	"1"^^xsd:byte .\
+                                 t:nonNegativeInteger1	rdf:value	"1"^^xsd:nonNegativeInteger .\
+                                  t:unsignedLong1	rdf:value	"1"^^xsd:unsignedLong .\
+                                   t:unsignedInt1	rdf:value	"1"^^xsd:unsignedInt .\
+                                    t:unsignedShort1	rdf:value	"1"^^xsd:unsignedShort .\
+                                     t:unsignedByte1	rdf:value	"1"^^xsd:unsignedByte .\
+                                  t:positiveInteger1	rdf:value	"1"^^xsd:positiveInteger .\
+                         }';
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX t: <http://www.w3.org/2001/sw/DataAccess/tests/data/TypePromotion/tP-0#>\
+                                PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                                PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                                ASK\
+                                 WHERE { \
+                                   t:int1 rdf:value ?l .\
+                                   t:short1 rdf:value ?r .\
+                                   FILTER ( datatype(?l + ?r) = xsd:integer )\
+                                 }', function(success, results){
+                                             test.ok(results);
+                                             test.done();
+                });
+            });
+        });
+    });
+};

@@ -24,6 +24,15 @@
     var registerDefaultPrefix = function(uri) {
         prefixes[null] = uri;
     }
+
+    var arrayToString = function(array) {
+        var tmp = "";
+        for(var i=0; i<array.length; i++) {
+            tmp = tmp + array[i];            
+        }
+
+        return tmp.toUpperCase();
+    }
 }
 
 SPARQL =
@@ -61,7 +70,7 @@ Prologue "[3] Prologue"
   [4]  	BaseDecl	  ::=  	'BASE' IRI_REF
 */
 BaseDecl "[4] BaseDecl"
-  = WS* 'BASE' WS* i:IRI_REF {
+  = WS* ('B'/'b')('A'/'a')('S'/'s')('E'/'e') WS* i:IRI_REF {
       registerDefaultPrefix(i);
 
       base = {};
@@ -75,7 +84,7 @@ BaseDecl "[4] BaseDecl"
   [5]  	PrefixDecl	  ::=  	'PREFIX' PNAME_NS IRI_REF
 */
 PrefixDecl "[5] PrefixDecl"
-  = WS* 'PREFIX'  WS* p:PNAME_NS  WS* l:IRI_REF {
+  = WS* ('P'/'p')('R'/'r')('E'/'e')('F'/'f')('I'/'i')('X'/'x')  WS* p:PNAME_NS  WS* l:IRI_REF {
 
       registerPrefix(p,l);
 
@@ -144,10 +153,10 @@ SubSelect "[7] SubSelect"
   [8]  	SelectClause	  ::=  	'SELECT' ( 'DISTINCT' | 'REDUCED' )? ( ( Var | ( '(' Expression 'AS' Var ')' ) )+ | '*' )
 */
 SelectClause "[8] SelectClause"
-  = WS* 'SELECT' WS* mod:( 'DISTINCT' / 'REDUCED' )? WS* proj:( ( ( WS* Var WS* ) / ( WS* '(' WS* Expression WS* 'AS' WS* Var WS* ')' WS* ) )+ / ( WS* '*' WS* )  ) {
+  = WS* ('S'/'s')('E'/'e')('L'/'l')('E'/'e')('C'/'c')('T'/'t') WS* mod:( ('D'/'d')('I'/'i')('S'/'s')('T'/'t')('I'/'i')('N'/'n')('C'/'c')('T'/'t') / ('R'/'r')('E'/'e')('D'/'d')('U'/'u')('C'/'c')('E'/'e')('D'/'d') )? WS* proj:( ( ( WS* Var WS* ) / ( WS* '(' WS* Expression WS* 'AS' WS* Var WS* ')' WS* ) )+ / ( WS* '*' WS* )  ) {
      var vars = [];
       if(proj.length === 3 && proj[1]==="*") {
-          return {vars: [{token: 'variable', kind:'*'}], modifier:mod};
+          return {vars: [{token: 'variable', kind:'*'}], modifier:arrayToString(mod)};
       }
 
       for(var i=0; i< proj.length; i++) {
@@ -160,7 +169,7 @@ SelectClause "[8] SelectClause"
           }
       }
 
-      return {vars: vars, modifier:mod};
+      return {vars: vars, modifier:arrayToString(mod)};
 }
 
 /*
@@ -434,7 +443,16 @@ Update1 "[31] Update1"
 [32]  	Load	  ::=  	'LOAD' IRIref ( 'INTO' GraphRef )?
 */
 Load "[32] Load"
-  = 'LOAD' IRIref ( 'INTO' GraphRef )?
+  = ('L'/'l')('O'/'o')('A'/'a')('D'/'d') WS* sg:IRIref WS* dg:( ('I'/'i')('N'/'n')('T'/'t')('O'/'o') WS* GraphRef)? {
+      var query = {};
+      query.kind = 'load';
+      query.token = 'executableunit'
+      query.sourceGraph = sg;
+      query.destinyGraph = dg[5];
+      
+      return query;
+}
+
 
 /*
   [33]  	Clear	  ::=  	'CLEAR' 'SILENT'? GraphRefAll
@@ -521,7 +539,9 @@ UsingClause "[42] UsingClause"
   [43]  	GraphRef	  ::=  	'GRAPH' IRIref
 */
 GraphRef "[43] GraphRef"
-  = 'GRAPH' IRIref
+  = ('G'/'g')('R'/'r')('A'/'a')('P'/'p')('H'/'h') WS* i:IRIref {
+      return i;
+}
 
 
 /*
@@ -1653,7 +1673,7 @@ BuiltInCall "[106] BuiltInCall"
 
       return ex;
 }
-  / 'DATATYPE' WS* '(' WS* e:Expression WS* ')' {
+  / ('D'/'d')('A'/'a')('T'/'t')('A'/'a')('T'/'t')('Y'/'y')('P'/'p')('E'/'e') WS* '(' WS* e:Expression WS* ')' {
       var ex = {};
       ex.token = 'expression'
       ex.expressionType = 'builtincall'
@@ -2190,6 +2210,14 @@ WS "[145] WS"
   / [\u0009]
   / [\u000D]
   / [\u000A]
+  / COMMENT
+
+
+/*
+  comment 	::= 	'#' ( [^#xA#xD] )*
+*/
+COMMENT " COMMENT"
+  = '#'( [^#xA#xD] )*
 
 
 /*

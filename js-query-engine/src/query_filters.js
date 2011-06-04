@@ -316,6 +316,36 @@ QueryFilters.isFloat = function(val) {
     }
 };
 
+QueryFilters.isDecimal = function(val) {
+    if(val == null) {
+        return false;
+    }
+    if(val.token === 'literal') {
+        if(val.type == "http://www.w3.org/2001/XMLSchema#decimal") {
+            return true;
+        } else {
+            return false;
+        }
+    } else {
+        return false;
+    }
+};
+
+QueryFilters.isDouble = function(val) {
+    if(val == null) {
+        return false;
+    }
+    if(val.token === 'literal') {
+        if(val.type == "http://www.w3.org/2001/XMLSchema#double") {
+            return true;
+        } else {
+            return false;
+        }
+    } else {
+        return false;
+    }
+};
+
 
 QueryFilters.isNumeric = function(val) {
     if(val == null) {
@@ -955,12 +985,15 @@ QueryFilters.runSumFunction = function(suma, sumb) {
     if(QueryFilters.isEbvError(suma) || QueryFilters.isEbvError(sumb)) {
         return QueryFilters.ebvError();
     }
-
-    if(QueryFilters.isFloat(suma) || QueryFilters.isFloat(sumb)) {
-        var val = QueryFilters.effectiveTypeValue(suma) + QueryFilters.effectiveTypeValue(sumb);
+    var val = QueryFilters.effectiveTypeValue(suma) + QueryFilters.effectiveTypeValue(sumb);
+    
+    if(QueryFilters.isDouble(suma) || QueryFilters.isDouble(sumb)) {
+        return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#double", value:val};        
+    } else if(QueryFilters.isFloat(suma) || QueryFilters.isFloat(sumb)) {
         return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#float", value:val};        
+    } else if(QueryFilters.isDecimal(suma) || QueryFilters.isDecimal(sumb)) {
+        return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#decimal", value:val};        
     } else {
-        var val = QueryFilters.effectiveTypeValue(suma) + QueryFilters.effectiveTypeValue(sumb);
         return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#integer", value:val};        
     }
 };
@@ -969,12 +1002,15 @@ QueryFilters.runSubFunction = function(suma, sumb) {
     if(QueryFilters.isEbvError(suma) || QueryFilters.isEbvError(sumb)) {
         return QueryFilters.ebvError();
     }
+    var val = QueryFilters.effectiveTypeValue(suma) - QueryFilters.effectiveTypeValue(sumb);
 
-    if(QueryFilters.isFloat(suma) || QueryFilters.isFloat(sumb)) {
-        var val = QueryFilters.effectiveTypeValue(suma) - QueryFilters.effectiveTypeValue(sumb);
+    if(QueryFilters.isDouble(suma) || QueryFilters.isDouble(sumb)) {
+        return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#double", value:val};        
+    } else if(QueryFilters.isFloat(suma) || QueryFilters.isFloat(sumb)) {
         return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#float", value:val};        
+    } else if(QueryFilters.isDecimal(suma) || QueryFilters.isDecimal(sumb)) {
+        return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#decimal", value:val};        
     } else {
-        var val = QueryFilters.effectiveTypeValue(suma) - QueryFilters.effectiveTypeValue(sumb);
         return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#integer", value:val};        
     }
 };
@@ -1012,12 +1048,15 @@ QueryFilters.runMulFunction = function(faca, facb) {
     if(QueryFilters.isEbvError(faca) || QueryFilters.isEbvError(facb)) {
         return QueryFilters.ebvError();
     }
+    var val = QueryFilters.effectiveTypeValue(faca) * QueryFilters.effectiveTypeValue(facb);
 
-    if(QueryFilters.isFloat(faca) || QueryFilters.isFloat(facb)) {
-        var val = QueryFilters.effectiveTypeValue(faca) * QueryFilters.effectiveTypeValue(facb);
+    if(QueryFilters.isDouble(faca) || QueryFilters.isDouble(facb)) {
+        return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#double", value:val};        
+    } else if(QueryFilters.isFloat(faca) || QueryFilters.isFloat(facb)) {
         return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#float", value:val};        
+    } else if(QueryFilters.isDecimal(faca) || QueryFilters.isDecimal(facb)) {
+        return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#decimal", value:val};        
     } else {
-        var val = QueryFilters.effectiveTypeValue(faca) * QueryFilters.effectiveTypeValue(facb);
         return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#integer", value:val};        
     }
 };
@@ -1026,12 +1065,15 @@ QueryFilters.runDivFunction = function(faca, facb) {
     if(QueryFilters.isEbvError(faca) || QueryFilters.isEbvError(facb)) {
         return QueryFilters.ebvError();
     }
+    var val = QueryFilters.effectiveTypeValue(faca) / QueryFilters.effectiveTypeValue(facb);
 
-    if(QueryFilters.isFloat(faca) || QueryFilters.isFloat(facb)) {
-        var val = QueryFilters.effectiveTypeValue(faca) / QueryFilters.effectiveTypeValue(facb);
+    if(QueryFilters.isDouble(faca) || QueryFilters.isDouble(facb)) {
+        return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#double", value:val};        
+    } else if(QueryFilters.isFloat(faca) || QueryFilters.isFloat(facb)) {
         return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#float", value:val};        
+    } else if(QueryFilters.isDecimal(faca) || QueryFilters.isDecimal(facb)) {
+        return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#decimal", value:val};        
     } else {
-        var val = QueryFilters.effectiveTypeValue(faca) / QueryFilters.effectiveTypeValue(facb);
         return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#integer", value:val};        
     }
 };
