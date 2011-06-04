@@ -316,14 +316,17 @@ QueryEngine.QueryEngine.prototype.projectBindings = function(projection, results
     return result;
 };
 
-QueryEngine.QueryEngine.prototype.applyBaseUri = function(uriFragment, env) {
-    return (env.base||"") + uriFragment;
-};
-
 QueryEngine.QueryEngine.prototype.resolveNsInEnvironment = function(prefix, env) {
     var namespaces = env.namespaces;
     return namespaces[prefix];
 };
+
+
+/*
+QueryEngine.QueryEngine.prototype.applyBaseUri = function(uriFragment, env) {
+    return (env.base||"") + uriFragment;
+};
+
 
 QueryEngine.QueryEngine.prototype.hasScheme = function(uri) {
     return uri.indexOf(":") != -1;
@@ -367,10 +370,11 @@ QueryEngine.QueryEngine.prototype.normalizeBaseUri = function(term, env) {
 
     return uri;
 }
+*/
 
 QueryEngine.QueryEngine.prototype.normalizeTerm = function(term, env, callback) {
     if(term.token === 'uri') {
-        var uri = this.normalizeBaseUri(term, env);
+        var uri = Utils.lexicalFormBaseUri(term, env);
         if(uri == null) {
             callback(false, "The prefix "+prefix+" cannot be resolved in the current environment");
         } else {
@@ -492,41 +496,9 @@ QueryEngine.QueryEngine.prototype.normalizeQuad = function(quad, queryEnv, callb
     });
 };
 
-QueryEngine.QueryEngine.prototype.baseValueLiteral = function(term, env) {
-    var value = term.value;
-    var lang = term.lang;
-    var type = term.type;
-
-    var indexedValue = null;
-    if(value != null && type != null && typeof(type) != 'string') {
-        var typeValue = type.value;
-
-        if(typeValue != null) {
-            indexedValue = '"' + term.value + '"^^<' + typeValue + '>';
-        } else {
-            var typePrefix = type.prefix;
-            var typeSuffix = type.suffix;
-
-            var resolvedPrefix = this.resolveNsInEnvironment(typePrefix, env);
-            term.type = resolvedPrefix+typeSuffix;
-            indexedValue = '"' + term.value + '"^^<' + resolvedPrefix + typeSuffix + '>';
-        }
-    } else {
-        if(lang == null && type == null) {
-            indexedValue = '"' + value + '"';
-        } else if(type == null) {
-            indexedValue = '"' + value + '"' + "@" + lang;        
-        } else {
-            indexedValue = '"' + term.value + '"^^<'+type+'>';
-        }
-    }
-    return indexedValue;
-};
-
 QueryEngine.QueryEngine.prototype.normalizeLiteral = function(term, env, callback) {
-    var indexedValue = this.baseValueLiteral(term, env);
-
-    this.lexicon.registerLiteral(indexedValue, function(oid){
+    var lexicalFormLiteral = Utils.lexicalFormLiteral(term, env);
+    this.lexicon.registerLiteral(lexicalFormLiteral, function(oid){
         callback(true, oid);
     });
 };
@@ -1056,12 +1028,9 @@ QueryEngine.QueryEngine.prototype.executeUpdate = function(syntaxTree, callback)
                 callback(true);
             });
         } else if(aqt.kind === 'load') {
-            // @todo
-            // NAMESPACES!!! -> this must be denormalized
-            // NORMALIZE * must be splitted bewteen denormalization and registry;
-            var graph = {'uri': aqt.sourceGraph.value};
+            var graph = {'uri': Utils.lexicalFormBaseUri(aqt.sourceGraph, queryEnv)};
             if(aqt.destinyGraph != null) {
-                graph = {'uri': aqt.destinyGraph.value};
+                graph = {'uri': Utils.lexicalFormBaseUri(aqt.destinyGraph, queryEnv)};
             }
             var that = this;
             this.rdfLoader.load(aqt.sourceGraph.value, graph, function(success, result){

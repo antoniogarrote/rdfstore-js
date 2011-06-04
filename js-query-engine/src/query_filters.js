@@ -192,7 +192,8 @@ QueryFilters.runFilter = function(filterExpr, bindings, queryEngine, env) {
                         return filterExpr.value
                     } else {
                         // type can be parsed as a hash using namespaces
-                        filterExpr.value.type =  queryEngine.normalizeBaseUri(filterExpr.value.type, env);
+
+                        filterExpr.value.type =  Utils.lexicalFormBaseUri(filterExpr.value.type, env);
                         return filterExpr.value
                     }
                 }
@@ -263,7 +264,7 @@ QueryFilters.RDFTermEquality = function(v1, v2, queryEngine, env) {
 
         }
     } else if(v1.token === 'uri' && v2.token === 'uri') {
-        return queryEngine.normalizeBaseUri(v1, env) == queryEngine.normalizeBaseUri(v2, env);
+        return Utils.lexicalFormBaseUri(v1, env) == Utils.lexicalFormBaseUri(v2, env);
     } else if(v1.token === 'blank' && v2.token === 'blank') {
         return v1.value == v2.value;
     } else {
@@ -1284,7 +1285,7 @@ QueryFilters.normalizeLiteralDatatype = function(literal, queryEngine, env) {
         return literal;
     } else {
         // type can be parsed as a hash using namespaces
-        literal.value.type =  queryEngine.normalizeBaseUri(literal.value.type, env);
+        literal.value.type =  Utils.lexicalFormBaseUri(literal.value.type, env);
         return literal;
     }
 };
@@ -1298,7 +1299,7 @@ QueryFilters.runIriRefOrFunction = function(iriref, args, bindings,queryEngine, 
             ops.push(QueryFilters.runFilter(args[i], bindings, queryEngine, env))
         }
 
-        var fun = queryEngine.normalizeBaseUri(iriref, env);
+        var fun = Utils.lexicalFormBaseUri(iriref, env);
 
         if(fun == "http://www.w3.org/2001/XMLSchema#integer" ||
            fun == "http://www.w3.org/2001/XMLSchema#decimal" ||
@@ -1460,7 +1461,7 @@ QueryFilters.runIriRefOrFunction = function(iriref, args, bindings,queryEngine, 
                 }
             } else if(from.token === 'uri') {
                 return {token: 'literal',
-                        value: queryEngine.normalizeBaseUri(from, env),
+                        value: Utils.lexicalFormBaseUri(from, env),
                         type: fun,
                         lang: null};
             } else {

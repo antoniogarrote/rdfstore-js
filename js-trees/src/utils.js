@@ -249,3 +249,84 @@ Utils.compareDateComponents = function(stra,strb) {
         }
     }
 };
+
+// RDF utils
+
+Utils.lexicalFormLiteral = function(term, env) {
+    var value = term.value;
+    var lang = term.lang;
+    var type = term.type;
+
+    var indexedValue = null;
+    if(value != null && type != null && typeof(type) != 'string') {
+        var typeValue = type.value;
+
+        if(typeValue != null) {
+            indexedValue = '"' + term.value + '"^^<' + typeValue + '>';
+        } else {
+            var typePrefix = type.prefix;
+            var typeSuffix = type.suffix;
+
+            var resolvedPrefix = env.namespaces[typePrefix];
+            term.type = resolvedPrefix+typeSuffix;
+            indexedValue = '"' + term.value + '"^^<' + resolvedPrefix + typeSuffix + '>';
+        }
+    } else {
+        if(lang == null && type == null) {
+            indexedValue = '"' + value + '"';
+        } else if(type == null) {
+            indexedValue = '"' + value + '"' + "@" + lang;        
+        } else {
+            indexedValue = '"' + term.value + '"^^<'+type+'>';
+        }
+    }
+    return indexedValue;
+};
+
+Utils.lexicalFormBaseUri = function(term, env) {
+    var uri = null;
+    //console.log("*** normalizing URI token:");
+    //console.log(term);
+    if(term.value == null) {
+        //console.log(" - URI has prefix and suffix");
+        //console.log(" - prefix:"+term.prefix);
+        //console.log(" - suffixx:"+term.suffix);
+        var prefix = term.prefix;
+        var suffix = term.suffix;
+        var resolvedPrefix = env.namespaces[prefix];
+        if(resolvedPrefix != null) {            
+            uri = resolvedPrefix+suffix;
+        }
+    } else {
+        //console.log(" - URI is not prefixed");
+        uri = term.value
+    }
+
+    if(uri===null) {
+        return null;
+    } else {
+        //console.log(" - resolved URI is "+uri);
+        if(uri.indexOf(":") == -1) {
+            //console.log(" - URI is partial");
+            uri = (env.base||"") + uri; // applyBaseUri
+        } else {
+            //console.log(" - URI is complete");
+        }
+        //console.log(" -> FINAL URI: "+uri);
+    }
+
+    return uri;
+};
+
+
+Utils.lexicalFormTerm = function(term, ns) {
+    if(term.token === 'uri') {
+        return {'uri': Utils.lexicalFormBaseUri(term, ns)}
+    } else if(term.token === 'literal') {
+        return {'literal': Utils.lexicalFormLiteral(term, ns)};
+    } else if(term.token === 'blank') {
+        return {'blank': label};
+    } else {
+        callback(false, 'Token of kind '+term.token+' cannot transformed into its lexical form');
+    }
+};
