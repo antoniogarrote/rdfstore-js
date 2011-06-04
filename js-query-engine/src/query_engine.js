@@ -322,81 +322,57 @@ QueryEngine.QueryEngine.prototype.resolveNsInEnvironment = function(prefix, env)
 };
 
 
-/*
-QueryEngine.QueryEngine.prototype.applyBaseUri = function(uriFragment, env) {
-    return (env.base||"") + uriFragment;
-};
-
-
-QueryEngine.QueryEngine.prototype.hasScheme = function(uri) {
-    return uri.indexOf(":") != -1;
-};
-
-QueryEngine.QueryEngine.prototype.normalizeBaseUri = function(term, env) {
-    var uri = null;
-    //console.log("*** normalizing URI token:");
-    //console.log(term);
-    if(term.value == null) {
-        //console.log(" - URI has prefix and suffix");
-        //console.log(" - prefix:"+term.prefix);
-        //console.log(" - suffixx:"+term.suffix);
-        var prefix = term.prefix;
-        var suffix = term.suffix;
-        var resolvedPrefix = this.resolveNsInEnvironment(prefix, env);
-        if(resolvedPrefix != null) {            
-            uri = resolvedPrefix+suffix;
-        }
-    } else {
-        //console.log(" - URI is not prefixed");
-        uri = term.value
-    }
-
-    if(uri===null) {
-        return null;
-    } else {
-        //console.log(" - resolved URI is "+uri);
-        if(!this.hasScheme(uri)) {
-            //console.log(" - URI is partial");
-            uri = this.applyBaseUri(uri, env);
-        } else {
-            //console.log(" - URI is complete");
-        }
-
-        //console.log(" -> FINAL URI: "+uri);
-        // 1. resolve ns prefix if prefixed
-        // 2. check if fragment or full uri
-        // 3. apply base if fragment
-    }
-
-    return uri;
-}
-*/
-
-QueryEngine.QueryEngine.prototype.normalizeTerm = function(term, env, callback) {
+QueryEngine.QueryEngine.prototype.normalizeTerm = function(term, env, shouldIndex, callback) {
     if(term.token === 'uri') {
         var uri = Utils.lexicalFormBaseUri(term, env);
         if(uri == null) {
             callback(false, "The prefix "+prefix+" cannot be resolved in the current environment");
         } else {
-            this.lexicon.registerUri(uri, function(oid){
-                callback(true, oid);
-            });
+            //console.log("SHOULD INDEX?");
+            //console.log(term);
+            //console.log(shouldIndex);
+            if(shouldIndex) {
+                this.lexicon.registerUri(uri, function(oid){
+                    callback(true, oid);
+                });
+            } else {
+                this.lexicon.resolveUri(uri, function(oid){
+                    callback(true, oid);
+                });
+            }
         }
 
     } else if(term.token === 'literal') {
-        this.normalizeLiteral(term, env, function(success, result){
-            callback(success, result);
-        })
+        var lexicalFormLiteral = Utils.lexicalFormLiteral(term, env);
+        if(shouldIndex) {
+            this.lexicon.registerLiteral(lexicalFormLiteral, function(oid){
+                callback(true, oid);
+            });
+        } else {
+            this.lexicon.resolveLiteral(lexicalFormLiteral, function(oid){
+                callback(true, oid);
+            });
+        }
+        //this.normalizeLiteral(term, env, function(success, result){
+        //    callback(success, result);
+        //})
     } else if(term.token === 'blank') {
         var label = term.label;
         var oid = env.blanks[label];
         if( oid != null) {
             callback(true,oid);
         } else {
-            this.lexicon.registerBlank(label, function(oid) {
-                env.blanks[label] = oid;
-                callback(true,oid);
-            });
+            if(shouldIndex) {
+                this.lexicon.registerBlank(label, function(oid) {
+                    env.blanks[label] = oid;
+                    callback(true,oid);
+                });
+            } else {
+                this.lexicon.resolveBlank(label, function(oid) {
+                    env.blanks[label] = oid;
+                    callback(true,oid);
+                });
+            }
         }
     } else if(term.token === 'var') {
         callback(true, term.value);
@@ -414,7 +390,7 @@ QueryEngine.QueryEngine.prototype.normalizeDatasets = function(datasets, env, ca
             dataset.oid = that.lexicon.defaultGraphOid;
             k(floop, env);
         } else {
-            that.normalizeTerm(dataset, env, function(success, result){
+            that.normalizeTerm(dataset, env, false, function(success, result){
                 if(success) {
                     dataset.oid = result;
                     k(floop, env);
@@ -428,7 +404,7 @@ QueryEngine.QueryEngine.prototype.normalizeDatasets = function(datasets, env, ca
     });
 }
 
-QueryEngine.QueryEngine.prototype.normalizeQuad = function(quad, queryEnv, callback) {
+QueryEngine.QueryEngine.prototype.normalizeQuad = function(quad, queryEnv, shouldIndex, callback) {
     var subject    = null;
     var predicate  = null;
     var object     = null;
@@ -440,7 +416,7 @@ QueryEngine.QueryEngine.prototype.normalizeQuad = function(quad, queryEnv, callb
             graph = 0; // default graph
             k();
         } else {
-          that.normalizeTerm(quad.graph, queryEnv, function(result, oid){    
+          that.normalizeTerm(quad.graph, queryEnv, shouldIndex, function(result, oid){    
               if(errorFound === false){
                   if(result===true) {
                       graph = oid;
@@ -452,7 +428,7 @@ QueryEngine.QueryEngine.prototype.normalizeQuad = function(quad, queryEnv, callb
           });
         }
     }, function(k){
-        that.normalizeTerm(quad.subject, queryEnv, function(result, oid){    
+        that.normalizeTerm(quad.subject, queryEnv, shouldIndex, function(result, oid){    
             if(errorFound === false){
                 if(result===true) {
                     subject = oid;
@@ -463,7 +439,7 @@ QueryEngine.QueryEngine.prototype.normalizeQuad = function(quad, queryEnv, callb
             k();
         });
     }, function(k){
-        that.normalizeTerm(quad.predicate, queryEnv, function(result, oid){    
+        that.normalizeTerm(quad.predicate, queryEnv, shouldIndex, function(result, oid){    
             if(errorFound === false){
                 if(result===true) {
                     predicate = oid;
@@ -474,7 +450,7 @@ QueryEngine.QueryEngine.prototype.normalizeQuad = function(quad, queryEnv, callb
             k();
         });
     }, function(k){
-        that.normalizeTerm(quad.object, queryEnv, function(result, oid){    
+        that.normalizeTerm(quad.object, queryEnv, shouldIndex, function(result, oid){    
             if(errorFound === false){
                 if(result===true) {
                     object = oid;
@@ -496,12 +472,12 @@ QueryEngine.QueryEngine.prototype.normalizeQuad = function(quad, queryEnv, callb
     });
 };
 
-QueryEngine.QueryEngine.prototype.normalizeLiteral = function(term, env, callback) {
-    var lexicalFormLiteral = Utils.lexicalFormLiteral(term, env);
-    this.lexicon.registerLiteral(lexicalFormLiteral, function(oid){
-        callback(true, oid);
-    });
-};
+//QueryEngine.QueryEngine.prototype.normalizeLiteral = function(term, env, callback) {
+//    var lexicalFormLiteral = Utils.lexicalFormLiteral(term, env);
+//    this.lexicon.registerLiteral(lexicalFormLiteral, function(oid){
+//        callback(true, oid);
+//    });
+//};
 
 QueryEngine.QueryEngine.prototype.denormalizeBindingsList = function(bindingsList, callback) {
     var results = [];
@@ -983,9 +959,18 @@ QueryEngine.QueryEngine.prototype.executeJOIN = function(projection, dataset, pa
 
 QueryEngine.QueryEngine.prototype.rangeQuery = function(quad, queryEnv, callback) {
     var that = this;
-    that.normalizeQuad(quad, queryEnv, function(success, key){
+    //console.log("BEFORE:");
+    //console.log("QUAD:");
+    //console.log(quad);
+    that.normalizeQuad(quad, queryEnv, false, function(success, key){
         if(success == true) {
+            //console.log("RANGE QUERY:")
+            //console.log(success);
+            //console.log(key);
+            //console.log(new QuadIndexCommon.Pattern(key));
             that.backend.range(new QuadIndexCommon.Pattern(key),function(quads){
+                //console.log("retrieved");
+                //console.log(quads)
                 if(quads == null || quads.length == 0) {
                     callback(true, []);
                 } else {
@@ -1027,6 +1012,21 @@ QueryEngine.QueryEngine.prototype.executeUpdate = function(syntaxTree, callback)
             }, function(env) {
                 callback(true);
             });
+        } else if(aqt.kind === 'deletedata') {
+            Utils.repeat(0, aqt.quads.length, function(k,env) {                
+                var quad = aqt.quads[env._i];
+                var floop = arguments.callee;
+                that._executeQuadDelete(quad, queryEnv, function(result, error) {
+                    if(result === true) {
+                        k(floop, env);
+                    } else {
+                        callback(false, error);
+                    }
+                });
+            }, function(env) {
+                callback(true);
+            });
+
         } else if(aqt.kind === 'load') {
             var graph = {'uri': Utils.lexicalFormBaseUri(aqt.sourceGraph, queryEnv)};
             if(aqt.destinyGraph != null) {
@@ -1164,7 +1164,7 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
 
 QueryEngine.QueryEngine.prototype._executeQuadInsert = function(quad, queryEnv, callback) {
     var that = this;
-    this.normalizeQuad(quad, queryEnv, function(success,result) {
+    this.normalizeQuad(quad, queryEnv, true, function(success,result) {
         if(success === true) {
             var key = new QuadIndexCommon.NodeKey(result);
             that.backend.index(key, function(result, error){
@@ -1173,6 +1173,26 @@ QueryEngine.QueryEngine.prototype._executeQuadInsert = function(quad, queryEnv, 
                 } else {
                     callback(false, error);
                 }
+            });
+        } else {
+            callback(false, result);
+        }
+    });
+};
+
+QueryEngine.QueryEngine.prototype._executeQuadDelete = function(quad, queryEnv, callback) {
+    var that = this;
+    this.normalizeQuad(quad, queryEnv, false, function(success,result) {
+        if(success === true) {
+            var key = new QuadIndexCommon.NodeKey(result);
+            that.backend.delete(key, function(result, error){
+                that.lexicon.unregister(quad, key, function(result, error){
+                    if(result == true){
+                        callback(true);
+                    } else {
+                        callback(false, error);
+                    }
+                })
             });
         } else {
             callback(false, result);

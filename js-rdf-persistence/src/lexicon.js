@@ -38,12 +38,29 @@ Lexicon.Lexicon.prototype.registerUri = function(uri, callback) {
         var oidStr = 'u'+oid;
         this.oidCounter++;
 
-        this.uriToOID[uri] = oid;
+        this.uriToOID[uri] =[oid, 0];
         this.OIDToUri[oidStr] = uri;
 
         callback(oid);
     } else {
-        callback(this.uriToOID[uri]);
+        var oidCounter = this.uriToOID[uri];
+        var oid = oidCounter[0];
+        var counter = oidCounter[1] + 1;
+        this.uriToOID[uri] = [oid, counter];
+        callback(oid);
+    }
+};
+
+Lexicon.Lexicon.prototype.resolveUri = function(uri, callback) {
+    if(uri === this.defaultGraphUri) {
+        callback(this.defaultGraphOid);
+    } else {
+        var oidCounter = this.uriToOID[uri];
+        if(oidCounter != null) {
+            callback(oidCounter[0]);
+        } else {
+            callback(-1);
+        }
     }
 };
 
@@ -55,20 +72,45 @@ Lexicon.Lexicon.prototype.registerBlank = function(label, callback) {
     callback(oidStr);
 };
 
+Lexicon.Lexicon.prototype.resolveBlank = function(label, callback) {
+//    @todo
+//    this is failing with unicode tests... e.g. kanji2
+
+//    var id = label.split(":")[1];
+//    callback(id);
+
+    var oid = this.oidCounter;
+    this.oidCounter++
+    callback(""+oid);
+};
+
 Lexicon.Lexicon.prototype.registerLiteral = function(literal, callback) {
     if(this.literalToOID[literal] == null){
         var oid = this.oidCounter;
         var oidStr =  'l'+ oid;
         this.oidCounter++;
 
-        this.literalToOID[literal] = oid;
+        this.literalToOID[literal] = [oid, 0];
         this.OIDToLiteral[oidStr] = literal;
 
         callback(oid);
     } else {
-        callback(this.literalToOID[literal]);
+        var oidCounter = this.literalToOID[literal];
+        var oid = oidCounter[0];
+        var counter = oidCounter[1] + 1;
+        this.literalToOID[literal] = [oid, counter];
+        callback(oid);
     }
 };
+
+Lexicon.Lexicon.prototype.resolveLiteral = function(literal, callback) {
+    var oidCounter = this.literalToOID[literal];
+    if(oidCounter != null ) {
+        callback(oidCounter[0]); 
+    } else {
+        callback(-1); 
+    }
+}
 
 Lexicon.Lexicon.prototype.parseLiteral = function(literalString) {
     var parts = literalString.lastIndexOf("@");
@@ -135,3 +177,60 @@ Lexicon.Lexicon.prototype.retrieve = function(oid,callback) {
 };
 
 
+Lexicon.Lexicon.prototype.unregister = function(quad, key,callback) {
+    try {
+        this.unregisterTerm(quad.subject.token, key.subject);
+        this.unregisterTerm(quad.predicate.token, key.predicate);
+        this.unregisterTerm(quad.object.token, key.object);
+        if(quad.graph!=null) {
+            this.unregisterTerm(quad.graph.token, key.graph); 
+        }
+        callback(true);
+    } catch(e) {
+        console.log("Error unregistering quad");
+        console.log(e.message);
+        callback(false);
+    }
+}
+
+Lexicon.Lexicon.prototype.unregisterTerm = function(kind, oid) {
+    if(kind === 'uri') {
+        if(oid != this.defaultGraphOid) {
+            var oidStr = 'u'+oid;
+            var uri = this.OIDToUri[oidStr];     // = uri;
+            var oidCounter = this.uriToOID[uri]; // =[oid, 0];
+            
+            var counter = oidCounter[1];
+            if(""+oidCounter[0] === ""+oid) {
+                if(counter === 0) {
+                    delete this.OIDToUri[oidStr];
+                    delete this.uriToOID[uri];
+                } else {
+                    this.uriToOID[uri] = [oid, counter-1];
+                }
+            } else {
+                throw("Not matching OID : "+oid+" vs "+ oidCounter[0]);
+            }
+        }
+    } else if(kind === 'literal') {
+        this.oidCounter++;
+        var oidStr     =  'l'+ oid;
+        var literal    = this.OIDToLiteral[oidStr];  // = literal;
+        var oidCounter = this.literalToOID[literal]; // = [oid, 0];
+        
+        var counter = oidCounter[1];
+        if(""+oidCounter[0] === ""+oid) {
+            if(counter === 0) {
+                delete this.OIDToLiteral[oidStr];
+                delete this.literalToOID[literal];
+            } else {
+                this.literalToOID[literal] = [oid, counter-1];
+            }
+        } else {
+            throw("Not matching OID : "+oid+" vs "+ oidCounter[0]);
+        }
+
+    } else if(kind === 'blank') {
+        delete this.OIDToBlank[""+oid];
+    }
+}

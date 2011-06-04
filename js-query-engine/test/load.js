@@ -11,7 +11,8 @@ exports.testLoadGraph = function(test){
                 test.ok(result===true);
 
                 engine.execute('PREFIX foaf:<http://xmlns.com/foaf/0.1/> SELECT ?o FROM NAMED <test> { GRAPH <test> { ?s foaf:page ?o} }', function(success,results){
-                    console.log(results);
+                    test.ok(success);
+                    test.ok(results.length > 0);
                     test.done();
                 });
             });

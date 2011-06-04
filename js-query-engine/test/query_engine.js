@@ -613,3 +613,120 @@ exports.testOrderBy3 = function(test) {
         });
     });
 };
+
+exports.testInsertionDeletionTrivial1 = function(test){
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            engine.execute('INSERT DATA {  <http://example/book3> <http://example.com/vocab#title> <http://test.com/example> }', function(result){
+                test.ok( result===true );
+
+                engine.execute('SELECT * { ?s ?p ?o }', function(success, result){
+                    test.ok(success === true );
+                    test.ok(result.length === 1);
+                    test.ok(result[0]['s'].value === 'http://example/book3');
+                    test.ok(result[0]['p'].value === 'http://example.com/vocab#title');
+                    test.ok(result[0]['o'].value  === 'http://test.com/example');
+
+                    engine.execute('DELETE DATA { <http://example/book3> <http://example.com/vocab#title> <http://test.com/example> }', function(result) {
+                        engine.execute('SELECT * { ?s ?p ?o }', function(success, result){
+                            test.ok(success === true );
+                            test.ok(result.length === 0);
+                            var acum = 0;
+                            for(var p in engine.lexicon.uriToOID) {
+                                acum++;
+                            }
+                            for(var p in engine.lexicon.OIDToUri) {
+                                acum++;
+                            }
+
+                            for(var p in engine.lexicon.literalToOID) {
+                                acum++;
+                            }
+
+                            for(var p in engine.lexicon.OIDToLiteral) {
+                                acum++;
+                            }
+                            test.ok(acum===0);
+                            test.done(); 
+                        });
+                    });
+                });
+            });
+
+        })
+    });
+};
+
+exports.testInsertionDeletion2 = function(test){
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            engine.execute('INSERT DATA {  GRAPH <a> { <http://example/book3> <http://example.com/vocab#title> <http://test.com/example> } }', function(result){
+                test.ok( result===true );
+
+                engine.execute('INSERT DATA {  GRAPH <b> { <http://example/book3> <http://example.com/vocab#title> <http://test.com/example> } }', function(result){
+                    test.ok( result===true );
+
+                    engine.execute('SELECT * FROM NAMED <a> { GRAPH <a> { ?s ?p ?o } }', function(success, result){
+                        test.ok(success === true );
+                        test.ok(result.length === 1);
+                        test.ok(result[0]['s'].value === 'http://example/book3');
+                        test.ok(result[0]['p'].value === 'http://example.com/vocab#title');
+                        test.ok(result[0]['o'].value  === 'http://test.com/example');
+
+                        engine.execute('SELECT * FROM NAMED <b> { GRAPH <b> { ?s ?p ?o } }', function(success, result){
+
+                            test.ok(success === true );
+                            test.ok(result.length === 1);
+                            test.ok(result[0]['s'].value === 'http://example/book3');
+                            test.ok(result[0]['p'].value === 'http://example.com/vocab#title');
+                            test.ok(result[0]['o'].value  === 'http://test.com/example');
+
+                            engine.execute('DELETE DATA { GRAPH <a> { <http://example/book3> <http://example.com/vocab#title> <http://test.com/example> }  }', function(result) {
+
+                                engine.execute('SELECT * FROM NAMED <a> { GRAPH <a> { ?s ?p ?o } }', function(success, result){
+
+                                    test.ok(success === true );
+                                    test.ok(result.length === 0);
+
+                                    engine.execute('SELECT * FROM NAMED <b> { GRAPH <b> { ?s ?p ?o } }', function(success, result){
+
+                                    test.ok(success === true );
+                                    test.ok(result.length === 1);
+                                    test.ok(result[0]['s'].value === 'http://example/book3');
+                                    test.ok(result[0]['p'].value === 'http://example.com/vocab#title');
+                                    test.ok(result[0]['o'].value  === 'http://test.com/example');
+
+
+                                        var acum = 0;
+                                        for(var p in engine.lexicon.uriToOID) {
+                                            acum++;
+                                        }
+                                        for(var p in engine.lexicon.OIDToUri) {
+                                            acum++;
+                                        }
+                                         
+                                        for(var p in engine.lexicon.literalToOID) {
+                                            acum++;
+                                        }
+                                         
+                                        for(var p in engine.lexicon.OIDToLiteral) {
+                                            acum++;
+                                        }
+
+                                        test.ok(acum===8);
+                                        test.done(); 
+                                    });
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+        });
+    });
+};
+
