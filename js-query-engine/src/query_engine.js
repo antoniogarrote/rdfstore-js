@@ -472,13 +472,6 @@ QueryEngine.QueryEngine.prototype.normalizeQuad = function(quad, queryEnv, shoul
     });
 };
 
-//QueryEngine.QueryEngine.prototype.normalizeLiteral = function(term, env, callback) {
-//    var lexicalFormLiteral = Utils.lexicalFormLiteral(term, env);
-//    this.lexicon.registerLiteral(lexicalFormLiteral, function(oid){
-//        callback(true, oid);
-//    });
-//};
-
 QueryEngine.QueryEngine.prototype.denormalizeBindingsList = function(bindingsList, callback) {
     var results = [];
     var that = this;
@@ -694,7 +687,7 @@ QueryEngine.QueryEngine.prototype.executeQuery = function(syntaxTree, callback, 
 // Select queries
 
 QueryEngine.QueryEngine.prototype.executeSelect = function(unit, env, defaultDataset, namedDataset, callback) {
-    if(unit.kind === "select" || unit.kind === "ask" || unit.kind === "construct") {
+    if(unit.kind === "select" || unit.kind === "ask" || unit.kind === "construct" || unit.kind === "modify") {
         var projection = unit.projection;
         var dataset    = unit.dataset;
         var modifier   = unit.modifier;
@@ -706,7 +699,9 @@ QueryEngine.QueryEngine.prototype.executeSelect = function(unit, env, defaultDat
         if(defaultDataset != null || namedDataset != null) {
             dataset.default = defaultDataset || [];
             dataset.named   = namedDataset || [];
-        } else if(dataset.default.length === 0 && dataset.named.length === 0) {
+        } 
+
+        if(dataset.default != null && dataset.default.length === 0 && dataset.named !=null && dataset.named.length === 0) {
             // We add the default graph to the default merged graph
             dataset.default.push(this.lexicon.defaultGraphUriTerm);
         }
@@ -997,7 +992,7 @@ QueryEngine.QueryEngine.prototype.executeUpdate = function(syntaxTree, callback)
     for(var i=0; i<units.length; i++) {
 
         var aqt = that.abstractQueryTree.parseExecutableUnit(units[i]);
-
+        
         if(aqt.kind === 'insertdata') {
             Utils.repeat(0, aqt.quads.length, function(k,env) {                
                 var quad = aqt.quads[env._i];
@@ -1026,7 +1021,8 @@ QueryEngine.QueryEngine.prototype.executeUpdate = function(syntaxTree, callback)
             }, function(env) {
                 callback(true);
             });
-
+        } else if(aqt.kind === 'modify') {
+            this._executeModifyQuery(aqt, queryEnv, callback);
         } else if(aqt.kind === 'load') {
             var graph = {'uri': Utils.lexicalFormBaseUri(aqt.sourceGraph, queryEnv)};
             if(aqt.destinyGraph != null) {
@@ -1161,6 +1157,144 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
 };
 
 // Low level operations for update queries
+
+QueryEngine.QueryEngine.prototype._executeModifyQuery = function(aqt, queryEnv, callback) {
+    var that = this;
+    var querySuccess = true;
+    var error = null;
+    var bindings = null;
+    var components = ['subject', 'predicate', 'object', 'graph'];
+
+    aqt.insert = aqt.insert == null ? [] : aqt.insert;
+    aqt.delete = aqt.delete == null ? [] : aqt.delete;
+
+    Utils.seq(
+        function(k) {
+            // select query
+
+            var defaultGraph = [];
+            var namedGraph = [];
+
+            if(aqt.with != null) {
+                defaultGraph.push(aqt.with);
+            }
+
+            if(aqt.using != null) {
+                namedGraph = [];
+                for(var i=0; i<aqt.using.length; i++) {
+                    var usingGraph = aqt.using[i];
+                    if(usingGraph.kind === 'named') {
+                        namedGraph.push(usingGraph.uri);
+                    } else {
+                        defaultGraph.push(usingGraph.uri);
+                    }
+                }
+            }
+
+            aqt.dataset = {};
+            aqt.projection = [{"token": "variable", "kind": "*"}];
+
+            that.executeSelect(aqt, queryEnv, defaultGraph, namedGraph, function(success, result) {                
+                if(success) {
+                    that.denormalizeBindingsList(result, function(success, result){
+                        if(success) {
+                            bindings = result;
+                        } else {
+                            querySuccess = false;
+                        }
+                        k();
+                    }) 
+                } else {
+                    querySuccess = false;
+                    k();
+                }
+            });
+
+        },function(k) {
+            // delete query
+
+            var defaultGraph = aqt.with;
+            if(querySuccess) {
+                var quads = [];
+                for(var i=0; i<aqt.delete.length; i++) {
+                    var src = aqt.delete[i];
+
+                    for(var j=0; j<bindings.length; j++) {
+                        var quad = {};
+                        var binding = bindings[j];
+
+                        for(var c=0; c<components.length; c++) {
+                            var component = components[c];
+                            if(component == 'graph' && src[component] == null) {
+                                quad['graph'] = defaultGraph;
+                            } else if(src[component].token === 'var') {
+                                quad[component] = binding[src[component].value];
+                            } else {
+                                quad[component] = src[component];
+                            }
+                        }
+
+                        quads.push(quad)
+                    }
+                }
+
+                Utils.repeat(0, quads.length, function(kk,env) {                
+                    var quad = quads[env._i];
+                    var floop = arguments.callee;
+                    that._executeQuadDelete(quad, queryEnv, function(result, error) {
+                        kk(floop, env);
+                    });
+                }, function(env) {
+                    k();
+                });
+            } else {
+                k();
+            }
+        },function(k) {
+            // insert query
+            var defaultGraph = aqt.with;
+
+            if(querySuccess) {
+                var quads = [];
+                for(var i=0; i<aqt.insert.length; i++) {
+                    var src = aqt.insert[i];
+
+                    for(var j=0; j<bindings.length; j++) {
+                        var quad = {};
+                        var binding = bindings[j];
+
+                        for(var c=0; c<components.length; c++) {
+                            var component = components[c];
+                            if(component == 'graph' && src[component] == null) {
+                                quad['graph'] = defaultGraph;
+                            } else if(src[component].token === 'var') {
+                                quad[component] = binding[src[component].value];
+                            } else {
+                                quad[component] = src[component];
+                            }
+                        }
+
+                        quads.push(quad)
+                    }
+                }
+
+                Utils.repeat(0, quads.length, function(kk,env) {                
+                    var quad = quads[env._i];
+                    var floop = arguments.callee;
+                    that._executeQuadInsert(quad, queryEnv, function(result, error) {
+                        kk(floop, env);
+                    });
+                }, function(env) {
+                    k();
+                });
+            } else {
+                k();
+            }
+        }
+    )(function(){
+        callback(querySuccess);
+    });
+};
 
 QueryEngine.QueryEngine.prototype._executeQuadInsert = function(quad, queryEnv, callback) {
     var that = this;

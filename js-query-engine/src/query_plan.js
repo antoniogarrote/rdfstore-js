@@ -186,21 +186,30 @@ QueryPlan.executeJoinBGP = function(joinVars, bgpa, bgpb, dataset, queryEngine, 
 };
 
 QueryPlan.executeBGPDatasets = function(bgp, dataset, queryEngine, queryEnv,callback) {
+    // avoid duplicate queries in the same graph
+    // merge of graphs is not guaranted here.
+    var duplicates = {};
+
     if(bgp.graph == null) {
         //union through all default graph(s)
         Utils.repeat(0, dataset.default.length, function(k, env) {
             var floop = arguments.callee;
-            env.acum = env.acum || [];;
-            bgp.graph = dataset.default[env._i];//.oid
-            queryEngine.rangeQuery(bgp, queryEnv, function(success, results) {                
-                if(success) {
-                    results = QueryPlan.buildBindingsFromRange(results, bgp);
-                    env.acum.push(results);
-                    k(floop, env);
-                } else {
-                    k(floop, env);              
-                }
-            });
+            if(duplicates[dataset.default[env._i].oid] == null) {
+                duplicates[dataset.default[env._i].oid] = true;
+                env.acum = env.acum || [];
+                bgp.graph = dataset.default[env._i];//.oid
+                queryEngine.rangeQuery(bgp, queryEnv, function(success, results) {                
+                    if(success) {
+                        results = QueryPlan.buildBindingsFromRange(results, bgp);
+                        env.acum.push(results);
+                        k(floop, env);
+                    } else {
+                        k(floop, env);              
+                    }
+                });
+            } else {
+                k(floop, env);
+            }
         }, function(env){
             var acumBindings = QueryPlan.unionManyBindings(env.acum||[]);
             callback(true, acumBindings);
@@ -211,22 +220,27 @@ QueryPlan.executeBGPDatasets = function(bgp, dataset, queryEngine, queryEnv,call
         // union through all named datasets
         Utils.repeat(0, dataset.named.length, function(k, env) {
             var floop = arguments.callee;
-            env.acum = env.acum || [];
-            bgp.graph = dataset.named[env._i];//.oid
-
-            queryEngine.rangeQuery(bgp, queryEnv, function(success, results) {
-                if(success) {
-                    results = QueryPlan.buildBindingsFromRange(results, bgp);
-                    // add the graph bound variable to the result 
-                    for(var i=0; i< results.length; i++) {
-                        results[i][graphVar] = dataset.named[env._i].oid;
+            if(duplicates[dataset.named[env._i].oid] == null) {
+                duplicates[dataset.named[env._i].oid] = true;
+                env.acum = env.acum || [];
+                bgp.graph = dataset.named[env._i];//.oid
+                 
+                queryEngine.rangeQuery(bgp, queryEnv, function(success, results) {
+                    if(success) {
+                        results = QueryPlan.buildBindingsFromRange(results, bgp);
+                        // add the graph bound variable to the result 
+                        for(var i=0; i< results.length; i++) {
+                            results[i][graphVar] = dataset.named[env._i].oid;
+                        }
+                        env.acum.push(results);
+                        k(floop, env);
+                    } else {
+                        callback(false, results);
                     }
-                    env.acum.push(results);
-                    k(floop, env);
-                } else {
-                    callback(false, results);
-                }
-            });
+                });
+            } else {
+                k(floop, env);
+            }
         }, function(env){
             var acumBindings = QueryPlan.unionManyBindings(env.acum||[]);
             callback(true, acumBindings);

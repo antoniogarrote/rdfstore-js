@@ -24,6 +24,8 @@ AbstractQueryTree.AbstractQueryTree.prototype.parseExecutableUnit = function(exe
         return this.parseSelect(executableUnit);
     } else if(executableUnit.kind === 'ask') {
         return this.parseSelect(executableUnit);        
+    } else if(executableUnit.kind === 'modify') {
+        return this.parseSelect(executableUnit);
     } else if(executableUnit.kind === 'construct') {
         return this.parseSelect(executableUnit);        
     } else if(executableUnit.kind === 'insertdata') {

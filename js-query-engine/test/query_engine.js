@@ -614,6 +614,7 @@ exports.testOrderBy3 = function(test) {
     });
 };
 
+
 exports.testInsertionDeletionTrivial1 = function(test){
     new Lexicon.Lexicon(function(lexicon){
         new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
@@ -730,3 +731,190 @@ exports.testInsertionDeletion2 = function(test){
     });
 };
 
+exports.testModify1 = function(test){
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            engine.execute('PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
+                            INSERT DATA {  GRAPH <http://example/addresses> \
+                                { \
+                                     <http://example/president25> foaf:givenName "Bill" .\
+                                     <http://example/president25> foaf:familyName "McKinley" .\
+                                     <http://example/president27> foaf:givenName "Bill" .\
+                                     <http://example/president27> foaf:familyName "Taft" .\
+                                     <http://example/president42> foaf:givenName "Bill" .\
+                                     <http://example/president42> foaf:familyName "Clinton" .\
+                                } \
+                            }', function(result){
+           engine.execute("PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
+                           WITH <http://example/addresses>\
+                           DELETE { ?person foaf:givenName 'Bill' }\
+                           INSERT { ?person foaf:givenName 'William' }\
+                           WHERE  { ?person foaf:givenName 'Bill' }", 
+                          function(success, result){
+           engine.execute("PREFIX foaf:<http://xmlns.com/foaf/0.1/>\
+                           SELECT * FROM NAMED <http://example/addresses> { \
+                           GRAPH <http://example/addresses> { ?s ?p ?o } }\
+                           ORDER BY ?s ?p", function(success, results){
+                          
+                               test.ok(success === true);
+
+                               test.ok(results[0].s.value === "http://example/president25");
+                               test.ok(results[1].s.value === "http://example/president25");
+                               test.ok(results[0].o.value === "McKinley");
+                               test.ok(results[1].o.value === "William");
+
+                               test.ok(results[2].s.value === "http://example/president27");
+                               test.ok(results[3].s.value === "http://example/president27");
+                               test.ok(results[2].o.value === "Taft");
+                               test.ok(results[3].o.value === "William");
+
+                               test.ok(results[4].s.value === "http://example/president42");
+                               test.ok(results[5].s.value === "http://example/president42");
+                               test.ok(results[4].o.value === "Clinton");
+                               test.ok(results[5].o.value === "William");
+
+                               test.done();
+                               
+                    })
+                });
+            });
+        });
+    });
+};
+
+
+exports.testModifyDefaultGraph = function(test){
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            engine.execute('PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
+                            INSERT DATA {  \
+                                     <http://example/president25> foaf:givenName "Bill" .\
+                                     <http://example/president25> foaf:familyName "McKinley" .\
+                                     <http://example/president27> foaf:givenName "Bill" .\
+                                     <http://example/president27> foaf:familyName "Taft" .\
+                                     <http://example/president42> foaf:givenName "Bill" .\
+                                     <http://example/president42> foaf:familyName "Clinton" .\
+                            }', function(result){
+           engine.execute("PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
+                           DELETE { ?person foaf:givenName 'Bill' }\
+                           INSERT { ?person foaf:givenName 'William' }\
+                           WHERE  { ?person foaf:givenName 'Bill' }", 
+                          function(success, result){
+           engine.execute("PREFIX foaf:<http://xmlns.com/foaf/0.1/>\
+                           SELECT * { ?s ?p ?o }\
+                           ORDER BY ?s ?p", function(success, results){
+                          
+                               test.ok(success === true);
+
+                               test.ok(results[0].s.value === "http://example/president25");
+                               test.ok(results[1].s.value === "http://example/president25");
+                               test.ok(results[0].o.value === "McKinley");
+                               test.ok(results[1].o.value === "William");
+
+                               test.ok(results[2].s.value === "http://example/president27");
+                               test.ok(results[3].s.value === "http://example/president27");
+                               test.ok(results[2].o.value === "Taft");
+                               test.ok(results[3].o.value === "William");
+
+                               test.ok(results[4].s.value === "http://example/president42");
+                               test.ok(results[5].s.value === "http://example/president42");
+                               test.ok(results[4].o.value === "Clinton");
+                               test.ok(results[5].o.value === "William");
+
+                               test.done();
+                               
+                    })
+                });
+            });
+        });
+    });
+};
+
+exports.testModifyOnlyInsert = function(test){
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            engine.execute('PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
+                            INSERT DATA {  GRAPH <http://example/addresses> \
+                                { \
+                                     <http://example/president25> foaf:givenName "Bill" .\
+                                     <http://example/president25> foaf:familyName "McKinley" .\
+                                     <http://example/president27> foaf:givenName "Bill" .\
+                                     <http://example/president27> foaf:familyName "Taft" .\
+                                     <http://example/president42> foaf:givenName "Bill" .\
+                                     <http://example/president42> foaf:familyName "Clinton" .\
+                                } \
+                            }', function(result){
+           engine.execute("PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
+                           WITH <http://example/addresses_bis>\
+                           INSERT { ?person foaf:givenName 'William' }\
+                           USING <http://example/addresses>\
+                           WHERE  { ?person foaf:givenName 'Bill' }", 
+                          function(success, result){
+           engine.execute("PREFIX foaf:<http://xmlns.com/foaf/0.1/>\
+                           SELECT * FROM <http://example/addresses_bis> \
+                           { ?s ?p ?o }\
+                           ORDER BY ?s ?p", function(success, results){
+                          
+                               test.ok(success === true);
+                               test.ok(results[0].s.value === "http://example/president25");
+                               test.ok(results[0].o.value === "William");
+
+                               test.ok(results[1].s.value === "http://example/president27");
+                               test.ok(results[1].o.value === "William");
+
+                               test.ok(results[2].s.value === "http://example/president42");
+                               test.ok(results[2].o.value === "William");
+
+                               test.done();
+                               
+                    })
+                });
+            });
+        });
+    });
+};
+
+
+exports.testModifyOnlyDelete = function(test){
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            engine.execute('PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
+                            INSERT DATA {  GRAPH <http://example/addresses> \
+                                { \
+                                     <http://example/president25> foaf:givenName "Bill" .\
+                                     <http://example/president25> foaf:familyName "McKinley" .\
+                                     <http://example/president27> foaf:givenName "Bill" .\
+                                     <http://example/president27> foaf:familyName "Taft" .\
+                                     <http://example/president42> foaf:givenName "Bill" .\
+                                     <http://example/president42> foaf:familyName "Clinton" .\
+                                } \
+                            }', function(result){
+           engine.execute("PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
+                           WITH <http://example/addresses>\
+                           DELETE { ?person foaf:givenName 'Bill' }\
+                           USING <http://example/addresses>\
+                           WHERE  { ?person foaf:givenName 'Bill' }", 
+                          function(success, result){
+           engine.execute("PREFIX foaf:<http://xmlns.com/foaf/0.1/>\
+                           SELECT * FROM <http://example/addresses> \
+                           { ?s ?p ?o }\
+                           ORDER BY ?s ?p", function(success, results){
+                          
+                               test.ok(success === true);
+                               test.ok(results.length === 3);
+                               test.done();
+                               
+                    })
+                });
+            });
+        });
+    });
+};

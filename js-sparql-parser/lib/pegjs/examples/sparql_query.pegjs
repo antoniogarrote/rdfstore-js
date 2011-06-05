@@ -515,25 +515,64 @@ DeleteWhere "[38] DeleteWhere"
   [39]  	Modify	  ::=  	( 'WITH' IRIref )? ( DeleteClause InsertClause? | InsertClause ) UsingClause* 'WHERE' GroupGraphPattern
 */
 Modify "[39] Modify"
-  = ('WITH' IRIref)? ( DeleteClause InsertClause? / InsertClause ) UsingClause* 'WHERE' GroupGraphPattern
+  = wg:(('W'/'w')('I'/'i')('T'/'t')('H'/'h') WS* IRIref)? WS* dic:( DeleteClause WS* InsertClause? / InsertClause ) WS* uc:UsingClause* WS* ('W'/'w')('H'/'h')('E'/'e')('R'/'r')('E'/'e') WS* p:GroupGraphPattern WS* {
+      var query = {};
+      query.kind = 'modify';
+
+      if(wg != "") {
+          query.with = wg[5];
+      } else {
+          query.with = null;
+      }
+
+
+      if(dic.length === 3 && dic[2] === '') {
+          query.delete = dic[0];
+          query.insert = null;
+      } else if(dic.length === 3 && dic[0].length != null && dic[1].length != null && dic[2].length != null) {
+          query.delete = dic[0];
+          query.insert = dic[2];
+      } else  {
+          query.insert = dic;
+          query.delete = null;
+      }
+
+      if(uc != '') {
+          query.using = uc;
+      }
+
+      query.pattern = p;
+
+      return query;
+}
 
 /*
   [40]  	DeleteClause	  ::=  	'DELETE' QuadPattern
 */
 DeleteClause "[40] DeleteClause"
-  = 'DELETE' QuadPattern
+  = ('D'/'d')('E'/'e')('L'/'l')('E'/'e')('T'/'t')('E'/'e') q:QuadPattern {
+      return q;
+}
 
 /*
   [41]  	InsertClause	  ::=  	'INSERT' QuadPattern
 */
 InsertClause "[41] InsertClause"
-  = 'INSERT' QuadPattern
+  = ('I'/'i')('N'/'n')('S'/'s')('E'/'e')('R'/'r')('T'/'t') q:QuadPattern {
+  return q;
+}
 
 /*
   [42]  	UsingClause	  ::=  	'USING' ( IRIref | 'NAMED' IRIref )
 */
 UsingClause "[42] UsingClause"
-  = 'USING' ( IRIref / 'NAMED' IRIref )
+  = WS* ('U'/'u')('S'/'s')('I'/'i')('N'/'n')('G'/'g') WS* g:( IRIref / ('N'/'n')('A'/'a')('M'/'m')('E'/'e')('D'/'d') WS* IRIref ) {
+      if(g.length!=null) {
+          return {kind: 'named', uri: g[6]};
+      } else {
+          return {kind: 'default', uri: g};
+      }
+}
 
 /*
   [43]  	GraphRef	  ::=  	'GRAPH' IRIref
