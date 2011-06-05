@@ -3,7 +3,7 @@ exports.Lexicon = {};
 var Lexicon = exports.Lexicon;
 
 // imports
-var QuadIndexCommon = require("./quad_index_common").QuadIndexCommon
+var QuadIndexCommon = require("./quad_index_common").QuadIndexCommon;
 
 /**
  * Temporal implementation of the lexicon

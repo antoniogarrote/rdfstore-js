@@ -1,12 +1,12 @@
 // exports
-exports.TCPTransport = {};
-var TCPTransport = exports.TCPTransport;
+exports.NetworkTransport = {};
+var NetworkTransport = exports.NetworkTransport;
 
 // imports
 var http = require("http");
 var url = require("url");
 
-TCPTransport.load = function(uri, accept, callback, redirect) {
+NetworkTransport.load = function(uri, accept, callback, redirect) {
     var redirection = redirect==null ? 3 : redirect;
     var parts = url.parse(uri);
     var client = http.createClient((parts.port || 80), parts.hostname);
@@ -35,7 +35,7 @@ TCPTransport.load = function(uri, accept, callback, redirect) {
             } else {
                 var location = (headers["Location"] || headers["location"])
                 if(location != null) {
-                    TCPTransport.load(location, accept, callback, (redirection -1));
+                    NetworkTransport.load(location, accept, callback, (redirection -1));
                 } else {
                     callback(false, 500);
                 }
@@ -46,6 +46,6 @@ TCPTransport.load = function(uri, accept, callback, redirect) {
     });
 }
 
-// var TCPTransport = require("./src/tcp_transport").TCPTransport; TCPTransport.load("http://google.es/", function(success, data) { console.log(success); console.log(data)})
+// var NetworkTransport = require("./src/tcp_transport").NetworkTransport; NetworkTransport.load("http://google.es/", function(success, data) { console.log(success); console.log(data)})
 // http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
-//var TCPTransport = require("./src/tcp_transport").TCPTransport; TCPTransport.load("http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html", function(success, data) { console.log(success); console.log(data)})
+//var NetworkTransport = require("./src/tcp_transport").NetworkTransport; NetworkTransport.load("http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html", function(success, data) { console.log(success); console.log(data)})

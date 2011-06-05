@@ -105,7 +105,6 @@ exports.example7 = function(test) {
 
     var query = aqt.parseQueryString(query);
     var result = aqt.parseSelect(query.units[0]);
-    console.log(JSON.stringify(result));
     test.ok(result.pattern.kind === "LEFT_JOIN");
     test.ok(result.pattern.filter.length === 1);
     test.ok(result.pattern.filter[0].token === 'filter');

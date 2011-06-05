@@ -3,8 +3,7 @@ exports.RDFLoader = {};
 var RDFLoader = exports.RDFLoader;
 
 // imports
-var Configuration = require("../../configuration").Configuration;
-var NetworkTransport = Configuration.NetworkTransport;
+var NetworkTransport = require("./tcp_transport").NetworkTransport;
 var TurtleParser = require("./turtle_parser").TurtleParser;
 var Utils = require("../../js-trees/src/utils").Utils;
 
