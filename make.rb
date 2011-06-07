@@ -173,7 +173,7 @@ end
 
 
 if ARGV.length != 1
-  puts "USAGE make.rb [nodejs | browser]"
+  puts "USAGE make.rb [nodejs | browser | tests]"
 else
   if ARGV[0] == "nodejs"
     make_nodejs
@@ -183,6 +183,6 @@ else
     exec 'nodeunit ./js-trees/tests/* ./js-store/test/* ./js-sparql-parser/test/* ./js-rdf-persistence/test/* ./js-query-engine/test/*'
   else
     puts "Unknown configuration: #{ARGV[0]}"
-    puts "USAGE make.rb [nodejs | browser]"
+    puts "USAGE make.rb [nodejs | browser | tests]"
   end
 end

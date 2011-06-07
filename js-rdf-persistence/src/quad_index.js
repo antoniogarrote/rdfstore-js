@@ -59,6 +59,12 @@ QuadIndex.Tree.prototype.insert = function(quad, callback) {
     });
 };
 
+QuadIndex.Tree.prototype.search = function(quad, callback) {
+    BaseTree.Tree.prototype.search.call(this, quad, function(result){
+        callback(result);
+    }, true); // true -> check exists : hack only present in the inMemoryAsyncBTree implementation
+};
+
 QuadIndex.Tree.prototype.range = function(pattern, callback) {
     this._rangeTraverse(this,this.root, pattern, callback);
 }

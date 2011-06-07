@@ -120,25 +120,29 @@ InMemoryAsyncBTree.Tree.prototype._updateRootNode = function(node,f) {
  * Retrieves the node matching the given value.
  * If no node is found, null is returned.
  */
-InMemoryAsyncBTree.Tree.prototype.search = function(key,f) {
+InMemoryAsyncBTree.Tree.prototype.search = function(key,f, checkExists) {
     var node = this.root;
     var tree = this;
-    tree.__search(tree,key,node,f);
+    tree.__search(tree,key,node,f, checkExists);
 };
-InMemoryAsyncBTree.Tree.prototype.__search = function(tree,key,node, f) {
+InMemoryAsyncBTree.Tree.prototype.__search = function(tree,key,node, f, checkExists) {
     var idx = 0;
     while(idx < node.numberActives && tree.comparator(key, node.keys[idx].key) === 1) {
         idx++;
     }
 
     if(idx < node.numberActives && tree.comparator(node.keys[idx].key,key) === 0) {
-        f(node.keys[idx].data);
+        if(checkExists!=null && checkExists == true) {
+            f(true);        
+        } else {
+            f(node.keys[idx].data);
+        }
     } else {
         if(node.isLeaf === true) {
             f(null)
         } else {
             tree._diskRead(node.children[idx],function(node){
-                tree.__search(tree,key,node,f)
+                tree.__search(tree,key,node,f, checkExists)
             });
         }
     }

@@ -140,6 +140,10 @@ SelectQuery "[6] SelectQuery"
       if(sm!=null && (sm.order!=null && sm.order!="")) {
           query.order = sm.order;
       }
+      if(sm!=null && sm.group!=null) {
+          query.group = sm.group;
+      }
+
       return query
 }
 
@@ -153,7 +157,7 @@ SubSelect "[7] SubSelect"
   [8]  	SelectClause	  ::=  	'SELECT' ( 'DISTINCT' | 'REDUCED' )? ( ( Var | ( '(' Expression 'AS' Var ')' ) )+ | '*' )
 */
 SelectClause "[8] SelectClause"
-  = WS* ('S'/'s')('E'/'e')('L'/'l')('E'/'e')('C'/'c')('T'/'t') WS* mod:( ('D'/'d')('I'/'i')('S'/'s')('T'/'t')('I'/'i')('N'/'n')('C'/'c')('T'/'t') / ('R'/'r')('E'/'e')('D'/'d')('U'/'u')('C'/'c')('E'/'e')('D'/'d') )? WS* proj:( ( ( WS* Var WS* ) / ( WS* '(' WS* Expression WS* 'AS' WS* Var WS* ')' WS* ) )+ / ( WS* '*' WS* )  ) {
+    = WS* ('S'/'s')('E'/'e')('L'/'l')('E'/'e')('C'/'c')('T'/'t') WS* mod:( ('D'/'d')('I'/'i')('S'/'s')('T'/'t')('I'/'i')('N'/'n')('C'/'c')('T'/'t') / ('R'/'r')('E'/'e')('D'/'d')('U'/'u')('C'/'c')('E'/'e')('D'/'d') )? WS* proj:( ( ( WS* Var WS* ) / ( WS* '(' WS* Expression WS* ('A'/'a')('S'/'s') WS* Var WS* ')' WS* ) )+ / ( WS* '*' WS* )  ) {
      var vars = [];
       if(proj.length === 3 && proj[1]==="*") {
           return {vars: [{token: 'variable', kind:'*'}], modifier:arrayToString(mod)};
@@ -165,7 +169,7 @@ SelectClause "[8] SelectClause"
           if(aVar.length === 3) {
               vars.push({token: 'variable', kind:'var', value:aVar[1]});
           } else {
-              vars.push({token: 'variable', kind:'aliased', expression: aVar[3], alias:aVar[7]})
+              vars.push({token: 'variable', kind:'aliased', expression: aVar[3], alias:aVar[8]})
           }
       }
 
@@ -176,7 +180,7 @@ SelectClause "[8] SelectClause"
   [9]  	ConstructQuery	  ::=  	'CONSTRUCT' ConstructTemplate DatasetClause* WhereClause SolutionModifier
 */
 ConstructQuery "[9] ConstructQuery"
-  = WS* 'CONSTRUCT' WS* t:ConstructTemplate WS* gs:DatasetClause* WS* w:WhereClause WS* sm:SolutionModifier {
+    = WS* ('C'/'c')('O'/'o')('N'/'n')('S'/'s')('T'/'t')('R'/'r')('U'/'u')('C'/'c')('T'/'t') WS* t:ConstructTemplate WS* gs:DatasetClause* WS* w:WhereClause WS* sm:SolutionModifier {
       var dataset = {named:[], default:[]};
       for(var i=0; i<gs.length; i++) {
           var g = gs[i];
@@ -225,8 +229,8 @@ DescribeQuery "[10] DescribeQuery"
 [11]  	AskQuery	  ::=  	'ASK' DatasetClause* WhereClause
 */
 AskQuery "[11] AskQuery"
-  = WS* 'ASK' WS* gs:DatasetClause* WS* w:WhereClause {
-      var dataset = {named:[], default:[]};
+    = WS* ('A'/'a')('S'/'s')('K'/'k') WS* gs:DatasetClause* WS* w:WhereClause {
+      var dataset = {'named':[], 'default':[]};
       for(var i=0; i<gs.length; i++) {
           var g = gs[i];
           if(g.kind === 'default') {
@@ -257,7 +261,7 @@ AskQuery "[11] AskQuery"
   [12]  	DatasetClause	  ::=  	'FROM' ( DefaultGraphClause | NamedGraphClause )
 */
 DatasetClause "[12] DatasetClause"
-  = 'FROM' WS* gs:( DefaultGraphClause / NamedGraphClause ) WS* {
+  = ('F'/'f')('R'/'r')('O'/'o')('M'/'m') WS* gs:( DefaultGraphClause / NamedGraphClause ) WS* {
       return gs;
 }
 
@@ -272,7 +276,7 @@ DefaultGraphClause "[13] DefaultGraphClause" = WS* s:SourceSelector {
   [14]  	NamedGraphClause	  ::=  	'NAMED' SourceSelector
 */
 NamedGraphClause "[14] NamedGraphClause"
-  = 'NAMED' WS* s:SourceSelector {      
+  = ('N'/'n')('A'/'a')('M'/'m')('E'/'e')('D'/'d') WS* s:SourceSelector {      
       return {graph:s, kind:'named', token:'graphCluase'};
 }
 
@@ -286,7 +290,7 @@ SourceSelector "[15] SourceSelector"
   [16]  	WhereClause	  ::=  	'WHERE'? GroupGraphPattern
 */
 WhereClause "[16] WhereClause"
-  = 'WHERE'? WS* g:GroupGraphPattern WS* {
+  = (('W'/'w')('H'/'h')('E'/'e')('R'/'r')('E'/'e'))? WS* g:GroupGraphPattern WS* {
       return g;
 }
 
@@ -294,7 +298,7 @@ WhereClause "[16] WhereClause"
   [17]  	SolutionModifier	  ::=  	GroupClause? HavingClause? OrderClause? LimitOffsetClauses?
 */
 SolutionModifier "[17] SolutionModifier"
-  = GroupClause? HavingClause? oc:OrderClause? lo:LimitOffsetClauses? {
+  = gc:GroupClause? HavingClause? oc:OrderClause? lo:LimitOffsetClauses? {
       var acum = {};
       if(lo != null) {
           if(lo.limit != null) {
@@ -303,6 +307,10 @@ SolutionModifier "[17] SolutionModifier"
           if(lo.offset != null) {
               acum.offset = lo.offset;
           }
+      }
+
+      if(gc != null) {
+          acum.group = gc;
       }
 
       acum.order = oc;
@@ -314,13 +322,32 @@ SolutionModifier "[17] SolutionModifier"
   [18]  	GroupClause	  ::=  	'GROUP' 'BY' GroupCondition+
 */
 GroupClause "[18] GroupClause"
-  = 'GROUP' 'BY' GroupCondition+
+  = ('G'/'g')('R'/'r')('O'/'o')('U'/'u')('P'/'p') WS* ('B'/'b')('Y'/'y') WS* conds:GroupCondition+ {
+      return conds;
+}
 
 /*
   [19]  	GroupCondition	  ::=  	( BuiltInCall | FunctionCall | '(' Expression ( 'AS' Var )? ')' | Var )
 */
 GroupCondition "[19] GroupCondition"
-  = ( BuiltInCall / FunctionCall / '(' Expression ( 'AS' Var )?  ')' / Var )
+  = b:BuiltInCall {
+      return b;
+}
+  / f:FunctionCall {
+      return f;
+}
+  / WS* '(' WS* e:Expression WS*  alias:( ('A'/'a')('S'/'s') WS* Var )?  WS* ')' WS* {
+      if(alias.length != 0) {
+          return {token: 'aliased_expression',
+                  expression: e,
+                  alias: alias[3] };
+      } else {
+          return e;
+      }
+}
+  / v:Var {
+      return v;
+}
 
 /*
   [20]  	HavingClause	  ::=  	'HAVING' HavingCondition+
@@ -338,7 +365,7 @@ HavingCondition "[21] HavingCondition"
   [22]  	OrderClause	  ::=  	'ORDER' 'BY' OrderCondition+
 */
 OrderClause "[22] OrderClause"
-  = 'ORDER' WS* 'BY' WS* os:OrderCondition+ WS* {
+  = ('O'/'o')('R'/'r')('D'/'d')('E'/'e')('R'/'r') WS* ('B'/'b')('Y'/'y') WS* os:OrderCondition+ WS* {
       return os;
 }
 
@@ -381,7 +408,7 @@ LimitOffsetClauses "[24] LimitOffsetClauses"
   [25]  	LimitClause	  ::=  	'LIMIT' INTEGER
 */
 LimitClause "[25] LimitClause"
-  = 'LIMIT' WS* i:INTEGER WS* {
+  = ('L'/'l')('I'/'i')('M'/'m')('I'/'i')('T'/'t') WS* i:INTEGER WS* {
   return { limit:parseInt(i.value) };
 }
 
@@ -389,7 +416,7 @@ LimitClause "[25] LimitClause"
   [26]  	OffsetClause	  ::=  	'OFFSET' INTEGER
 */
 OffsetClause "[26] OffsetClause"
-  = 'OFFSET' WS* i:INTEGER WS* {
+  = ('O'/'o')('F'/'f')('F'/'f')('S'/'s')('E'/'e')('T'/'t') WS* i:INTEGER WS* {
   return { offset:parseInt(i.value) };
 }
 
@@ -642,7 +669,7 @@ Quads "[47] Quads"
   [48]  	QuadsNotTriples	  ::=  	'GRAPH' VarOrIRIref '{' TriplesTemplate? '}'
 */
 QuadsNotTriples "[48] QuadsNotTriples"
-  = WS* 'GRAPH' WS* g:VarOrIRIref WS* '{' WS* ts:TriplesTemplate? WS* '}' WS* {
+  = WS* ('G'/'g')('R'/'r')('A'/'a')('P'/'p')('H'/'h') WS* g:VarOrIRIref WS* '{' WS* ts:TriplesTemplate? WS* '}' WS* {
       var quads = []
       for(var i=0; i<ts.triplesContext.length; i++) {
           var triple = ts.triplesContext[i]
@@ -868,7 +895,7 @@ GroupOrUnionGraphPattern "[58] GroupOrUnionGraphPattern"
   [59]  	Filter	  ::=  	'FILTER' Constraint
 */
 Filter "[59] Filter"
-  = WS* 'FILTER' WS* c:Constraint {
+  = WS* ('F'/'f')('I'/'i')('L'/'l')('T'/'t')('E'/'e')('R'/'r') WS* c:Constraint {
       return {token: 'filter',
               value: c}
 }
@@ -1685,7 +1712,7 @@ BrackettedExpression "[105] BrackettedExpression"
                                        |  NotExistsFunc
 */
 BuiltInCall "[106] BuiltInCall"
-  = 'STR' WS* '(' WS* e:Expression WS* ')' {
+  = ('S'/'s')('T'/'t')('R'/'r') WS* '(' WS* e:Expression WS* ')' {
       var ex = {};
       ex.token = 'expression'
       ex.expressionType = 'builtincall'
@@ -1694,7 +1721,7 @@ BuiltInCall "[106] BuiltInCall"
 
       return ex;
   }
-  / 'LANG' WS* '(' WS* e:Expression WS* ')' {
+  / ('L'/'l')('A'/'a')('N'/'n')('G'/'g') WS* '(' WS* e:Expression WS* ')' {
       var ex = {};
       ex.token = 'expression'
       ex.expressionType = 'builtincall'
@@ -1809,7 +1836,7 @@ BuiltInCall "[106] BuiltInCall"
     ex.args = [e1, e2];
     return ex;
 }
-/ 'ISURI' WS* '(' WS* arg:Expression WS* ')' {
+/ ('I'/'i')('S'/'s')('U'/'u')('R'/'r')('I'/'i') WS* '(' WS* arg:Expression WS* ')' {
     var ex = {};
     ex.token = 'expression';
     ex.expressionType = 'builtincall';
@@ -1818,7 +1845,7 @@ BuiltInCall "[106] BuiltInCall"
 
     return ex;
 }
-/ 'ISIRI' WS* '(' WS* arg:Expression WS* ')' {
+/ ('I'/'i')('S'/'s')('I'/'i')('R'/'r')('I'/'i') WS* '(' WS* arg:Expression WS* ')' {
     var ex = {};
     ex.token = 'expression';
     ex.expressionType = 'builtincall';
@@ -1833,7 +1860,7 @@ BuiltInCall "[106] BuiltInCall"
   [107]  	RegexExpression	  ::=  	'REGEX' '(' Expression ',' Expression ( ',' Expression )? ')'
 */
 RegexExpression "[107] RegexExpression"  
-  = 'REGEX' WS* '(' WS* e1:Expression WS* ',' WS* e2:Expression WS* eo:( ',' WS* Expression)?  WS* ')' {
+  = ('R'/'r')('E'/'e')('G'/'g')('E'/'e')('X'/'x') WS* '(' WS* e1:Expression WS* ',' WS* e2:Expression WS* eo:( ',' WS* Expression)?  WS* ')' {
       var regex = {};
       regex.token = 'expression';
       regex.expressionType = 'regex';
@@ -1871,7 +1898,7 @@ Aggregate "[110] Aggregate"
   = 'COUNT' '(' d:'DISTINCT'?  e:('*' / Expression) ')' {
       exp = {};
       exp.token = 'expression'
-      exp.rexpressionType = 'aggregate'
+      exp.expressionType = 'aggregate'
       exp.aggregateType = 'count'
       exp.distinct = d
       exp.expression = e
@@ -1882,7 +1909,7 @@ Aggregate "[110] Aggregate"
   / 'SUM' '(' d:'DISTINCT'? e:Expression ')' {
       exp = {};
       exp.token = 'expression'
-      exp.rexpressionType = 'aggregate'
+      exp.expressionType = 'aggregate'
       exp.aggregateType = 'sum'
       exp.distinct = d
       exp.expression = e
@@ -1893,7 +1920,7 @@ Aggregate "[110] Aggregate"
   / 'MIN' '(' d:'DISTINCT'? e:Expression ')' {
       exp = {};
       exp.token = 'expression'
-      exp.rexpressionType = 'aggregate'
+      exp.expressionType = 'aggregate'
       exp.aggregateType = 'min'
       exp.distinct = d
       exp.expression = e
@@ -1904,7 +1931,7 @@ Aggregate "[110] Aggregate"
   / 'MAX' '(' d:'DISTINCT'? e:Expression ')' {
       exp = {};
       exp.token = 'expression'
-      exp.rexpressionType = 'aggregate'
+      exp.expressionType = 'aggregate'
       exp.aggregateType = 'max'
       exp.distinct = d
       exp.expression = e
@@ -1915,7 +1942,7 @@ Aggregate "[110] Aggregate"
   / 'AVG' '(' d:'DISTINCT'? e:Expression ')' {
       exp = {};
       exp.token = 'expression'
-      exp.rexpressionType = 'aggregate'
+      exp.expressionType = 'aggregate'
       exp.aggregateType = 'avg'
       exp.distinct = d
       exp.expression = e
@@ -1994,7 +2021,7 @@ NumericLiteralNegative "[116] NumericLiteralNegative"
   [117]  	BooleanLiteral	  ::=  	'true' |	'false'
 */
 BooleanLiteral "[117] BooleanLiteral"
-  = 'true' {
+  = ('T'/'t')('R'/'r')('U'/'u')('E'/'e') {
       lit = {};
       lit.token = "literal";
       lit.lang = null;
@@ -2002,7 +2029,7 @@ BooleanLiteral "[117] BooleanLiteral"
       lit.value = true;
       return lit;
  }
-  / 'false' {
+  / ('F'/'f')('A'/'a')('L'/'l')('S'/'s')('E'/'e') {
       lit = {};
       lit.token = "literal";
       lit.lang = null;

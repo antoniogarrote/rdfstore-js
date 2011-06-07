@@ -907,12 +907,36 @@ exports.testModifyOnlyDelete = function(test){
                            SELECT * FROM <http://example/addresses> \
                            { ?s ?p ?o }\
                            ORDER BY ?s ?p", function(success, results){
-                          
                                test.ok(success === true);
                                test.ok(results.length === 3);
                                test.done();
                                
                     })
+                });
+            });
+        });
+    });
+};
+
+exports.testAliasedVar = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = "PREFIX : <http://example/>\
+                         INSERT DATA {\
+                         :s1 :p 1 .\
+                         :s1 :q 9 .\
+                         :s2 :p 2 . }";
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example/> SELECT (?s AS ?t) {  ?s :p ?v . } GROUP BY ?s', function(success, results){
+                    test.ok(success);
+                    test.ok(results.length === 2);
+
+                    test.ok(results[0].t.value === "http://example/s1");
+                    test.ok(results[1].t.value === "http://example/s2");
+                    test.done();
                 });
             });
         });

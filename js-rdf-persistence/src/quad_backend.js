@@ -93,6 +93,15 @@ QuadBackend.QuadBackend.prototype.range = function(pattern, callback)  {
     });
 }
 
+QuadBackend.QuadBackend.prototype.search = function(quad, callback)  {
+    var indexKey = this.indices[0];
+    var index= this.indexMap[indexKey];
+
+    index.search(quad, function(result){
+        callback(result!=null);
+    });
+}
+
 
 QuadBackend.QuadBackend.prototype.delete = function(quad, callback) {
     var that = this;

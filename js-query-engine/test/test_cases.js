@@ -8907,3 +8907,136 @@ exports.testTypePromotionTypePromotion11 = function(test) {
     });
 };
 
+exports.testGroupingGroup01 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = "PREFIX : <http://example/>\
+                         INSERT DATA {\
+                         :s1 :p 1 .\
+                         :s1 :q 9 .\
+                         :s2 :p 2 . }";
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example/> SELECT ?s {  ?s :p ?v . } GROUP BY ?s', function(success, results){
+                    test.ok(success);
+                    test.ok(results.length === 2);
+
+                    test.ok(results[0].s.value === "http://example/s1");
+                    test.ok(results[1].s.value === "http://example/s2");
+                    test.done();
+                });
+            });
+        });
+    });
+};
+
+
+
+exports.testBasicUpdateInsertDataSPO1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = "PREFIX : <http://example.org/ns#> INSERT DATA { :s :p :o }";
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example.org/ns#> SELECT * { ?s ?p ?o }', function(success, results){
+                    test.ok(success);
+                    test.ok(results.length === 1);
+                    test.ok(results[0].s.value === "http://example.org/ns#s");
+                    test.ok(results[0].p.value === "http://example.org/ns#p");
+                    test.ok(results[0].o.value === "http://example.org/ns#o");
+                    test.done();
+                });
+            });
+        });
+    });
+};
+
+
+exports.testBasicUpdateInsertDataSPONamed1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = "PREFIX : <http://example/>\
+                         INSERT DATA {\
+                         :s1 :p 1 .\
+                         :s1 :q 9 .\
+                         :s2 :p 2 . }";
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example/> SELECT ?s {  ?s :p ?v . } GROUP BY ?s', function(success, results){
+                    test.ok(success);
+                    test.ok(results.length === 2);
+                    test.ok(results[0].s.value === "http://example/s1");
+                    test.ok(results[1].s.value === "http://example/s2");
+                    test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testBasicUpdateInsertDataSPONamed2 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = "PREFIX : <http://example.org/ns#> INSERT DATA { GRAPH <http://example.org/g1> { :s :p :o } }";
+
+            engine.execute(query, function(success, result){
+
+                var query = "PREFIX : <http://example.org/ns#> INSERT DATA { GRAPH <http://example.org/g1> { :s :p :o2 } }";
+
+                engine.execute(query, function(success, result){
+
+                    engine.execute('PREFIX : <http://example.org/ns#> SELECT * { ?s ?p ?o } ORDER BY ?o', function(success, results){
+                        test.ok(success);
+                        test.ok(results.length === 2);
+                        test.ok(results[0].s.value === "http://example.org/ns#s");
+                        test.ok(results[0].p.value === "http://example.org/ns#p");
+                        test.ok(results[0].o.value === "http://example.org/ns#o");
+
+                        test.ok(results[1].s.value === "http://example.org/ns#s");
+                        test.ok(results[1].p.value === "http://example.org/ns#p");
+                        test.ok(results[1].o.value === "http://example.org/ns#o2");
+
+                        test.done();
+                    }, [{"token": "uri", "prefix": null, "suffix": null, "value": "http://example.org/g1"}], []);
+                });
+            });
+        });
+    });
+};
+
+exports.testBasicUpdateInsertDataSPONamed3 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = "PREFIX : <http://example.org/ns#> INSERT DATA { GRAPH <http://example.org/g1> { :s :p :o } }";
+
+            engine.execute(query, function(success, result){
+
+                var query = "PREFIX : <http://example.org/ns#> INSERT DATA { GRAPH <http://example.org/g1> { :s :p :o } }";
+
+                engine.execute(query, function(success, result){
+
+                    engine.execute('PREFIX : <http://example.org/ns#> SELECT * { ?s ?p ?o } ORDER BY ?o', function(success, results){
+                        test.ok(success);
+                        test.ok(results.length === 1);
+                        test.ok(results[0].s.value === "http://example.org/ns#s");
+                        test.ok(results[0].p.value === "http://example.org/ns#p");
+                        test.ok(results[0].o.value === "http://example.org/ns#o");
+
+                        test.done();
+                    }, [{"token": "uri", "prefix": null, "suffix": null, "value": "http://example.org/g1"}], []);
+                });
+            });
+        });
+    });
+};
+

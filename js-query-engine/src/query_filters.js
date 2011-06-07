@@ -154,6 +154,29 @@ QueryFilters.collect = function(filterExpr, bindings, env, queryEngine, callback
 };
 
 
+// @todo @wip
+QueryFilters.runAggregator = function(aggregator, bindingsGroup) {
+    if(bindingsGroup == null || bindingsGroup.length === 0) {
+        return QueryFilters.ebvError();
+    } else if(aggregator.token === 'variable' && aggregator.kind == 'var') {
+        return {'var': aggregator.value.value, 'value':bindingsGroup[0][aggregator.value.value]};
+    } else if(aggregator.token === 'variable' && aggregator.kind === 'aliased') {
+        if(aggregator.expression.expressionType === 'atomic' && aggregator.expression.primaryexpression === 'var') {
+            return {'var': aggregator.alias.value, 'value':bindingsGroup[0][aggregator.expression.value.value]};
+        } else if(aggregator.expression.expressionType === 'aggregate') {
+            if(aggregator.expression.aggregateType === 'MAX') {
+
+            }
+        } else {
+            var ebv = QueryFilters.runFilter(aggregate.expression, bindingsGroup[0], {blanks:{}, outCache:{}});
+            if(QueryFilters.isEbvError(ebv) === true) {
+                return ebv;
+            } else {
+            return {'var': aggregator.alias.value, 'value':ebv};
+            }
+        }
+    }
+};
 QueryFilters.runFilter = function(filterExpr, bindings, queryEngine, env) {
     if(filterExpr.expressionType != null) {
         var expressionType = filterExpr.expressionType;
