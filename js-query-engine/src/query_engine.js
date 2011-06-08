@@ -404,7 +404,7 @@ QueryEngine.QueryEngine.prototype.normalizeTerm = function(term, env, shouldInde
     }
 };
 
-QueryEngine.QueryEngine.prototype.normalizeDatasets = function(datasets, env, callback) {
+QueryEngine.QueryEngine.prototype.normalizeDatasets = function(datasets, outerEnv, callback) {
     var that = this;
     Utils.repeat(0, datasets.length, function(k,env) {
         var floop = arguments.callee;
@@ -413,7 +413,7 @@ QueryEngine.QueryEngine.prototype.normalizeDatasets = function(datasets, env, ca
             dataset.oid = that.lexicon.defaultGraphOid;
             k(floop, env);
         } else {
-            that.normalizeTerm(dataset, env, false, function(success, result){
+            that.normalizeTerm(dataset, outerEnv, false, function(success, result){
                 if(success) {
                     dataset.oid = result;
                     k(floop, env);

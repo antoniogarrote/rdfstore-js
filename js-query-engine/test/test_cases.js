@@ -3087,8 +3087,6 @@ exports.testDataset02 = function(test) {
     });
 }
 
-
-
 exports.testDataset03 = function(test) {
     new Lexicon.Lexicon(function(lexicon){
         new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
@@ -9034,6 +9032,75 @@ exports.testBasicUpdateInsertDataSPONamed3 = function(test) {
 
                         test.done();
                     }, [{"token": "uri", "prefix": null, "suffix": null, "value": "http://example.org/g1"}], []);
+                });
+            });
+        });
+    });
+};
+
+exports.testBasicUpdateInsertWhere01 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = "PREFIX : <http://example.org/> INSERT DATA { <http://example.org/s> <http://example.org/p> 'o' . }";
+
+            engine.execute(query, function(success, result){
+
+                var query = "PREFIX : <http://example.org/> INSERT { ?s ?p 'q' } WHERE { ?s ?p ?o }";
+
+                engine.execute(query, function(success, result){
+
+                    engine.execute('PREFIX : <http://example.org/> SELECT * { ?s ?p ?o } ORDER BY ?o', function(success, results){
+                        test.ok(success);
+
+                        test.ok(results.length === 2);
+                        test.ok(results[0].s.value === "http://example.org/s");
+                        test.ok(results[0].p.value === "http://example.org/p");
+                        test.ok(results[0].o.value === "o");
+
+                        test.ok(results[1].s.value === "http://example.org/s");
+                        test.ok(results[1].p.value === "http://example.org/p");
+                        test.ok(results[1].o.value === "q");
+
+                        test.done();
+                    });
+                });
+            });
+        });
+    });
+};
+
+exports.testBasicUpdateInsertWhere02 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = "PREFIX : <http://example.org/> INSERT DATA { <http://example.org/s> <http://example.org/p> 'o' . }";
+
+            engine.execute(query, function(success, result){
+
+                var query = "PREFIX : <http://example.org/> INSERT { GRAPH :g1 { ?s ?p 'q' } } WHERE { ?s ?p ?o }";
+
+                engine.execute(query, function(success, result){
+
+                    engine.execute('PREFIX : <http://example.org/> SELECT * { ?s ?p ?o } ORDER BY ?o', function(success, results){
+                        test.ok(success);
+
+                        test.ok(results.length === 1);
+                        test.ok(results[0].s.value === "http://example.org/s");
+                        test.ok(results[0].p.value === "http://example.org/p");
+                        test.ok(results[0].o.value === "o");
+
+                        engine.execute('PREFIX : <http://example.org/> SELECT * FROM :g1 { ?s ?p ?o } ORDER BY ?o', function(success, results){
+                            test.ok(results.length === 1);
+                            test.ok(results[0].s.value === "http://example.org/s");
+                            test.ok(results[0].p.value === "http://example.org/p");
+                            test.ok(results[0].o.value === "q");
+
+                            test.done();
+                        });
+                    });
                 });
             });
         });

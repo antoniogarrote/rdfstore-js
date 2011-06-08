@@ -180,7 +180,7 @@ else
   elsif ARGV[0] == "browser"
     make_browser
   elsif ARGV[0] == "tests"
-    exec 'nodeunit ./js-trees/tests/* ./js-store/test/* ./js-sparql-parser/test/* ./js-rdf-persistence/test/* ./js-query-engine/test/*'
+    exec 'nodeunit ./js-trees/tests/* ./js-store/test/* ./js-sparql-parser/test/* ./js-rdf-persistence/test/* ./js-query-engine/test/* ./js-communication/test/*'
   else
     puts "Unknown configuration: #{ARGV[0]}"
     puts "USAGE make.rb [nodejs | browser | tests]"
