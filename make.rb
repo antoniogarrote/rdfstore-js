@@ -1,21 +1,34 @@
 #!/usr/bin/env ruby
 
+require 'rubygems'
 require 'fileutils'
+require 'json'
 
 def load_configuration
   puts "*** loading configuration"
   require(File.dirname(__FILE__)+"/configuration")
 end
 
-def build_distribution_directory
+def build_distribution_directory(system);
   begin
     puts "*** building distribution directory"
     Dir.mkdir "./dist"
+    Dir.mkdir "./dist/browser"
+    Dir.mkdir "./dist/nodejs"
   rescue 
     puts "(!) dist directory already exits"
-    FileUtils.rm_r("./dist")
-    Dir.mkdir "./dist"
+    FileUtils.rm_r("./dist/browser/") if system == 'browser'
+    FileUtils.rm_r("./dist/nodejs/") if system == 'nodejs'
+    Dir.mkdir "./dist/browser" if system == 'browser'
+    Dir.mkdir "./dist/nodejs" if system == 'nodejs'
   end
+end
+
+def minimize_output_browser
+  puts "*** minimizing output"
+  `cp ./yuicompressor-2.4.6.jar ./dist/browser/`
+  `cd ./dist/browser && java -jar yuicompressor-2.4.6.jar rdf_store.js > rdf_store_min.js`
+  `rm ./dist/browser/yuicompressor-2.4.6.jar`
 end
 
 def write_nodejs_preamble(of)
@@ -28,7 +41,7 @@ end
 
 def write_nodejs_coda(of)
   js_code =<<__END
-module.exports = Store.Store;
+module.exports = Store;
 })();
 __END
 
@@ -63,7 +76,7 @@ def process_file_for_nodejs(of, f)
 end
 
 def process_files_for_nodejs
-  File.open("./dist/js_sparql.js", "w") do |of|
+  File.open("./dist/nodejs/index.js", "w") do |of|
     
     write_nodejs_preamble(of)
     
@@ -76,7 +89,7 @@ def process_files_for_nodejs
     end
 
   
-    File.open("./js-communication/src/tcp_transport.js", "r") do |f|
+    File.open("./src/js-communication/src/tcp_transport.js", "r") do |f|
       puts "*** processing TCP Transport file"
       process_file_for_nodejs(of, f)
     end
@@ -85,11 +98,25 @@ def process_files_for_nodejs
   end
 end
 
+def make_package_json
+  puts "*** generating package.json"
+  package_config = BUILD_CONFIGURATION[:nodejs][:package].to_json
+  File.open("./dist/nodejs/package.json", 'w') do |of|
+    of << package_config
+  end
+end
+
+def npm_linking
+  exec 'cd ./dist/nodejs && npm link'
+end
+
 def make_nodejs
   puts "  NODEJS CONFIGURATION"
   load_configuration
-  build_distribution_directory
+  build_distribution_directory 'nodejs'
   process_files_for_nodejs
+  make_package_json
+  #npm_linking
   puts "\r\n*** FINISHED";
 end
 
@@ -130,7 +157,7 @@ end
 
 def write_browser_coda(of)
   js_code =<<__END
-window.sparqlStore = Store.Store;
+window.rdfstore = Store;
 })(window);
 __END
 
@@ -138,10 +165,10 @@ __END
 end
 
 def process_files_for_browser
-  File.open("./dist/js_sparql.js", "w") do |of|
+  File.open("./dist/browser/rdf_store.js", "w") do |of|
     
     if BUILD_CONFIGURATION[:browser][:load_jquery]
-      File.open("./js-communication/src/jquery_ajax.js", "r") do |f|
+      File.open("./src/js-communication/src/jquery_ajax.js", "r") do |f|
         f.each_line do |line|
           of << line
         end
@@ -166,8 +193,9 @@ end
 def make_browser
   puts "  BROWSER CONFIGURATION"
   load_configuration
-  build_distribution_directory
+  build_distribution_directory 'browser'
   process_files_for_browser
+  minimize_output_browser
   puts "\r\n*** FINISHED";
 end
 
@@ -180,7 +208,7 @@ else
   elsif ARGV[0] == "browser"
     make_browser
   elsif ARGV[0] == "tests"
-    exec 'nodeunit ./js-trees/tests/* ./js-store/test/* ./js-sparql-parser/test/* ./js-rdf-persistence/test/* ./js-query-engine/test/* ./js-communication/test/*'
+    exec 'nodeunit ./src/js-trees/tests/* ./src/js-store/test/* ./src/js-sparql-parser/test/* ./src/js-rdf-persistence/test/* ./src/js-query-engine/test/* ./src/js-communication/test/*'
   else
     puts "Unknown configuration: #{ARGV[0]}"
     puts "USAGE make.rb [nodejs | browser | tests]"
