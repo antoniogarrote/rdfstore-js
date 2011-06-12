@@ -485,25 +485,46 @@ Load "[32] Load"
   [33]  	Clear	  ::=  	'CLEAR' 'SILENT'? GraphRefAll
 */
 Clear "[33] Clear"
-  = 'CLEAR' 'SILENT'? GraphRefAll
+  = ('C'/'c')('L'/'l')('E'/'e')('A'/'a')('R'/'r') WS* (('S'/'s')('I'/'i')('L'/'l')('E'/'e')('N'/'n')('T'/'t'))? WS* ref:GraphRefAll {
+      var query = {};
+      query.kind = 'clear';
+      query.token = 'executableunit'
+      query.destinyGraph = ref;
+      
+      return query;
+}
 
 /*
   [34]  	Drop	  ::=  	'DROP' 'SILENT'? GraphRefAll
 */
 Drop "[34] Drop"
-  = 'DROP' 'SILENT'? GraphRefAll
+  = ('D'/'d')('R'/'r')('O'/'o')('P'/'p')  WS* (('S'/'s')('I'/'i')('L'/'l')('E'/'e')('N'/'n')('T'/'t'))? WS* ref:GraphRefAll {
+      var query = {};
+      query.kind = 'drop';
+      query.token = 'executableunit'
+      query.destinyGraph = ref;
+      
+      return query;
+}
 
 /*
 [35]  	Create	  ::=  	'CREATE' 'SILENT'? GraphRef
 */
 Create "[35] Create"
-  = 'CREATE' 'SILENT'? GraphRef
+  = ('C'/'c')('R'/'r')('E'/'e')('A'/'a')('T'/'t')('E'/'e') WS* (('S'/'s')('I'/'i')('L'/'l')('E'/'e')('N'/'n')('T'/'t'))? WS* ref:GraphRef {
+      var query = {};
+      query.kind = 'create';
+      query.token = 'executableunit'
+      query.destinyGraph = ref;
+      
+      return query;
+}
 
 /*
   [36]  	InsertData	  ::=  	'INSERT' <WS*> ',DATA' QuadData
 */
 InsertData "[36] InsertData"
-  = 'INSERT' WS* 'DATA' WS* qs:QuadData {
+  = ('I'/'i')('N'/'n')('S'/'s')('E'/'e')('R'/'r')('T'/'t') WS* ('D'/'d')('A'/'a')('T'/'t')('A'/'a') WS* qs:QuadData {
       var query = {};
       query.kind = 'insertdata';
       query.token = 'executableunit'
@@ -516,7 +537,7 @@ InsertData "[36] InsertData"
   [37]  	DeleteData	  ::=  	'DELETE' <WS*> 'DATA' QuadData
 */
 DeleteData "[37] DeleteData"
-  = 'DELETE' WS* 'DATA' qs:QuadData {
+  =  ('D'/'d')('E'/'e')('L'/'l')('E'/'e')('T'/'t')('E'/'e') WS* ('D'/'d')('A'/'a')('T'/'t')('A'/'a') qs:QuadData {
       var query = {};
       query.kind = 'deletedata';
       query.token = 'executableunit'
@@ -529,11 +550,36 @@ DeleteData "[37] DeleteData"
   [38]  	DeleteWhere	  ::=  	'DELETE' <WS*> 'WHERE' QuadPattern
 */
 DeleteWhere "[38] DeleteWhere"
-  = 'DELETE' WS* 'WHERE' WS* qs:QuadPattern {
+  = ('D'/'d')('E'/'e')('L'/'l')('E'/'e')('T'/'t')('E'/'e') WS* ('W'/'w')('H'/'h')('E'/'e')('R'/'r')('E'/'e') WS* p:GroupGraphPattern {
       var query = {};
-      query.kind = 'deletewhere';
-      query.token = 'executableunit'
-      query.quads = qs;
+      query.kind = 'modify';
+      query.pattern = p;
+      query.with = null;
+      query.using = null;
+
+      var quads = [];
+
+
+      var patternsCollection = p.patterns[0];
+      if(patternsCollection.triplesContext == null && patternsCollection.patterns!=null) {
+          patternsCollection = patternsCollection.patterns[0].triplesContext;
+      } else {
+          patternsCollection = patternsCollection.triplesContext;
+      }
+
+      for(var i=0; i<patternsCollection.length; i++) {
+          var quad = {};
+          var contextQuad = patternsCollection[i];
+
+          quad['subject'] = contextQuad['subject'];
+          quad['predicate'] = contextQuad['predicate'];
+          quad['object'] = contextQuad['object'];
+          quad['graph'] = contextQuad['graph'];
+
+          quads.push(quad);
+      }
+
+      query.delete = quads;
 
       return query;
 }
@@ -614,10 +660,18 @@ GraphRef "[43] GraphRef"
   [44]  	GraphRefAll	  ::=  	GraphRef | 'DEFAULT' | 'NAMED' | 'ALL'
 */
 GraphRefAll "[44] GraphRefAll"
-  = GraphRef
-  / 'DEFAULT'
-  / 'NAMED'
-  / 'ALL'
+  = g:GraphRef {
+      return g;
+}
+  / ('D'/'d')('E'/'e')('F'/'f')('A'/'a')('U'/'u')('L'/'l')('T'/'t') {
+      return 'default';
+}
+  / ('N'/'n')('A'/'a')('M'/'m')('E'/'e')('D'/'d') {
+      return 'named';
+}
+  / ('A'/'a')('L'/'l')('L'/'l') {
+      return 'all';
+}
 
 /*
   [45]  	QuadPattern	  ::=  	'{' Quads '}'

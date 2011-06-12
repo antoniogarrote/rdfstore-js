@@ -24,10 +24,32 @@ Lexicon.Lexicon = function(callback){
     this.defaultGraphUri = "https://github.com/antoniogarrote/js-tools/types#default_graph";
     this.defaultGraphUriTerm = {"token": "uri", "prefix": null, "suffix": null, "value": this.defaultGraphUri, "oid": this.defaultGraphOid};
     this.oidCounter = 1;
+
+    this.knownGraphs = {};
     
     if(callback != null) {
         callback(this);
     }
+};
+
+Lexicon.Lexicon.prototype.registerGraph = function(oid, callback){
+    if(oid != this.defaultGraphOid) {
+        this.knownGraphs[oid] = true;
+    }
+    callback(true);
+};
+
+Lexicon.Lexicon.prototype.registeredGraphs = function(shouldReturnUris,callback) {
+    var acum = [];
+
+    for(var g in this.knownGraphs) {
+        if(shouldReturnUris === true) {
+            acum.push(this.OIDToUri['u'+g]);
+        } else {
+            acum.push(g);
+        }
+    }
+    callback(true, acum);
 };
 
 Lexicon.Lexicon.prototype.registerUri = function(uri, callback) {
@@ -205,6 +227,9 @@ Lexicon.Lexicon.prototype.unregisterTerm = function(kind, oid) {
                 if(counter === 0) {
                     delete this.OIDToUri[oidStr];
                     delete this.uriToOID[uri];
+                    // delete the graph oid from known graphs
+                    // in case this URI is a graph identifier
+                    delete this.knownGraphs[oid];
                 } else {
                     this.uriToOID[uri] = [oid, counter-1];
                 }

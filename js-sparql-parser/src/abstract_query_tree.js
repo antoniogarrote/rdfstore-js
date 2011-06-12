@@ -34,6 +34,12 @@ AbstractQueryTree.AbstractQueryTree.prototype.parseExecutableUnit = function(exe
         return this.parseInsertData(executableUnit);        
     } else if(executableUnit.kind === 'load') {
         return executableUnit;
+    } else if(executableUnit.kind === 'clear') {
+        return executableUnit;
+    } else if(executableUnit.kind === 'drop') {
+        return executableUnit;
+    } else if(executableUnit.kind === 'create') {
+        return executableUnit;
     } else {
         throw new Error('unknown executable unit: ' + executableUnit.kind);
     }

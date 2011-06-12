@@ -942,3 +942,466 @@ exports.testAliasedVar = function(test) {
         });
     });
 };
+
+exports.testClearGraph1 = function(test){
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            engine.execute('PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
+                            INSERT DATA {  GRAPH <http://example/president25> \
+                                { \
+                                     <http://example/president25> foaf:givenName "Bill" .\
+                                     <http://example/president25> foaf:familyName "McKinley" .\
+                                } \
+                            }', function(result){
+
+            engine.execute('PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
+                            INSERT DATA {  GRAPH <http://example/president27> \
+                                { \
+                                     <http://example/president27> foaf:givenName "Bill" .\
+                                     <http://example/president27> foaf:familyName "Taft" .\
+                                } \
+                            }', function(result){
+
+           engine.execute("CLEAR GRAPH <http://example/president27>", function(success, results){
+               engine.execute("SELECT * { GRAPH <http://example/president27> { ?s ?p ?o } }", function(success, results) {
+
+                     test.ok(success);
+                     test.ok(results.length === 0);
+
+                   engine.execute("SELECT * { GRAPH <http://example/president25> { ?s ?p ?o } }", function(success, results) {
+
+                       test.ok(results.length === 2);
+                       test.done();
+
+                   });
+               });
+           });
+           });
+           });
+        });
+    });
+};
+
+exports.testClearGraph2 = function(test){
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+
+            engine.execute('PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
+                              INSERT DATA { \
+                                   <http://example/president22> foaf:givenName "Grover" .\
+                                   <http://example/president22> foaf:familyName "Cleveland" .\
+                              }', function(succes, result){
+            engine.execute('PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
+                            INSERT DATA {  GRAPH <http://example/president25> \
+                                { \
+                                     <http://example/president25> foaf:givenName "Bill" .\
+                                     <http://example/president25> foaf:familyName "McKinley" .\
+                                } \
+                            }', function(result){
+
+            engine.execute('PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
+                            INSERT DATA {  GRAPH <http://example/president27> \
+                                { \
+                                     <http://example/president27> foaf:givenName "Bill" .\
+                                     <http://example/president27> foaf:familyName "Taft" .\
+                                } \
+                            }', function(result){
+
+           engine.execute("CLEAR DEFAULT", function(success, results){
+               engine.execute("SELECT *  { ?s ?p ?o } ", function(success, results) {
+
+                   test.ok(success);
+                   test.ok(results.length === 0);
+
+               engine.execute("SELECT * { GRAPH <http://example/president27> { ?s ?p ?o } }", function(success, results) {
+
+                     test.ok(success);
+                     test.ok(results.length === 2);
+
+                   engine.execute("SELECT * { GRAPH <http://example/president25> { ?s ?p ?o } }", function(success, results) {
+
+                       test.ok(results.length === 2);
+                       test.done();
+
+                   });
+               });
+               });
+           });
+           });
+           });
+           });
+    });
+    });
+};
+
+exports.testClearGraph3 = function(test){
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+
+            engine.execute('PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
+                              INSERT DATA { \
+                                   <http://example/president22> foaf:givenName "Grover" .\
+                                   <http://example/president22> foaf:familyName "Cleveland" .\
+                              }', function(succes, result){
+            engine.execute('PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
+                            INSERT DATA {  GRAPH <http://example/president25> \
+                                { \
+                                     <http://example/president25> foaf:givenName "Bill" .\
+                                     <http://example/president25> foaf:familyName "McKinley" .\
+                                } \
+                            }', function(result){
+
+            engine.execute('PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
+                            INSERT DATA {  GRAPH <http://example/president27> \
+                                { \
+                                     <http://example/president27> foaf:givenName "Bill" .\
+                                     <http://example/president27> foaf:familyName "Taft" .\
+                                } \
+                            }', function(result){
+
+           engine.execute("CLEAR NAMED", function(success, results){
+               test.ok(success);
+               engine.execute("SELECT *  { ?s ?p ?o } ", function(success, results) {
+
+                   test.ok(results);
+                   test.ok(results.length === 2);
+
+               engine.execute("SELECT * { GRAPH <http://example/president27> { ?s ?p ?o } }", function(success, results) {
+
+                     test.ok(success);
+                     test.ok(results.length === 0);
+
+                   engine.execute("SELECT * { GRAPH <http://example/president25> { ?s ?p ?o } }", function(success, results) {
+
+                       test.ok(results.length === 0);
+                       test.done();
+
+                   });
+               });
+               });
+           });
+           });
+           });
+           });
+    });
+    });
+};
+
+exports.testClearGraph4 = function(test){
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+
+            engine.execute('PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
+                              INSERT DATA { \
+                                   <http://example/president22> foaf:givenName "Grover" .\
+                                   <http://example/president22> foaf:familyName "Cleveland" .\
+                              }', function(succes, result){
+            engine.execute('PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
+                            INSERT DATA {  GRAPH <http://example/president25> \
+                                { \
+                                     <http://example/president25> foaf:givenName "Bill" .\
+                                     <http://example/president25> foaf:familyName "McKinley" .\
+                                } \
+                            }', function(result){
+
+            engine.execute('PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
+                            INSERT DATA {  GRAPH <http://example/president27> \
+                                { \
+                                     <http://example/president27> foaf:givenName "Bill" .\
+                                     <http://example/president27> foaf:familyName "Taft" .\
+                                } \
+                            }', function(result){
+
+           engine.execute("CLEAR ALL", function(success, results){
+               test.ok(success);
+               engine.execute("SELECT *  { ?s ?p ?o } ", function(success, results) {
+
+                   test.ok(results);
+                   test.ok(results.length === 0);
+
+               engine.execute("SELECT * { GRAPH <http://example/president27> { ?s ?p ?o } }", function(success, results) {
+
+                     test.ok(success);
+                     test.ok(results.length === 0);
+
+                   engine.execute("SELECT * { GRAPH <http://example/president25> { ?s ?p ?o } }", function(success, results) {
+
+                       test.ok(results.length === 0);
+                       engine.lexicon.registeredGraphs(true,function(success, graphs) {
+                           test.ok(success);
+                           test.ok(graphs.length === 0);
+                           test.done();
+                       });
+                   });
+               });
+               });
+           });
+           });
+           });
+           });
+    });
+    });
+};
+
+exports.testCreate = function(test){
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            engine.execute('CREATE GRAPH <a>', function(result){
+                test.ok(result===true);
+
+                test.done();
+            });
+
+        })
+    });
+};
+
+exports.testDrop1 = function(test){
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            engine.execute('PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
+                            INSERT DATA {  GRAPH <http://example/president25> \
+                                { \
+                                     <http://example/president25> foaf:givenName "Bill" .\
+                                     <http://example/president25> foaf:familyName "McKinley" .\
+                                } \
+                            }', function(result){
+
+            engine.execute('PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
+                            INSERT DATA {  GRAPH <http://example/president27> \
+                                { \
+                                     <http://example/president27> foaf:givenName "Bill" .\
+                                     <http://example/president27> foaf:familyName "Taft" .\
+                                } \
+                            }', function(result){
+
+           engine.execute("DROP GRAPH <http://example/president27>", function(success, results){
+               engine.execute("SELECT * { GRAPH <http://example/president27> { ?s ?p ?o } }", function(success, results) {
+
+                     test.ok(success);
+                     test.ok(results.length === 0);
+
+                   engine.execute("SELECT * { GRAPH <http://example/president25> { ?s ?p ?o } }", function(success, results) {
+
+                       test.ok(results.length === 2);
+                       test.done();
+
+                   });
+               });
+           });
+           });
+           });
+        });
+    });
+};
+
+exports.testDrop2 = function(test){
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+
+            engine.execute('PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
+                              INSERT DATA { \
+                                   <http://example/president22> foaf:givenName "Grover" .\
+                                   <http://example/president22> foaf:familyName "Cleveland" .\
+                              }', function(succes, result){
+            engine.execute('PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
+                            INSERT DATA {  GRAPH <http://example/president25> \
+                                { \
+                                     <http://example/president25> foaf:givenName "Bill" .\
+                                     <http://example/president25> foaf:familyName "McKinley" .\
+                                } \
+                            }', function(result){
+
+            engine.execute('PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
+                            INSERT DATA {  GRAPH <http://example/president27> \
+                                { \
+                                     <http://example/president27> foaf:givenName "Bill" .\
+                                     <http://example/president27> foaf:familyName "Taft" .\
+                                } \
+                            }', function(result){
+
+           engine.execute("DROP DEFAULT", function(success, results){
+               engine.execute("SELECT *  { ?s ?p ?o } ", function(success, results) {
+
+                   test.ok(success);
+                   test.ok(results.length === 0);
+
+               engine.execute("SELECT * { GRAPH <http://example/president27> { ?s ?p ?o } }", function(success, results) {
+
+                     test.ok(success);
+                     test.ok(results.length === 2);
+
+                   engine.execute("SELECT * { GRAPH <http://example/president25> { ?s ?p ?o } }", function(success, results) {
+
+                       test.ok(results.length === 2);
+                       test.done();
+
+                   });
+               });
+               });
+           });
+           });
+           });
+           });
+    });
+    });
+};
+
+exports.testDrop3 = function(test){
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+
+            engine.execute('PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
+                              INSERT DATA { \
+                                   <http://example/president22> foaf:givenName "Grover" .\
+                                   <http://example/president22> foaf:familyName "Cleveland" .\
+                              }', function(succes, result){
+            engine.execute('PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
+                            INSERT DATA {  GRAPH <http://example/president25> \
+                                { \
+                                     <http://example/president25> foaf:givenName "Bill" .\
+                                     <http://example/president25> foaf:familyName "McKinley" .\
+                                } \
+                            }', function(result){
+
+            engine.execute('PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
+                            INSERT DATA {  GRAPH <http://example/president27> \
+                                { \
+                                     <http://example/president27> foaf:givenName "Bill" .\
+                                     <http://example/president27> foaf:familyName "Taft" .\
+                                } \
+                            }', function(result){
+
+           engine.execute("DROP NAMED", function(success, results){
+               test.ok(success);
+               engine.execute("SELECT *  { ?s ?p ?o } ", function(success, results) {
+
+                   test.ok(results);
+                   test.ok(results.length === 2);
+
+               engine.execute("SELECT * { GRAPH <http://example/president27> { ?s ?p ?o } }", function(success, results) {
+
+                     test.ok(success);
+                     test.ok(results.length === 0);
+
+                   engine.execute("SELECT * { GRAPH <http://example/president25> { ?s ?p ?o } }", function(success, results) {
+
+                       test.ok(results.length === 0);
+                       test.done();
+
+                   });
+               });
+               });
+           });
+           });
+           });
+           });
+    });
+    });
+};
+
+exports.testDrop4 = function(test){
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+
+            engine.execute('PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
+                              INSERT DATA { \
+                                   <http://example/president22> foaf:givenName "Grover" .\
+                                   <http://example/president22> foaf:familyName "Cleveland" .\
+                              }', function(succes, result){
+            engine.execute('PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
+                            INSERT DATA {  GRAPH <http://example/president25> \
+                                { \
+                                     <http://example/president25> foaf:givenName "Bill" .\
+                                     <http://example/president25> foaf:familyName "McKinley" .\
+                                } \
+                            }', function(result){
+
+            engine.execute('PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
+                            INSERT DATA {  GRAPH <http://example/president27> \
+                                { \
+                                     <http://example/president27> foaf:givenName "Bill" .\
+                                     <http://example/president27> foaf:familyName "Taft" .\
+                                } \
+                            }', function(result){
+
+           engine.execute("DROP ALL", function(success, results){
+               test.ok(success);
+               engine.execute("SELECT *  { ?s ?p ?o } ", function(success, results) {
+
+                   test.ok(results);
+                   test.ok(results.length === 0);
+
+               engine.execute("SELECT * { GRAPH <http://example/president27> { ?s ?p ?o } }", function(success, results) {
+
+                     test.ok(success);
+                     test.ok(results.length === 0);
+
+                   engine.execute("SELECT * { GRAPH <http://example/president25> { ?s ?p ?o } }", function(success, results) {
+
+                       test.ok(results.length === 0);
+                       engine.lexicon.registeredGraphs(true,function(success, graphs) {
+                           test.ok(success);
+                           test.ok(graphs.length === 0);
+                           test.done();
+                       });
+                   });
+               });
+               });
+           });
+           });
+           });
+           });
+    });
+    });
+};
+
+exports.testDeleteWhere1 = function(test){
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            engine.execute('PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
+                            INSERT DATA \
+                                { \
+                                     <http://example/president25> foaf:givenName "Bill" .\
+                                     <http://example/president25> foaf:familyName "McKinley" .\
+                                     <http://example/president27> foaf:givenName "Bill" .\
+                                     <http://example/president27> foaf:familyName "Taft" .\
+                                     <http://example/president42> foaf:givenName "Bill" .\
+                                     <http://example/president42> foaf:familyName "Clinton" .\
+                                }', function(result){
+           engine.execute("PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
+                           DELETE WHERE  { ?person foaf:givenName 'Bill'}", function(success, result){
+           engine.execute("PREFIX foaf:<http://xmlns.com/foaf/0.1/>\
+                           SELECT *  \
+                           { ?s ?p ?o }\
+                           ORDER BY ?s ?p", function(success, results){
+                               test.ok(success === true);
+                               test.ok(results.length === 3);
+                               test.done();
+                               
+                    })
+                });
+            });
+        });
+    });
+};

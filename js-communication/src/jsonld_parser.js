@@ -54,7 +54,13 @@ JSONLDParser.parser.parse = function(data, graph) {
         JSONLDParser.parser.parseListOfNodes([data], state, null, null, triples, nodeId);
     }
 
-    return triples;
+    var quads = [];
+    for(var i=0; i<triples.length; i++) {
+        var quad = triples[i];
+        quad.graph = graph;
+        quads.push(quad);
+    }
+    return quads;
 };
 
 JSONLDParser.parser.parseListOfNodes = function(data, state, inheritedSubject, inheritedPredicate, triples, nodeId) {

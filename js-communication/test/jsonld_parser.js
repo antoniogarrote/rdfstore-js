@@ -257,12 +257,13 @@ exports.testParsing6 = function(test) {
               "homepage": "http://example.org/home/"
             };
 
-    result = JSONLDParser.parser.parse(input);
+    result = JSONLDParser.parser.parse(input, {graph: 'http://test.com/graph'});
 
     for(var i=0; i<result.length; i++) {
         if(result[i].predicate.value === 'http://xmlns.com/foaf/0.1/age') {
             result[i].object.value === '41';
             result[i].object.type === 'http://www.w3.org/2001/XMLSchema#integer';
+            result[i].graph.value === 'http://test.com/graph';
         }
     }
 

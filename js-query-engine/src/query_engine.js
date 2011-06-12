@@ -351,9 +351,6 @@ QueryEngine.QueryEngine.prototype.normalizeTerm = function(term, env, shouldInde
         if(uri == null) {
             callback(false, "The prefix "+prefix+" cannot be resolved in the current environment");
         } else {
-            //console.log("SHOULD INDEX?");
-            //console.log(term);
-            //console.log(shouldIndex);
             if(shouldIndex) {
                 this.lexicon.registerUri(uri, function(oid){
                     callback(true, oid);
@@ -447,7 +444,16 @@ QueryEngine.QueryEngine.prototype.normalizeQuad = function(quad, queryEnv, shoul
                       errorFound = true;
                   }
               }
-              k();
+              if(shouldIndex === true && !errorFound) {
+                  that.lexicon.registerGraph(oid, function(succes){
+                      if(succes === false) {
+                          errorFound = true;
+                      }
+                      k();
+                  });
+              } else {
+                  k();
+              }
           });
         }
     }, function(k){
@@ -582,16 +588,22 @@ QueryEngine.QueryEngine.prototype.denormalizeBindings = function(bindings, callb
 // Queries execution
 
 QueryEngine.QueryEngine.prototype.execute = function(queryString, callback, defaultDataset, namedDataset){
-    //console.log(queryString);
-    var syntaxTree = this.abstractQueryTree.parseQueryString(queryString);
-    if(syntaxTree == null) {
-        throw("Error parsing query string");
-    } else {
-        if(syntaxTree.token === 'query' && syntaxTree.kind == 'update')  {
-            this.executeUpdate(syntaxTree, callback);
-        } else if(syntaxTree.token === 'query' && syntaxTree.kind == 'query') {
-            //console.log(JSON.stringify(syntaxTree));
-            this.executeQuery(syntaxTree, callback, defaultDataset, namedDataset);
+    try{
+        var syntaxTree = this.abstractQueryTree.parseQueryString(queryString);
+        if(syntaxTree == null) {
+            callback(false,"Error parsing query string");
+        } else {
+            if(syntaxTree.token === 'query' && syntaxTree.kind == 'update')  {
+                this.executeUpdate(syntaxTree, callback);
+            } else if(syntaxTree.token === 'query' && syntaxTree.kind == 'query') {
+                this.executeQuery(syntaxTree, callback, defaultDataset, namedDataset);
+            }
+        }
+    } catch(e) {
+        if(e.name && e.name==='SyntaxError') {
+            callback(false, "Syntax error: \nmessage:"+e.message+"\nline "+e.line+", column:"+e.column);
+        } else {
+            callback(false, "Query execution error");
         }
     }
 };
@@ -679,7 +691,6 @@ QueryEngine.QueryEngine.prototype.executeQuery = function(syntaxTree, callback, 
                                             }
                                         }
                                     }
-                                    //console.log(tripleTemplate);
                                     var s = RDFJSInterface.buildRDFResource(tripleTemplate.subject,bindings,that,queryEnv);
                                     var p = RDFJSInterface.buildRDFResource(tripleTemplate.predicate,bindings,that,queryEnv);
                                     var o = RDFJSInterface.buildRDFResource(tripleTemplate.object,bindings,that,queryEnv);
@@ -1097,6 +1108,7 @@ QueryEngine.QueryEngine.prototype.rangeQuery = function(quad, queryEnv, callback
             //console.log(success);
             //console.log(key);
             //console.log(new QuadIndexCommon.Pattern(key));
+            //console.log(key);
             that.backend.range(new QuadIndexCommon.Pattern(key),function(quads){
                 //console.log("retrieved");
                 //console.log(quads)
@@ -1157,6 +1169,8 @@ QueryEngine.QueryEngine.prototype.executeUpdate = function(syntaxTree, callback)
             });
         } else if(aqt.kind === 'modify') {
             this._executeModifyQuery(aqt, queryEnv, callback);
+        } else if(aqt.kind === 'create') {
+            callback(true);
         } else if(aqt.kind === 'load') {
             var graph = {'uri': Utils.lexicalFormBaseUri(aqt.sourceGraph, queryEnv)};
             if(aqt.destinyGraph != null) {
@@ -1171,6 +1185,10 @@ QueryEngine.QueryEngine.prototype.executeUpdate = function(syntaxTree, callback)
                     that.batchLoad(result, callback);
                 }
             });
+        } else if(aqt.kind === 'drop') {
+            this._executeClearGraph(aqt.destinyGraph, queryEnv, callback);
+        } else if(aqt.kind === 'clear') {
+            this._executeClearGraph(aqt.destinyGraph, queryEnv, callback);
         } else {
             throw new Error("not supported execution unit");
         }
@@ -1195,72 +1213,72 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
         if(env.success) {
           Utils.seq(function(k) {
               // subject
-              if(quad.subject['uri']) {
-                  that.lexicon.registerUri(quad.subject.uri, function(oid){
+              if(quad.subject['uri'] || quad.subject.token === 'uri') {
+                  that.lexicon.registerUri(quad.subject.uri || quad.subject.value, function(oid){
                       subject = oid;
                       k();
                   });
-              } else if(quad.subject['literal']) {
-                  that.lexicon.registerLiteral(quad.subject.literal, function(oid){
+              } else if(quad.subject['literal'] || quad.subject.token === 'literal') {
+                  that.lexicon.registerLiteral(quad.subject.literal || quad.subject.value, function(oid){
                       subject = oid;                    
                       k();
                   });
               } else {
-                  that.lexicon.registerBlank(quad.subject.blank, function(oid){
+                  that.lexicon.registerBlank(quad.subject.blank || quad.subject.value, function(oid){
                       subject = oid;
                       k();
                   });
               }
           }, function(k) {
               // predicate
-              if(quad.predicate['uri']) {
-                  that.lexicon.registerUri(quad.predicate.uri, function(oid){
+              if(quad.predicate['uri'] || quad.predicate.token === 'uri') {
+                  that.lexicon.registerUri(quad.predicate.uri || quad.predicate.value, function(oid){
                       predicate = oid;
                       k();
                   });
-              } else if(quad.predicate['literal']) {
-                  that.lexicon.registerLiteral(quad.predicate.literal, function(oid){
+              } else if(quad.predicate['literal'] || quad.predicate.token === 'literal') {
+                  that.lexicon.registerLiteral(quad.predicate.literal || quad.predicate.value, function(oid){
                       predicate = oid;                    
                       k();
                   });
               } else {
-                  that.lexicon.registerBlank(quad.predicate.blank, function(oid){
+                  that.lexicon.registerBlank(quad.predicate.blank || quad.predicate.value, function(oid){
                       predicate = oid;
                       k();
                   });
               }
           }, function(k) {
               // object
-              if(quad.object['uri']) {
-                  that.lexicon.registerUri(quad.object.uri, function(oid){
+              if(quad.object['uri'] || quad.object.token === 'uri') {
+                  that.lexicon.registerUri(quad.object.uri || quad.object.value, function(oid){
                       object = oid;
                       k();
                   });
-              } else if(quad.object['literal']) {
-                  that.lexicon.registerLiteral(quad.object.literal, function(oid){
+              } else if(quad.object['literal'] || quad.object.token === 'literal') {
+                  that.lexicon.registerLiteral(quad.object.literal || quad.object.value, function(oid){
                       object = oid;                    
                       k();
                   });
               } else {
-                  that.lexicon.registerBlank(quad.object.blank, function(oid){
+                  that.lexicon.registerBlank(quad.object.blank || quad.object.value, function(oid){
                       object = oid;
                       k();
                   });
               }
           }, function(k) {
               // graph
-              if(quad.graph['uri']) {
-                  that.lexicon.registerUri(quad.graph.uri, function(oid){
+              if(quad.graph['uri'] || quad.graph.token === 'uri') {
+                  that.lexicon.registerUri(quad.graph.uri || quad.graph.value, function(oid){
                       graph = oid;
                       k();
                   });
-              } else if(quad.graph['literal']) {
-                  that.lexicon.registerLiteral(quad.graph.literal, function(oid){
+              } else if(quad.graph['literal'] || quad.graph.token === 'literal') {
+                  that.lexicon.registerLiteral(quad.graph.literal || quad.graph.value, function(oid){
                       graph = oid;                    
                       k();
                   });
               } else {
-                  that.lexicon.registerBlank(quad.graph.blank, function(oid){
+                  that.lexicon.registerBlank(quad.graph.blank || quad.graph.value, function(oid){
                       graph = oid;
                       k();
                   });
@@ -1268,6 +1286,7 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
           })(function(result){
               var quad = {subject: subject, predicate:predicate, object:object, graph: graph};
               var key = new QuadIndexCommon.NodeKey(quad);
+
               that.backend.index(key, function(result, error){
                   if(result == true){
                       env.counter = env.counter + 1;
@@ -1329,6 +1348,7 @@ QueryEngine.QueryEngine.prototype._executeModifyQuery = function(aqt, queryEnv, 
             aqt.projection = [{"token": "variable", "kind": "*"}];
 
             that.executeSelect(aqt, queryEnv, defaultGraph, namedGraph, function(success, result) {                
+
                 if(success) {
                     that.denormalizeBindingsList(result, function(success, result){
                         if(success) {
@@ -1472,4 +1492,54 @@ QueryEngine.QueryEngine.prototype._executeQuadDelete = function(quad, queryEnv, 
             callback(false, result);
         }
     });
+};
+
+QueryEngine.QueryEngine.prototype._executeClearGraph = function(destinyGraph, queryEnv, callback) {
+    if(destinyGraph === 'default') {
+        this.execute("DELETE { ?s ?p ?o } WHERE { ?s ?p ?o }", callback);
+    } else if(destinyGraph === 'named') {
+        var that = this;
+        this.lexicon.registeredGraphs(true,function(success, graphs){
+            if(success === true) {
+                var foundErrorDeleting = false;
+                Utils.repeat(0, graphs.length,function(k,env) {
+                    var graph = graphs[env._i];
+                    var floop = arguments.callee;
+                    if(!foundErrorDeleting) {
+                        that.execute("DELETE { GRAPH <"+graph+"> { ?s ?p ?o } } WHERE { GRAPH <"+graph+"> { ?s ?p ?o } }", function(success, results){
+                            foundErrorDeleting = !success;
+                            k(floop, env);
+                        });
+                    } else {
+                        k(floop, env);
+                    }
+                }, function(env) {
+                    callback(!foundErrorDeleting);
+                });
+            } else {
+                callback(false, "Error deleting named graphs");
+            }
+        });
+    } else if(destinyGraph === 'all') {
+        var that = this;
+        this.execute("CLEAR DEFAULT", function(success, result) {
+            if(success) {
+                that.execute("CLEAR NAMED", callback);
+            } else {
+                callback(false,result);
+            }
+        });
+    } else {
+        // destinyGraph is an URI
+        if(destinyGraph.token == 'uri') {
+            var graphUri = Utils.lexicalFormBaseUri(destinyGraph,queryEnv);
+            if(graphUri != null) {
+                this.execute("DELETE { GRAPH <"+graphUri+"> { ?s ?p ?o } } WHERE { GRAPH <"+graphUri+"> { ?s ?p ?o } }", callback);
+            } else {
+                callback(false, "wrong graph URI");
+            }
+        } else {
+            callback(false, "wrong graph URI");
+        }
+    }
 };
