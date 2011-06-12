@@ -1,7 +1,7 @@
 #rdfstore-js
 
 
-rdfstore-js is a pure Javascript implementation of a RDF graph store with support for the SPARQL query and manipulation language.
+rdfstore-js is a pure Javascript implementation of a RDF graph store with support for the SPARQL query and data manipulation language.
 
     var rdfstore = require('rdfstore');
     
@@ -10,17 +10,17 @@ rdfstore-js is a pure Javascript implementation of a RDF graph store with suppor
 
         store.setPrefix('dbp', 'http://dbpedia.org/resource/');
         
-        store.node(store.rdf.resolve('dbp:Tim_Berners-Lee'), function(success, graph) {
+        store.node(store.rdf.resolve('dbp:Tim_Berners-Lee'), "http://example.org/people", function(success, graph) {
 
           var peopleGraph = graph.filter(store.rdf.filters.type(store.rdf.resolve("foaf:Person")));
           
           store.execute('PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
                          PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
                          PREFIX : <http://example.org/>\
-                         SELECT ?s { GRAPH <:people> { ?s rdf:type foaf:People } }',
+                         SELECT ?s FROM NAMED :people { GRAPH ?g { ?s rdf:type foaf:People } }',
                          function(success, results) {
 
-                           console.log(peopleGraph.toArray(0).subject.valueOf() === results[0].s.value);
+                           console.log(peopleGraph.toArray()[0].subject.valueOf() === results[0].s.value);
 
                          });
 
@@ -28,9 +28,10 @@ rdfstore-js is a pure Javascript implementation of a RDF graph store with suppor
 
       });
     })
-rdfstore-js can be used as a script being executed in a web browser or as library included in a node.js application.
 
-The current implementation passes all the test cases for the SPARQL 1.0 query language and supports the graph manipulation operations from the SPARQL 1.1/Update version of the language.
+rdfstore-js can be executed in a web browser or can be included as a library in a node.js application.
+
+The current implementation is far from complete but it already passes all the test cases for the SPARQL 1.0 query language and supports data manipulation operations from the SPARQL 1.1/Update version of the language.
 
 Some other features included in the library are the following:
 
@@ -43,10 +44,10 @@ Some other features included in the library are the following:
 
 ## SPARQL support
 
-rdfstore supports at the moment SPARQL 1.0 and most of SPARQL 1.1/Update.
+rdfstore-js supports at the moment SPARQL 1.0 and most of SPARQL 1.1/Update.
 Only small parts of SPARQL 1.1 query has been implemented.
 
-This is a list of the kind of queries currently implemented:
+This is a list of the different kind of queries currently implemented:
   
 - SELECT queries
 - UNION, OPTIONAL clauses
@@ -69,11 +70,11 @@ This is a list of the kind of queries currently implemented:
 
 ##Installation
 
-To use the library in a node.js application there is available a [package](http://search.npmjs.org/#/rdfstore) that can be installed using the NPM package manager:
+To use the library in a node.js application, there is available a [package](http://search.npmjs.org/#/rdfstore) that can be installed using the NPM package manager:
 
     $npm install rdfstore
 
-It is also possible to use rdfstore-js in a web application being executed in a browser. There is [minimized version](https://github.com/antoniogarrote/rdfstore-js/blob/master/dist/browser/rdf_store_min.js) of the library in a single Javascript file that can be linked in any HTML document.
+It is also possible to use rdfstore-js in a web application being executed in a browser. There is [minimized version](https://github.com/antoniogarrote/rdfstore-js/blob/master/dist/browser/rdf_store_min.js) of the library in a single Javascript file that can be linked from a HTML document.
 
 
 ##Building
@@ -84,25 +85,25 @@ To build the library for node.js execute the following command from the root dir
 
     $./make.rb nodejs
 
-To build the library for the browser execute the following command:
+To build the library for the browser configuration, execute the following command:
 
     $./make.rb nodejs
 
-The output for each environment should have been created in a dist directory in the root directory of the project.
+The output of each configuration will be created in the dist subdirectory at the root path of the project.
 
 
 ## Tests
 
-To execute the whole test suite for the library, including the DAWG test cases for SPARQL 1.0 and the test cases for SPARQL 1.1 implemented at the moment, the build script can be used:
+To execute the whole test suite of the library, including the DAWG test cases for SPARQL 1.0 and the test cases for SPARQL 1.1 implemented at the moment, the build script can be used:
 
     $./make.rb tests
 
-The tests use [nodeunit](http://search.npmjs.org/#/nodeunit) for the implementation so that library must be installed in order to run the tests.
+The tests depend on [nodeunit](http://search.npmjs.org/#/nodeunit). That node.js library must be installed in order to run the tests.
 
 
 ## API
 
-This is a small overview of the rdfstore.js API.
+This is a small overview of the rdfstore-js API.
 
 ###Store creation
 
@@ -173,10 +174,10 @@ This is a small overview of the rdfstore.js API.
 
 ###Loading remote graphs
 
-rdfstore will try to retrieve remote RDF resources across the network when a 'LOAD' SPARQL query is executed.
-The node.js build of the library will use regular TCP sockets and perform proper content negotiation and following redirections.
-The browser build, will try to perform an AJAX request to retrieve the resource using the correct HTTP headers. Nevertheless, this implementation is subjected to the limitations of the Same Domain Policy preventing cross domain requests. Redirections even in the same domain may also fail due to the browser removing the 'Accept' HTTP header of the original request.
-rdfstore relies in on the jQuery Javascript library to peform cross-browser AJAX request, so this library must be linked in order to exeucte 'LOAD' requests in the browser.  
+rdfstore-js will try to retrieve remote RDF resources across the network when a 'LOAD' SPARQL query is executed.
+The node.js build of the library will use regular TCP sockets and perform proper content negotiation. It will also follow a limited number of redirections.
+The browser build, will try to perform an AJAX request to retrieve the resource using the correct HTTP headers. Nevertheless, this implementation is subjected to the limitations of the Same Domain Policy implemented in current browsers that prevents cross domain requests. Redirections, even for the same domain, may also fail due to the browser removing the 'Accept' HTTP header of the original request.
+rdfstore-js relies in on the jQuery Javascript library to peform cross-browser AJAX requests. This library must be linked in order to exeucte 'LOAD' requests in the browser.  
 
     store.execute('LOAD <http://dbpedialite.org/titles/Lisp_%28programming_language%29>\
                    INTO GRAPH <lisp>', function(success){
@@ -191,7 +192,7 @@ rdfstore relies in on the jQuery Javascript library to peform cross-browser AJAX
 
 ###High level interface
 
-The following interface is a convenience API to work with Javascript code instead of using query strings. It is built on top of the RDF Interfaces W3C API.
+The following interface is a convenience API to work with Javascript code instead of using SPARQL query strings. It is built on top of the RDF Interfaces W3C API.
 
     /* retrieving a whole graph as JS Interafce API graph object */
 
@@ -285,7 +286,7 @@ This object can be used to access to the full RDF Interfaces 1.0 API.
 
 ###JSON-LD Support
 
-rdfstore implements parsers for Turtle and JSON-LD. The specification of JSON-LD is still an ongoing effort. You may expect to find some inconsistencies between this implementation and the actual specification.
+rdfstore-js implements parsers for Turtle and JSON-LD. The specification of JSON-LD is still an ongoing effort. You may expect to find some inconsistencies between this implementation and the actual specification.
 
             jsonld = {
               "@context": 
@@ -319,19 +320,19 @@ rdfstore implements parsers for Turtle and JSON-LD. The specification of JSON-LD
 
 ##Reusable modules
 
-rdfstore is built from a collection of general purpose modules. Some of these modules can easily be extracted from the library and used on their own.
+rdfstore-js is built from a collection of general purpose modules. Some of these modules can be easily extracted from the library and used on their own.
 
 This is a listing of the main modules that can be re-used:
 
--src/js-trees: in-memory and persisten tree data structures: binary trees, red-black trees, b-trees, etc.
--src/js-sparql-parser: a SPARQL and a Turtle parsers built using the [PEG.js](http://pegjs.majda.cz/) parsing expression grammars library.
--src/js-trees/src/utils: a continuation passing style inspired library for different code flow constructions
--src/js-communication/src/json_ld_parser: JSON-LD parser implementation.
--src/js-query-enginesrc/rdf_js_interface: Javascript Interface 1.0 API implementation.
+- src/js-trees: in-memory and persisten tree data structures: binary trees, red-black trees, b-trees, etc.
+- src/js-sparql-parser: a SPARQL and a Turtle parsers built using the [PEG.js](http://pegjs.majda.cz/) parsing expression grammars library.
+- src/js-trees/src/utils: a continuation passing style inspired library for different code flow constructions
+- src/js-communication/src/json_ld_parser: JSON-LD parser implementation.
+- src/js-query-enginesrc/rdf_js_interface: Javascript Interface 1.0 API implementation.
 
 ##Contributing
 
-rdfstore is still at the beginning of its development. If you take a look at the library and find a way to improve it, please ping us. We'll be very greatful for any bug report or pull-request.
+rdfstore-js is still at the beginning of its development. If you take a look at the library and find a way to improve it, please ping us. We'll be very greatful for any bug report or pull-request.
 
 ## Authors
 
