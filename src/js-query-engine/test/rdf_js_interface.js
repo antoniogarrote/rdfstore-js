@@ -74,14 +74,15 @@ exports.testActions = function(test) {
     var graph = rdf.createGraph();
     graph.addAction(rdf.createAction(rdf.filters.p(rdf.resolve("foaf:name")),
                                      function(triple){ var name = triple.object.valueOf();
-                                                       var name = name.slice(0,1).toUpperCase() + name.slice(1, name.length);
+                                                       var name = name.slice(0,1).toUpperCase() 
+                                                       + name.slice(1, name.length);
                                                        triple.object = rdf.createNamedNode(name);
                                                        return triple;}));
 
     rdf.setPrefix("ex", "http://example.org/people/");
     graph.add(rdf.createTriple( rdf.createNamedNode(rdf.resolve("ex:Alice")),
                                 rdf.createNamedNode(rdf.resolve("foaf:name")),
-                                rdf.createLiteral("alice") ));;
+                                rdf.createLiteral("alice") ));
 
     graph.add(rdf.createTriple( rdf.createNamedNode(rdf.resolve("ex:Alice")),
                                 rdf.createNamedNode(rdf.resolve("foaf:knows")),

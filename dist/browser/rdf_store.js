@@ -37811,5 +37811,5 @@ Store.Store.prototype._nodeToQuery = function(term) {
 };
 
 // end of ./src/js-store/src/store.js 
-window.rdfStore = Store;
+window.rdfstore = Store;
 })(window);

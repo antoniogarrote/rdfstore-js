@@ -55,6 +55,7 @@ BUILD_CONFIGURATION = {
         :email => "<antoniogarrote@gmail.com>"
       },
       :engines => {:node => ">0.4"},
+      :repository =>  {:type => "git", :url => "https://github.com/antoniogarrote/rdfstore-js.git"},
       :dependencies => {
         "binary" => ">=0.2.1",
         "put"    => ">=0.0.5"
