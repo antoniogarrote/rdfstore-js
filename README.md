@@ -87,7 +87,7 @@ To build the library for node.js execute the following command from the root dir
 
 To build the library for the browser configuration, execute the following command:
 
-    $./make.rb nodejs
+    $./make.rb browser
 
 The output of each configuration will be created in the dist subdirectory at the root path of the project.
 
