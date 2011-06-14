@@ -96,6 +96,20 @@ RDFLoader.RDFLoader.prototype.load = function(uri, graph, callback) {
         }});
 };
 
+RDFLoader.RDFLoader.prototype.loadFromFile = function(parser, graph, uri, callback) {
+    try {
+        var that = this;
+        fs = require('fs');
+        fs.readFile(uri.split("file:/")[1], function(err, data) {
+            if(err) throw err;
+            var data = data.toString('utf8');
+            that.tryToParse(parser, graph, data, callback);
+        });
+    } catch(e) {
+        callback(false, e);
+    }
+};
+
 RDFLoader.RDFLoader.prototype.tryToParse = function(parser, graph, input, callback) {
     try {
         if(typeof(input) === 'string') {

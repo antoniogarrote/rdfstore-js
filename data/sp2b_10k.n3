@@ -1,0 +1,52 @@
+@prefix dc: <http://purl.org/dc/elements/1.1/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix swrc: <http://swrc.ontoware.org/ontology#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix bench: <http://localhost/vocabulary/bench/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix person: <http://localhost/persons/> .
+bench:Journal rdfs:subClassOf foaf:Document.
+bench:Proceedings rdfs:subClassOf foaf:Document.
+bench:Inproceedings rdfs:subClassOf foaf:Document.
+bench:Article rdfs:subClassOf foaf:Document.
+bench:Www rdfs:subClassOf foaf:Document.
+bench:MastersThesis rdfs:subClassOf foaf:Document.
+bench:PhDThesis rdfs:subClassOf foaf:Document.
+bench:Incollection rdfs:subClassOf foaf:Document.
+bench:Book rdfs:subClassOf foaf:Document.
+<http://localhost/persons/Paul_Erdoes> rdf:type foaf:Person.
+<http://localhost/persons/Paul_Erdoes> foaf:name "Paul Erdoes"^^xsd:string.
+<http://localhost/misc/UnknownDocument> rdf:type foaf:Document.
+<http://localhost/publications/journals/Journal1/1940> rdf:type bench:Journal.
+<http://localhost/publications/journals/Journal1/1940> swrc:number "1"^^xsd:integer.
+<http://localhost/publications/journals/Journal1/1940> dc:title "Journal 1 (1940)"^^xsd:string.
+<http://localhost/publications/journals/Journal1/1940> swrc:volume "1"^^xsd:integer.
+<http://localhost/publications/journals/Journal1/1940> dcterms:issued "1940"^^xsd:integer.
+<http://localhost/publications/articles/Journal1/1940/Article1> rdf:type bench:Article.
+<http://localhost/publications/articles/Journal1/1940/Article1> bench:abstract "unmuzzling measles decentralizing hogfishes gantleted richer succories dwelling scrapped prat islanded burlily thanklessly swiveled polers oinked apnea maxillary dumpers bering evasiveness toto teashop reaccepts gunneries exorcises pirog desexes summable heliocentricity excretions recelebrating dually plateauing reoccupations embossers cerebrum gloves mohairs admiralties bewigged playgoers cheques batting waspishly stilbestrol villainousness miscalling firefanged skeins equalled sandwiching bewitchment cheaters riffled kerneling napoleons rifer splinting surmisers satisfying undamped sharpers forbearer anesthetization undermentioned outflanking funnyman commuted lachrymation floweret arcadian acridities unrealistic substituting surges preheats loggias reconciliating photocatalyst lenity tautological jambing sodality outcrop slipcases phenylketonuria grunts venturers valiantly unremorsefully extradites stollens ponderers conditione loathly cancels debiting parrots paraguayans resonates"^^xsd:string.
+<http://localhost/publications/articles/Journal1/1940/Article1> bench:cdrom "http://www.hogfishes.tld/richer/succories.html"^^xsd:string.
+<http://localhost/publications/articles/Journal1/1940/Article1> rdfs:seeAlso "http://www.gantleted.tld/succories/dwelling.html"^^xsd:string.
+<http://localhost/publications/articles/Journal1/1940/Article1> swrc:month "4"^^xsd:integer.
+<http://localhost/publications/articles/Journal1/1940/Article1> swrc:note "overbites terminals giros podgy vagus kinkiest xix recollected"^^xsd:string.
+<http://localhost/publications/articles/Journal1/1940/Article1> swrc:pages "110"^^xsd:integer.
+<http://localhost/publications/articles/Journal1/1940/Article1> dc:title "richer dwelling scrapped"^^xsd:string.
+<http://localhost/publications/articles/Journal1/1940/Article1> foaf:homepage "http://www.succories.tld/scrapped/prat.html"^^xsd:string.
+<http://localhost/publications/articles/Journal1/1940/Article1> swrc:journal <http://localhost/publications/journals/Journal1/1940>.
+_:Adamanta_Schlitt rdf:type foaf:Person.
+_:Adamanta_Schlitt foaf:name "Adamanta Schlitt"^^xsd:string.
+<http://localhost/publications/articles/Journal1/1940/Article1> dc:creator _:Adamanta_Schlitt.
+<http://localhost/publications/articles/Journal1/1940/Article1> dc:creator <http://localhost/persons/Paul_Erdoes>.
+<http://localhost/publications/articles/Journal1/1940/Article1> dcterms:references _:references1.
+_:references1 rdf:type rdf:Bag.
+_:references1 rdf:_1 <http://localhost/misc/UnknownDocument>.
+_:references1 rdf:_2 <http://localhost/misc/UnknownDocument>.
+_:references1 rdf:_3 <http://localhost/misc/UnknownDocument>.
+_:references1 rdf:_4 <http://localhost/misc/UnknownDocument>.
+<http://localhost/publications/articles/Journal1/1940/Article2> rdf:type bench:Article.
+<http://localhost/publications/articles/Journal1/1940/Article2> bench:abstract "householder overeducated objurgate treaties preprocessor despising loftily yabber reprovingly blungers dwarflike effulgences coreless tuberculoses environs hulled preexamination oralogy tibetans slavishly hipless prs bluejays cuppier nonsurgical skimpiest outpoured dissociated heartier petitionee brill neologic intermuscular fobbed transcribed swifters redigesting ostinato recalculation safest signiory latchets inflecting trephines hops exec junketeers isolators reducing nethermost nonfiction retrogressions eliminates unknowns mongoloids danker raunchiness perspicuously disjoined nigglings midmonths labium peeped daydreams permuting immediately canzona interrelated cooked reformers goodwife technicolor plenishes nippy bounden occulters blubberer amenities desecrated tetrachlorides loutish polygony malines cliffhanger entailments reindexed bedstraws thoughtless elation swampland earings circumscribed paralyzingly pouchy surrejoinders chestiest measurage tonsils pasturage thurifer teazle"^^xsd:string.
+<http://localhost/publications/articles/Journal1/1940/Article2> bench:cdrom "http://www.dwelling.tld/prat/islanded.html"^^xsd:string.
+<http://localhost/publications/articles/Journal1/1940/Article2> rdfs:seeAlso "http://www.scrapped.tld/islanded/burlily.html"^^xsd:string.
+<http://localhost/publications/articles/Journal1/1940/Article2> swrc:month "8"^^xsd:integer.
+<http://localhost/publications/articles/Journal1/1940/Article2> swrc:note "fringier rhythmical wastebaskets powderer immigrates inserter plights corollaries"^^xsd:string.

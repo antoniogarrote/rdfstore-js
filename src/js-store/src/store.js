@@ -271,6 +271,20 @@ Store.Store.prototype.load = function(){
         var query = "LOAD <"+data.valueOf()+"> INTO GRAPH <"+graph.valueOf()+">";
 
         this.engine.execute(query, callback);
+    } else if(data.indexOf('file://')=== 0) {
+        var parser = this.engine.rdfLoader.parsers[mediaType];
+
+        var that = this;
+
+        this.engine.rdfLoader.loadFromFile(parser, {'token':'uri', 'value':graph.valueOf()}, data, function(success, quads) {
+            if(success) {
+                that.engine.batchLoad(quads,callback);
+            } else {
+                callback(success, quads);
+            }
+        });
+
+
     } else {
         var parser = this.engine.rdfLoader.parsers[mediaType];
 

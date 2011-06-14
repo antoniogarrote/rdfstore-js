@@ -31,6 +31,22 @@ Utils.include = function(a,v) {
     return false;
 };
 
+Utils.repeatNew = function(c,max,floop,env) {
+try{
+    if(arguments.length===3) { env = {}; }
+    env._i = c;
+    env._success = true;
+    var result;
+    while(env._i<max && result != 'break') {
+        result = floop(env);
+        env._i++;
+    }
+    return env;
+} catch(e) {
+    console.log("ERROR");
+}
+};
+
 Utils.repeat = function(c,max,floop,fend,env) {
     if(arguments.length===4) { env = {}; }
     if(c<max) {
@@ -38,7 +54,7 @@ Utils.repeat = function(c,max,floop,fend,env) {
         floop(function(floop,env){
             // avoid stack overflow
             // deadly hack
-            if(c % 40 == 39) {
+            if(c % 5 == 4) {
                 setTimeout(function(){ Utils.repeat(c+1, max, floop, fend, env); }, 0);
             } else {
                 Utils.repeat(c+1, max, floop, fend, env);
@@ -342,6 +358,8 @@ Utils.lexicalFormTerm = function(term, ns) {
     } else if(term.token === 'literal') {
         return {'literal': Utils.lexicalFormLiteral(term, ns)};
     } else if(term.token === 'blank') {
+        var label = '_:'+ns.blank;
+        ns.blank = ns.blank+1;
         return {'blank': label};
     } else {
         callback(false, 'Token of kind '+term.token+' cannot transformed into its lexical form');

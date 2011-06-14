@@ -2,6 +2,14 @@
 exports.TurtleParser = {};
 var TurtleParser = exports.TurtleParser;
 
+var statementCounter = 0;
+var timer = new Date().getTime();
+var printTime = function() {
+    var newTimer = new Date().getTime();
+    console.log("ellapsed: "+((newTimer-timer)/1000)+" secs");
+    timer = newTimer;
+};
+
 // imports
 var Utils = require("./../../js-trees/src/utils").Utils;
 
@@ -190,6 +198,11 @@ TurtleParser.parser = (function(){
       }
       
       function parse_statement() {
+          statementCounter++;
+          if(statementCounter % 1000 == 0) {
+              console.log(""+statementCounter);
+              printTime();
+          }
         var cacheKey = 'statement@' + pos;
         var cachedResult = cache[cacheKey];
         if (cachedResult) {
@@ -5175,7 +5188,7 @@ TurtleParser.parser = (function(){
         }
         
         var savedReportMatchFailures = reportMatchFailures;
-        reportMatchFailures = false;
+          reportMatchFailures = false
         if (input.substr(pos).match(/^[ ]/) !== null) {
           var result5 = input.charAt(pos);
           pos++;
@@ -6253,8 +6266,10 @@ TurtleParser.parser.parse = function(data, graph) {
 
     var result = TurtleParser.parser.innerParse(data);
     var namespaces = {};
-    var env = {namespaces: namespaces, base:''};
-    
+    var env = {namespaces: namespaces, base:'', blankCounter: 0};
+
+    statementCounter = 0;
+
     for(var i=0; i<result.length; i++) {
         var unit = result[i];
         if(unit.token === 'base') {
