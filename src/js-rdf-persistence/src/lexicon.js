@@ -21,7 +21,7 @@ Lexicon.Lexicon = function(callback){
     this.OIDToBlank = {};
 
     this.defaultGraphOid = 0;
-    this.defaultGraphUri = "https://github.com/antoniogarrote/js-tools/types#default_graph";
+    this.defaultGraphUri = "https://github.com/antoniogarrote/rdfstore-js#default_graph";
     this.defaultGraphUriTerm = {"token": "uri", "prefix": null, "suffix": null, "value": this.defaultGraphUri, "oid": this.defaultGraphOid};
     this.oidCounter = 1;
 

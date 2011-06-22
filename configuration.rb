@@ -47,14 +47,14 @@ BUILD_CONFIGURATION = {
                 ],
     :package => {
       :name    => "rdfstore",
-      :version => "0.1.1",
+      :version => "0.1.3",
       :description => "RDF graph store supporting the SPARQL query language",
       :keywords => ["RDF", "SPARQL", "graph", "store"],
       :author  => {
         :name => "Antonio Garrote",
         :email => "<antoniogarrote@gmail.com>"
       },
-      :engines => {:node => ">0.4"},
+      :engines => {:node => "0.4"},
       :repository =>  {:type => "git", :url => "https://github.com/antoniogarrote/rdfstore-js.git"},
       :dependencies => {
         "binary" => ">=0.2.1",

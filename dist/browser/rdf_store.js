@@ -32,6 +32,22 @@ Utils.include = function(a,v) {
     return false;
 };
 
+Utils.repeatNew = function(c,max,floop,env) {
+try{
+    if(arguments.length===3) { env = {}; }
+    env._i = c;
+    env._success = true;
+    var result;
+    while(env._i<max && result != 'break') {
+        result = floop(env);
+        env._i++;
+    }
+    return env;
+} catch(e) {
+    console.log("ERROR");
+}
+};
+
 Utils.repeat = function(c,max,floop,fend,env) {
     if(arguments.length===4) { env = {}; }
     if(c<max) {
@@ -39,7 +55,7 @@ Utils.repeat = function(c,max,floop,fend,env) {
         floop(function(floop,env){
             // avoid stack overflow
             // deadly hack
-            if(c % 40 == 39) {
+            if(c % 5 == 4) {
                 setTimeout(function(){ Utils.repeat(c+1, max, floop, fend, env); }, 0);
             } else {
                 Utils.repeat(c+1, max, floop, fend, env);
@@ -343,6 +359,8 @@ Utils.lexicalFormTerm = function(term, ns) {
     } else if(term.token === 'literal') {
         return {'literal': Utils.lexicalFormLiteral(term, ns)};
     } else if(term.token === 'blank') {
+        var label = '_:'+ns.blank;
+        ns.blank = ns.blank+1;
         return {'blank': label};
     } else {
         callback(false, 'Token of kind '+term.token+' cannot transformed into its lexical form');
@@ -1662,7 +1680,7 @@ Lexicon.Lexicon = function(callback){
     this.OIDToBlank = {};
 
     this.defaultGraphOid = 0;
-    this.defaultGraphUri = "https://github.com/antoniogarrote/js-tools/types#default_graph";
+    this.defaultGraphUri = "https://github.com/antoniogarrote/rdfstore-js#default_graph";
     this.defaultGraphUriTerm = {"token": "uri", "prefix": null, "suffix": null, "value": this.defaultGraphUri, "oid": this.defaultGraphOid};
     this.oidCounter = 1;
 
@@ -1948,6 +1966,14 @@ NetworkTransport.load = function(uri, accept, callback, redirect) {
 // exports
 var TurtleParser = {};
 
+var statementCounter = 0;
+var timer = new Date().getTime();
+var printTime = function() {
+    var newTimer = new Date().getTime();
+    console.log("ellapsed: "+((newTimer-timer)/1000)+" secs");
+    timer = newTimer;
+};
+
 // imports
 
 TurtleParser.parser = (function(){
@@ -2135,6 +2161,11 @@ TurtleParser.parser = (function(){
       }
       
       function parse_statement() {
+          statementCounter++;
+          if(statementCounter % 1000 == 0) {
+              console.log(""+statementCounter);
+              printTime();
+          }
         var cacheKey = 'statement@' + pos;
         var cachedResult = cache[cacheKey];
         if (cachedResult) {
@@ -7120,7 +7151,7 @@ TurtleParser.parser = (function(){
         }
         
         var savedReportMatchFailures = reportMatchFailures;
-        reportMatchFailures = false;
+          reportMatchFailures = false
         if (input.substr(pos).match(/^[ ]/) !== null) {
           var result5 = input.charAt(pos);
           pos++;
@@ -8198,8 +8229,10 @@ TurtleParser.parser.parse = function(data, graph) {
 
     var result = TurtleParser.parser.innerParse(data);
     var namespaces = {};
-    var env = {namespaces: namespaces, base:''};
-    
+    var env = {namespaces: namespaces, base:'', blankCounter: 0};
+
+    statementCounter = 0;
+
     for(var i=0; i<result.length; i++) {
         var unit = result[i];
         if(unit.token === 'base') {
@@ -8657,6 +8690,20 @@ RDFLoader.RDFLoader.prototype.load = function(uri, graph, callback) {
         } else {
             callback(false, "Network error: "+results);
         }});
+};
+
+RDFLoader.RDFLoader.prototype.loadFromFile = function(parser, graph, uri, callback) {
+    try {
+        var that = this;
+        fs = require('fs');
+        fs.readFile(uri.split("file:/")[1], function(err, data) {
+            if(err) throw err;
+            var data = data.toString('utf8');
+            that.tryToParse(parser, graph, data, callback);
+        });
+    } catch(e) {
+        callback(false, e);
+    }
 };
 
 RDFLoader.RDFLoader.prototype.tryToParse = function(parser, graph, input, callback) {
@@ -37776,6 +37823,20 @@ Store.Store.prototype.load = function(){
         var query = "LOAD <"+data.valueOf()+"> INTO GRAPH <"+graph.valueOf()+">";
 
         this.engine.execute(query, callback);
+    } else if(data.indexOf('file://')=== 0) {
+        var parser = this.engine.rdfLoader.parsers[mediaType];
+
+        var that = this;
+
+        this.engine.rdfLoader.loadFromFile(parser, {'token':'uri', 'value':graph.valueOf()}, data, function(success, quads) {
+            if(success) {
+                that.engine.batchLoad(quads,callback);
+            } else {
+                callback(success, quads);
+            }
+        });
+
+
     } else {
         var parser = this.engine.rdfLoader.parsers[mediaType];
 
