@@ -122,7 +122,7 @@ This is a small overview of the rdfstore-js API.
     var store = rdfstore.create()
 
     // alt 3
-    new rdfstore.Store(funciton(store) {
+    new rdfstore.Store(function(store) {
       // the new store is ready
     });
 
