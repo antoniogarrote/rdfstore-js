@@ -120,7 +120,7 @@ SelectQuery "[6] SelectQuery"
           dataset['default'].push({token:'uri', 
                                    prefix:null, 
                                    suffix:null, 
-                                   value:'https://github.com/antoniogarrote/js-tools/types#default_graph'});
+                                   value:'https://github.com/antoniogarrote/rdfstore-js#default_graph'});
       }
 
       var query = {};
@@ -196,7 +196,7 @@ ConstructQuery "[9] ConstructQuery"
           dataset['default'].push({token:'uri', 
                                    prefix:null, 
                                    suffix:null, 
-                                   value:'https://github.com/antoniogarrote/js-tools/types#default_graph'});
+                                   value:'https://github.com/antoniogarrote/rdfstore-js#default_graph'});
       }
 
       var query = {};
@@ -245,7 +245,7 @@ AskQuery "[11] AskQuery"
           dataset['default'].push({token:'uri', 
                                    prefix:null, 
                                    suffix:null, 
-                                   value:'https://github.com/antoniogarrote/js-tools/types#default_graph'});
+                                   value:'https://github.com/antoniogarrote/rdfstore-js#default_graph'});
       }
 
       var query = {};

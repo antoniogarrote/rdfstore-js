@@ -271,7 +271,7 @@ Store.Store.prototype.load = function(){
         var query = "LOAD <"+data.valueOf()+"> INTO GRAPH <"+graph.valueOf()+">";
 
         this.engine.execute(query, callback);
-    } else if(data.indexOf('file://')=== 0) {
+    } else if(data && typeof(data)==='string' && data.indexOf('file://')=== 0) {
         var parser = this.engine.rdfLoader.parsers[mediaType];
 
         var that = this;

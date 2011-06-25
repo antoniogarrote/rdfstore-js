@@ -954,7 +954,7 @@ SparqlParser.parser = (function(){
                     dataset['default'].push({token:'uri', 
                                              prefix:null, 
                                              suffix:null, 
-                                             value:'https://github.com/antoniogarrote/js-tools/types#default_graph'});
+                                             value:'https://github.com/antoniogarrote/rdfstore-js#default_graph'});
                 }
           
                 var query = {};
@@ -2686,7 +2686,7 @@ SparqlParser.parser = (function(){
                     dataset['default'].push({token:'uri', 
                                              prefix:null, 
                                              suffix:null, 
-                                             value:'https://github.com/antoniogarrote/js-tools/types#default_graph'});
+                                             value:'https://github.com/antoniogarrote/rdfstore-js#default_graph'});
                 }
           
                 var query = {};
@@ -2991,7 +2991,7 @@ SparqlParser.parser = (function(){
                     dataset['default'].push({token:'uri', 
                                              prefix:null, 
                                              suffix:null, 
-                                             value:'https://github.com/antoniogarrote/js-tools/types#default_graph'});
+                                             value:'https://github.com/antoniogarrote/rdfstore-js#default_graph'});
                 }
           
                 var query = {};
