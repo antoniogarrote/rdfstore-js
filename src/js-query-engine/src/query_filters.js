@@ -153,30 +153,70 @@ QueryFilters.collect = function(filterExpr, bindings, env, queryEngine, callback
     });
 };
 
+QueryFilters.runDistinct = function(projectedBindings, projectionVariables) {
+};
 
-// @todo @wip
-QueryFilters.runAggregator = function(aggregator, bindingsGroup) {
+// @todo add more aggregation functions here
+QueryFilters.runAggregator = function(aggregator, bindingsGroup, queryEngine, env) {
     if(bindingsGroup == null || bindingsGroup.length === 0) {
         return QueryFilters.ebvError();
     } else if(aggregator.token === 'variable' && aggregator.kind == 'var') {
-        return {'var': aggregator.value.value, 'value':bindingsGroup[0][aggregator.value.value]};
+        return bindingsGroup[0][aggregator.value.value];
     } else if(aggregator.token === 'variable' && aggregator.kind === 'aliased') {
         if(aggregator.expression.expressionType === 'atomic' && aggregator.expression.primaryexpression === 'var') {
-            return {'var': aggregator.alias.value, 'value':bindingsGroup[0][aggregator.expression.value.value]};
+            return bindingsGroup[0][aggregator.expression.value.value];
         } else if(aggregator.expression.expressionType === 'aggregate') {
-            if(aggregator.expression.aggregateType === 'MAX') {
+            if(aggregator.expression.aggregateType === 'max') {
+                var max = null;
+                for(var i=0; i< bindingsGroup.length; i++) {
+                    var bindings = bindingsGroup[i];
+                    var ebv = QueryFilters.runFilter(aggregator.expression.expression, bindings, queryEngine, env);                    
+                    if(!QueryFilters.isEbvError(ebv)) {
+                        if(max === null) {
+                            max = ebv;
+                        } else {
+                            if(QueryFilters.runLtFunction(max, ebv).value === true) {
+                                max = ebv;
+                            }
+                        }
+                    }
+                }
 
+                if(max===null) {
+                    return QueryFilters.ebvError();
+                } else {
+                    return max;
+                }
+            } else if(aggregator.expression.aggregateType === 'min') {
+                var min = null;
+                for(var i=0; i< bindingsGroup.length; i++) {
+                    var bindings = bindingsGroup[i];
+                    var ebv = QueryFilters.runFilter(aggregator.expression.expression, bindings, queryEngine, env);                    
+                    if(!QueryFilters.isEbvError(ebv)) {
+                        if(min === null) {
+                            min = ebv;
+                        } else {
+                            if(QueryFilters.runGtFunction(min, ebv).value === true) {
+                                min = ebv;
+                            }
+                        }
+                    }
+                }
+
+                if(min===null) {
+                    return QueryFilters.ebvError();
+                } else {
+                    return min;
+                }
             }
+
         } else {
             var ebv = QueryFilters.runFilter(aggregate.expression, bindingsGroup[0], {blanks:{}, outCache:{}});
-            if(QueryFilters.isEbvError(ebv) === true) {
-                return ebv;
-            } else {
-            return {'var': aggregator.alias.value, 'value':ebv};
-            }
+            return ebv;
         }
     }
 };
+
 QueryFilters.runFilter = function(filterExpr, bindings, queryEngine, env) {
     if(filterExpr.expressionType != null) {
         var expressionType = filterExpr.expressionType;

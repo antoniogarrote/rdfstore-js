@@ -1971,23 +1971,23 @@ Aggregate "[110] Aggregate"
       return exp
 
   }
-  / 'MIN' '(' d:'DISTINCT'? e:Expression ')' {
+  / ('M'/'m')('I'/'i')('N'/'n') WS* '(' WS* d:( ('D'/'d')('I'/'i')('S'/'s')('T'/'t')('I'/'i')('N'/'n')('C'/'c')('T'/'t') )? WS* e:Expression WS* ')' WS* {
       exp = {};
       exp.token = 'expression'
       exp.expressionType = 'aggregate'
       exp.aggregateType = 'min'
-      exp.distinct = d
+      exp.distinct = (d != "" ? 'DISTINCT' : d);
       exp.expression = e
 
       return exp
 
   }
-  / 'MAX' '(' d:'DISTINCT'? e:Expression ')' {
+  / ('M'/'m')('A'/'a')('X'/'x') WS* '(' WS* d:( ('D'/'d')('I'/'i')('S'/'s')('T'/'t')('I'/'i')('N'/'n')('C'/'c')('T'/'t') )? WS* e:Expression WS* ')' WS* {
       exp = {};
       exp.token = 'expression'
       exp.expressionType = 'aggregate'
       exp.aggregateType = 'max'
-      exp.distinct = d
+      exp.distinct = (d != "" ? 'DISTINCT' : d);
       exp.expression = e
 
       return exp
