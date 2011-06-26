@@ -36,11 +36,6 @@ QueryFilters.checkFilters = function(pattern, bindings, nullifyErrors, queryEnv,
     }, function(env){
         callback(true,bindings.concat(nullified));
     });
-//    if(filters && filters[0]) {
-//        QueryFilters.run(filters[0].value, bindings, nullifyErrors, queryEnv, queryEngine, callback);
-//    } else {
-//        callback(true, bindings);
-//    }
 };
 
 QueryFilters.boundVars = function(filterExpr) {
@@ -208,8 +203,27 @@ QueryFilters.runAggregator = function(aggregator, bindingsGroup, queryEngine, en
                 } else {
                     return min;
                 }
-            }
+            } else if(aggregator.expression.aggregateType === 'count') {
+                var distinct = {}
+                var count = 0;
+                for(var i=0; i< bindingsGroup.length; i++) {
+                    var bindings = bindingsGroup[i];
+                    var ebv = QueryFilters.runFilter(aggregator.expression.expression, bindings, queryEngine, env);                    
+                    if(!QueryFilters.isEbvError(ebv)) {
+                        if(aggregator.expression.distinct != null && aggregator.expression.distinct != '') {
+                            var key = Utils.hashTerm(ebv);
+                            if(distinct[key] == null) {
+                                distinct[key] = true;
+                                count++;
+                            }
+                        } else {
+                            count++;
+                        }
+                    }
+                }
 
+                return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#integer", value:''+count};
+            }
         } else {
             var ebv = QueryFilters.runFilter(aggregate.expression, bindingsGroup[0], {blanks:{}, outCache:{}});
             return ebv;

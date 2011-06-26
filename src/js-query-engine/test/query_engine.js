@@ -1455,3 +1455,57 @@ exports.testGroupMin1 = function(test) {
         });
     });
 };
+
+exports.testGroupCount1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = "PREFIX : <http://example/>\
+                         INSERT DATA {\
+                         :s1 :p 1 .\
+                         :s1 :q 9 .\
+                         :s1 :v 9 .\
+                         :s2 :p 2 .\
+                         :s2 :p 0 }";
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example/> SELECT (COUNT(?v) AS ?count) {  ?s ?p ?v . } GROUP BY ?s', function(success, results){
+                    test.ok(success);
+                    test.ok(results.length===2);
+                    test.ok(results[0].count.value==='3')
+                    test.ok(results[1].count.value==='2')
+
+                    test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testGroupCountDistinct1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = "PREFIX : <http://example/>\
+                         INSERT DATA {\
+                         :s1 :p 1 .\
+                         :s1 :q 9 .\
+                         :s1 :v 9 .\
+                         :s2 :p 2 .\
+                         :s2 :p 0 }";
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example/> SELECT (COUNT( distinct ?v) AS ?count) {  ?s ?p ?v . } GROUP BY ?s', function(success, results){
+                    test.ok(success);
+                    test.ok(results.length===2);
+                    test.ok(results[0].count.value==='2')
+                    test.ok(results[1].count.value==='2')
+
+                    test.done();
+                });
+            });
+        });
+    });
+};

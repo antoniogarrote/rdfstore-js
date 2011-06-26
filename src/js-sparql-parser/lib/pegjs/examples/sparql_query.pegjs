@@ -1949,37 +1949,37 @@ NotExistsFunc "[109] NotExistsFunc"
                                           'GROUP_CONCAT' '(' 'DISTINCT'? Expression ( ';' 'SEPARATOR' '=' String )? ')' )
 */
 Aggregate "[110] Aggregate"
-  = 'COUNT' '(' d:'DISTINCT'?  e:('*' / Expression) ')' {
+  =   ('C'/'c')('O'/'o')('U'/'u')('N'/'n')('T'/'t') WS* '(' WS* d:( ('D'/'d')('I'/'i')('S'/'s')('T'/'t')('I'/'i')('N'/'n')('C'/'c')('T'/'t') )? WS* e:Expression WS* ')' WS* {
       exp = {};
-      exp.token = 'expression'
-      exp.expressionType = 'aggregate'
-      exp.aggregateType = 'count'
-      exp.distinct = d
-      exp.expression = e
+      exp.token = 'expression';
+      exp.expressionType = 'aggregate';
+      exp.aggregateType = 'count';
+      exp.distinct = (d != "" ? 'DISTINCT' : d);
+      exp.expression = e;
 
-      return exp
+      return exp;
 
   }
   / 'SUM' '(' d:'DISTINCT'? e:Expression ')' {
       exp = {};
-      exp.token = 'expression'
-      exp.expressionType = 'aggregate'
-      exp.aggregateType = 'sum'
-      exp.distinct = d
-      exp.expression = e
+      exp.token = 'expression';
+      exp.expressionType = 'aggregate';
+      exp.aggregateType = 'sum';
+      exp.distinct = d;
+      exp.expression = e;
 
-      return exp
+      return exp;
 
   }
   / ('M'/'m')('I'/'i')('N'/'n') WS* '(' WS* d:( ('D'/'d')('I'/'i')('S'/'s')('T'/'t')('I'/'i')('N'/'n')('C'/'c')('T'/'t') )? WS* e:Expression WS* ')' WS* {
       exp = {};
-      exp.token = 'expression'
-      exp.expressionType = 'aggregate'
-      exp.aggregateType = 'min'
+      exp.token = 'expression';
+      exp.expressionType = 'aggregate';
+      exp.aggregateType = 'min';
       exp.distinct = (d != "" ? 'DISTINCT' : d);
-      exp.expression = e
+      exp.expression = e;
 
-      return exp
+      return exp;
 
   }
   / ('M'/'m')('A'/'a')('X'/'x') WS* '(' WS* d:( ('D'/'d')('I'/'i')('S'/'s')('T'/'t')('I'/'i')('N'/'n')('C'/'c')('T'/'t') )? WS* e:Expression WS* ')' WS* {

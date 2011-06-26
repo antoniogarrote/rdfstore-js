@@ -31,22 +31,6 @@ Utils.include = function(a,v) {
     return false;
 };
 
-Utils.repeatNew = function(c,max,floop,env) {
-try{
-    if(arguments.length===3) { env = {}; }
-    env._i = c;
-    env._success = true;
-    var result;
-    while(env._i<max && result != 'break') {
-        result = floop(env);
-        env._i++;
-    }
-    return env;
-} catch(e) {
-    console.log("ERROR");
-}
-};
-
 Utils.repeat = function(c,max,floop,fend,env) {
     if(arguments.length===4) { env = {}; }
     if(c<max) {
@@ -377,4 +361,30 @@ Utils.normalizeUnicodeLiterals = function(string) {
     }
 
     return string;
+}
+
+Utils.hashTerm = function(term) {
+    try {
+      if(term.token==='uri') {
+          return "u"+term.value;
+      } else if(term.token === 'blank') {
+          return "b"+term.value;
+      } else if(term.token === 'literal') {
+          l = "l"+term.value;
+          l = l + (term.type || "");
+          l = l + (term.lang || "");        
+   
+          return l;
+      }
+    } catch(e) {
+        if(typeof(term) === 'object') {
+            var key = "";
+            for(p in term) {
+                key = key + p + term[p];
+            }
+
+            return key;
+        }
+        return term;
+    }
 }

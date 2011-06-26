@@ -273,7 +273,6 @@ QueryEngine.QueryEngine.prototype.removeDefaultGraphBindings = function(bindings
 }
 
 
-// @wip
 QueryEngine.QueryEngine.prototype.aggregateBindings = function(projection, bindingsGroup, env, callback) {
     this.copyDenormalizedBindings(bindingsGroup, env.outCache, function(result, denormBindings) {
         if(result===true) {
@@ -751,7 +750,6 @@ QueryEngine.QueryEngine.prototype.executeSelect = function(unit, env, defaultDat
                   if(success) {
                       if(unit.group && unit.group != "") {
                           that.groupSolution(result, unit.group, env, function(success, groupedBindings){
-                              //var projectedBindings = that.projectBindings(projection, groupedBindings);
 
                               var aggregatedBindings = [];
                               var foundError = false;
@@ -1167,7 +1165,6 @@ QueryEngine.QueryEngine.prototype.executeUpdate = function(syntaxTree, callback)
     for(var i=0; i<units.length; i++) {
 
         var aqt = that.abstractQueryTree.parseExecutableUnit(units[i]);
-        
         if(aqt.kind === 'insertdata') {
             Utils.repeat(0, aqt.quads.length, function(k,env) {                
                 var quad = aqt.quads[env._i];
@@ -1487,7 +1484,7 @@ QueryEngine.QueryEngine.prototype._executeQuadInsert = function(quad, queryEnv, 
             var key = new QuadIndexCommon.NodeKey(result);
             that.backend.search(new QuadIndexCommon.NodeKey(result),function(result) {
                 if(result){
-                    callback(false, "Not implemented yet");
+                    callback(true, "duplicated");
                 } else {
                     that.backend.index(key, function(result, error){
                         if(result == true){
