@@ -1960,12 +1960,12 @@ Aggregate "[110] Aggregate"
       return exp;
 
   }
-  / 'SUM' '(' d:'DISTINCT'? e:Expression ')' {
+  / ('S'/'s')('U'/'u')('M'/'m') WS* '(' WS* d:( ('D'/'d')('I'/'i')('S'/'s')('T'/'t')('I'/'i')('N'/'n')('C'/'c')('T'/'t') )? WS*  e:Expression WS* ')' WS* {
       exp = {};
       exp.token = 'expression';
       exp.expressionType = 'aggregate';
       exp.aggregateType = 'sum';
-      exp.distinct = d;
+      exp.distinct = (d != "" ? 'DISTINCT' : d);
       exp.expression = e;
 
       return exp;
@@ -1993,12 +1993,12 @@ Aggregate "[110] Aggregate"
       return exp
 
   }
-  / 'AVG' '(' d:'DISTINCT'? e:Expression ')' {
+  / ('A'/'a')('V'/'v')('G'/'g') WS* '(' WS* d:( ('D'/'d')('I'/'i')('S'/'s')('T'/'t')('I'/'i')('N'/'n')('C'/'c')('T'/'t') )? WS* e:Expression WS* ')' WS* {
       exp = {};
       exp.token = 'expression'
       exp.expressionType = 'aggregate'
       exp.aggregateType = 'avg'
-      exp.distinct = d
+      exp.distinct = (d != "" ? 'DISTINCT' : d);
       exp.expression = e
 
       return exp

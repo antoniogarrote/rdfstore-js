@@ -1509,3 +1509,107 @@ exports.testGroupCountDistinct1 = function(test) {
         });
     });
 };
+
+exports.testGroupAvg1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = "PREFIX : <http://example/>\
+                         INSERT DATA {\
+                         :s1 :p 1 .\
+                         :s1 :q 3 .\
+                         :s1 :v 3 .\
+                         :s2 :p 1 .\
+                         :s2 :p 11 }";
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example/> SELECT (AVG( distinct ?v) AS ?avg) {  ?s ?p ?v . } GROUP BY ?s', function(success, results){
+                    test.ok(success);
+                    test.ok(results.length===2);
+                    test.ok(results[0].avg.value==='2')
+                    test.ok(results[1].avg.value==='6')
+
+                    test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testGroupAvg2 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = "PREFIX : <http://example/>\
+                         INSERT DATA {\
+                         :s1 :p 2 .\
+                         :s1 :q 3 .\
+                         :s2 :p 1 .\
+                         :s2 :p 11 }";
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example/> SELECT (AVG(?v) AS ?avg) {  ?s ?p ?v . } GROUP BY ?s', function(success, results){
+                    test.ok(success);
+                    test.ok(results.length===2);
+                    test.ok(results[0].avg.value==='2.5')
+                    test.ok(results[1].avg.value==='6')
+                    test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testGroupSum1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = "PREFIX : <http://example/>\
+                         INSERT DATA {\
+                         :s1 :p 1 .\
+                         :s1 :q 3 .\
+                         :s1 :v 3 .\
+                         :s2 :p 1 .\
+                         :s2 :p 11 }";
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example/> SELECT (SUM( distinct ?v) AS ?avg) {  ?s ?p ?v . } GROUP BY ?s', function(success, results){
+                    test.ok(success);
+                    test.ok(results.length===2);
+                    test.ok(results[0].avg.value==='4')
+                    test.ok(results[1].avg.value==='12')
+
+                    test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testGroupSum2 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = "PREFIX : <http://example/>\
+                         INSERT DATA {\
+                         :s1 :p 2 .\
+                         :s1 :q 3.5 .\
+                         :s2 :p 1 .\
+                         :s2 :p 11 }";
+
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX : <http://example/> SELECT (SUM(?v) AS ?avg) {  ?s ?p ?v . } GROUP BY ?s', function(success, results){
+                    test.ok(success);
+                    test.ok(results.length===2);
+                    test.ok(results[0].avg.value==='5.5')
+                    test.ok(results[1].avg.value==='12')
+                    test.done();
+                });
+            });
+        });
+    });
+};

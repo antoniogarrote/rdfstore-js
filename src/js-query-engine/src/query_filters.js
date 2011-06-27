@@ -223,10 +223,64 @@ QueryFilters.runAggregator = function(aggregator, bindingsGroup, queryEngine, en
                 }
 
                 return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#integer", value:''+count};
+            } else if(aggregator.expression.aggregateType === 'avg') {
+                var distinct = {}
+                var aggregated = {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#integer", value:'0'};
+                var count = 0;
+                for(var i=0; i< bindingsGroup.length; i++) {
+                    var bindings = bindingsGroup[i];
+                    var ebv = QueryFilters.runFilter(aggregator.expression.expression, bindings, queryEngine, env);                    
+                    if(!QueryFilters.isEbvError(ebv)) {
+                        if(aggregator.expression.distinct != null && aggregator.expression.distinct != '') {
+                            var key = Utils.hashTerm(ebv);
+                            if(distinct[key] == null) {
+                                distinct[key] = true;
+                                if(QueryFilters.isNumeric(ebv)) {
+                                    aggregated = QueryFilters.runSumFunction(aggregated, ebv);
+                                    count++;
+                                }
+                            }
+                        } else {
+                            if(QueryFilters.isNumeric(ebv)) {
+                                aggregated = QueryFilters.runSumFunction(aggregated, ebv);
+                                count++;
+                            }
+                        }
+                    }
+                }
+
+                var result = QueryFilters.runDivFunction(aggregated, {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#integer", value:''+count});
+                result.value = ''+result.value;
+                return result;
+            } else if(aggregator.expression.aggregateType === 'sum') {
+                var distinct = {}
+                var aggregated = {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#integer", value:'0'};
+                for(var i=0; i< bindingsGroup.length; i++) {
+                    var bindings = bindingsGroup[i];
+                    var ebv = QueryFilters.runFilter(aggregator.expression.expression, bindings, queryEngine, env);                    
+                    if(!QueryFilters.isEbvError(ebv)) {
+                        if(aggregator.expression.distinct != null && aggregator.expression.distinct != '') {
+                            var key = Utils.hashTerm(ebv);
+                            if(distinct[key] == null) {
+                                distinct[key] = true;
+                                if(QueryFilters.isNumeric(ebv)) {
+                                    aggregated = QueryFilters.runSumFunction(aggregated, ebv);
+                                }
+                            }
+                        } else {
+                            if(QueryFilters.isNumeric(ebv)) {
+                                aggregated = QueryFilters.runSumFunction(aggregated, ebv);
+                            }
+                        }
+                    }
+                }
+                
+                aggregated.value =''+aggregated.value;
+                return aggregated;
+            } else {
+                var ebv = QueryFilters.runFilter(aggregate.expression, bindingsGroup[0], {blanks:{}, outCache:{}});
+                return ebv;
             }
-        } else {
-            var ebv = QueryFilters.runFilter(aggregate.expression, bindingsGroup[0], {blanks:{}, outCache:{}});
-            return ebv;
         }
     }
 };
