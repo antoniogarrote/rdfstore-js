@@ -41,6 +41,7 @@ Some other features included in the library are the following:
 - JSON-LD experimental parser
 - Turtle/N3 parser
 - W3C RDF Interfaces API
+- RDF graph events API
 
 ## SPARQL support
 
