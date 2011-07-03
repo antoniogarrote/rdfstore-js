@@ -319,7 +319,49 @@ rdfstore-js implements parsers for Turtle and JSON-LD. The specification of JSON
       });
     });
 
+###Events API
 
+rdfstore-js implements an experimental events API that allows clients to observe changes in the RDF graph and receive notifications when parts of this graph changes.
+The two main event functions are *subscribe* that makes possible to set up a callback function that will be invoked each time triples matching a certain pattern passed as an argument are added or removed, and the function *startObservingNode* that will be invoked with the modified version of the node each time triples are added or removed from the node.
+
+    var cb = function(event, triples){ 
+      // it will receive a notifications where a triple matching
+      // the pattern s:http://example/boogk, p:*, o:*, g:*
+      // is inserted or removed.
+      if(event === 'added') {
+        console.log(triples.length+" triples have been added");  
+      } else if(event === 'deleted') {
+        console.log(triples.length+" triples have been deleted");  
+      } 
+    }
+     
+    store.subscribe("http://example/book",null,null,null,cb);
+     
+     
+    // .. do something;
+     
+    // stop receiving notifications
+    store.unsubscribe(cb);
+
+The main difference between both methods is that *subscribe* receives the triples that have changed meanwhile *startObservingNode* receives alway the whole node with its updated triples. *startObservingNode* receives the node as a RDF Interface graph object.
+
+    var cb = function(node){ 
+      // it will receive the updated version of the node each
+      // time it is modified.
+      // If the node does not exist, the graph received will
+      // not contain triples.
+      console.log("The node has now "+node.toArray().length+" nodes");
+    }
+     
+    // if only tow arguments are passed, the default graph will be used.
+    // A graph uri can be passed as an optional second argument.
+    store.startObservingNode("http://example/book",cb);
+     
+     
+    // .. do something;
+     
+    // stop receiving notifications
+    store.stopObservingNode(cb);
 ##Reusable modules
 
 rdfstore-js is built from a collection of general purpose modules. Some of these modules can be easily extracted from the library and used on their own.

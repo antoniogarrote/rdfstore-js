@@ -385,8 +385,8 @@ exports.testDelete2 = function(test) {
 
         var graph = store.rdf.createGraph();
         graph.add(store.rdf.createTriple( store.rdf.createNamedNode(store.rdf.resolve("ex:Alice")),
-                                    store.rdf.createNamedNode(store.rdf.resolve("foaf:name")),
-                                    store.rdf.createLiteral("alice") ));;
+                                          store.rdf.createNamedNode(store.rdf.resolve("foaf:name")),
+                                          store.rdf.createLiteral("alice") ));;
 
         graph.add(store.rdf.createTriple( store.rdf.createNamedNode(store.rdf.resolve("ex:Alice")),
                                           store.rdf.createNamedNode(store.rdf.resolve("foaf:knows")),
@@ -486,7 +486,6 @@ exports.testLoad2 = function(test) {
         store.load('remote', 'http://dbpedia.org/resource/Tim_Berners-Lee', function(success, result) {
             store.node('http://dbpedia.org/resource/Tim_Berners-Lee', function(success, graph){
                 test.ok(success);
-                //var results = graph.filter(store.rdf.filters.p(store.rdf.resolve("rdf:type")));
                 var results = graph.filter(store.rdf.filters.type(store.rdf.resolve("foaf:Person")));
                 test.ok(results.toArray().length === 1);
                 test.done();
@@ -495,3 +494,99 @@ exports.testLoad2 = function(test) {
     });
 };
 
+
+exports.testEventsAPI1 = function(test){
+    var counter = 0;
+    new Store.Store(function(store){
+        store.execute('INSERT DATA {  <http://example/book> <http://example.com/vocab#title> <http://test.com/example> }', function(result, msg){
+            store.startObservingNode("http://example/book",function(graph){
+                var observerFn = arguments.callee;
+                if(counter === 0) {
+                    counter++;
+                    test.ok(graph.toArray().length === 1);
+                    store.execute('INSERT DATA {  <http://example/book> <http://example.com/vocab#title2> <http://test.com/example2> }');
+                } else if(counter === 1) {
+                    counter++;
+                    test.ok(graph.toArray().length === 2);
+                    store.execute('DELETE DATA {  <http://example/book> <http://example.com/vocab#title2> <http://test.com/example2> }');
+                } else if(counter === 2) {
+                    counter++;
+                    test.ok(graph.toArray().length === 1);
+                    store.stopObservingNode(observerFn);
+                    store.execute('INSERT DATA {  <http://example/book> <http://example.com/vocab#title2> <http://test.com/example3> }');                    
+                    test.done();
+                } else if(counter === 3) {
+                    test.ok(false);
+                }
+            });
+        });
+    });
+};
+
+exports.testEventsAPI2 = function(test){
+    var counter = 0;
+    new Store.Store(function(store){
+        store.execute('INSERT DATA { GRAPH <http://example/graph> { <http://example/book> <http://example.com/vocab#title> <http://test.com/example> } }', function(result, msg){
+            store.startObservingNode("http://example/book", "http://example/graph", function(graph){
+                var observerFn = arguments.callee;
+                if(counter === 0) {
+                    counter++;
+                    test.ok(graph.toArray().length === 1);
+                    store.execute('INSERT DATA { GRAPH <http://example/graph> { <http://example/book> <http://example.com/vocab#title2> <http://test.com/example2> } }');
+                } else if(counter === 1) {
+                    counter++;
+                    test.ok(graph.toArray().length === 2);
+                    store.execute('DELETE DATA { GRAPH <http://example/graph> { <http://example/book> <http://example.com/vocab#title2> <http://test.com/example2> } }');
+                } else if(counter === 2) {
+                    counter++;
+                    test.ok(graph.toArray().length === 1);
+                    store.stopObservingNode(observerFn);
+                    store.execute('INSERT DATA { GRAPH <http://example/graph> { <http://example/book> <http://example.com/vocab#title2> <http://test.com/example3> } }');                    
+                    test.done();
+                } else if(counter === 3) {
+                    test.ok(false);
+                }
+            });
+        });
+    });
+};
+
+
+exports.testEventsAPI3 = function(test){
+    var counter = 0;
+    new Store.Store(function(store){
+        store.subscribe("http://example/book",null,null,null,function(event, triples){
+            var observerFn = arguments.callee;
+            if(counter === 0) {
+                counter++;
+                test.ok(event === 'added');
+                test.ok(triples.length === 1);
+
+                test.ok(triples[0].subject.valueOf() === 'http://example/book');
+                test.ok(triples[0].object.valueOf() === 'http://test.com/example');
+            } else if(counter === 1) {
+                counter++;
+                test.ok(event === 'added');
+                test.ok(triples.length === 2);
+            } else if(counter === 2) {
+                counter++;
+                test.ok(event === 'deleted');
+                test.ok(triples.length === 1);
+                store.unsubscribe(observerFn);
+            } else if(counter === 3) {
+                test.ok(false);
+            }
+        });
+        
+        store.execute('INSERT DATA {  <http://example/book> <http://example.com/vocab#title> <http://test.com/example> }', function(){
+            store.execute('INSERT DATA {  <http://example/book> <http://example.com/vocab#title2> <http://test.com/example2>.\
+                                          <http://example/book> <http://example.com/vocab#title3> <http://test.com/example3> }', function(){
+                store.execute('DELETE DATA {  <http://example/book> <http://example.com/vocab#title2> <http://test.com/example2> }',function(){
+                    store.execute('INSERT DATA {  <http://example/book> <http://example.com/vocab#title2> <http://test.com/example3> }', function(){
+                        test.done();
+                    });                    
+                });
+            });
+        });
+    });
+}

@@ -10,6 +10,7 @@ var QueryPlan = require("./query_plan").QueryPlan;
 var QueryFilters = require("./query_filters").QueryFilters;
 var RDFJSInterface = require("./rdf_js_interface").RDFJSInterface;
 var RDFLoader = require("../../js-communication/src/rdf_loader").RDFLoader;
+var Callbacks = require("./callbacks.js").Callbacks;
 
 QueryEngine.QueryEngine = function(params) {
     if(arguments.length != 0) {
@@ -17,6 +18,7 @@ QueryEngine.QueryEngine = function(params) {
         this.lexicon = params.lexicon;
         this.abstractQueryTree = new AbstractQueryTree.AbstractQueryTree();
         this.rdfLoader = new RDFLoader.RDFLoader(params['communication']);
+        this.callbacksBackend = new Callbacks.CallbacksBackend(this);
     }
 };
 
@@ -592,7 +594,18 @@ QueryEngine.QueryEngine.prototype.execute = function(queryString, callback, defa
             callback(false,"Error parsing query string");
         } else {
             if(syntaxTree.token === 'query' && syntaxTree.kind == 'update')  {
-                this.executeUpdate(syntaxTree, callback);
+                this.callbacksBackend.startGraphModification();
+                var that = this;
+                this.executeUpdate(syntaxTree, function(success, result){
+                    if(success) {
+                        that.callbacksBackend.endGraphModification(function(){
+                            callback(success, result);
+                        });
+                    } else {
+                        that.callbacksBackend.cancelGraphModification();
+                        callback(success, result);
+                    }
+                });
             } else if(syntaxTree.token === 'query' && syntaxTree.kind == 'query') {
                 this.executeQuery(syntaxTree, callback, defaultDataset, namedDataset);
             }
@@ -1161,7 +1174,6 @@ QueryEngine.QueryEngine.prototype.executeUpdate = function(syntaxTree, callback)
     // environment for the operation -> base ns, declared ns, etc.
     var queryEnv = {blanks:{}, outCache:{}};
     this.registerNsInEnvironment(prologue, queryEnv);
-
     for(var i=0; i<units.length; i++) {
 
         var aqt = that.abstractQueryTree.parseExecutableUnit(units[i]);
@@ -1479,15 +1491,16 @@ QueryEngine.QueryEngine.prototype._executeModifyQuery = function(aqt, queryEnv, 
 
 QueryEngine.QueryEngine.prototype._executeQuadInsert = function(quad, queryEnv, callback) {
     var that = this;
-    this.normalizeQuad(quad, queryEnv, true, function(success,result) {
+    this.normalizeQuad(quad, queryEnv, true, function(success,normalized) {
         if(success === true) {
-            var key = new QuadIndexCommon.NodeKey(result);
-            that.backend.search(new QuadIndexCommon.NodeKey(result),function(result) {
+            var key = new QuadIndexCommon.NodeKey(normalized);
+            that.backend.search(key,function(result) {
                 if(result){
                     callback(true, "duplicated");
                 } else {
                     that.backend.index(key, function(result, error){
                         if(result == true){
+                            that.callbacksBackend.nextGraphModification(Callbacks.added, [quad, normalized]);
                             callback(true);
                         } else {
                             callback(false, error);
@@ -1503,12 +1516,13 @@ QueryEngine.QueryEngine.prototype._executeQuadInsert = function(quad, queryEnv, 
 
 QueryEngine.QueryEngine.prototype._executeQuadDelete = function(quad, queryEnv, callback) {
     var that = this;
-    this.normalizeQuad(quad, queryEnv, false, function(success,result) {
+    this.normalizeQuad(quad, queryEnv, false, function(success,normalized) {
         if(success === true) {
-            var key = new QuadIndexCommon.NodeKey(result);
+            var key = new QuadIndexCommon.NodeKey(normalized);
             that.backend.delete(key, function(result, error){
                 that.lexicon.unregister(quad, key, function(result, error){
                     if(result == true){
+                        that.callbacksBackend.nextGraphModification(Callbacks['deleted'], [quad, normalized]);
                         callback(true);
                     } else {
                         callback(false, error);

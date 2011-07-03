@@ -66,7 +66,9 @@ def process_file_for_nodejs(of, f)
       line.gsub!('dataset.default', "dataset['default']")
       line.gsub!("default:[]","'default':[]")
       line.gsub!(".while","meanwhile");
+      line.gsub!("Callbacks.deleted","____TMP_DOT_DELETE____");
       line.gsub!(".delete","['delete']");
+      line.gsub!("____TMP_DOT_DELETE____","Callbacks.deleted");
       line.gsub!(".extends","['extends']");
       line.gsub!(".with","['with']");
       line.gsub!(".using","['using']");
@@ -146,7 +148,9 @@ def process_file_for_browser(of, f)
       line.gsub!('dataset.default', "dataset['default']")
       line.gsub!("default:[]","'default':[]")
       line.gsub!(".while","meanwhile");
+      line.gsub!("Callbacks.deleted","____TMP_DOT_DELETE____");
       line.gsub!(".delete","['delete']");
+      line.gsub!("____TMP_DOT_DELETE____","Callbacks.deleted");
       line.gsub!(".extends","['extends']");
       line.gsub!(".with","['with']");
       line.gsub!(".using","['using']");

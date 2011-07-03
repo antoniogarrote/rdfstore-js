@@ -39,6 +39,7 @@ Store.Store = function(arg1, arg2) {
     }
 
     this.rdf = RDFJSInterface.rdf;
+    this.functionMap = {};
 
     var that = this;
     new Lexicon.Lexicon(function(lexicon){
@@ -137,6 +138,54 @@ Store.Store.prototype.node = function() {
     this.engine.execute("CONSTRUCT { <" + nodeUri + "> ?p ?o } WHERE { GRAPH <" + graphUri + "> { <" + nodeUri + "> ?p ?o } }", callback);
 };
 
+Store.Store.prototype.startObservingNode = function() {
+    var uri, graphUri, callback;
+
+    if(arguments.length === 2) {
+        uri = arguments[0];
+        callback = arguments[1];
+        this.engine.callbacksBackend.observeNode(uri, callback, function(){});
+    } else if(arguments.length === 3) {
+        uri = arguments[0];
+        graphUri = arguments[1];
+        callback = arguments[2];
+        this.engine.callbacksBackend.observeNode(uri, graphUri, callback, function(){});
+    }
+};
+
+Store.Store.prototype.stopObservingNode = function(callback) {
+    this.engine.callbacksBackend.stopObservingNode(callback);
+};
+
+Store.Store.prototype.subscribe = function(s, p, o, g, callback) {
+    var adapterCb = function(event,triples){
+        var acum = [];
+        var queryEnv = {blanks:{}, outCache:{}};
+        var bindings = [];
+
+        for(var i=0; i<triples.length; i++) {
+            var triple = triples[i];
+            var s = RDFJSInterface.buildRDFResource(triple.subject,bindings,this.engine,queryEnv);
+            var p = RDFJSInterface.buildRDFResource(triple.predicate,bindings,this.engine,queryEnv);
+            var o = RDFJSInterface.buildRDFResource(triple.object,bindings,this.engine,queryEnv);
+            if(s!=null && p!=null && o!=null) {
+                triple = new RDFJSInterface.Triple(s,p,o);
+                acum.push(triple);
+            }
+        }
+
+        callback(event,acum);
+    }
+
+    this.functionMap[callback] = adapterCb;
+    this.engine.callbacksBackend.subscribe(s,p,o,g,adapterCb,function(){});
+};
+
+Store.Store.prototype.unsubscribe = function(callback) {
+    var adapterCb = this.functionMap[callback];
+    this.engine.callbacksBackend.unsubscribe(adapterCb);
+    delete this.functionMap[callback];
+};
 
 Store.Store.prototype.setPrefix = function(prefix, uri) {
     this.rdf.setPrefix(prefix, uri)

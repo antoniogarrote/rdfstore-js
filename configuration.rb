@@ -21,6 +21,7 @@ BUILD_CONFIGURATION = {
                  "./src/js-query-engine/src/query_filters.js",
                  "./src/js-query-engine/src/query_plan.js",
                  "./src/js-query-engine/src/query_engine.js",
+                 "./src/js-query-engine/src/callbacks.js",
                  "./src/js-store/src/store.js"
                 ]
   },
@@ -43,11 +44,12 @@ BUILD_CONFIGURATION = {
                  "./src/js-query-engine/src/query_filters.js",
                  "./src/js-query-engine/src/query_plan.js",
                  "./src/js-query-engine/src/query_engine.js",
+                 "./src/js-query-engine/src/callbacks.js",
                  "./src/js-store/src/store.js"
                 ],
     :package => {
       :name    => "rdfstore",
-      :version => "0.1.5",
+      :version => "0.1.6",
       :description => "RDF graph store supporting the SPARQL query language",
       :keywords => ["RDF", "SPARQL", "graph", "store"],
       :author  => {
