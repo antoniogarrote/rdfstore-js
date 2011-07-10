@@ -57,7 +57,7 @@ This is a list of the different kind of queries currently implemented:
 - ORDER BY clauses
 - SPARQL 1.0 filters and builtin functions
 - variable aliases
-- variable aggregation: MAX, MIN, COUNT functions
+- variable aggregation: MAX, MIN, COUNT, AVG, SUM functions
 - GROUP BY clauses
 - DISTINCT query modifier
 - CONSTRUCT queries

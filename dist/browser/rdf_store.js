@@ -366,7 +366,9 @@ Utils.normalizeUnicodeLiterals = function(string) {
 
 Utils.hashTerm = function(term) {
     try {
-      if(term.token==='uri') {
+      if(term == null) {
+          return "";
+      } if(term.token==='uri') {
           return "u"+term.value;
       } else if(term.token === 'blank') {
           return "b"+term.value;
@@ -29167,150 +29169,150 @@ SparqlParser.parser = (function(){
         reportMatchFailures = false;
         var savedPos8 = pos;
         if (input.substr(pos, 1) === "C") {
-          var result256 = "C";
+          var result258 = "C";
           pos += 1;
         } else {
-          var result256 = null;
+          var result258 = null;
           if (reportMatchFailures) {
             matchFailed("\"C\"");
           }
         }
-        if (result256 !== null) {
-          var result203 = result256;
+        if (result258 !== null) {
+          var result203 = result258;
         } else {
           if (input.substr(pos, 1) === "c") {
-            var result255 = "c";
+            var result257 = "c";
             pos += 1;
           } else {
-            var result255 = null;
+            var result257 = null;
             if (reportMatchFailures) {
               matchFailed("\"c\"");
             }
           }
-          if (result255 !== null) {
-            var result203 = result255;
+          if (result257 !== null) {
+            var result203 = result257;
           } else {
             var result203 = null;;
           };
         }
         if (result203 !== null) {
           if (input.substr(pos, 1) === "O") {
-            var result254 = "O";
+            var result256 = "O";
             pos += 1;
           } else {
-            var result254 = null;
+            var result256 = null;
             if (reportMatchFailures) {
               matchFailed("\"O\"");
             }
           }
-          if (result254 !== null) {
-            var result204 = result254;
+          if (result256 !== null) {
+            var result204 = result256;
           } else {
             if (input.substr(pos, 1) === "o") {
-              var result253 = "o";
+              var result255 = "o";
               pos += 1;
             } else {
-              var result253 = null;
+              var result255 = null;
               if (reportMatchFailures) {
                 matchFailed("\"o\"");
               }
             }
-            if (result253 !== null) {
-              var result204 = result253;
+            if (result255 !== null) {
+              var result204 = result255;
             } else {
               var result204 = null;;
             };
           }
           if (result204 !== null) {
             if (input.substr(pos, 1) === "U") {
-              var result252 = "U";
+              var result254 = "U";
               pos += 1;
             } else {
-              var result252 = null;
+              var result254 = null;
               if (reportMatchFailures) {
                 matchFailed("\"U\"");
               }
             }
-            if (result252 !== null) {
-              var result205 = result252;
+            if (result254 !== null) {
+              var result205 = result254;
             } else {
               if (input.substr(pos, 1) === "u") {
-                var result251 = "u";
+                var result253 = "u";
                 pos += 1;
               } else {
-                var result251 = null;
+                var result253 = null;
                 if (reportMatchFailures) {
                   matchFailed("\"u\"");
                 }
               }
-              if (result251 !== null) {
-                var result205 = result251;
+              if (result253 !== null) {
+                var result205 = result253;
               } else {
                 var result205 = null;;
               };
             }
             if (result205 !== null) {
               if (input.substr(pos, 1) === "N") {
-                var result250 = "N";
+                var result252 = "N";
                 pos += 1;
               } else {
-                var result250 = null;
+                var result252 = null;
                 if (reportMatchFailures) {
                   matchFailed("\"N\"");
                 }
               }
-              if (result250 !== null) {
-                var result206 = result250;
+              if (result252 !== null) {
+                var result206 = result252;
               } else {
                 if (input.substr(pos, 1) === "n") {
-                  var result249 = "n";
+                  var result251 = "n";
                   pos += 1;
                 } else {
-                  var result249 = null;
+                  var result251 = null;
                   if (reportMatchFailures) {
                     matchFailed("\"n\"");
                   }
                 }
-                if (result249 !== null) {
-                  var result206 = result249;
+                if (result251 !== null) {
+                  var result206 = result251;
                 } else {
                   var result206 = null;;
                 };
               }
               if (result206 !== null) {
                 if (input.substr(pos, 1) === "T") {
-                  var result248 = "T";
+                  var result250 = "T";
                   pos += 1;
                 } else {
-                  var result248 = null;
+                  var result250 = null;
                   if (reportMatchFailures) {
                     matchFailed("\"T\"");
                   }
                 }
-                if (result248 !== null) {
-                  var result207 = result248;
+                if (result250 !== null) {
+                  var result207 = result250;
                 } else {
                   if (input.substr(pos, 1) === "t") {
-                    var result247 = "t";
+                    var result249 = "t";
                     pos += 1;
                   } else {
-                    var result247 = null;
+                    var result249 = null;
                     if (reportMatchFailures) {
                       matchFailed("\"t\"");
                     }
                   }
-                  if (result247 !== null) {
-                    var result207 = result247;
+                  if (result249 !== null) {
+                    var result207 = result249;
                   } else {
                     var result207 = null;;
                   };
                 }
                 if (result207 !== null) {
                   var result208 = [];
-                  var result246 = parse_WS();
-                  while (result246 !== null) {
-                    result208.push(result246);
-                    var result246 = parse_WS();
+                  var result248 = parse_WS();
+                  while (result248 !== null) {
+                    result208.push(result248);
+                    var result248 = parse_WS();
                   }
                   if (result208 !== null) {
                     if (input.substr(pos, 1) === "(") {
@@ -29324,280 +29326,298 @@ SparqlParser.parser = (function(){
                     }
                     if (result209 !== null) {
                       var result210 = [];
-                      var result245 = parse_WS();
-                      while (result245 !== null) {
-                        result210.push(result245);
-                        var result245 = parse_WS();
+                      var result247 = parse_WS();
+                      while (result247 !== null) {
+                        result210.push(result247);
+                        var result247 = parse_WS();
                       }
                       if (result210 !== null) {
                         var savedPos9 = pos;
                         if (input.substr(pos, 1) === "D") {
-                          var result244 = "D";
+                          var result246 = "D";
                           pos += 1;
                         } else {
-                          var result244 = null;
+                          var result246 = null;
                           if (reportMatchFailures) {
                             matchFailed("\"D\"");
                           }
                         }
-                        if (result244 !== null) {
-                          var result221 = result244;
+                        if (result246 !== null) {
+                          var result223 = result246;
                         } else {
                           if (input.substr(pos, 1) === "d") {
-                            var result243 = "d";
+                            var result245 = "d";
                             pos += 1;
                           } else {
-                            var result243 = null;
+                            var result245 = null;
                             if (reportMatchFailures) {
                               matchFailed("\"d\"");
                             }
                           }
-                          if (result243 !== null) {
-                            var result221 = result243;
+                          if (result245 !== null) {
+                            var result223 = result245;
                           } else {
-                            var result221 = null;;
+                            var result223 = null;;
                           };
                         }
-                        if (result221 !== null) {
+                        if (result223 !== null) {
                           if (input.substr(pos, 1) === "I") {
-                            var result242 = "I";
+                            var result244 = "I";
                             pos += 1;
                           } else {
-                            var result242 = null;
+                            var result244 = null;
                             if (reportMatchFailures) {
                               matchFailed("\"I\"");
                             }
                           }
-                          if (result242 !== null) {
-                            var result222 = result242;
+                          if (result244 !== null) {
+                            var result224 = result244;
                           } else {
                             if (input.substr(pos, 1) === "i") {
-                              var result241 = "i";
+                              var result243 = "i";
                               pos += 1;
                             } else {
-                              var result241 = null;
+                              var result243 = null;
                               if (reportMatchFailures) {
                                 matchFailed("\"i\"");
                               }
                             }
-                            if (result241 !== null) {
-                              var result222 = result241;
+                            if (result243 !== null) {
+                              var result224 = result243;
                             } else {
-                              var result222 = null;;
+                              var result224 = null;;
                             };
                           }
-                          if (result222 !== null) {
+                          if (result224 !== null) {
                             if (input.substr(pos, 1) === "S") {
-                              var result240 = "S";
+                              var result242 = "S";
                               pos += 1;
                             } else {
-                              var result240 = null;
+                              var result242 = null;
                               if (reportMatchFailures) {
                                 matchFailed("\"S\"");
                               }
                             }
-                            if (result240 !== null) {
-                              var result223 = result240;
+                            if (result242 !== null) {
+                              var result225 = result242;
                             } else {
                               if (input.substr(pos, 1) === "s") {
-                                var result239 = "s";
+                                var result241 = "s";
                                 pos += 1;
                               } else {
-                                var result239 = null;
+                                var result241 = null;
                                 if (reportMatchFailures) {
                                   matchFailed("\"s\"");
                                 }
                               }
-                              if (result239 !== null) {
-                                var result223 = result239;
+                              if (result241 !== null) {
+                                var result225 = result241;
                               } else {
-                                var result223 = null;;
+                                var result225 = null;;
                               };
                             }
-                            if (result223 !== null) {
+                            if (result225 !== null) {
                               if (input.substr(pos, 1) === "T") {
-                                var result238 = "T";
+                                var result240 = "T";
                                 pos += 1;
                               } else {
-                                var result238 = null;
+                                var result240 = null;
                                 if (reportMatchFailures) {
                                   matchFailed("\"T\"");
                                 }
                               }
-                              if (result238 !== null) {
-                                var result224 = result238;
+                              if (result240 !== null) {
+                                var result226 = result240;
                               } else {
                                 if (input.substr(pos, 1) === "t") {
-                                  var result237 = "t";
+                                  var result239 = "t";
                                   pos += 1;
                                 } else {
-                                  var result237 = null;
+                                  var result239 = null;
                                   if (reportMatchFailures) {
                                     matchFailed("\"t\"");
                                   }
                                 }
-                                if (result237 !== null) {
-                                  var result224 = result237;
+                                if (result239 !== null) {
+                                  var result226 = result239;
                                 } else {
-                                  var result224 = null;;
+                                  var result226 = null;;
                                 };
                               }
-                              if (result224 !== null) {
+                              if (result226 !== null) {
                                 if (input.substr(pos, 1) === "I") {
-                                  var result236 = "I";
+                                  var result238 = "I";
                                   pos += 1;
                                 } else {
-                                  var result236 = null;
+                                  var result238 = null;
                                   if (reportMatchFailures) {
                                     matchFailed("\"I\"");
                                   }
                                 }
-                                if (result236 !== null) {
-                                  var result225 = result236;
+                                if (result238 !== null) {
+                                  var result227 = result238;
                                 } else {
                                   if (input.substr(pos, 1) === "i") {
-                                    var result235 = "i";
+                                    var result237 = "i";
                                     pos += 1;
                                   } else {
-                                    var result235 = null;
+                                    var result237 = null;
                                     if (reportMatchFailures) {
                                       matchFailed("\"i\"");
                                     }
                                   }
-                                  if (result235 !== null) {
-                                    var result225 = result235;
+                                  if (result237 !== null) {
+                                    var result227 = result237;
                                   } else {
-                                    var result225 = null;;
+                                    var result227 = null;;
                                   };
                                 }
-                                if (result225 !== null) {
+                                if (result227 !== null) {
                                   if (input.substr(pos, 1) === "N") {
-                                    var result234 = "N";
+                                    var result236 = "N";
                                     pos += 1;
                                   } else {
-                                    var result234 = null;
+                                    var result236 = null;
                                     if (reportMatchFailures) {
                                       matchFailed("\"N\"");
                                     }
                                   }
-                                  if (result234 !== null) {
-                                    var result226 = result234;
+                                  if (result236 !== null) {
+                                    var result228 = result236;
                                   } else {
                                     if (input.substr(pos, 1) === "n") {
-                                      var result233 = "n";
+                                      var result235 = "n";
                                       pos += 1;
                                     } else {
-                                      var result233 = null;
+                                      var result235 = null;
                                       if (reportMatchFailures) {
                                         matchFailed("\"n\"");
                                       }
                                     }
-                                    if (result233 !== null) {
-                                      var result226 = result233;
+                                    if (result235 !== null) {
+                                      var result228 = result235;
                                     } else {
-                                      var result226 = null;;
+                                      var result228 = null;;
                                     };
                                   }
-                                  if (result226 !== null) {
+                                  if (result228 !== null) {
                                     if (input.substr(pos, 1) === "C") {
-                                      var result232 = "C";
+                                      var result234 = "C";
                                       pos += 1;
                                     } else {
-                                      var result232 = null;
+                                      var result234 = null;
                                       if (reportMatchFailures) {
                                         matchFailed("\"C\"");
                                       }
                                     }
-                                    if (result232 !== null) {
-                                      var result227 = result232;
+                                    if (result234 !== null) {
+                                      var result229 = result234;
                                     } else {
                                       if (input.substr(pos, 1) === "c") {
-                                        var result231 = "c";
+                                        var result233 = "c";
                                         pos += 1;
                                       } else {
-                                        var result231 = null;
+                                        var result233 = null;
                                         if (reportMatchFailures) {
                                           matchFailed("\"c\"");
                                         }
                                       }
-                                      if (result231 !== null) {
-                                        var result227 = result231;
+                                      if (result233 !== null) {
+                                        var result229 = result233;
                                       } else {
-                                        var result227 = null;;
+                                        var result229 = null;;
                                       };
                                     }
-                                    if (result227 !== null) {
+                                    if (result229 !== null) {
                                       if (input.substr(pos, 1) === "T") {
-                                        var result230 = "T";
+                                        var result232 = "T";
                                         pos += 1;
                                       } else {
-                                        var result230 = null;
+                                        var result232 = null;
                                         if (reportMatchFailures) {
                                           matchFailed("\"T\"");
                                         }
                                       }
-                                      if (result230 !== null) {
-                                        var result228 = result230;
+                                      if (result232 !== null) {
+                                        var result230 = result232;
                                       } else {
                                         if (input.substr(pos, 1) === "t") {
-                                          var result229 = "t";
+                                          var result231 = "t";
                                           pos += 1;
                                         } else {
-                                          var result229 = null;
+                                          var result231 = null;
                                           if (reportMatchFailures) {
                                             matchFailed("\"t\"");
                                           }
                                         }
-                                        if (result229 !== null) {
-                                          var result228 = result229;
+                                        if (result231 !== null) {
+                                          var result230 = result231;
                                         } else {
-                                          var result228 = null;;
+                                          var result230 = null;;
                                         };
                                       }
-                                      if (result228 !== null) {
-                                        var result220 = [result221, result222, result223, result224, result225, result226, result227, result228];
+                                      if (result230 !== null) {
+                                        var result222 = [result223, result224, result225, result226, result227, result228, result229, result230];
                                       } else {
-                                        var result220 = null;
+                                        var result222 = null;
                                         pos = savedPos9;
                                       }
                                     } else {
-                                      var result220 = null;
+                                      var result222 = null;
                                       pos = savedPos9;
                                     }
                                   } else {
-                                    var result220 = null;
+                                    var result222 = null;
                                     pos = savedPos9;
                                   }
                                 } else {
-                                  var result220 = null;
+                                  var result222 = null;
                                   pos = savedPos9;
                                 }
                               } else {
-                                var result220 = null;
+                                var result222 = null;
                                 pos = savedPos9;
                               }
                             } else {
-                              var result220 = null;
+                              var result222 = null;
                               pos = savedPos9;
                             }
                           } else {
-                            var result220 = null;
+                            var result222 = null;
                             pos = savedPos9;
                           }
                         } else {
-                          var result220 = null;
+                          var result222 = null;
                           pos = savedPos9;
                         }
-                        var result211 = result220 !== null ? result220 : '';
+                        var result211 = result222 !== null ? result222 : '';
                         if (result211 !== null) {
                           var result212 = [];
-                          var result219 = parse_WS();
-                          while (result219 !== null) {
-                            result212.push(result219);
-                            var result219 = parse_WS();
+                          var result221 = parse_WS();
+                          while (result221 !== null) {
+                            result212.push(result221);
+                            var result221 = parse_WS();
                           }
                           if (result212 !== null) {
-                            var result213 = parse_ConditionalOrExpression();
+                            if (input.substr(pos, 1) === "*") {
+                              var result220 = "*";
+                              pos += 1;
+                            } else {
+                              var result220 = null;
+                              if (reportMatchFailures) {
+                                matchFailed("\"*\"");
+                              }
+                            }
+                            if (result220 !== null) {
+                              var result213 = result220;
+                            } else {
+                              var result219 = parse_ConditionalOrExpression();
+                              if (result219 !== null) {
+                                var result213 = result219;
+                              } else {
+                                var result213 = null;;
+                              };
+                            }
                             if (result213 !== null) {
                               var result214 = [];
                               var result218 = parse_WS();
@@ -35057,67 +35077,31 @@ SparqlParser.parser = (function(){
         var savedReportMatchFailures = reportMatchFailures;
         reportMatchFailures = false;
         var savedPos0 = pos;
-        var result8 = parse_PN_CHARS_U();
-        if (result8 !== null) {
-          var result2 = result8;
+        var result6 = parse_PN_CHARS_U();
+        if (result6 !== null) {
+          var result2 = result6;
         } else {
           if (input.substr(pos).match(/^[0-9]/) !== null) {
-            var result7 = input.charAt(pos);
+            var result5 = input.charAt(pos);
             pos++;
           } else {
-            var result7 = null;
+            var result5 = null;
             if (reportMatchFailures) {
               matchFailed("[0-9]");
             }
           }
-          if (result7 !== null) {
-            var result2 = result7;
+          if (result5 !== null) {
+            var result2 = result5;
           } else {
             var result2 = null;;
           };
         }
         if (result2 !== null) {
           var result3 = [];
-          var result6 = parse_PN_CHARS();
-          if (result6 !== null) {
-            var result4 = result6;
-          } else {
-            if (input.substr(pos, 1) === ".") {
-              var result5 = ".";
-              pos += 1;
-            } else {
-              var result5 = null;
-              if (reportMatchFailures) {
-                matchFailed("\".\"");
-              }
-            }
-            if (result5 !== null) {
-              var result4 = result5;
-            } else {
-              var result4 = null;;
-            };
-          }
+          var result4 = parse_PN_CHARS();
           while (result4 !== null) {
             result3.push(result4);
-            var result6 = parse_PN_CHARS();
-            if (result6 !== null) {
-              var result4 = result6;
-            } else {
-              if (input.substr(pos, 1) === ".") {
-                var result5 = ".";
-                pos += 1;
-              } else {
-                var result5 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\".\"");
-                }
-              }
-              if (result5 !== null) {
-                var result4 = result5;
-              } else {
-                var result4 = null;;
-              };
-            }
+            var result4 = parse_PN_CHARS();
           }
           if (result3 !== null) {
             var result1 = [result2, result3];
@@ -36156,20 +36140,35 @@ QueryFilters.runAggregator = function(aggregator, bindingsGroup, queryEngine, en
             } else if(aggregator.expression.aggregateType === 'count') {
                 var distinct = {}
                 var count = 0;
-                for(var i=0; i< bindingsGroup.length; i++) {
-                    var bindings = bindingsGroup[i];
-                    var ebv = QueryFilters.runFilter(aggregator.expression.expression, bindings, queryEngine, env);                    
-                    if(!QueryFilters.isEbvError(ebv)) {
-                        if(aggregator.expression.distinct != null && aggregator.expression.distinct != '') {
-                            var key = Utils.hashTerm(ebv);
+                if(aggregator.expression.expression === '*') {
+                    if(aggregator.expression.distinct != null && aggregator.expression.distinct != '') {
+                        for(var i=0; i< bindingsGroup.length; i++) {
+                            var bindings = bindingsGroup[i];
+                            var key = Utils.hashTerm(bindings);
                             if(distinct[key] == null) {
                                 distinct[key] = true;
                                 count++;
                             }
-                        } else {
-                            count++;
-                        }
-                    }
+                        } 
+                    } else {
+                        count = bindingsGroup.length;
+                    }                   
+                } else {
+                  for(var i=0; i< bindingsGroup.length; i++) {
+                      var bindings = bindingsGroup[i];
+                      var ebv = QueryFilters.runFilter(aggregator.expression.expression, bindings, queryEngine, env);                    
+                      if(!QueryFilters.isEbvError(ebv)) {
+                          if(aggregator.expression.distinct != null && aggregator.expression.distinct != '') {
+                              var key = Utils.hashTerm(ebv);
+                              if(distinct[key] == null) {
+                                  distinct[key] = true;
+                                  count++;
+                              }
+                          } else {
+                              count++;
+                          }
+                      }
+                  }
                 }
 
                 return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#integer", value:''+count};
@@ -38411,7 +38410,7 @@ QueryEngine.QueryEngine.prototype.projectBindings = function(projection, results
                 if(projection[j].token == 'variable' && projection[j].kind != 'aliased') {
                     currentProjected[projection[j].value.value] = currentResult[projection[j].value.value];
                 } else if(projection[j].token == 'variable' && projection[j].kind == 'aliased') {
-                    var ebv = QueryFilters.runFilter(projection[j].expression, currentResult, that, {blanks:{}, outCache:{}});
+                    var ebv = QueryFilters.runFilter(projection[j].expression, currentResult, this, {blanks:{}, outCache:{}});
                     if(QueryFilters.isEbvError(ebv)) {
                         shouldAdd = false;
                         break
@@ -38633,6 +38632,11 @@ QueryEngine.QueryEngine.prototype.copyDenormalizedBindings = function(bindingsLi
             if(oid == null) {
                 // this can be null, e.g. union different variables (check SPARQL recommendation examples UNION)
                 denorm[variables[env._i]] = null;
+                k(floop, env);
+            } else if(typeof(oid) === 'object') {
+                // the binding is already denormalized, this can happen for example because the value of the
+                // binding is the result of the aggregation of other bindings in a GROUP clause
+                denorm[variables[env._i]] = oid;
                 k(floop, env);
             } else {
                 var inOut = out[oid];
@@ -38860,6 +38864,19 @@ QueryEngine.QueryEngine.prototype.executeSelect = function(unit, env, defaultDat
             if(success) {
                 that.executeSelectUnit(projection, dataset, unit.pattern, env, function(success, result){
                   if(success) {
+                      // detect single group
+                      if(unit.group!=null && unit.group === "") {
+                          var foundUniqueGroup = false;
+                          for(var i=0; i<unit.projection.length; i++) {
+                              if(unit.projection[i].expression!=null && unit.projection[i].expression.expressionType === 'aggregate') {
+                                  foundUniqueGroup = true;
+                                  break;
+                              }
+                          }
+                          if(foundUniqueGroup === true) {
+                              unit.group = 'singleGroup';
+                          }
+                      }
                       if(unit.group && unit.group != "") {
                           that.groupSolution(result, unit.group, env, function(success, groupedBindings){
 
@@ -38919,104 +38936,130 @@ QueryEngine.QueryEngine.prototype.groupSolution = function(bindings, group, quer
     var order = [];
     var filteredBindings = [];
     var initialized = false;
+    var that = this;
+    if(group === 'singleGroup') {
+        callback(true, [bindings]);
 
-    Utils.repeat(0, bindings.length, function(kk, outEnv) {
-        var outFloop = arguments.callee;
-        var currentBindings = bindings[outEnv._i];
-        var mustAddBindings = true;
+    } else {
+        Utils.repeat(0, bindings.length, function(kk, outEnv) {
+            var outFloop = arguments.callee;
+            var currentBindings = bindings[outEnv._i];
+            var mustAddBindings = true;
 
-        /**
-         * In this loop, we iterate through all the group clauses and tranform the current bindings
-         * according to the group by clauses.
-         * If it is the first iteration we also save in a different array the order for the 
-         * grouped variables that will be used later to build the final groups
-         */
-        Utils.repeat(0, group.length, function(k, env) {
-            var floop = arguments.callee;
-            var currentOrderClause = group[env._i];
-            var orderVariable = null;
+            /**
+             * In this loop, we iterate through all the group clauses and tranform the current bindings
+             * according to the group by clauses.
+             * If it is the first iteration we also save in a different array the order for the 
+             * grouped variables that will be used later to build the final groups
+             */
+            Utils.repeat(0, group.length, function(k, env) {
+                var floop = arguments.callee;
+                var currentOrderClause = group[env._i];
+                var orderVariable = null;
 
-            if(currentOrderClause.token === 'var') {
-                orderVariable = currentOrderClause.value;
-            } else if(currentOrderClause.token === 'aliased_expression') {
-                if(currentOrderClause.expression.primaryexpression === 'var') {
+                if(currentOrderClause.token === 'var') {
+                    orderVariable = currentOrderClause.value;
+
+                    if(initialized == false) {
+                        order.push(orderVariable);
+                    }
+
+                    k(floop, env);
+                } else if(currentOrderClause.token === 'aliased_expression') {
                     orderVariable = currentOrderClause.alias.value;
-                    currentBindings[currentOrderClause.alias.value] = currentBindings[currentOrderClause.expression.value.value];
-                } else {
-                    var filterResultEbv = QueryFilters.runFilter(currentOrderClause.expression, currentBindings, that, queryEnv);
-                    if(!QueryFilters.isEbvError(filterResultEbv)) {
-                        currentBindings[currentOrderClause.alias.value]= filterResultEbv;
+                    if(initialized == false) {
+                        order.push(orderVariable);
+                    }
+
+                    if(currentOrderClause.expression.primaryexpression === 'var') {
+                        currentBindings[currentOrderClause.alias.value] = currentBindings[currentOrderClause.expression.value.value];
+                        k(floop, env);
+
                     } else {
-                        mustAddBindings = false;
+                        that.copyDenormalizedBindings([currentBindings], queryEnv.outCache, function(success, denormBindings){
+                            var filterResultEbv = QueryFilters.runFilter(currentOrderClause.expression, denormBindings[0], that, queryEnv);
+                            if(!QueryFilters.isEbvError(filterResultEbv)) {
+                                if(filterResultEbv.value != null) {
+                                    filterResultEbv.value = ""+filterResultEbv.value;
+                                }
+                                currentBindings[currentOrderClause.alias.value]= filterResultEbv;
+                            } else {
+                                mustAddBindings = false;
+                            }
+                            
+                            k(floop, env);
+                        });
+                    }
+                } else {
+                    // In this case, we create an additional variable in the binding to hold the group variable value
+                    that.copyDenormalizedBindings([currentBindings], queryEnv.outCache, function(success, denormBindings){
+                        var filterResultEbv = QueryFilters.runFilter(currentOrderClause, denormBindings[0], that, queryEnv);
+                        if(!QueryFilters.isEbvError(filterResultEbv)) {
+                            currentBindings["groupCondition"+env._i] = filterResultEbv;
+                            orderVariable = "groupCondition"+env._i;
+                            if(initialized == false) {
+                                order.push(orderVariable);
+                            }
+                         
+                        } else {
+                            mustAddBindings = false;
+                        }
+                         
+                        k(floop, env);
+                    });
+                }
+                
+            }, function(env){
+                if(initialized == false) {
+                    initialized = true;
+                } 
+                if(mustAddBindings === true) {
+                    filteredBindings.push(currentBindings);
+                }
+                kk(outFloop, outEnv);
+            });
+
+        }, function(outEnv) {
+            /**
+             * After processing all the bindings, we build the group using the
+             * information stored about the order of the group variables.
+             */
+            var dups = {};
+            var groupMap = {};
+            var groupCounter = 0;
+            for(var i=0; i<filteredBindings.length; i++) {
+                var currentTransformedBinding = filteredBindings[i];
+                var key = ""
+                for(var j=0; j<order.length; j++) {
+                    var maybeObject = currentTransformedBinding[order[j]];
+                    if(typeof(maybeObject) === 'object') {
+                        key = key + maybeObject.value;
+                    } else {
+                        key = key + maybeObject;
                     }
                 }
-            } else {
-                // In this case, we create an additional variable in the binding to hold the group variable value
-                var filterResultEbv = QueryFilters.runFilter(currentOrderClause, currentBindings, that, queryEnv);
-                if(!QueryFilters.isEbvError(filterResultEbv)) {
-                    currentBindings["groupCondition"+env._i] = filterResultEbv;
-                    orderVariable = "groupCondition"+env._i;
+
+                if(dups[key] == null) {
+                    //currentTransformedBinding["__group__"] = groupCounter; 
+                    groupMap[key] = groupCounter;
+                    dups[key] = [currentTransformedBinding];
+                    //groupCounter++
                 } else {
-                    mustAddBindings = false;
+                    //currentTransformedBinding["__group__"] = dups[key][0]["__group__"]; 
+                    dups[key].push(currentTransformedBinding);
                 }
             }
 
-            if(initialized == false) {
-                order.push(orderVariable);
+            // The final result is an array of arrays with all the groups
+            var groups = [];
+            
+            for(var k in dups) {
+                groups.push(dups[k]);
             }
 
-            k(floop, env);
-        
-        }, function(env){
-            if(initialized == false) {
-                initialized = true;
-            } 
-            if(mustAddBindings === true) {
-                filteredBindings.push(currentBindings);
-            }
-            kk(outFloop, outEnv);
+            callback(true, groups);
         });
-
-    }, function(outEnv) {
-        /**
-         * After processing all the bindings, we build the group using the
-         * information stored about the order of the group variables.
-         */
-        var dups = {};
-        var groupMap = {};
-        var groupCounter = 0;
-        for(var i=0; i<filteredBindings.length; i++) {
-            var currentTransformedBinding = filteredBindings[i];
-            var key = ""
-            for(var j=0; j<order.length; j++) {
-                var maybeObject = currentTransformedBinding[order[j]];
-                if(typeof(maybeObject) === 'object') {
-                    key = key + maybeObject.value;
-                } else {
-                    key = key + maybeObject;
-                }
-            }
-
-            if(dups[key] == null) {
-                //currentTransformedBinding["__group__"] = groupCounter; 
-                groupMap[key] = groupCounter;
-                dups[key] = [currentTransformedBinding];
-                //groupCounter++
-            } else {
-                //currentTransformedBinding["__group__"] = dups[key][0]["__group__"]; 
-                dups[key].push(currentTransformedBinding);
-            }
-        }
-
-        // The final result is an array of arrays with all the groups
-        var groups = [];
-        
-        for(var k in dups) {
-            groups.push(dups[k]);
-        }
-
-        callback(true, groups);
-    });
+    }
 }
 
 
