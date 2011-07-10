@@ -26157,67 +26157,31 @@ SparqlParser.parser = (function(){
         var savedReportMatchFailures = reportMatchFailures;
         reportMatchFailures = false;
         var savedPos0 = pos;
-        var result8 = parse_PN_CHARS_U();
-        if (result8 !== null) {
-          var result2 = result8;
+        var result6 = parse_PN_CHARS_U();
+        if (result6 !== null) {
+          var result2 = result6;
         } else {
           if (input.substr(pos).match(/^[0-9]/) !== null) {
-            var result7 = input.charAt(pos);
+            var result5 = input.charAt(pos);
             pos++;
           } else {
-            var result7 = null;
+            var result5 = null;
             if (reportMatchFailures) {
               matchFailed("[0-9]");
             }
           }
-          if (result7 !== null) {
-            var result2 = result7;
+          if (result5 !== null) {
+            var result2 = result5;
           } else {
             var result2 = null;;
           };
         }
         if (result2 !== null) {
           var result3 = [];
-          var result6 = parse_PN_CHARS();
-          if (result6 !== null) {
-            var result4 = result6;
-          } else {
-            if (input.substr(pos, 1) === ".") {
-              var result5 = ".";
-              pos += 1;
-            } else {
-              var result5 = null;
-              if (reportMatchFailures) {
-                matchFailed("\".\"");
-              }
-            }
-            if (result5 !== null) {
-              var result4 = result5;
-            } else {
-              var result4 = null;;
-            };
-          }
+          var result4 = parse_PN_CHARS();
           while (result4 !== null) {
             result3.push(result4);
-            var result6 = parse_PN_CHARS();
-            if (result6 !== null) {
-              var result4 = result6;
-            } else {
-              if (input.substr(pos, 1) === ".") {
-                var result5 = ".";
-                pos += 1;
-              } else {
-                var result5 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\".\"");
-                }
-              }
-              if (result5 !== null) {
-                var result4 = result5;
-              } else {
-                var result4 = null;;
-              };
-            }
+            var result4 = parse_PN_CHARS();
           }
           if (result3 !== null) {
             var result1 = [result2, result3];

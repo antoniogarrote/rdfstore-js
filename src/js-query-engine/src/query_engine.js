@@ -312,7 +312,7 @@ QueryEngine.QueryEngine.prototype.projectBindings = function(projection, results
                 if(projection[j].token == 'variable' && projection[j].kind != 'aliased') {
                     currentProjected[projection[j].value.value] = currentResult[projection[j].value.value];
                 } else if(projection[j].token == 'variable' && projection[j].kind == 'aliased') {
-                    var ebv = QueryFilters.runFilter(projection[j].expression, currentResult, that, {blanks:{}, outCache:{}});
+                    var ebv = QueryFilters.runFilter(projection[j].expression, currentResult, this, {blanks:{}, outCache:{}});
                     if(QueryFilters.isEbvError(ebv)) {
                         shouldAdd = false;
                         break
@@ -761,6 +761,19 @@ QueryEngine.QueryEngine.prototype.executeSelect = function(unit, env, defaultDat
             if(success) {
                 that.executeSelectUnit(projection, dataset, unit.pattern, env, function(success, result){
                   if(success) {
+                      // detect single group
+                      if(unit.group!=null && unit.group === "") {
+                          var foundUniqueGroup = false;
+                          for(var i=0; i<unit.projection.length; i++) {
+                              if(unit.projection[i].expression!=null && unit.projection[i].expression.expressionType === 'aggregate') {
+                                  foundUniqueGroup = true;
+                                  break;
+                              }
+                          }
+                          if(foundUniqueGroup === true) {
+                              unit.group = 'singleGroup';
+                          }
+                      }
                       if(unit.group && unit.group != "") {
                           that.groupSolution(result, unit.group, env, function(success, groupedBindings){
 
@@ -820,104 +833,108 @@ QueryEngine.QueryEngine.prototype.groupSolution = function(bindings, group, quer
     var order = [];
     var filteredBindings = [];
     var initialized = false;
+    if(group === 'singleGroup') {
+        callback(true, [bindings]);
 
-    Utils.repeat(0, bindings.length, function(kk, outEnv) {
-        var outFloop = arguments.callee;
-        var currentBindings = bindings[outEnv._i];
-        var mustAddBindings = true;
+    } else {
+        Utils.repeat(0, bindings.length, function(kk, outEnv) {
+            var outFloop = arguments.callee;
+            var currentBindings = bindings[outEnv._i];
+            var mustAddBindings = true;
 
-        /**
-         * In this loop, we iterate through all the group clauses and tranform the current bindings
-         * according to the group by clauses.
-         * If it is the first iteration we also save in a different array the order for the 
-         * grouped variables that will be used later to build the final groups
-         */
-        Utils.repeat(0, group.length, function(k, env) {
-            var floop = arguments.callee;
-            var currentOrderClause = group[env._i];
-            var orderVariable = null;
+            /**
+             * In this loop, we iterate through all the group clauses and tranform the current bindings
+             * according to the group by clauses.
+             * If it is the first iteration we also save in a different array the order for the 
+             * grouped variables that will be used later to build the final groups
+             */
+            Utils.repeat(0, group.length, function(k, env) {
+                var floop = arguments.callee;
+                var currentOrderClause = group[env._i];
+                var orderVariable = null;
 
-            if(currentOrderClause.token === 'var') {
-                orderVariable = currentOrderClause.value;
-            } else if(currentOrderClause.token === 'aliased_expression') {
-                if(currentOrderClause.expression.primaryexpression === 'var') {
-                    orderVariable = currentOrderClause.alias.value;
-                    currentBindings[currentOrderClause.alias.value] = currentBindings[currentOrderClause.expression.value.value];
+                if(currentOrderClause.token === 'var') {
+                    orderVariable = currentOrderClause.value;
+                } else if(currentOrderClause.token === 'aliased_expression') {
+                    if(currentOrderClause.expression.primaryexpression === 'var') {
+                        orderVariable = currentOrderClause.alias.value;
+                        currentBindings[currentOrderClause.alias.value] = currentBindings[currentOrderClause.expression.value.value];
+                    } else {
+                        var filterResultEbv = QueryFilters.runFilter(currentOrderClause.expression, currentBindings, that, queryEnv);
+                        if(!QueryFilters.isEbvError(filterResultEbv)) {
+                            currentBindings[currentOrderClause.alias.value]= filterResultEbv;
+                        } else {
+                            mustAddBindings = false;
+                        }
+                    }
                 } else {
-                    var filterResultEbv = QueryFilters.runFilter(currentOrderClause.expression, currentBindings, that, queryEnv);
+                    // In this case, we create an additional variable in the binding to hold the group variable value
+                    var filterResultEbv = QueryFilters.runFilter(currentOrderClause, currentBindings, that, queryEnv);
                     if(!QueryFilters.isEbvError(filterResultEbv)) {
-                        currentBindings[currentOrderClause.alias.value]= filterResultEbv;
+                        currentBindings["groupCondition"+env._i] = filterResultEbv;
+                        orderVariable = "groupCondition"+env._i;
                     } else {
                         mustAddBindings = false;
                     }
                 }
-            } else {
-                // In this case, we create an additional variable in the binding to hold the group variable value
-                var filterResultEbv = QueryFilters.runFilter(currentOrderClause, currentBindings, that, queryEnv);
-                if(!QueryFilters.isEbvError(filterResultEbv)) {
-                    currentBindings["groupCondition"+env._i] = filterResultEbv;
-                    orderVariable = "groupCondition"+env._i;
+
+                if(initialized == false) {
+                    order.push(orderVariable);
+                }
+
+                k(floop, env);
+                
+            }, function(env){
+                if(initialized == false) {
+                    initialized = true;
+                } 
+                if(mustAddBindings === true) {
+                    filteredBindings.push(currentBindings);
+                }
+                kk(outFloop, outEnv);
+            });
+
+        }, function(outEnv) {
+            /**
+             * After processing all the bindings, we build the group using the
+             * information stored about the order of the group variables.
+             */
+            var dups = {};
+            var groupMap = {};
+            var groupCounter = 0;
+            for(var i=0; i<filteredBindings.length; i++) {
+                var currentTransformedBinding = filteredBindings[i];
+                var key = ""
+                for(var j=0; j<order.length; j++) {
+                    var maybeObject = currentTransformedBinding[order[j]];
+                    if(typeof(maybeObject) === 'object') {
+                        key = key + maybeObject.value;
+                    } else {
+                        key = key + maybeObject;
+                    }
+                }
+
+                if(dups[key] == null) {
+                    //currentTransformedBinding["__group__"] = groupCounter; 
+                    groupMap[key] = groupCounter;
+                    dups[key] = [currentTransformedBinding];
+                    //groupCounter++
                 } else {
-                    mustAddBindings = false;
+                    //currentTransformedBinding["__group__"] = dups[key][0]["__group__"]; 
+                    dups[key].push(currentTransformedBinding);
                 }
             }
 
-            if(initialized == false) {
-                order.push(orderVariable);
+            // The final result is an array of arrays with all the groups
+            var groups = [];
+            
+            for(var k in dups) {
+                groups.push(dups[k]);
             }
 
-            k(floop, env);
-        
-        }, function(env){
-            if(initialized == false) {
-                initialized = true;
-            } 
-            if(mustAddBindings === true) {
-                filteredBindings.push(currentBindings);
-            }
-            kk(outFloop, outEnv);
+            callback(true, groups);
         });
-
-    }, function(outEnv) {
-        /**
-         * After processing all the bindings, we build the group using the
-         * information stored about the order of the group variables.
-         */
-        var dups = {};
-        var groupMap = {};
-        var groupCounter = 0;
-        for(var i=0; i<filteredBindings.length; i++) {
-            var currentTransformedBinding = filteredBindings[i];
-            var key = ""
-            for(var j=0; j<order.length; j++) {
-                var maybeObject = currentTransformedBinding[order[j]];
-                if(typeof(maybeObject) === 'object') {
-                    key = key + maybeObject.value;
-                } else {
-                    key = key + maybeObject;
-                }
-            }
-
-            if(dups[key] == null) {
-                //currentTransformedBinding["__group__"] = groupCounter; 
-                groupMap[key] = groupCounter;
-                dups[key] = [currentTransformedBinding];
-                //groupCounter++
-            } else {
-                //currentTransformedBinding["__group__"] = dups[key][0]["__group__"]; 
-                dups[key].push(currentTransformedBinding);
-            }
-        }
-
-        // The final result is an array of arrays with all the groups
-        var groups = [];
-        
-        for(var k in dups) {
-            groups.push(dups[k]);
-        }
-
-        callback(true, groups);
-    });
+    }
 }
 
 

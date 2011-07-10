@@ -363,6 +363,7 @@ The main difference between both methods is that *subscribe* receives the triple
      
     // stop receiving notifications
     store.stopObservingNode(cb);
+
 ##Reusable modules
 
 rdfstore-js is built from a collection of general purpose modules. Some of these modules can be easily extracted from the library and used on their own.

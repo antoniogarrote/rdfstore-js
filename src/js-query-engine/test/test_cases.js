@@ -9107,3 +9107,27 @@ exports.testBasicUpdateInsertWhere02 = function(test) {
     });
 };
 
+
+exports.testAggregatesAgg01 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+
+
+            var query = 'PREFIX : <http://www.example.org/>  INSERT DATA { :s :p1 :o1 , :o2 , :o3. :s :p2 :o1 , :o2 . }';
+
+            engine.execute(query, function(success, result){
+
+                var query = "PREFIX : <http://www.example.org> SELECT (COUNT(?O) AS ?C) WHERE { ?S ?P ?O }";
+
+                engine.execute(query, function(success, results){
+                    test.ok(success);
+
+                    test.ok(results[0].C.value === '5');
+                    test.done();
+                });
+            });
+        });
+    });
+}

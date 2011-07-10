@@ -2408,6 +2408,6 @@ PN_PREFIX "[151] PN_PREFIX"
 */
 
 PN_LOCAL "[152] PN_LOCAL"
-  = base:(PN_CHARS_U / [0-9]) rest:(PN_CHARS / '.')* { 
+  = base:(PN_CHARS_U / [0-9]) rest:(PN_CHARS)* { 
                                                        return base + rest.join('');
                                                      }
