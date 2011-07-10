@@ -206,20 +206,35 @@ QueryFilters.runAggregator = function(aggregator, bindingsGroup, queryEngine, en
             } else if(aggregator.expression.aggregateType === 'count') {
                 var distinct = {}
                 var count = 0;
-                for(var i=0; i< bindingsGroup.length; i++) {
-                    var bindings = bindingsGroup[i];
-                    var ebv = QueryFilters.runFilter(aggregator.expression.expression, bindings, queryEngine, env);                    
-                    if(!QueryFilters.isEbvError(ebv)) {
-                        if(aggregator.expression.distinct != null && aggregator.expression.distinct != '') {
-                            var key = Utils.hashTerm(ebv);
+                if(aggregator.expression.expression === '*') {
+                    if(aggregator.expression.distinct != null && aggregator.expression.distinct != '') {
+                        for(var i=0; i< bindingsGroup.length; i++) {
+                            var bindings = bindingsGroup[i];
+                            var key = Utils.hashTerm(bindings);
                             if(distinct[key] == null) {
                                 distinct[key] = true;
                                 count++;
                             }
-                        } else {
-                            count++;
-                        }
-                    }
+                        } 
+                    } else {
+                        count = bindingsGroup.length;
+                    }                   
+                } else {
+                  for(var i=0; i< bindingsGroup.length; i++) {
+                      var bindings = bindingsGroup[i];
+                      var ebv = QueryFilters.runFilter(aggregator.expression.expression, bindings, queryEngine, env);                    
+                      if(!QueryFilters.isEbvError(ebv)) {
+                          if(aggregator.expression.distinct != null && aggregator.expression.distinct != '') {
+                              var key = Utils.hashTerm(ebv);
+                              if(distinct[key] == null) {
+                                  distinct[key] = true;
+                                  count++;
+                              }
+                          } else {
+                              count++;
+                          }
+                      }
+                  }
                 }
 
                 return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#integer", value:''+count};

@@ -365,7 +365,9 @@ Utils.normalizeUnicodeLiterals = function(string) {
 
 Utils.hashTerm = function(term) {
     try {
-      if(term.token==='uri') {
+      if(term == null) {
+          return "";
+      } if(term.token==='uri') {
           return "u"+term.value;
       } else if(term.token === 'blank') {
           return "b"+term.value;

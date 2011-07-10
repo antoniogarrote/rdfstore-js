@@ -9130,4 +9130,146 @@ exports.testAggregatesAgg01 = function(test) {
             });
         });
     });
+};
+
+exports.testAggregatesAgg02 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+
+
+            var query = 'PREFIX : <http://www.example.org/>  INSERT DATA { :s :p1 :o1 , :o2 , :o3. :s :p2 :o1 , :o2 . }';
+
+            engine.execute(query, function(success, result){
+
+                var query = "PREFIX : <http://www.example.org> SELECT ?P (COUNT(?O) AS ?C) WHERE { ?S ?P ?O } GROUP BY ?P";
+
+                engine.execute(query, function(success, results){
+                    test.ok(success);
+
+                    test.ok(results.length === 2);
+                    test.ok(results[0].P.value === 'http://www.example.org/p1');
+                    test.ok(results[0].C.value === '3');
+                    test.ok(results[1].P.value === 'http://www.example.org/p2');
+                    test.ok(results[1].C.value === '2');
+                    test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testAggregatesAgg04 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+
+
+            var query = 'PREFIX : <http://www.example.org/>  INSERT DATA { :s :p1 :o1 , :o2 , :o3. :s :p2 :o1 , :o2 . }';
+
+            engine.execute(query, function(success, result){
+
+                var query = "PREFIX : <http://www.example.org> SELECT (COUNT(*) AS ?C) WHERE { ?S ?P ?O }";
+
+                engine.execute(query, function(success, results){
+                    test.ok(success);
+
+                    test.ok(results.length === 1);
+                    test.ok(results[0].C.value === '5');
+                    test.done();
+                });
+            });
+        });
+    });
+};
+
+
+exports.testAggregatesAgg05 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+
+
+            var query = 'PREFIX : <http://www.example.org/>  INSERT DATA { :s :p1 :o1 , :o2 , :o3. :s :p2 :o1 , :o2 . }';
+
+            engine.execute(query, function(success, result){
+
+                var query = "PREFIX : <http://www.example.org> SELECT ?P (COUNT(*) AS ?C) WHERE { ?S ?P ?O } GROUP BY ?P";
+
+                engine.execute(query, function(success, results){
+                    test.ok(success);
+
+                    test.ok(results.length === 2);
+                    test.ok(results[0].P.value === 'http://www.example.org/p1');
+                    test.ok(results[0].C.value === '3');
+                    test.ok(results[1].P.value === 'http://www.example.org/p2');
+                    test.ok(results[1].C.value === '2');
+                    test.done();
+                });
+            });
+        });
+    });
+};
+
+/*
+exports.testAggregatesAgg08 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+
+
+            var query = 'PREFIX : <http://www.example.org/> INSERT DATA { :s :p 0,1,2 . :s :q 0,1,2 . }';
+
+            engine.execute(query, function(success, result){
+
+                var query = "PREFIX : <http://www.example.org/> SELECT ((?O1 + ?O2) AS ?O12) (COUNT(?O1) AS ?C) WHERE { ?S :p ?O1; :q ?O2 } GROUP BY (?O1 + ?O2) ORDER BY ?O12";
+
+                engine.execute(query, function(success, results){
+                    test.ok(success);
+                    console.log(results);
+                    test.ok(results.length === 0);
+                    test.done();
+                });
+            });
+        });
+    });
+}
+*/
+
+exports.testAggregatesAgg08b = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+
+
+            var query = 'PREFIX : <http://www.example.org/> INSERT DATA { :s :p 0,1,2 . :s :q 0,1,2 . }';
+
+            engine.execute(query, function(success, result){
+
+                var query = "PREFIX : <http://www.example.org/> SELECT ?O12 (COUNT(?O1) AS ?C) WHERE { ?S :p ?O1; :q ?O2 } GROUP BY ((?O1 + ?O2) AS ?O12) ORDER BY ?O12"
+
+                engine.execute(query, function(success, results){
+                    test.ok(success);
+
+                    test.ok(results.length === 5);
+                    test.ok(results[0].O12.value === '0');
+                    test.ok(results[0].C.value === '1');
+                    test.ok(results[1].O12.value === '1');
+                    test.ok(results[1].C.value === '2');
+                    test.ok(results[2].O12.value === '2');
+                    test.ok(results[2].C.value === '3');
+                    test.ok(results[3].O12.value === '3');
+                    test.ok(results[3].C.value === '2');
+                    test.ok(results[4].O12.value === '4');
+                    test.ok(results[4].C.value === '1');
+                    test.done();
+                });
+            });
+        });
+    });
 }

@@ -1949,7 +1949,7 @@ NotExistsFunc "[109] NotExistsFunc"
                                           'GROUP_CONCAT' '(' 'DISTINCT'? Expression ( ';' 'SEPARATOR' '=' String )? ')' )
 */
 Aggregate "[110] Aggregate"
-  =   ('C'/'c')('O'/'o')('U'/'u')('N'/'n')('T'/'t') WS* '(' WS* d:( ('D'/'d')('I'/'i')('S'/'s')('T'/'t')('I'/'i')('N'/'n')('C'/'c')('T'/'t') )? WS* e:Expression WS* ')' WS* {
+  =   ('C'/'c')('O'/'o')('U'/'u')('N'/'n')('T'/'t') WS* '(' WS* d:( ('D'/'d')('I'/'i')('S'/'s')('T'/'t')('I'/'i')('N'/'n')('C'/'c')('T'/'t') )? WS* e:('*'/Expression) WS* ')' WS* {
       exp = {};
       exp.token = 'expression';
       exp.expressionType = 'aggregate';

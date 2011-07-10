@@ -535,6 +535,11 @@ QueryEngine.QueryEngine.prototype.copyDenormalizedBindings = function(bindingsLi
                 // this can be null, e.g. union different variables (check SPARQL recommendation examples UNION)
                 denorm[variables[env._i]] = null;
                 k(floop, env);
+            } else if(typeof(oid) === 'object') {
+                // the binding is already denormalized, this can happen for example because the value of the
+                // binding is the result of the aggregation of other bindings in a GROUP clause
+                denorm[variables[env._i]] = oid;
+                k(floop, env);
             } else {
                 var inOut = out[oid];
                 if(inOut!= null) {
@@ -833,6 +838,7 @@ QueryEngine.QueryEngine.prototype.groupSolution = function(bindings, group, quer
     var order = [];
     var filteredBindings = [];
     var initialized = false;
+    var that = this;
     if(group === 'singleGroup') {
         callback(true, [bindings]);
 
@@ -855,34 +861,55 @@ QueryEngine.QueryEngine.prototype.groupSolution = function(bindings, group, quer
 
                 if(currentOrderClause.token === 'var') {
                     orderVariable = currentOrderClause.value;
+
+                    if(initialized == false) {
+                        order.push(orderVariable);
+                    }
+
+                    k(floop, env);
                 } else if(currentOrderClause.token === 'aliased_expression') {
+                    orderVariable = currentOrderClause.alias.value;
+                    if(initialized == false) {
+                        order.push(orderVariable);
+                    }
+
                     if(currentOrderClause.expression.primaryexpression === 'var') {
-                        orderVariable = currentOrderClause.alias.value;
                         currentBindings[currentOrderClause.alias.value] = currentBindings[currentOrderClause.expression.value.value];
+                        k(floop, env);
+
                     } else {
-                        var filterResultEbv = QueryFilters.runFilter(currentOrderClause.expression, currentBindings, that, queryEnv);
-                        if(!QueryFilters.isEbvError(filterResultEbv)) {
-                            currentBindings[currentOrderClause.alias.value]= filterResultEbv;
-                        } else {
-                            mustAddBindings = false;
-                        }
+                        that.copyDenormalizedBindings([currentBindings], queryEnv.outCache, function(success, denormBindings){
+                            var filterResultEbv = QueryFilters.runFilter(currentOrderClause.expression, denormBindings[0], that, queryEnv);
+                            if(!QueryFilters.isEbvError(filterResultEbv)) {
+                                if(filterResultEbv.value != null) {
+                                    filterResultEbv.value = ""+filterResultEbv.value;
+                                }
+                                currentBindings[currentOrderClause.alias.value]= filterResultEbv;
+                            } else {
+                                mustAddBindings = false;
+                            }
+                            
+                            k(floop, env);
+                        });
                     }
                 } else {
                     // In this case, we create an additional variable in the binding to hold the group variable value
-                    var filterResultEbv = QueryFilters.runFilter(currentOrderClause, currentBindings, that, queryEnv);
-                    if(!QueryFilters.isEbvError(filterResultEbv)) {
-                        currentBindings["groupCondition"+env._i] = filterResultEbv;
-                        orderVariable = "groupCondition"+env._i;
-                    } else {
-                        mustAddBindings = false;
-                    }
+                    that.copyDenormalizedBindings([currentBindings], queryEnv.outCache, function(success, denormBindings){
+                        var filterResultEbv = QueryFilters.runFilter(currentOrderClause, denormBindings[0], that, queryEnv);
+                        if(!QueryFilters.isEbvError(filterResultEbv)) {
+                            currentBindings["groupCondition"+env._i] = filterResultEbv;
+                            orderVariable = "groupCondition"+env._i;
+                            if(initialized == false) {
+                                order.push(orderVariable);
+                            }
+                         
+                        } else {
+                            mustAddBindings = false;
+                        }
+                         
+                        k(floop, env);
+                    });
                 }
-
-                if(initialized == false) {
-                    order.push(orderVariable);
-                }
-
-                k(floop, env);
                 
             }, function(env){
                 if(initialized == false) {
