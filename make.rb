@@ -24,14 +24,14 @@ def build_distribution_directory(system);
   end
 end
 
-def minimize_output_browser_old
+def minimize_output_browser
   puts "*** minimizing output"
   `cp ./yuicompressor-2.4.6.jar ./dist/browser/`
   `cd ./dist/browser && java -jar yuicompressor-2.4.6.jar rdf_store.js > rdf_store_min.js`
   `rm ./dist/browser/yuicompressor-2.4.6.jar`
 end
 
-def minimize_output_browser
+def minimize_output_browser_closure
   puts "*** minimizing output"
   `cp ./closure-compiler.jar ./dist/browser/`
   `cd ./dist/browser && java -jar closure-compiler.jar --compilation_level=ADVANCED_OPTIMIZATIONS --js=rdf_store.js > rdf_store_min.js`
