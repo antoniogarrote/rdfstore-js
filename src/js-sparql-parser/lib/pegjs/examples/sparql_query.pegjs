@@ -330,10 +330,10 @@ GroupClause "[18] GroupClause"
   [19]  	GroupCondition	  ::=  	( BuiltInCall | FunctionCall | '(' Expression ( 'AS' Var )? ')' | Var )
 */
 GroupCondition "[19] GroupCondition"
-  = b:BuiltInCall {
+  = WS* b:BuiltInCall WS* {
       return b;
 }
-  / f:FunctionCall {
+  / WS* f:FunctionCall WS* {
       return f;
 }
   / WS* '(' WS* e:Expression WS*  alias:( ('A'/'a')('S'/'s') WS* Var )?  WS* ')' WS* {
@@ -345,7 +345,7 @@ GroupCondition "[19] GroupCondition"
           return e;
       }
 }
-  / v:Var {
+  / WS* v:Var WS*  {
       return v;
 }
 

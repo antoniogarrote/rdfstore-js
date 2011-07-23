@@ -64,7 +64,7 @@ RDFLoader.RDFLoader.prototype.load = function(uri, graph, callback) {
             var mime = results["headers"]["Content-Type"] || results["headers"]["content-type"];
             var data = results['data'];
             if(mime != null) {
-                mime.split(";")[0]
+                mime = mime.split(";")[0]
                 for(var m in that.parsers) {
                     if(m.indexOf("/")!=-1) {
                         var mimeParts = m.split("/");
@@ -120,7 +120,7 @@ RDFLoader.RDFLoader.prototype.tryToParse = function(parser, graph, input, callba
         if(parsed != null) {
             callback(true, parsed);
         } else {
-            callback(false, "parsing error with mime type : "+e);
+            callback(false, "parsing error");
         }
     } catch(e) {
         callback(false, "parsing error with mime type : " + e);

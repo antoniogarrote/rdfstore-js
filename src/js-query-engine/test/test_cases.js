@@ -8931,7 +8931,6 @@ exports.testGroupingGroup01 = function(test) {
 };
 
 
-
 exports.testBasicUpdateInsertDataSPO1 = function(test) {
     new Lexicon.Lexicon(function(lexicon){
         new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
@@ -9214,31 +9213,31 @@ exports.testAggregatesAgg05 = function(test) {
     });
 };
 
-/*
-exports.testAggregatesAgg08 = function(test) {
-    new Lexicon.Lexicon(function(lexicon){
-        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
-            var engine = new QueryEngine.QueryEngine({backend: backend,
-                                                      lexicon: lexicon});      
 
+//exports.testAggregatesAgg08 = function(test) {
+//    new Lexicon.Lexicon(function(lexicon){
+//        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+//            var engine = new QueryEngine.QueryEngine({backend: backend,
+//                                                      lexicon: lexicon});      
+// 
+// 
+//            var query = 'PREFIX : <http://www.example.org/> INSERT DATA { :s :p 0,1,2 . :s :q 0,1,2 . }';
+// 
+//            engine.execute(query, function(success, result){
+// 
+//                var query = "PREFIX : <http://www.example.org/> SELECT ((?O1 + ?O2) AS ?O12) (COUNT(?O1) AS ?C) WHERE { ?S :p ?O1; :q ?O2 } GROUP BY (?O1 + ?O2) ORDER BY ?O12";
+// 
+//                engine.execute(query, function(success, results){
+//                    test.ok(success);
+//                    console.log(results);
+//                    test.ok(results.length === 0);
+//                    test.done();
+//                });
+//            });
+//        });
+//    });
+//}
 
-            var query = 'PREFIX : <http://www.example.org/> INSERT DATA { :s :p 0,1,2 . :s :q 0,1,2 . }';
-
-            engine.execute(query, function(success, result){
-
-                var query = "PREFIX : <http://www.example.org/> SELECT ((?O1 + ?O2) AS ?O12) (COUNT(?O1) AS ?C) WHERE { ?S :p ?O1; :q ?O2 } GROUP BY (?O1 + ?O2) ORDER BY ?O12";
-
-                engine.execute(query, function(success, results){
-                    test.ok(success);
-                    console.log(results);
-                    test.ok(results.length === 0);
-                    test.done();
-                });
-            });
-        });
-    });
-}
-*/
 
 exports.testAggregatesAgg08b = function(test) {
     new Lexicon.Lexicon(function(lexicon){
@@ -9273,3 +9272,60 @@ exports.testAggregatesAgg08b = function(test) {
         });
     });
 }
+
+exports.testAggregatesAgg09 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+
+
+            var query = 'PREFIX : <http://www.example.org/> INSERT DATA { :s :p 0,1,2 . :s :q 0,1,2 . }';
+
+            engine.execute(query, function(success, result){
+                var query = 'PREFIX : <http://www.example.org/>\
+                             SELECT ?P (COUNT(?O) AS ?C)\
+                             WHERE { ?S ?P ?O } GROUP BY ?S';
+
+                engine.execute(query, function(success, result){
+                    test.ok(success === false);
+                    test.done();
+                });
+            });
+        });
+    });
+}
+
+exports.testAggregatesAggSum1 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+
+
+            var query = 'PREFIX : <http://www.example.org/> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA {                          \
+                         :ints :int 1, 2, 3 .\
+                         :decimals :dec 1.0, 2.2, 3.5 .\
+                         :doubles :double 1.0E2, 2.0E3, 3.0E4 .\
+                         :mixed1 :int 1 ; :dec 2.2 .\
+                         :mixed2 :double 2E-1 ; :dec 2.2 . }';
+
+            engine.execute(query, function(success, result){
+                var query = 'PREFIX : <http://www.example.org/>\
+                             SELECT (SUM(?o) AS ?sum)\
+                             WHERE {\
+                                     ?s :dec ?o\
+                             }';
+
+                engine.execute(query, function(success, results){
+                    test.ok(results.length === 1);
+                    test.ok(results[0].sum.value === '11.100000000000001');
+                    test.done();
+                });
+            });
+        });
+    });
+}
+

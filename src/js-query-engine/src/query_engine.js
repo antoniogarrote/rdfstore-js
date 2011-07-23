@@ -76,7 +76,7 @@ QueryEngine.QueryEngine.prototype.applyModifier = function(modifier, projectedBi
          
             if(map[key] == null) {
                 // this will preserve the order in projectedBindings
-                result.push(bindings) 
+                result.push(bindings);
                 map[key] = true;
             }
         }
@@ -158,7 +158,7 @@ QueryEngine.QueryEngine.prototype.applyOrderBy = function(order, modifiedBinding
 
 QueryEngine.QueryEngine.prototype.compareFilteredBindings = function(a, b, order, env) {
     var found = false;
-    var i = 0
+    var i = 0;
     while(!found) {
         if(i==a.value.length) {
             return 0;
@@ -242,17 +242,17 @@ QueryEngine.QueryEngine.prototype.compareFilteredBindings = function(a, b, order
 
 QueryEngine.QueryEngine.prototype.removeDefaultGraphBindings = function(bindingsList, dataset) {
     var onlyDefaultDatasets = [];
-    var namedDatasetsMap = {}
+    var namedDatasetsMap = {};
     for(var i=0; i<dataset.named.length; i++) {
         namedDatasetsMap[dataset.named[i].oid] = true;
     }
-    for(var i=0; i<dataset.default.length; i++) {
+    for(i=0; i<dataset.default.length; i++) {
         if(namedDatasetsMap[dataset.default[i].oid] == null) {
             onlyDefaultDatasets.push(dataset.default[i].oid);
         }
     }
     var acum = [];
-    for(var i=0; i<bindingsList.length; i++) {
+    for(i=0; i<bindingsList.length; i++) {
         var bindings = bindingsList[i];
         var foundDefaultGraph = false;
         for(var p in bindings) {
@@ -272,7 +272,7 @@ QueryEngine.QueryEngine.prototype.removeDefaultGraphBindings = function(bindings
     }
 
     return acum;
-}
+};
 
 
 QueryEngine.QueryEngine.prototype.aggregateBindings = function(projection, bindingsGroup, env, callback) {
@@ -315,7 +315,7 @@ QueryEngine.QueryEngine.prototype.projectBindings = function(projection, results
                     var ebv = QueryFilters.runFilter(projection[j].expression, currentResult, this, {blanks:{}, outCache:{}});
                     if(QueryFilters.isEbvError(ebv)) {
                         shouldAdd = false;
-                        break
+                        break;
                     } else {
                         currentProjected[projection[j].alias.value] = ebv;
                     }
@@ -410,12 +410,12 @@ QueryEngine.QueryEngine.prototype.normalizeDatasets = function(datasets, outerEn
                 } else {
                     callback(success, result);
                 }
-            })      
+            });      
         }  
     }, function(env) {
         callback(true, "ok");
     });
-}
+};
 
 QueryEngine.QueryEngine.prototype.normalizeQuad = function(quad, queryEnv, shouldIndex, callback) {
     var subject    = null;
@@ -510,7 +510,7 @@ QueryEngine.QueryEngine.prototype.denormalizeBindingsList = function(bindingsLis
         });
     }, function(env) {
         callback(true, results);
-    })
+    });
 };
 
 /**
@@ -556,7 +556,7 @@ QueryEngine.QueryEngine.prototype.copyDenormalizedBindings = function(bindingsLi
         }, function(env){
             denormList.push(denorm);
             klist(floopList, listEnv);
-        })
+        });
     }, function(){
         callback(true, denormList);
     });
@@ -585,7 +585,7 @@ QueryEngine.QueryEngine.prototype.denormalizeBindings = function(bindings, envOu
         }
     }, function(env){
         callback(true, bindings);
-    })
+    });
 };
 
 // Queries execution
@@ -641,7 +641,6 @@ QueryEngine.QueryEngine.prototype.executeQuery = function(syntaxTree, callback, 
     var aqt = that.abstractQueryTree.parseExecutableUnit(units[0]);
 
     // can be anything else but a select???
-    var that = this;
     if(aqt.kind === 'select') {
       this.executeSelect(aqt, queryEnv, defaultDataset, namedDataset, function(success, result){
           if(success) {
@@ -679,7 +678,7 @@ QueryEngine.QueryEngine.prototype.executeQuery = function(syntaxTree, callback, 
         });
     } else if(aqt.kind === 'construct') {
         aqt.projection = [{"token": "variable", "kind": "*"}];
-        var that = this;
+        that = this;
         this.executeSelect(aqt, queryEnv, defaultDataset, namedDataset, function(success, result){
             if(success) {
                 if(success) {              
@@ -700,7 +699,7 @@ QueryEngine.QueryEngine.prototype.executeQuery = function(syntaxTree, callback, 
                                     // fresh IDs for blank nodes in the construct template
                                     var components = ['subject', 'predicate', 'object'];
                                     var tripleTemplate = aqt.template.triplesContext[j];                                    
-                                    for( var p=0; p<components.length; p++) {
+                                    for(var p=0; p<components.length; p++) {
                                         var component = components[p];
                                         if(tripleTemplate[component].token === 'blank') {
                                             if(blankMap[tripleTemplate[component].value] != null) {
@@ -780,30 +779,34 @@ QueryEngine.QueryEngine.prototype.executeSelect = function(unit, env, defaultDat
                           }
                       }
                       if(unit.group && unit.group != "") {
-                          that.groupSolution(result, unit.group, env, function(success, groupedBindings){
-
-                              var aggregatedBindings = [];
-                              var foundError = false;
-
-                              Utils.repeat(0, groupedBindings.length, function(k,loopEnv) {
-                                  var floop = arguments.callee;
-                                  if(!foundError) {
-                                      that.aggregateBindings(projection, groupedBindings[loopEnv._i], env, function(result, resultingBindings){
-                                          if(result) {
-                                              aggregatedBindings.push(resultingBindings);
-                                              k(floop, loopEnv);
-                                          } else {
-                                              foundError = true;
-                                              k(floop, loopEnv);
-                                          }
-                                      });
-                                  } else {
-                                      k(floop, loopEnv);
-                                  }
-                              },function(env){
-                                  callback(!foundError, {'bindings': aggregatedBindings, 'denorm':true});
-                              });
-                          });
+                          if(that.checkGroupSemantics(unit.group,projection)) {
+                            that.groupSolution(result, unit.group, env, function(success, groupedBindings){
+                             
+                                var aggregatedBindings = [];
+                                var foundError = false;
+                             
+                                Utils.repeat(0, groupedBindings.length, function(k,loopEnv) {
+                                    var floop = arguments.callee;
+                                    if(!foundError) {
+                                        that.aggregateBindings(projection, groupedBindings[loopEnv._i], env, function(result, resultingBindings){
+                                            if(result) {
+                                                aggregatedBindings.push(resultingBindings);
+                                                k(floop, loopEnv);
+                                            } else {
+                                                foundError = true;
+                                                k(floop, loopEnv);
+                                            }
+                                        });
+                                    } else {
+                                        k(floop, loopEnv);
+                                    }
+                                },function(env){
+                                    callback(!foundError, {'bindings': aggregatedBindings, 'denorm':true});
+                                });
+                            });
+                          } else {
+                              callback(false, "Incompatible Group and Projection variables");
+                          }
                       } else {
                           that.applyOrderBy(order, result, env, function(success, orderedBindings){
                               if(success) {
@@ -931,7 +934,7 @@ QueryEngine.QueryEngine.prototype.groupSolution = function(bindings, group, quer
             var groupCounter = 0;
             for(var i=0; i<filteredBindings.length; i++) {
                 var currentTransformedBinding = filteredBindings[i];
-                var key = ""
+                var key = "";
                 for(var j=0; j<order.length; j++) {
                     var maybeObject = currentTransformedBinding[order[j]];
                     if(typeof(maybeObject) === 'object') {
@@ -961,8 +964,8 @@ QueryEngine.QueryEngine.prototype.groupSolution = function(bindings, group, quer
 
             callback(true, groups);
         });
-    }
-}
+    };
+};
 
 
 /**
@@ -1012,7 +1015,7 @@ QueryEngine.QueryEngine.prototype.executeUNION = function(projection, dataset, p
         that.executeSelectUnit(projection, dataset, setQuery1, env, function(success, results){
             if(success) {
                 set1 = results;
-                k();
+                return k();
             } else {
                 return callback(false, results);
             }
@@ -1021,7 +1024,7 @@ QueryEngine.QueryEngine.prototype.executeUNION = function(projection, dataset, p
         that.executeSelectUnit(projection, dataset, setQuery2, env, function(success, results){
             if(success) {
                 set2 = results;
-                k();
+                return k();
             } else {
                 return callback(false, results);
             }
@@ -1058,7 +1061,7 @@ QueryEngine.QueryEngine.prototype.executeLEFT_JOIN = function(projection, datase
         that.executeSelectUnit(projection, dataset, setQuery1, env, function(success, results){
             if(success) {
                 set1 = results;
-                k();
+                return k();
             } else {
                 return callback(false, results);
             }
@@ -1067,7 +1070,7 @@ QueryEngine.QueryEngine.prototype.executeLEFT_JOIN = function(projection, datase
         that.executeSelectUnit(projection, dataset, setQuery2, env, function(success, results){
             if(success) {
                 set2 = results;
-                k();
+                return k();
             } else {
                 return callback(false, results);
             }
@@ -1087,11 +1090,11 @@ QueryEngine.QueryEngine.prototype.executeLEFT_JOIN = function(projection, datase
             if(success) {
                 if(set1.length>1 && set2.length>1) {
                     var vars = [];
-                    var vars1 = {}
+                    var vars1 = {};
                     for(var p in set1[0]) {
                         vars1[p] = true;
                     }
-                    for(var p in set2[0]) {
+                    for(p in set2[0]) {
                         if(vars1[p] != true) {
                             vars.push(p);
                         }
@@ -1104,17 +1107,17 @@ QueryEngine.QueryEngine.prototype.executeLEFT_JOIN = function(projection, datase
                                 bindings[i]["bindings"][vars[j]] = null;
                             }                            
                             var idx = [];
-                            var idxColl = []
+                            var idxColl = [];
                             for(var p in bindings[i]["bindings"]) {
                                 if(bindings[i]["bindings"][p] != null) {
                                     idx.push(p+bindings[i]["bindings"][p]);
                                     idx.sort();
-                                    idxColl.push(idx.join(""))
+                                    idxColl.push(idx.join(""));
                                 }
                             }
                             // reject duplicates -> (set union)
                             if(duplicates[idx.join("")]==null) {
-                                for(var j=0; j<idxColl.length; j++) {
+                                for(j=0; j<idxColl.length; j++) {
                                     //console.log(" - "+idxColl[j])
                                     duplicates[idxColl[j]] = true;
                                 }
@@ -1124,12 +1127,12 @@ QueryEngine.QueryEngine.prototype.executeLEFT_JOIN = function(projection, datase
                         } else {
                             acum.push(bindings[i]);
                             var idx = [];
-                            var idxColl = []
+                            var idxColl = [];
                             for(var p in bindings[i]) {
                                 idx.push(p+bindings[i][p]);
                                 idx.sort();
                                 //console.log(idx.join("") + " -> ok");
-                                duplicates[idx.join("")] = true
+                                duplicates[idx.join("")] = true;
                             }
 
                         }
@@ -1159,7 +1162,7 @@ QueryEngine.QueryEngine.prototype.executeJOIN = function(projection, dataset, pa
         that.executeSelectUnit(projection, dataset, setQuery1, env, function(success, results){
             if(success) {
                 set1 = results;
-                k();
+                return k();
             } else {
                 return callback(false, results);
             }
@@ -1168,7 +1171,7 @@ QueryEngine.QueryEngine.prototype.executeJOIN = function(projection, dataset, pa
         that.executeSelectUnit(projection, dataset, setQuery2, env, function(success, results){
             if(success) {
                 set2 = results;
-                k();
+                return k();
             } else {
                 return callback(false, results);
             }
@@ -1433,17 +1436,17 @@ QueryEngine.QueryEngine.prototype._executeModifyQuery = function(aqt, queryEnv, 
             that.executeSelect(aqt, queryEnv, defaultGraph, namedGraph, function(success, result) {                
 
                 if(success) {
-                    that.denormalizeBindingsList(result, queryEnv.outCache, function(success, result){
+                    return that.denormalizeBindingsList(result, queryEnv.outCache, function(success, result){
                         if(success) {
                             bindings = result;
                         } else {
                             querySuccess = false;
                         }
-                        k();
-                    }) 
+                        return k();
+                    }); 
                 } else {
                     querySuccess = false;
-                    k();
+                    return k();
                 }
             });
 
@@ -1471,7 +1474,7 @@ QueryEngine.QueryEngine.prototype._executeModifyQuery = function(aqt, queryEnv, 
                             }
                         }
 
-                        quads.push(quad)
+                        quads.push(quad);
                     }
                 }
 
@@ -1511,7 +1514,7 @@ QueryEngine.QueryEngine.prototype._executeModifyQuery = function(aqt, queryEnv, 
                             }
                         }
 
-                        quads.push(quad)
+                        quads.push(quad);
                     }
                 }
 
@@ -1571,7 +1574,7 @@ QueryEngine.QueryEngine.prototype._executeQuadDelete = function(quad, queryEnv, 
                     } else {
                         callback(false, error);
                     }
-                })
+                });
             });
         } else {
             callback(false, result);
@@ -1627,4 +1630,38 @@ QueryEngine.QueryEngine.prototype._executeClearGraph = function(destinyGraph, qu
             callback(false, "wrong graph URI");
         }
     }
+};
+
+QueryEngine.QueryEngine.prototype.checkGroupSemantics = function(groupVars, projectionVars) {
+    if(groupVars === 'singleGroup') {
+        return true;        
+    }
+
+    var projection = {};
+
+    for(var i=0; i<groupVars.length; i++) {
+        var groupVar = groupVars[i];
+        if(groupVar.token === 'var') {
+            projection[groupVar.value] = true;
+        } else if(groupVar.token === 'aliased_expression') {
+            projection[groupVar.alias.value] = true;
+        }
+    }
+
+    for(i=0; i<projectionVars.length; i++) {
+        var projectionVar = projectionVars[i];
+        if(projectionVar.kind === 'var') {
+            if(projection[projectionVar.value.value] == null) {
+                return false;
+            }
+        } else if(projectionVar.kind === 'aliased' && 
+                  projectionVar.expression &&
+                  projectionVar.expression.primaryexpression === 'var') {
+            if(projection[projectionVar.expression.value.value] == null) {
+                return false;
+            }
+        }
+    }
+
+    return true;
 };
