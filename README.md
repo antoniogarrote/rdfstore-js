@@ -77,7 +77,7 @@ To use the library in a node.js application, there is available a [package](http
 
     $npm install rdfstore
 
-It is also possible to use rdfstore-js in a web application being executed in a browser. There is [minimized version](https://github.com/antoniogarrote/rdfstore-js/blob/master/dist/browser/rdf_store_min.js) of the library in a single Javascript file that can be linked from a HTML document. There is also a [minimized and gunzipped version](https://github.com/antoniogarrote/rdfstore-js/blob/master/dist/browser/rdf_store_min.js.gz) available. Both versions have been compiled using Google's Closure Javascript compiler.
+It is also possible to use rdfstore-js in a web application being executed in a browser. There is [minimized version](https://raw.github.com/antoniogarrote/rdfstore-js/master/dist/browser/rdf_store_min.js) of the library in a single Javascript file that can be linked from a HTML document. There is also a [minimized and gunzipped version](https://raw.github.com/antoniogarrote/rdfstore-js/master/dist/browser/rdf_store_min.js) available. Both versions have been compiled using Google's Closure Javascript compiler.
 
 
 ##Building
