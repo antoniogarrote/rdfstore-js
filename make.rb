@@ -24,21 +24,35 @@ def build_distribution_directory(system);
   end
 end
 
-def minimize_output_browser
+def minimize_output_browser_yui
   puts "*** minimizing output"
   `cp ./yuicompressor-2.4.6.jar ./dist/browser/`
   `cd ./dist/browser && java -jar yuicompressor-2.4.6.jar rdf_store.js > rdf_store_min.js`
+  `cp ./dist/browser/rdf_store_min.js ./dist/browser/rdf_store_min.js.bak`  
+  `cd ./dist/browser && gzip -9 rdf_store_min.js`
+  `mv ./dist/browser/rdf_store_min.js.bak ./dist/browser/rdf_store_min.js`
   `rm ./dist/browser/yuicompressor-2.4.6.jar`
 end
 
-def minimize_output_browser_closure
+def minimize_output_browser
   puts "*** minimizing output"
   `cp ./closure-compiler.jar ./dist/browser/`
-  `cd ./dist/browser && java -jar closure-compiler.jar --compilation_level=ADVANCED_OPTIMIZATIONS --js=rdf_store.js > rdf_store_min.js`
+#  `cd ./dist/browser && java -jar closure-compiler.jar --compilation_level=ADVANCED_OPTIMIZATIONS --js=rdf_store.js > rdf_store_min.js`
+  `cd ./dist/browser && java -jar closure-compiler.jar --compilation_level=SIMPLE_OPTIMIZATIONS --js=rdf_store.js > rdf_store_min.js`
   `cp ./dist/browser/rdf_store_min.js ./dist/browser/rdf_store_min.js.bak`
   `cd ./dist/browser && gzip -9 rdf_store_min.js`
   `mv ./dist/browser/rdf_store_min.js.bak ./dist/browser/rdf_store_min.js`
   `rm ./dist/browser/closure-compiler.jar`
+end
+
+def minimize_output_nodejs
+  puts "*** minimizing output"
+  `cp ./closure-compiler.jar ./dist/nodejs/`
+  `cd ./dist/nodejs && java -jar closure-compiler.jar --compilation_level=SIMPLE_OPTIMIZATIONS --js=index.js > rdf_store_min.js`
+  `cp ./dist/nodejs/rdf_store_min.js ./dist/nodejs/rdf_store_min.js.bak`  
+  `cd ./dist/nodejs && gzip -9 rdf_store_min.js`
+  `mv ./dist/nodejs/rdf_store_min.js.bak ./dist/nodejs/rdf_store_min.js`
+  `rm ./dist/nodejs/closure-compiler.jar`
 end
 
 def write_nodejs_preamble(of)
@@ -56,6 +70,51 @@ module.exports = Store;
 __END
 
   of << js_code;
+end
+
+def write_test_min_preamble(of)
+  js_code =<<__END
+var Store = require('./rdf_store_min.js');
+
+console.log(Store);
+
+var Lexicon = {};
+Lexicon.Lexicon = function(f) {
+    Store.create(function(store) {
+        f(store);
+    });
+};
+
+var QuadBackend = {};
+QuadBackend.QuadBackend = function(opts,f) {
+    f(opts);
+};
+
+var QueryEngine = {};
+QueryEngine.QueryEngine = function(opts) {
+    return opts.lexicon;
+};
+__END
+
+  of << js_code;
+end
+
+def process_files_for_test_min
+  File.open("./dist/nodejs/test_min.js", "w") do |of|
+    
+    write_test_min_preamble(of)
+    
+    File.open("./src/js-query-engine/test/test_cases.js", "r") do |f|
+      puts "*** Adding W3C test cases to test file"
+      f.each_line do |line|
+        if(line =~ /[a-zA-Z0-9 =]*require/) == 0
+          puts " * ignoring require"
+        else
+          of << line
+        end
+      end
+    end
+  end
 end
 
 def process_file_for_nodejs(of, f) 
@@ -213,6 +272,17 @@ def make_browser
   puts "\r\n*** FINISHED";
 end
 
+def test_minimized
+  puts "  MINIMIZED NODEJS CONFIGURATION"
+  load_configuration
+  build_distribution_directory 'nodejs'
+  process_files_for_nodejs
+  process_files_for_test_min
+  minimize_output_nodejs
+  puts `cd ./dist/nodejs && nodeunit ./test_min.js`
+  puts "\r\n*** FINISHED";
+end
+
 
 if ARGV.length != 1
   puts "USAGE make.rb [nodejs | browser | tests]"
@@ -221,6 +291,8 @@ else
     make_nodejs
   elsif ARGV[0] == "browser"
     make_browser
+  elsif ARGV[0] == "test_min"
+    test_minimized
   elsif ARGV[0] == "tests"
     exec 'nodeunit ./src/js-trees/tests/* ./src/js-store/test/* ./src/js-sparql-parser/test/* ./src/js-rdf-persistence/test/* ./src/js-query-engine/test/* ./src/js-communication/test/*'
   else

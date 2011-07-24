@@ -56,17 +56,29 @@ Store.Store = function(arg1, arg2) {
 
 
 Store.Store.prototype.execute = function() {
-    var queryString;
-    var callback;
+    if(arguments.length === 3) {
+        this.executeWithEnvironment(arguments[0],
+                                    arguments[1],
+                                    arguments[2]);
+    } else if(arguments.length === 4) {
+        this.executeWithEnvironment(arguments[0],
+                                    arguments[2],
+                                    arguments[3],
+                                    arguments[1]);
+    } else {
 
-    if(arguments.length === 1) {
-        queryString = arguments[0];
-        callback = function(){};
-    } else if(arguments.length === 2) {
-        queryString = arguments[0];
-        callback = arguments [1];
+        var queryString;
+        var callback;
+     
+        if(arguments.length === 1) {
+            queryString = arguments[0];
+            callback = function(){};
+        } else if(arguments.length === 2) {
+            queryString = arguments[0];
+            callback = arguments [1];
+        }
+        this.engine.execute(queryString, callback);
     }
-    this.engine.execute(queryString, callback);
 };
 
 Store.Store.prototype.executeWithEnvironment = function() {
@@ -80,7 +92,7 @@ Store.Store.prototype.executeWithEnvironment = function() {
         callback = function(){};
         defaultGraphs = arguments[1];
         namedGraphs = arguments[2];
-    } else if(arguments.length === 2) {
+    } else if(arguments.length === 4) {
         queryString = arguments[0];
         callback = arguments [3];
         defaultGraphs = arguments[1];
