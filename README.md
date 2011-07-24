@@ -95,7 +95,7 @@ To build the library for the browser configuration, execute the following comman
 The output of each configuration will be created in the dist subdirectory at the root path of the project.
 You can also run the tests on the minimized version of the library with the command:
 
-   $./make.rb test_min
+    $./make.rb test_min
 
 
 ## Tests
