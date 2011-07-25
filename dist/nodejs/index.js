@@ -8682,7 +8682,7 @@ RDFLoader.RDFLoader.prototype.load = function(uri, graph, callback) {
             var mime = results["headers"]["Content-Type"] || results["headers"]["content-type"];
             var data = results['data'];
             if(mime != null) {
-                mime.split(";")[0]
+                mime = mime.split(";")[0]
                 for(var m in that.parsers) {
                     if(m.indexOf("/")!=-1) {
                         var mimeParts = m.split("/");
@@ -8738,7 +8738,7 @@ RDFLoader.RDFLoader.prototype.tryToParse = function(parser, graph, input, callba
         if(parsed != null) {
             callback(true, parsed);
         } else {
-            callback(false, "parsing error with mime type : "+e);
+            callback(false, "parsing error");
         }
     } catch(e) {
         callback(false, "parsing error with mime type : " + e);
@@ -12971,205 +12971,263 @@ SparqlParser.parser = (function(){
         
         var savedReportMatchFailures = reportMatchFailures;
         reportMatchFailures = false;
-        var result32 = parse_BuiltInCall();
-        var result31 = result32 !== null
+        var savedPos4 = pos;
+        var result43 = [];
+        var result47 = parse_WS();
+        while (result47 !== null) {
+          result43.push(result47);
+          var result47 = parse_WS();
+        }
+        if (result43 !== null) {
+          var result44 = parse_BuiltInCall();
+          if (result44 !== null) {
+            var result45 = [];
+            var result46 = parse_WS();
+            while (result46 !== null) {
+              result45.push(result46);
+              var result46 = parse_WS();
+            }
+            if (result45 !== null) {
+              var result42 = [result43, result44, result45];
+            } else {
+              var result42 = null;
+              pos = savedPos4;
+            }
+          } else {
+            var result42 = null;
+            pos = savedPos4;
+          }
+        } else {
+          var result42 = null;
+          pos = savedPos4;
+        }
+        var result41 = result42 !== null
           ? (function(b) {
                 return b;
-          })(result32)
+          })(result42[1])
           : null;
-        if (result31 !== null) {
-          var result0 = result31;
+        if (result41 !== null) {
+          var result0 = result41;
         } else {
-          var result30 = parse_FunctionCall();
-          var result29 = result30 !== null
+          var savedPos3 = pos;
+          var result36 = [];
+          var result40 = parse_WS();
+          while (result40 !== null) {
+            result36.push(result40);
+            var result40 = parse_WS();
+          }
+          if (result36 !== null) {
+            var result37 = parse_FunctionCall();
+            if (result37 !== null) {
+              var result38 = [];
+              var result39 = parse_WS();
+              while (result39 !== null) {
+                result38.push(result39);
+                var result39 = parse_WS();
+              }
+              if (result38 !== null) {
+                var result35 = [result36, result37, result38];
+              } else {
+                var result35 = null;
+                pos = savedPos3;
+              }
+            } else {
+              var result35 = null;
+              pos = savedPos3;
+            }
+          } else {
+            var result35 = null;
+            pos = savedPos3;
+          }
+          var result34 = result35 !== null
             ? (function(f) {
                   return f;
-            })(result30)
+            })(result35[1])
             : null;
-          if (result29 !== null) {
-            var result0 = result29;
+          if (result34 !== null) {
+            var result0 = result34;
           } else {
-            var savedPos0 = pos;
-            var result5 = [];
-            var result28 = parse_WS();
-            while (result28 !== null) {
-              result5.push(result28);
-              var result28 = parse_WS();
+            var savedPos1 = pos;
+            var result10 = [];
+            var result33 = parse_WS();
+            while (result33 !== null) {
+              result10.push(result33);
+              var result33 = parse_WS();
             }
-            if (result5 !== null) {
+            if (result10 !== null) {
               if (input.substr(pos, 1) === "(") {
-                var result6 = "(";
+                var result11 = "(";
                 pos += 1;
               } else {
-                var result6 = null;
+                var result11 = null;
                 if (reportMatchFailures) {
                   matchFailed("\"(\"");
                 }
               }
-              if (result6 !== null) {
-                var result7 = [];
-                var result27 = parse_WS();
-                while (result27 !== null) {
-                  result7.push(result27);
-                  var result27 = parse_WS();
+              if (result11 !== null) {
+                var result12 = [];
+                var result32 = parse_WS();
+                while (result32 !== null) {
+                  result12.push(result32);
+                  var result32 = parse_WS();
                 }
-                if (result7 !== null) {
-                  var result8 = parse_ConditionalOrExpression();
-                  if (result8 !== null) {
-                    var result9 = [];
-                    var result26 = parse_WS();
-                    while (result26 !== null) {
-                      result9.push(result26);
-                      var result26 = parse_WS();
+                if (result12 !== null) {
+                  var result13 = parse_ConditionalOrExpression();
+                  if (result13 !== null) {
+                    var result14 = [];
+                    var result31 = parse_WS();
+                    while (result31 !== null) {
+                      result14.push(result31);
+                      var result31 = parse_WS();
                     }
-                    if (result9 !== null) {
-                      var savedPos1 = pos;
+                    if (result14 !== null) {
+                      var savedPos2 = pos;
                       if (input.substr(pos, 1) === "A") {
-                        var result25 = "A";
+                        var result30 = "A";
                         pos += 1;
                       } else {
-                        var result25 = null;
+                        var result30 = null;
                         if (reportMatchFailures) {
                           matchFailed("\"A\"");
                         }
                       }
-                      if (result25 !== null) {
-                        var result17 = result25;
+                      if (result30 !== null) {
+                        var result22 = result30;
                       } else {
                         if (input.substr(pos, 1) === "a") {
-                          var result24 = "a";
+                          var result29 = "a";
                           pos += 1;
                         } else {
-                          var result24 = null;
+                          var result29 = null;
                           if (reportMatchFailures) {
                             matchFailed("\"a\"");
                           }
                         }
-                        if (result24 !== null) {
-                          var result17 = result24;
+                        if (result29 !== null) {
+                          var result22 = result29;
                         } else {
-                          var result17 = null;;
+                          var result22 = null;;
                         };
                       }
-                      if (result17 !== null) {
+                      if (result22 !== null) {
                         if (input.substr(pos, 1) === "S") {
-                          var result23 = "S";
+                          var result28 = "S";
                           pos += 1;
                         } else {
-                          var result23 = null;
+                          var result28 = null;
                           if (reportMatchFailures) {
                             matchFailed("\"S\"");
                           }
                         }
-                        if (result23 !== null) {
-                          var result18 = result23;
+                        if (result28 !== null) {
+                          var result23 = result28;
                         } else {
                           if (input.substr(pos, 1) === "s") {
-                            var result22 = "s";
+                            var result27 = "s";
                             pos += 1;
                           } else {
-                            var result22 = null;
+                            var result27 = null;
                             if (reportMatchFailures) {
                               matchFailed("\"s\"");
                             }
                           }
-                          if (result22 !== null) {
-                            var result18 = result22;
+                          if (result27 !== null) {
+                            var result23 = result27;
                           } else {
-                            var result18 = null;;
+                            var result23 = null;;
                           };
                         }
-                        if (result18 !== null) {
-                          var result19 = [];
-                          var result21 = parse_WS();
-                          while (result21 !== null) {
-                            result19.push(result21);
-                            var result21 = parse_WS();
+                        if (result23 !== null) {
+                          var result24 = [];
+                          var result26 = parse_WS();
+                          while (result26 !== null) {
+                            result24.push(result26);
+                            var result26 = parse_WS();
                           }
-                          if (result19 !== null) {
-                            var result20 = parse_Var();
-                            if (result20 !== null) {
-                              var result16 = [result17, result18, result19, result20];
+                          if (result24 !== null) {
+                            var result25 = parse_Var();
+                            if (result25 !== null) {
+                              var result21 = [result22, result23, result24, result25];
                             } else {
-                              var result16 = null;
-                              pos = savedPos1;
+                              var result21 = null;
+                              pos = savedPos2;
                             }
                           } else {
-                            var result16 = null;
-                            pos = savedPos1;
+                            var result21 = null;
+                            pos = savedPos2;
                           }
                         } else {
-                          var result16 = null;
-                          pos = savedPos1;
+                          var result21 = null;
+                          pos = savedPos2;
                         }
                       } else {
-                        var result16 = null;
-                        pos = savedPos1;
+                        var result21 = null;
+                        pos = savedPos2;
                       }
-                      var result10 = result16 !== null ? result16 : '';
-                      if (result10 !== null) {
-                        var result11 = [];
-                        var result15 = parse_WS();
-                        while (result15 !== null) {
-                          result11.push(result15);
-                          var result15 = parse_WS();
+                      var result15 = result21 !== null ? result21 : '';
+                      if (result15 !== null) {
+                        var result16 = [];
+                        var result20 = parse_WS();
+                        while (result20 !== null) {
+                          result16.push(result20);
+                          var result20 = parse_WS();
                         }
-                        if (result11 !== null) {
+                        if (result16 !== null) {
                           if (input.substr(pos, 1) === ")") {
-                            var result12 = ")";
+                            var result17 = ")";
                             pos += 1;
                           } else {
-                            var result12 = null;
+                            var result17 = null;
                             if (reportMatchFailures) {
                               matchFailed("\")\"");
                             }
                           }
-                          if (result12 !== null) {
-                            var result13 = [];
-                            var result14 = parse_WS();
-                            while (result14 !== null) {
-                              result13.push(result14);
-                              var result14 = parse_WS();
+                          if (result17 !== null) {
+                            var result18 = [];
+                            var result19 = parse_WS();
+                            while (result19 !== null) {
+                              result18.push(result19);
+                              var result19 = parse_WS();
                             }
-                            if (result13 !== null) {
-                              var result4 = [result5, result6, result7, result8, result9, result10, result11, result12, result13];
+                            if (result18 !== null) {
+                              var result9 = [result10, result11, result12, result13, result14, result15, result16, result17, result18];
                             } else {
-                              var result4 = null;
-                              pos = savedPos0;
+                              var result9 = null;
+                              pos = savedPos1;
                             }
                           } else {
-                            var result4 = null;
-                            pos = savedPos0;
+                            var result9 = null;
+                            pos = savedPos1;
                           }
                         } else {
-                          var result4 = null;
-                          pos = savedPos0;
+                          var result9 = null;
+                          pos = savedPos1;
                         }
                       } else {
-                        var result4 = null;
-                        pos = savedPos0;
+                        var result9 = null;
+                        pos = savedPos1;
                       }
                     } else {
-                      var result4 = null;
-                      pos = savedPos0;
+                      var result9 = null;
+                      pos = savedPos1;
                     }
                   } else {
-                    var result4 = null;
-                    pos = savedPos0;
+                    var result9 = null;
+                    pos = savedPos1;
                   }
                 } else {
-                  var result4 = null;
-                  pos = savedPos0;
+                  var result9 = null;
+                  pos = savedPos1;
                 }
               } else {
-                var result4 = null;
-                pos = savedPos0;
+                var result9 = null;
+                pos = savedPos1;
               }
             } else {
-              var result4 = null;
-              pos = savedPos0;
+              var result9 = null;
+              pos = savedPos1;
             }
-            var result3 = result4 !== null
+            var result8 = result9 !== null
               ? (function(e, alias) {
                     if(alias.length != 0) {
                         return {token: 'aliased_expression',
@@ -13178,16 +13236,45 @@ SparqlParser.parser = (function(){
                     } else {
                         return e;
                     }
-              })(result4[3], result4[5])
+              })(result9[3], result9[5])
               : null;
-            if (result3 !== null) {
-              var result0 = result3;
+            if (result8 !== null) {
+              var result0 = result8;
             } else {
-              var result2 = parse_Var();
+              var savedPos0 = pos;
+              var result3 = [];
+              var result7 = parse_WS();
+              while (result7 !== null) {
+                result3.push(result7);
+                var result7 = parse_WS();
+              }
+              if (result3 !== null) {
+                var result4 = parse_Var();
+                if (result4 !== null) {
+                  var result5 = [];
+                  var result6 = parse_WS();
+                  while (result6 !== null) {
+                    result5.push(result6);
+                    var result6 = parse_WS();
+                  }
+                  if (result5 !== null) {
+                    var result2 = [result3, result4, result5];
+                  } else {
+                    var result2 = null;
+                    pos = savedPos0;
+                  }
+                } else {
+                  var result2 = null;
+                  pos = savedPos0;
+                }
+              } else {
+                var result2 = null;
+                pos = savedPos0;
+              }
               var result1 = result2 !== null
                 ? (function(v) {
                       return v;
-                })(result2)
+                })(result2[1])
                 : null;
               if (result1 !== null) {
                 var result0 = result1;
@@ -35332,6 +35419,7 @@ SparqlParser.parser = (function(){
   return result;
 })();
 
+
 // end of ./src/js-sparql-parser/src/sparql_parser.js 
 // exports
 RDFJSInterface = {};
@@ -38183,7 +38271,7 @@ QueryEngine.QueryEngine.prototype.applyModifier = function(modifier, projectedBi
          
             if(map[key] == null) {
                 // this will preserve the order in projectedBindings
-                result.push(bindings) 
+                result.push(bindings);
                 map[key] = true;
             }
         }
@@ -38265,7 +38353,7 @@ QueryEngine.QueryEngine.prototype.applyOrderBy = function(order, modifiedBinding
 
 QueryEngine.QueryEngine.prototype.compareFilteredBindings = function(a, b, order, env) {
     var found = false;
-    var i = 0
+    var i = 0;
     while(!found) {
         if(i==a.value.length) {
             return 0;
@@ -38349,17 +38437,17 @@ QueryEngine.QueryEngine.prototype.compareFilteredBindings = function(a, b, order
 
 QueryEngine.QueryEngine.prototype.removeDefaultGraphBindings = function(bindingsList, dataset) {
     var onlyDefaultDatasets = [];
-    var namedDatasetsMap = {}
+    var namedDatasetsMap = {};
     for(var i=0; i<dataset.named.length; i++) {
         namedDatasetsMap[dataset.named[i].oid] = true;
     }
-    for(var i=0; i<dataset['default'].length; i++) {
+    for(i=0; i<dataset['default'].length; i++) {
         if(namedDatasetsMap[dataset['default'][i].oid] == null) {
             onlyDefaultDatasets.push(dataset['default'][i].oid);
         }
     }
     var acum = [];
-    for(var i=0; i<bindingsList.length; i++) {
+    for(i=0; i<bindingsList.length; i++) {
         var bindings = bindingsList[i];
         var foundDefaultGraph = false;
         for(var p in bindings) {
@@ -38379,7 +38467,7 @@ QueryEngine.QueryEngine.prototype.removeDefaultGraphBindings = function(bindings
     }
 
     return acum;
-}
+};
 
 
 QueryEngine.QueryEngine.prototype.aggregateBindings = function(projection, bindingsGroup, env, callback) {
@@ -38422,7 +38510,7 @@ QueryEngine.QueryEngine.prototype.projectBindings = function(projection, results
                     var ebv = QueryFilters.runFilter(projection[j].expression, currentResult, this, {blanks:{}, outCache:{}});
                     if(QueryFilters.isEbvError(ebv)) {
                         shouldAdd = false;
-                        break
+                        break;
                     } else {
                         currentProjected[projection[j].alias.value] = ebv;
                     }
@@ -38517,12 +38605,12 @@ QueryEngine.QueryEngine.prototype.normalizeDatasets = function(datasets, outerEn
                 } else {
                     callback(success, result);
                 }
-            })      
+            });      
         }  
     }, function(env) {
         callback(true, "ok");
     });
-}
+};
 
 QueryEngine.QueryEngine.prototype.normalizeQuad = function(quad, queryEnv, shouldIndex, callback) {
     var subject    = null;
@@ -38617,7 +38705,7 @@ QueryEngine.QueryEngine.prototype.denormalizeBindingsList = function(bindingsLis
         });
     }, function(env) {
         callback(true, results);
-    })
+    });
 };
 
 /**
@@ -38663,7 +38751,7 @@ QueryEngine.QueryEngine.prototype.copyDenormalizedBindings = function(bindingsLi
         }, function(env){
             denormList.push(denorm);
             klist(floopList, listEnv);
-        })
+        });
     }, function(){
         callback(true, denormList);
     });
@@ -38692,7 +38780,7 @@ QueryEngine.QueryEngine.prototype.denormalizeBindings = function(bindings, envOu
         }
     }, function(env){
         callback(true, bindings);
-    })
+    });
 };
 
 // Queries execution
@@ -38748,7 +38836,6 @@ QueryEngine.QueryEngine.prototype.executeQuery = function(syntaxTree, callback, 
     var aqt = that.abstractQueryTree.parseExecutableUnit(units[0]);
 
     // can be anything else but a select???
-    var that = this;
     if(aqt.kind === 'select') {
       this.executeSelect(aqt, queryEnv, defaultDataset, namedDataset, function(success, result){
           if(success) {
@@ -38786,7 +38873,7 @@ QueryEngine.QueryEngine.prototype.executeQuery = function(syntaxTree, callback, 
         });
     } else if(aqt.kind === 'construct') {
         aqt.projection = [{"token": "variable", "kind": "*"}];
-        var that = this;
+        that = this;
         this.executeSelect(aqt, queryEnv, defaultDataset, namedDataset, function(success, result){
             if(success) {
                 if(success) {              
@@ -38807,7 +38894,7 @@ QueryEngine.QueryEngine.prototype.executeQuery = function(syntaxTree, callback, 
                                     // fresh IDs for blank nodes in the construct template
                                     var components = ['subject', 'predicate', 'object'];
                                     var tripleTemplate = aqt.template.triplesContext[j];                                    
-                                    for( var p=0; p<components.length; p++) {
+                                    for(var p=0; p<components.length; p++) {
                                         var component = components[p];
                                         if(tripleTemplate[component].token === 'blank') {
                                             if(blankMap[tripleTemplate[component].value] != null) {
@@ -38887,30 +38974,34 @@ QueryEngine.QueryEngine.prototype.executeSelect = function(unit, env, defaultDat
                           }
                       }
                       if(unit.group && unit.group != "") {
-                          that.groupSolution(result, unit.group, env, function(success, groupedBindings){
-
-                              var aggregatedBindings = [];
-                              var foundError = false;
-
-                              Utils.repeat(0, groupedBindings.length, function(k,loopEnv) {
-                                  var floop = arguments.callee;
-                                  if(!foundError) {
-                                      that.aggregateBindings(projection, groupedBindings[loopEnv._i], env, function(result, resultingBindings){
-                                          if(result) {
-                                              aggregatedBindings.push(resultingBindings);
-                                              k(floop, loopEnv);
-                                          } else {
-                                              foundError = true;
-                                              k(floop, loopEnv);
-                                          }
-                                      });
-                                  } else {
-                                      k(floop, loopEnv);
-                                  }
-                              },function(env){
-                                  callback(!foundError, {'bindings': aggregatedBindings, 'denorm':true});
-                              });
-                          });
+                          if(that.checkGroupSemantics(unit.group,projection)) {
+                            that.groupSolution(result, unit.group, env, function(success, groupedBindings){
+                             
+                                var aggregatedBindings = [];
+                                var foundError = false;
+                             
+                                Utils.repeat(0, groupedBindings.length, function(k,loopEnv) {
+                                    var floop = arguments.callee;
+                                    if(!foundError) {
+                                        that.aggregateBindings(projection, groupedBindings[loopEnv._i], env, function(result, resultingBindings){
+                                            if(result) {
+                                                aggregatedBindings.push(resultingBindings);
+                                                k(floop, loopEnv);
+                                            } else {
+                                                foundError = true;
+                                                k(floop, loopEnv);
+                                            }
+                                        });
+                                    } else {
+                                        k(floop, loopEnv);
+                                    }
+                                },function(env){
+                                    callback(!foundError, {'bindings': aggregatedBindings, 'denorm':true});
+                                });
+                            });
+                          } else {
+                              callback(false, "Incompatible Group and Projection variables");
+                          }
                       } else {
                           that.applyOrderBy(order, result, env, function(success, orderedBindings){
                               if(success) {
@@ -39038,7 +39129,7 @@ QueryEngine.QueryEngine.prototype.groupSolution = function(bindings, group, quer
             var groupCounter = 0;
             for(var i=0; i<filteredBindings.length; i++) {
                 var currentTransformedBinding = filteredBindings[i];
-                var key = ""
+                var key = "";
                 for(var j=0; j<order.length; j++) {
                     var maybeObject = currentTransformedBinding[order[j]];
                     if(typeof(maybeObject) === 'object') {
@@ -39068,8 +39159,8 @@ QueryEngine.QueryEngine.prototype.groupSolution = function(bindings, group, quer
 
             callback(true, groups);
         });
-    }
-}
+    };
+};
 
 
 /**
@@ -39119,7 +39210,7 @@ QueryEngine.QueryEngine.prototype.executeUNION = function(projection, dataset, p
         that.executeSelectUnit(projection, dataset, setQuery1, env, function(success, results){
             if(success) {
                 set1 = results;
-                k();
+                return k();
             } else {
                 return callback(false, results);
             }
@@ -39128,7 +39219,7 @@ QueryEngine.QueryEngine.prototype.executeUNION = function(projection, dataset, p
         that.executeSelectUnit(projection, dataset, setQuery2, env, function(success, results){
             if(success) {
                 set2 = results;
-                k();
+                return k();
             } else {
                 return callback(false, results);
             }
@@ -39165,7 +39256,7 @@ QueryEngine.QueryEngine.prototype.executeLEFT_JOIN = function(projection, datase
         that.executeSelectUnit(projection, dataset, setQuery1, env, function(success, results){
             if(success) {
                 set1 = results;
-                k();
+                return k();
             } else {
                 return callback(false, results);
             }
@@ -39174,7 +39265,7 @@ QueryEngine.QueryEngine.prototype.executeLEFT_JOIN = function(projection, datase
         that.executeSelectUnit(projection, dataset, setQuery2, env, function(success, results){
             if(success) {
                 set2 = results;
-                k();
+                return k();
             } else {
                 return callback(false, results);
             }
@@ -39194,11 +39285,11 @@ QueryEngine.QueryEngine.prototype.executeLEFT_JOIN = function(projection, datase
             if(success) {
                 if(set1.length>1 && set2.length>1) {
                     var vars = [];
-                    var vars1 = {}
+                    var vars1 = {};
                     for(var p in set1[0]) {
                         vars1[p] = true;
                     }
-                    for(var p in set2[0]) {
+                    for(p in set2[0]) {
                         if(vars1[p] != true) {
                             vars.push(p);
                         }
@@ -39211,17 +39302,17 @@ QueryEngine.QueryEngine.prototype.executeLEFT_JOIN = function(projection, datase
                                 bindings[i]["bindings"][vars[j]] = null;
                             }                            
                             var idx = [];
-                            var idxColl = []
+                            var idxColl = [];
                             for(var p in bindings[i]["bindings"]) {
                                 if(bindings[i]["bindings"][p] != null) {
                                     idx.push(p+bindings[i]["bindings"][p]);
                                     idx.sort();
-                                    idxColl.push(idx.join(""))
+                                    idxColl.push(idx.join(""));
                                 }
                             }
                             // reject duplicates -> (set union)
                             if(duplicates[idx.join("")]==null) {
-                                for(var j=0; j<idxColl.length; j++) {
+                                for(j=0; j<idxColl.length; j++) {
                                     //console.log(" - "+idxColl[j])
                                     duplicates[idxColl[j]] = true;
                                 }
@@ -39231,12 +39322,12 @@ QueryEngine.QueryEngine.prototype.executeLEFT_JOIN = function(projection, datase
                         } else {
                             acum.push(bindings[i]);
                             var idx = [];
-                            var idxColl = []
+                            var idxColl = [];
                             for(var p in bindings[i]) {
                                 idx.push(p+bindings[i][p]);
                                 idx.sort();
                                 //console.log(idx.join("") + " -> ok");
-                                duplicates[idx.join("")] = true
+                                duplicates[idx.join("")] = true;
                             }
 
                         }
@@ -39266,7 +39357,7 @@ QueryEngine.QueryEngine.prototype.executeJOIN = function(projection, dataset, pa
         that.executeSelectUnit(projection, dataset, setQuery1, env, function(success, results){
             if(success) {
                 set1 = results;
-                k();
+                return k();
             } else {
                 return callback(false, results);
             }
@@ -39275,7 +39366,7 @@ QueryEngine.QueryEngine.prototype.executeJOIN = function(projection, dataset, pa
         that.executeSelectUnit(projection, dataset, setQuery2, env, function(success, results){
             if(success) {
                 set2 = results;
-                k();
+                return k();
             } else {
                 return callback(false, results);
             }
@@ -39540,17 +39631,17 @@ QueryEngine.QueryEngine.prototype._executeModifyQuery = function(aqt, queryEnv, 
             that.executeSelect(aqt, queryEnv, defaultGraph, namedGraph, function(success, result) {                
 
                 if(success) {
-                    that.denormalizeBindingsList(result, queryEnv.outCache, function(success, result){
+                    return that.denormalizeBindingsList(result, queryEnv.outCache, function(success, result){
                         if(success) {
                             bindings = result;
                         } else {
                             querySuccess = false;
                         }
-                        k();
-                    }) 
+                        return k();
+                    }); 
                 } else {
                     querySuccess = false;
-                    k();
+                    return k();
                 }
             });
 
@@ -39578,7 +39669,7 @@ QueryEngine.QueryEngine.prototype._executeModifyQuery = function(aqt, queryEnv, 
                             }
                         }
 
-                        quads.push(quad)
+                        quads.push(quad);
                     }
                 }
 
@@ -39618,7 +39709,7 @@ QueryEngine.QueryEngine.prototype._executeModifyQuery = function(aqt, queryEnv, 
                             }
                         }
 
-                        quads.push(quad)
+                        quads.push(quad);
                     }
                 }
 
@@ -39678,7 +39769,7 @@ QueryEngine.QueryEngine.prototype._executeQuadDelete = function(quad, queryEnv, 
                     } else {
                         callback(false, error);
                     }
-                })
+                });
             });
         } else {
             callback(false, result);
@@ -39734,6 +39825,40 @@ QueryEngine.QueryEngine.prototype._executeClearGraph = function(destinyGraph, qu
             callback(false, "wrong graph URI");
         }
     }
+};
+
+QueryEngine.QueryEngine.prototype.checkGroupSemantics = function(groupVars, projectionVars) {
+    if(groupVars === 'singleGroup') {
+        return true;        
+    }
+
+    var projection = {};
+
+    for(var i=0; i<groupVars.length; i++) {
+        var groupVar = groupVars[i];
+        if(groupVar.token === 'var') {
+            projection[groupVar.value] = true;
+        } else if(groupVar.token === 'aliased_expression') {
+            projection[groupVar.alias.value] = true;
+        }
+    }
+
+    for(i=0; i<projectionVars.length; i++) {
+        var projectionVar = projectionVars[i];
+        if(projectionVar.kind === 'var') {
+            if(projection[projectionVar.value.value] == null) {
+                return false;
+            }
+        } else if(projectionVar.kind === 'aliased' && 
+                  projectionVar.expression &&
+                  projectionVar.expression.primaryexpression === 'var') {
+            if(projection[projectionVar.expression.value.value] == null) {
+                return false;
+            }
+        }
+    }
+
+    return true;
 };
 
 // end of ./src/js-query-engine/src/query_engine.js 
@@ -40078,17 +40203,29 @@ Store.Store = function(arg1, arg2) {
 
 
 Store.Store.prototype.execute = function() {
-    var queryString;
-    var callback;
+    if(arguments.length === 3) {
+        this.executeWithEnvironment(arguments[0],
+                                    arguments[1],
+                                    arguments[2]);
+    } else if(arguments.length === 4) {
+        this.executeWithEnvironment(arguments[0],
+                                    arguments[2],
+                                    arguments[3],
+                                    arguments[1]);
+    } else {
 
-    if(arguments.length === 1) {
-        queryString = arguments[0];
-        callback = function(){};
-    } else if(arguments.length === 2) {
-        queryString = arguments[0];
-        callback = arguments [1];
+        var queryString;
+        var callback;
+     
+        if(arguments.length === 1) {
+            queryString = arguments[0];
+            callback = function(){};
+        } else if(arguments.length === 2) {
+            queryString = arguments[0];
+            callback = arguments [1];
+        }
+        this.engine.execute(queryString, callback);
     }
-    this.engine.execute(queryString, callback);
 };
 
 Store.Store.prototype.executeWithEnvironment = function() {
@@ -40102,7 +40239,7 @@ Store.Store.prototype.executeWithEnvironment = function() {
         callback = function(){};
         defaultGraphs = arguments[1];
         namedGraphs = arguments[2];
-    } else if(arguments.length === 2) {
+    } else if(arguments.length === 4) {
         queryString = arguments[0];
         callback = arguments [3];
         defaultGraphs = arguments[1];
@@ -40373,6 +40510,27 @@ Store.Store.prototype.load = function(){
 
 Store.Store.prototype.registerParser = function(mediaType, parser) {
     this.engine.rdfLoader.registerParser(mediaType,parser);
+};
+
+/**
+ * Returns the URI of all the graphs currently contained
+ * in the store
+ */
+Store.Store.prototype.registeredGraphs = function(callback) {
+    this.engine.lexicon.registeredGraphs(true, function(success, graphs) {
+        if(success) {
+            var acum = [];
+            for(var i=0; i<graphs.length; i++) {
+                var graph = graphs[i];
+                var uri = new RDFJSInterface.NamedNode(graph);
+                acum.push(uri);
+            }
+
+            callback(true, acum);
+        } else {
+            callback(success, graphs);
+        }
+    });
 };
 
 Store.Store.prototype._nodeToQuery = function(term) {

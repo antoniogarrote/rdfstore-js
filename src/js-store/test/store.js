@@ -590,3 +590,53 @@ exports.testEventsAPI3 = function(test){
         });
     });
 }
+
+exports.testRegisteredGraph = function(test) {
+    new Store.Store(function(store) {
+        var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
+                     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\
+                     PREFIX : <http://example.org/people/>\
+                     INSERT DATA {\
+                       GRAPH :alice {\
+                         :alice\
+                             rdf:type        foaf:Person ;\
+                             foaf:name       "Alice" ;\
+                             foaf:mbox       <mailto:alice@work> ;\
+                             foaf:knows      :bob ;\
+                         .\
+                       }\
+                     }';
+        store.execute(query, function(success, results) {
+
+            var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
+                         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\
+                         PREFIX : <http://example.org/people/>\
+                         INSERT DATA {\
+                           GRAPH :bob {\
+                              :bob\
+                                  rdf:type        foaf:Person ;\
+                                  foaf:name       "Bob" ; \
+                                  foaf:knows      :alice ;\
+                                  foaf:mbox       <mailto:bob@home> ;\
+                                  .\
+                           }\
+                         }'
+        store.execute(query, function(success, results) {
+
+            store.registeredGraphs(function(results,graphs) {
+                test.ok(graphs.length === 2);
+                var values = [];
+                for(var i=0; i<graphs.length; i++) {
+                    values.push(graphs[i].valueOf());
+                }
+                values.sort();
+                test.ok(values[0] === 'http://example.org/people/alice');
+                test.ok(values[1] === 'http://example.org/people/bob');
+                test.done();
+            });
+        });
+        });
+    });
+};

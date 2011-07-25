@@ -1939,7 +1939,8 @@ var NetworkTransport = {};
 NetworkTransport.load = function(uri, accept, callback, redirect) {
     var transport = jQuery;
 
-    transport.ajax(uri,{
+    transport.ajax({
+        url: uri,
         headers: {"Accepts": accept},
 
         success: function(data, status, xhr){
@@ -40501,6 +40502,27 @@ Store.Store.prototype.load = function(){
 
 Store.Store.prototype.registerParser = function(mediaType, parser) {
     this.engine.rdfLoader.registerParser(mediaType,parser);
+};
+
+/**
+ * Returns the URI of all the graphs currently contained
+ * in the store
+ */
+Store.Store.prototype.registeredGraphs = function(callback) {
+    this.engine.lexicon.registeredGraphs(true, function(success, graphs) {
+        if(success) {
+            var acum = [];
+            for(var i=0; i<graphs.length; i++) {
+                var graph = graphs[i];
+                var uri = new RDFJSInterface.NamedNode(graph);
+                acum.push(uri);
+            }
+
+            callback(true, acum);
+        } else {
+            callback(success, graphs);
+        }
+    });
 };
 
 Store.Store.prototype._nodeToQuery = function(term) {

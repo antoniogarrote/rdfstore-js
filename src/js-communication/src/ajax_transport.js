@@ -5,7 +5,8 @@ var NetworkTransport = exports.NetworkTransport;
 NetworkTransport.load = function(uri, accept, callback, redirect) {
     var transport = jQuery;
 
-    transport.ajax(uri,{
+    transport.ajax({
+        url: uri,
         headers: {"Accepts": accept},
 
         success: function(data, status, xhr){
