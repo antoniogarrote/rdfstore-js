@@ -139,10 +139,10 @@ exports.simpleObserve1 = function(test){
             }, function() {
                 engine.execute('INSERT DATA {  <http://example/book> <http://example.com/vocab#title> <http://test.com/example> }', function(){
                     engine.execute('INSERT DATA {  <http://example/book> <http://example.com/vocab#other> <http://test.com/example2> }', function(){
-                        // this shoulg not trigger the callback
+                        // this should not trigger the callback
                         engine.execute('INSERT DATA {  <http://example/book2> <http://example.com/vocab#other> <http://test.com/example3> }', function(){
                             engine.execute('DELETE DATA {  <http://example/book> <http://example.com/vocab#other> <http://test.com/example2> }', function(){
-                                test.ok(count === 4);
+                                test.ok(count === 3);
                                 test.ok(numTriples = 1);
 
                                 test.done();

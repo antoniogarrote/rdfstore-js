@@ -16,3 +16,18 @@ exports.testSeq = function(test){
         test.done();
     });
 }
+
+
+exports.testRecur = function(test) {
+    var counter = 0;
+    var testRec = function(){
+        counter++;
+        if(counter == Utils.stackCounterLimit*5) {
+            console.log(counter);
+            test.done();
+        } else {
+            Utils.recur(function(){ testRec(); });
+        }
+    };
+    testRec();
+}

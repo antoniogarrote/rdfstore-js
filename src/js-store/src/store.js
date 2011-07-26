@@ -55,6 +55,27 @@ Store.Store = function(arg1, arg2) {
 };
 
 
+/**
+ * Executes a query in the store.
+ * There are two possible way of invoking this function,
+ * providing a pair of arrays of namespaces that will be
+ * used to compute the union of the default and named
+ * dataset, or without them.
+ * Both invocations receive as an optional last parameter
+ * a callback function that will receive the return status
+ * of the query and the results.
+ *
+ * @arguments:
+ * 1)
+ * - query
+ * - callback (optional)
+ * 
+ * 2)
+ * - query
+ * - URIs default namespaces
+ * - URIs named namespaces
+ * - callback (optional)
+ */
 Store.Store.prototype.execute = function() {
     if(arguments.length === 3) {
         this.executeWithEnvironment(arguments[0],
@@ -62,9 +83,9 @@ Store.Store.prototype.execute = function() {
                                     arguments[2]);
     } else if(arguments.length === 4) {
         this.executeWithEnvironment(arguments[0],
+                                    arguments[1],
                                     arguments[2],
-                                    arguments[3],
-                                    arguments[1]);
+                                    arguments[3]);
     } else {
 
         var queryString;
@@ -379,9 +400,9 @@ Store.Store.prototype.registeredGraphs = function(callback) {
                 acum.push(uri);
             }
 
-            callback(true, acum);
+            return callback(true, acum);
         } else {
-            callback(success, graphs);
+            return callback(success, graphs);
         }
     });
 };

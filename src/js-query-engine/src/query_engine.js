@@ -616,8 +616,6 @@ QueryEngine.QueryEngine.prototype.execute = function(queryString, callback, defa
             }
         }
     } catch(e) {
-        console.log(e);
-        console.log(e.stack);
         if(e.name && e.name==='SyntaxError') {
             callback(false, "Syntax error: \nmessage:"+e.message+"\nline "+e.line+", column:"+e.column);
         } else {
@@ -1286,6 +1284,9 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
     var predicate  = null;
     var object     = null;
     var graph      = null;
+    var oldLimit = Utils.stackCounterLimit;
+    Utils.stackCounter = 0;
+    Utils.stackCounterLimit = 10;
 
     Utils.repeat(0, quads.length, function(kk,env){
         if(env.success == null) {
@@ -1355,8 +1356,10 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
               // graph
               if(quad.graph['uri'] || quad.graph.token === 'uri') {
                   that.lexicon.registerUri(quad.graph.uri || quad.graph.value, function(oid){
-                      graph = oid;
-                      k();
+                      that.lexicon.registerGraph(oid,function(){
+                          graph = oid;
+                          k();
+                      });
                   });
               } else if(quad.graph['literal'] || quad.graph.token === 'literal') {
                   that.lexicon.registerLiteral(quad.graph.literal || quad.graph.value, function(oid){
@@ -1372,7 +1375,7 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
           })(function(result){
               var quad = {subject: subject, predicate:predicate, object:object, graph: graph};
               var key = new QuadIndexCommon.NodeKey(quad);
-
+              
               that.backend.index(key, function(result, error){
                   if(result == true){
                       env.counter = env.counter + 1;
@@ -1387,6 +1390,7 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
             kk(floop, env);
         }
     }, function(env){
+        Utils.stackCounterLimit = oldLimit;
         if(env.success) {
             callback(true, env.counter);
         } else {

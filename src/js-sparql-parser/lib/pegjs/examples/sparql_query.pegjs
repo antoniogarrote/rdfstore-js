@@ -105,7 +105,7 @@ PrefixDecl "[5] PrefixDecl"
 SelectQuery "[6] SelectQuery"
   = s:SelectClause WS* gs:DatasetClause* WS* w:WhereClause WS* sm:SolutionModifier WS* BindingsClause {
 
-      var dataset = {named:[], default:[]};
+      var dataset = {'named':[], 'default':[]};
       for(var i=0; i<gs.length; i++) {
           var g = gs[i];
           if(g.kind === 'default') {

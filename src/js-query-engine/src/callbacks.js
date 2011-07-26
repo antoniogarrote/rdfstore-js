@@ -253,7 +253,6 @@ Callbacks.CallbacksBackend.prototype.observeNode = function() {
     this.engine.execute(query,  function(success, graph){
         if(success) {
             var node = graph;
-            callback(node);
             var observer = function(event, triples){
                 for(var i = 0; i<triples.length; i++) {
                     var triple = triples[i];
@@ -274,6 +273,7 @@ Callbacks.CallbacksBackend.prototype.observeNode = function() {
             };
             that.observersMap[callback] = observer;
             that.subscribe(uri,null,null,null,observer,doneCallback);
+            callback(node);
         } else {
             doneCallback(false);
         }

@@ -81,6 +81,17 @@ console.log(Store);
 var Lexicon = {};
 Lexicon.Lexicon = function(f) {
     Store.create(function(store) {
+        store.execute = function() {
+            if(arguments.length === 2) {
+                this.engine.execute(arguments[0],
+                                    arguments[1]);
+            } else if(arguments.length === 4) {
+                this.engine.execute(arguments[0],
+                                    arguments[1],
+                                    arguments[2],
+                                    arguments[3]);
+            }
+        };
         f(store);
     });
 };

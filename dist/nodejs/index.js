@@ -3,10 +3,24 @@
 Utils = {};
 
 
+
 Utils['extends'] = function(supertype, descendant) {
     descendant.prototype = new supertype();
 };
 
+
+Utils.stackCounterLimit = 1000;
+Utils.stackCounter = 0;
+
+Utils.recur = function(c){
+    if(Utils.stackCounter === Utils.stackCounterLimit) {
+        Utils.stackCounter = 0;
+        setTimeout(c, 0);
+    } else {
+        Utils.stackCounter++;
+        c();
+    } 
+};
 
 Utils.shuffle = function(o){ //v1.0
     for(var j, x, i = o.length; i; j = parseInt(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
@@ -39,11 +53,7 @@ Utils.repeat = function(c,max,floop,fend,env) {
         floop(function(floop,env){
             // avoid stack overflow
             // deadly hack
-            if(c % 5 == 4) {
-                setTimeout(function(){ Utils.repeat(c+1, max, floop, fend, env); }, 0);
-            } else {
-                Utils.repeat(c+1, max, floop, fend, env);
-            }
+            Utils.recur(function(){ Utils.repeat(c+1, max, floop, fend, env) });
         },env);
     } else {
         fend(env);
@@ -9850,7 +9860,7 @@ SparqlParser.parser = (function(){
         var result0 = result1 !== null
           ? (function(s, gs, w, sm) {
           
-                var dataset = {named:[], 'default':[]};
+                var dataset = {'named':[], 'default':[]};
                 for(var i=0; i<gs.length; i++) {
                     var g = gs[i];
                     if(g.kind === 'default') {
@@ -35419,7 +35429,6 @@ SparqlParser.parser = (function(){
   return result;
 })();
 
-
 // end of ./src/js-sparql-parser/src/sparql_parser.js 
 // exports
 RDFJSInterface = {};
@@ -38811,8 +38820,6 @@ QueryEngine.QueryEngine.prototype.execute = function(queryString, callback, defa
             }
         }
     } catch(e) {
-        console.log(e);
-        console.log(e.stack);
         if(e.name && e.name==='SyntaxError') {
             callback(false, "Syntax error: \nmessage:"+e.message+"\nline "+e.line+", column:"+e.column);
         } else {
@@ -39481,6 +39488,9 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
     var predicate  = null;
     var object     = null;
     var graph      = null;
+    var oldLimit = Utils.stackCounterLimit;
+    Utils.stackCounter = 0;
+    Utils.stackCounterLimit = 10;
 
     Utils.repeat(0, quads.length, function(kk,env){
         if(env.success == null) {
@@ -39550,8 +39560,10 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
               // graph
               if(quad.graph['uri'] || quad.graph.token === 'uri') {
                   that.lexicon.registerUri(quad.graph.uri || quad.graph.value, function(oid){
-                      graph = oid;
-                      k();
+                      that.lexicon.registerGraph(oid,function(){
+                          graph = oid;
+                          k();
+                      });
                   });
               } else if(quad.graph['literal'] || quad.graph.token === 'literal') {
                   that.lexicon.registerLiteral(quad.graph.literal || quad.graph.value, function(oid){
@@ -39567,7 +39579,7 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
           })(function(result){
               var quad = {subject: subject, predicate:predicate, object:object, graph: graph};
               var key = new QuadIndexCommon.NodeKey(quad);
-
+              
               that.backend.index(key, function(result, error){
                   if(result == true){
                       env.counter = env.counter + 1;
@@ -39582,6 +39594,7 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
             kk(floop, env);
         }
     }, function(env){
+        Utils.stackCounterLimit = oldLimit;
         if(env.success) {
             callback(true, env.counter);
         } else {
@@ -40112,7 +40125,6 @@ Callbacks.CallbacksBackend.prototype.observeNode = function() {
     this.engine.execute(query,  function(success, graph){
         if(success) {
             var node = graph;
-            callback(node);
             var observer = function(event, triples){
                 for(var i = 0; i<triples.length; i++) {
                     var triple = triples[i];
@@ -40133,6 +40145,7 @@ Callbacks.CallbacksBackend.prototype.observeNode = function() {
             };
             that.observersMap[callback] = observer;
             that.subscribe(uri,null,null,null,observer,doneCallback);
+            callback(node);
         } else {
             doneCallback(false);
         }
@@ -40202,6 +40215,27 @@ Store.Store = function(arg1, arg2) {
 };
 
 
+/**
+ * Executes a query in the store.
+ * There are two possible way of invoking this function,
+ * providing a pair of arrays of namespaces that will be
+ * used to compute the union of the default and named
+ * dataset, or without them.
+ * Both invocations receive as an optional last parameter
+ * a callback function that will receive the return status
+ * of the query and the results.
+ *
+ * @arguments:
+ * 1)
+ * - query
+ * - callback (optional)
+ * 
+ * 2)
+ * - query
+ * - URIs default namespaces
+ * - URIs named namespaces
+ * - callback (optional)
+ */
 Store.Store.prototype.execute = function() {
     if(arguments.length === 3) {
         this.executeWithEnvironment(arguments[0],
@@ -40209,9 +40243,9 @@ Store.Store.prototype.execute = function() {
                                     arguments[2]);
     } else if(arguments.length === 4) {
         this.executeWithEnvironment(arguments[0],
+                                    arguments[1],
                                     arguments[2],
-                                    arguments[3],
-                                    arguments[1]);
+                                    arguments[3]);
     } else {
 
         var queryString;
@@ -40526,9 +40560,9 @@ Store.Store.prototype.registeredGraphs = function(callback) {
                 acum.push(uri);
             }
 
-            callback(true, acum);
+            return callback(true, acum);
         } else {
-            callback(success, graphs);
+            return callback(success, graphs);
         }
     });
 };

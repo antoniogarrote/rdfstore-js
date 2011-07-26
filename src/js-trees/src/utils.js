@@ -2,10 +2,24 @@ exports.Utils = {};
 var Utils = exports.Utils;
 
 
+
 Utils.extends = function(supertype, descendant) {
     descendant.prototype = new supertype();
 };
 
+
+Utils.stackCounterLimit = 1000;
+Utils.stackCounter = 0;
+
+Utils.recur = function(c){
+    if(Utils.stackCounter === Utils.stackCounterLimit) {
+        Utils.stackCounter = 0;
+        setTimeout(c, 0);
+    } else {
+        Utils.stackCounter++;
+        c();
+    } 
+};
 
 Utils.shuffle = function(o){ //v1.0
     for(var j, x, i = o.length; i; j = parseInt(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
@@ -38,11 +52,7 @@ Utils.repeat = function(c,max,floop,fend,env) {
         floop(function(floop,env){
             // avoid stack overflow
             // deadly hack
-            if(c % 5 == 4) {
-                setTimeout(function(){ Utils.repeat(c+1, max, floop, fend, env); }, 0);
-            } else {
-                Utils.repeat(c+1, max, floop, fend, env);
-            }
+            Utils.recur(function(){ Utils.repeat(c+1, max, floop, fend, env) });
         },env);
     } else {
         fend(env);

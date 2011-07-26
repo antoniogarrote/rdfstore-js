@@ -939,7 +939,7 @@ SparqlParser.parser = (function(){
         var result0 = result1 !== null
           ? (function(s, gs, w, sm) {
           
-                var dataset = {named:[], default:[]};
+                var dataset = {'named':[], 'default':[]};
                 for(var i=0; i<gs.length; i++) {
                     var g = gs[i];
                     if(g.kind === 'default') {
@@ -26507,4 +26507,3 @@ SparqlParser.parser = (function(){
   
   return result;
 })();
-
