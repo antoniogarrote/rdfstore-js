@@ -421,3 +421,18 @@ Store.Store.prototype._nodeToQuery = function(term) {
         return term.toString();
     }
 };
+
+/**
+ * Returns the current network transport being used by the
+ * the store.
+ */
+Store.Store.prototype.getNetworkTransport = function() {
+    return NetworkTransport;
+}
+
+/**
+ * Sets the network transport used by the store;
+ */
+Store.Store.prototype.setNetworkTransport = function(networkTransportImpl) {
+    NetworkTransport = networkTransportImpl;
+}

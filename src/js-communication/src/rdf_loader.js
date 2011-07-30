@@ -11,20 +11,20 @@ var Utils = require("../../js-trees/src/utils").Utils;
 RDFLoader.RDFLoader = function(params) {
     this.precedences = ["text/turtle", "text/n3", "application/json"];
     this.parsers = {"text/turtle": TurtleParser.parser, "text/n3":TurtleParser.parser, "application/json":JSONLDParser.parser};
-    //if(params != null) {
-    //  for(var mime in params["parsers"]) {
-    //      this.parsers[mime] = params["parsers"][mime];
-    //  }
-    //}
+    if(params != null) {
+      for(var mime in params["parsers"]) {
+          this.parsers[mime] = params["parsers"][mime];
+      }
+    }
 
-    //if(params && params["precedences"] != null) {
-    //    this.precedences = params["precedences"];
-    //    for(var mime in params["parsers"]) {
-    //        if(!Utils.include(this.precedences, mime)) {
-    //            this.precedences.push(mime);
-    //        }
-    //    }
-    //}
+    if(params && params["precedences"] != null) {
+        this.precedences = params["precedences"];
+        for(var mime in params["parsers"]) {
+            if(!Utils.include(this.precedences, mime)) {
+                this.precedences.push(mime);
+            }
+        }
+    }
 
     this.acceptHeaderValue = "";
     for(var i=0; i<this.precedences.length; i++) {

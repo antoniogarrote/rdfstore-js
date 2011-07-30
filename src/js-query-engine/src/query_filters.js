@@ -793,7 +793,7 @@ QueryFilters.effectiveTypeValue = function(val){
             // plain literal -> just manipulate the string
             return val.value;
         } else {
-            val.value
+            return val.value
         }
     } else {
         // @todo
