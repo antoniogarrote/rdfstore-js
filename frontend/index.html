@@ -5,112 +5,36 @@
 <!--[if (gte IE 9)|!(IE)]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-
-  <!-- Always force latest IE rendering engine (even in intranet) & Chrome Frame
-       Remove this if you use the .htaccess -->
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-
   <title>RDFStore JS</title>
   <meta name="author" content="Antonio Garrote">
 
   <link rel="stylesheet" href="./css/rdfstore_frontend.css">
   <link rel="stylesheet" href="./css/ui-lightness/jquery-ui-1.8.14.custom.css">
 
-  <!-- All JavaScript at the bottom, except for Modernizr which
-  enables HTML5 elements & feature detects -->
   <script type='text/javascript' src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
   <script type='text/javascript' src='./js/jquery-ui.min.js'></script>
   <script type='text/javascript' src='http://ajax.aspnetcdn.com/ajax/jquery.templates/beta1/jquery.tmpl.js'></script>
   <script type='text/javascript' src='./js/rdf_store.js'></script>
-  <script type='text/javascript' src='./js/rdfquery.js'></script>
-<!--  <script type='text/javascript' src='https://raw.github.com/antoniogarrote/rdfstore-js/master/dist/browser/rdf_store_min.js'></script>-->
   <script type='text/javascript' src='./js/knockout-1.2.1.js'></script>
   <script type='text/javascript' src='./js/rdfstore_frontend.js'></script>
   <script type='text/javascript'>
-    jQuery(document).ready(function(){   
-      rdfstore.create({"communication": {
-                         "parsers": {
-                           "text/html" :           rdfstore_frontend.rdfaParser,
-                           "application/rdf+xml":  rdfstore_frontend.rdfParser
-                         },
-                        "precedences": ["application/rdf+xml", "text/html"] }
-                      }, 
-                      function(store) {
-                         store.execute("PREFIX : <http://example.org/ns#> \
-                          INSERT DATA { \
-                           :s :p1 :o1, :o2, :o3.\
-                           :s :p2 :o1, :o2.\
-                           :s :p3 'test'^^<http://test.org/string> .\
-                         }", function(){
-                          
-                               //var uri = 'http://dbpedia.org/data/The_Lord_of_the_Rings.n3'
-                               new rdfstore_frontend('#target',store);
-                             })
-                      });
+    jQuery(document).ready(function(){
+      rdfstore.create(function(store) {
+        store.execute("PREFIX : <http://example.org/ns#> \
+                        INSERT DATA { \
+                         :s :p1 :o1, :o2, :o3.\
+                         :s :p2 :o1, :o2.\
+                         :s :p3 'test'^^<http://test.org/string> .\
+                       }", function(){
+          new rdfstore_frontend('#target',store);
+        })
+      });
     });
   </script>
 </head>
 
 <body>
-
-<script id='sparql-graphs-template' type='text/html'>
-    <ul id='rdf-store-graphs-list'>
-    {{each graphs}}
-        <li class='rdf-store-graph-item' data-bind="css: { 'rdf-store-graph-item rdf-store-selected-graph-item': ($value === selectedGraph()) }">
-          <a href='#' data-bind='event: {click:selectGraph}'>${$value}</a>
-        </li>
-    {{/each}}
-   </ul>
-</script>
-
-<script id='sparql-results-template' type='text/html'>
-  <table id='sparql-results-table-headers'>
-    <thead>
-      <tr>        
-        {{each bindingsVariables}}
-          <th scope='col'>${$value}</th>
-        {{/each}}
-      </tr>
-    </thead>
- </table>
-  <div id='sparql-results-table-rows'>
-    <table>
-      <tbody>
-        {{each bindingsArray}}
-          <tr class='{{if $index%2==0}}sparql-result-even-row{{else}}sparql-result-odd-row{{/if}}'>
-            {{each $value }}
-              {{if $value.token==='uri'}}
-                <td data-bind='click: newShowBinding, event: {mouseover: tdMouseOver}'>
-                    <span class='rdfstore-data-value'>${$value.value}</span>
-                    <span class='rdfstore-data-token' style='display:none'>uri</span>
-                </td>
-              {{else}}
-                {{if $value.token==='literal'}}
-                  <td data-bind='click: newShowBinding, event: {mouseover: tdMouseOver}'>
-                      <span class='rdfstore-data-value'>${$value.value}</span>
-                      <span class='rdfstore-data-token' style='display:none'>literal</span>
-                      <span class='rdfstore-data-lang'  style='display:none'>${$value.lang}</span>
-                      <span class='rdfstore-data-type'  style='display:none'>${$value.type}</span>
-                  </td>
-                {{else}}
-                  <td data-bind='click: newShowBinding, event: {mouseover: tdMouseOver}'>
-                      <span class='rdfstore-data-value'>${$value.value}</span>
-                      <span class='rdfstore-data-token' style='display:none'>blank</span>
-                  </td>
-                {{/if}}
-              {{/if}}
-            {{/each}}
-          </tr>
-        {{/each}}
-      </tbody>
-    </table>
-  </div>
-</script>
-
-<script id='sparql-template-row' type='text/html'>
-  <td>${$item.data}</td>
-</script>
-
 <div id='target'>
 </div>
 
