@@ -158,3 +158,34 @@ AbstractQueryTree.AbstractQueryTree.prototype._buildGroupGraphPattern = function
         return g;
     }
 };
+
+/**
+ * Collects basic triple pattern in a complex SPARQL AQT
+ */
+AbstractQueryTree.AbstractQueryTree.prototype.collectBasicTriples = function(aqt, acum) {
+    if(acum == null) {
+        acum = [];
+    }
+
+    if(aqt.kind === 'select') {
+        acum = this.collectBasicTriples(aqt.pattern,acum);
+    } else if(aqt.kind === 'BGP') {
+        acum = acum.concat(aqt.value);
+    } else if(aqt.kind === 'UNION') {
+        acum = this.collectBasicTriples(aqt.value[0],acum);
+        acum = this.collectBasicTriples(aqt.value[1],acum);
+    } else if(aqt.kind === 'GRAPH') {
+        acum = this.collectBasicTriples(aqt.value,acum);
+    } else if(aqt.kind === 'LEFT_JOIN' || aqt.kind === 'JOIN') {
+        acum = this.collectBasicTriples(aqt.lvalue, acum);
+        acum = this.collectBasicTriples(aqt.rvalue, acum);
+    } else if(aqt.kind === 'FILTER') {
+        acum = this.collectBasicTriples(aqt.value, acum);
+    } else if(aqt.kind === 'EMPTY_PATTERN') {
+        // nothing
+    } else {
+        throw "Unknown pattern: "+aqt.kind;
+    }
+
+    return acum;
+};

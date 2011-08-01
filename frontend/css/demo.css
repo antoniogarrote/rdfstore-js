@@ -1,0 +1,26 @@
+body {
+    font-family: "Helvetica Neue",Arial,Helvetica,sans-serif;
+    margin: 20px
+}
+
+#target {
+    position:absolute;
+    width: 100%
+}
+
+#launch {
+    font-weight: bold;
+    margin: auto;
+    max-width: 200px;
+    padding-top: 7px;
+    text-align: center
+}
+
+#launch a {
+    background-color: #B5C9E2;
+    color: #224059;
+    cursor: pointer;
+    display: block;
+    padding: 4px;
+    text-decoration: none
+}

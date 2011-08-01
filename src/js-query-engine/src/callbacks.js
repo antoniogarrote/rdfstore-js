@@ -7,6 +7,8 @@ var Utils = require("./../../js-trees/src/utils").Utils;
 var QuadBackend = require("./../../js-rdf-persistence/src/quad_backend").QuadBackend;
 var QuadIndexCommon = require("./../../js-rdf-persistence/src/quad_index_common").QuadIndexCommon;
 var RDFJSInterface = require("./rdf_js_interface").RDFJSInterface;
+var AbstractQueryTree = require("./../../js-sparql-parser/src/abstract_query_tree").AbstractQueryTree;
+
 
 Callbacks.ANYTHING = {'token': 'var', 
                       'value': '_'};
@@ -15,9 +17,14 @@ Callbacks.added = 'added';
 Callbacks.deleted = 'deleted';
 
 Callbacks.CallbacksBackend = function() {
+    this.aqt = new AbstractQueryTree.AbstractQueryTree();
     this.engine = arguments[0];
     this.indexMap = {};
     this.observersMap = {};
+    this.queriesIndexMap = {};
+    this.queriesList = [];
+    this.pendingQueries = [];
+    this.matchedQueries = [];
     this.updateInProgress = null;
     this.indices = ['SPOG', 'GP', 'OGS', 'POG', 'GSP', 'OS'];
     this.componentOrders = {
@@ -33,13 +40,22 @@ Callbacks.CallbacksBackend = function() {
     this.callbacksMap = {};
     this.callbacksInverseMap = {};
 
+    this.queryCounter = 0;
+    this.queriesMap = {};
+    this.queriesCallbacksMap = {};
+    this.queriesInverseMap = {};
+
     for(var i=0; i<this.indices.length; i++) {
         var indexKey = this.indices[i];
         this.indexMap[indexKey] = {};
+        this.queriesIndexMap[indexKey] = {};
     };
 };
 
 Callbacks.CallbacksBackend.prototype.startGraphModification = function() {
+    this.pendingQueries = [].concat(this.queriesList);
+    this.matchedQueries = [];
+
     var added = Callbacks['added'];
     var deleted = Callbacks['deleted'];
     if(this.updateInProgress == null) {
@@ -58,7 +74,9 @@ Callbacks.CallbacksBackend.prototype.endGraphModification = function(callback) {
         that.updateInProgress = null;
         this.sendNotification(Callbacks['deleted'], tmp[Callbacks['deleted']],function(){
             that.sendNotification(Callbacks['added'], tmp[Callbacks['added']], function(){
-                callback(true);
+                that.dispatchQueries(function(){
+                    callback(true);
+                });
             });
         });
     } else {
@@ -78,12 +96,16 @@ Callbacks.CallbacksBackend.prototype.sendNotification = function(event, quadsPai
             var index = this.indexMap[indexKey];
             var order = this.componentOrders[indexKey];
             this._searchCallbacksInIndex(index, order, event, quadPair, notificationsMap);
+            if(this.pendingQueries.length != 0) {
+                index = this.queriesIndexMap[indexKey];
+                this._searchQueriesInIndex(index, order, quadPair);
+            }
         }
     }
 
     this.dispatchNotifications(notificationsMap);
 
-    if(doneCallback!=null)
+    if(doneCallback != null)
         doneCallback(true);
 };
 
@@ -217,7 +239,7 @@ Callbacks.CallbacksBackend.prototype._indexForPattern = function(pattern) {
 
     for(var i=0; i<matchingIndices.length; i++) {
         var index = matchingIndices[i];
-        var indexComponents = this.componentOrders[index]
+        var indexComponents = this.componentOrders[index];
         for(var j=0; j<indexComponents.length; j++) {
             if(Utils.include(indexKey, indexComponents[j])===false) {
                 break;
@@ -230,7 +252,6 @@ Callbacks.CallbacksBackend.prototype._indexForPattern = function(pattern) {
     
     return 'SPOG' // If no other match, we return the most generic index
 };
-
 
 Callbacks.CallbacksBackend.prototype.observeNode = function() {
     var uri,graphUri,callback,doneCallback;
@@ -288,4 +309,137 @@ Callbacks.CallbacksBackend.prototype.stopObservingNode = function(callback) {
     } else {
         return false;
     }
+};
+
+// Queries
+
+Callbacks.CallbacksBackend.prototype.observeQuery = function(query, callback, endCallback) {
+    var queryParsed = this.aqt.parseQueryString(query);
+    var parsedTree = this.aqt.parseSelect(queryParsed.units[0]);
+    var patterns = this.aqt.collectBasicTriples(parsedTree);
+    var that = this;
+    var queryEnv = {blanks:{}, outCache:{}};
+    var floop, pattern, quad, indexKey, indexOrder, index;
+
+    var counter = this.queryCounter;
+    this.queryCounter++;
+    this.queriesMap[counter] = query;
+    this.queriesInverseMap[query] = counter;
+    this.queriesList.push(counter);
+    this.queriesCallbacksMap[counter] = callback;
+
+    Utils.repeat(0, patterns.length,
+                 function(k,env) {
+                     floop = arguments.callee;
+                     quad = patterns[env._i];
+                     if(quad.graph == null) {
+                         quad.graph = that.engine.lexicon.defaultGraphUriTerm;
+                     }
+
+                     that.engine.normalizeQuad(quad, queryEnv, true, function(success, normalized){
+                         pattern =  new QuadIndexCommon.Pattern(normalized);        
+                         indexKey = that._indexForPattern(pattern);
+                         indexOrder = that.componentOrders[indexKey];
+                         index = that.queriesIndexMap[indexKey];
+
+                         for(var i=0; i<indexOrder.length; i++) {
+                             var component = indexOrder[i];
+                             var quadValue = normalized[component];
+                             if(typeof(quadValue) === 'string') {
+                                 if(index['_'] == null) {
+                                     index['_'] = [];
+                                 }
+                                 index['_'].push(counter);
+                                 break;
+                             } else {
+                                 if(i===indexOrder.length-1) {
+                                     index[quadValue] = index[quadValue] || {'_':[]};
+                                     index[quadValue]['_'].push(counter);
+                                 } else {
+                                     index[quadValue] = index[quadValue] || {};
+                                     index = index[quadValue];
+                                 }
+                             }
+                         }
+
+                         k(floop,env);
+                     });
+                 },
+                 function(env) {
+                     that.engine.execute(query,
+                                         function(success, results){
+                                             if(success){
+                                                 callback(results);
+                                             } else {
+                                                 console.log("ERROR in query callback "+results);
+                                             }                                             
+                                         });
+                     if(endCallback != null)
+                         endCallback();
+                 });
+};
+
+Callbacks.CallbacksBackend.prototype.stopObservingQuery = function(query) {
+    var id = this.queriesInverseMap[query];
+    if(id != null) {
+        delete this.queriesInverseMap[query];
+        delete this.queriesMap[id];
+        this.queriesList = Utils.remove(this.queriesList, id);
+    }
+};
+
+Callbacks.CallbacksBackend.prototype._searchQueriesInIndex = function(index, order, quadPair) {
+    var quadPairNomalized = quadPair[1];
+    var quadPair = quadPair[0];
+
+    for(var i=0; i<(order.length+1); i++) {
+        var matched = index['_'] || [];
+        
+        var filteredIds = [];
+        for(var j=0; j<matched.length; j++) {
+            var queryId = matched[j];
+            if(Utils.include(this.pendingQueries,queryId)) {
+                Utils.remove(this.pendingQueries,queryId);
+                this.matchedQueries.push(queryId);
+            }
+            // removing IDs for queries no longer being observed
+            if(this.queriesMap[queryId] != null) {
+                filteredIds.push(queryId);
+            }
+        }
+        index['_'] = filteredIds;
+
+        var component = order[i];
+        if(index[''+quadPairNomalized[component]] != null) {
+            index = index[''+quadPairNomalized[component]];
+        } else {
+            break;
+        }
+    }
+};
+
+Callbacks.CallbacksBackend.prototype.dispatchQueries = function(callback) {
+    var that = this;
+    var floop, query, queryId, queryCallback;
+    Utils.repeat(0, this.matchedQueries.length,
+                 function(k, env){
+                     floop = arguments.callee;
+                     queryId = that.matchedQueries[env._i];
+                     query = that.queriesMap[queryId];
+                     queryCallback = that.queriesCallbacksMap[queryId];
+                     Utils.recur(function(){
+                         that.engine.execute(query, 
+                                             function(success, results){
+                                                 if(success) {
+                                                     queryCallback(results);
+                                                 } else {
+                                                     console.log("ERROR executing query callback "+results);
+                                                 }
+                                                 k(floop,env);
+                                             });
+                     });
+                 },
+                 function(env) {
+                     callback();
+                 });
 };

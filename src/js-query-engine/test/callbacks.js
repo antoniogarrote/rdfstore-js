@@ -155,3 +155,92 @@ exports.simpleObserve1 = function(test){
     });
 };
 
+
+exports.simpleCallbackQuery1 = function(test){
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+
+            var callbacksBackend = engine.callbacksBackend;
+
+            var callbacksCounter = 0;
+
+            callbacksBackend.observeQuery("select * where { ?s ?p ?o }",
+                                          function(bindings) {
+                                              if(callbacksCounter == 0) {
+                                                  callbacksCounter++;
+                                                  test.ok(bindings.length === 0);
+                                              } else if(callbacksCounter === 1) {
+                                                  callbacksCounter++;
+                                                  test.ok(bindings.length === 1);
+                                                  test.ok(bindings[0].o.value === "http://test.com/example1");
+                                                  callbacksBackend.stopObservingQuery("select * where { ?s ?p ?o }");
+                                                  setTimeout(function(){
+                                                      test.done();
+                                                  }, 2000);
+                                              } else {
+                                                  test.ok(false);
+                                                  test.done();
+                                              }
+                                          });
+  
+            engine.execute('INSERT DATA {  <http://example/book> <http://example.com/vocab#title> <http://test.com/example1> }', function(){
+                engine.execute('INSERT DATA {  <http://example/book> <http://example.com/vocab#title> <http://test.com/example2> }', function(){
+                    // callbacks should have been fired
+                });
+            });
+        });
+    })
+};
+
+
+exports.simpleCallbackQuery2 = function(test){
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+
+            var callbacksBackend = engine.callbacksBackend;
+
+            var callbacksCounter = 0;
+
+            callbacksBackend.observeQuery("select * where { <http://test.com/vocab#a> ?p ?o }",
+                                          function(bindings) {
+                                              if(callbacksCounter == 0) {
+                                                  callbacksCounter++;
+                                                  test.ok(bindings.length === 0);
+                                              } else if(callbacksCounter === 1) {
+                                                  callbacksCounter++;
+                                                  test.ok(bindings.length === 1);
+                                                  test.ok(bindings[0].o.value === "http://test.com/example1");                       
+                                              } else if(callbacksCounter === 2) {
+                                                  callbacksCounter++;
+                                                  test.ok(bindings.length === 2);
+                                                  test.ok(bindings[0].o.value === "http://test.com/example1");                       
+                                                  test.ok(bindings[1].o.value === "http://test.com/example3");                       
+                                              } else if(callbacksCounter === 3) {
+                                                  callbacksCounter++;
+                                                  test.ok(bindings.length === 1);
+                                                  test.ok(bindings[0].o.value === "http://test.com/example1");                       
+                                                  setTimeout(function(){
+                                                      test.done();
+                                                  }, 2000);
+                                              } else {
+                                                  test.ok(false);
+                                                  test.done();
+                                              }
+                                          });
+  
+            engine.execute('INSERT DATA {  <http://test.com/vocab#a> <http://example.com/vocab#title> <http://test.com/example1> }', function(){
+                engine.execute('INSERT DATA {  <http://example/book> <http://example.com/vocab#title> <http://test.com/example2> }', function(){
+                    engine.execute('INSERT DATA {  <http://test.com/vocab#a> <http://example.com/vocab#title> <http://test.com/example3> }', function(){
+                        engine.execute('DELETE DATA {  <http://test.com/vocab#a> <http://example.com/vocab#title> <http://test.com/example3> }', function(){
+                            // callbacks should have been fired
+                        });
+                    });
+                });
+            });
+        });
+    })
+};

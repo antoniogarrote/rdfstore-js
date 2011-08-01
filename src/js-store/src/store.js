@@ -190,6 +190,21 @@ Store.Store.prototype.stopObservingNode = function(callback) {
     this.engine.callbacksBackend.stopObservingNode(callback);
 };
 
+Store.Store.prototype.startObservingQuery = function() {
+    var query = arguments[0];
+    var callback = arguments[1];
+    var endCallback = arguments[2];
+    if(endCallback!=null) {
+        this.engine.callbacksBackend.observeQuery(uri, callback, endCallback);
+    } else {
+        this.engine.callbacksBackend.observeQuery(uri, callback, function(){});
+    }
+};
+
+Store.Store.prototype.stopObservingQuery = function(query) {
+    this.engine.callbacksBackend.stopObservingQuery(query);
+};
+
 Store.Store.prototype.subscribe = function(s, p, o, g, callback) {
     var adapterCb = function(event,triples){
         var acum = [];

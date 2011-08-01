@@ -144,3 +144,77 @@ exports.examples9 = function(test) {
 
     test.done();
 }
+
+
+exports.exampleCollect1 = function(test) {
+    var query = "SELECT * { ?s ?p ?o }";
+
+    var query = aqt.parseQueryString(query);
+    var parsed = aqt.parseExecutableUnit(query.units[0]);
+    var patterns = aqt.collectBasicTriples(parsed);
+    
+    test.ok(patterns.length === 1);
+    test.done();
+}
+
+
+exports.exampleCollect2 = function(test) {
+    var query = "SELECT * { ?s :p1 ?v1 ; :p2 ?v2 }";
+
+    var query = aqt.parseQueryString(query);
+    var parsed = aqt.parseSelect(query.units[0]);
+
+    var patterns = aqt.collectBasicTriples(parsed);
+    
+    test.ok(patterns.length === 2);
+
+    test.done();
+}
+
+exports.exampleCollect9 = function(test) {
+    var query = "PREFIX foaf:    <http://xmlns.com/foaf/0.1/>\
+                 SELECT ?nameX ?nameY ?nickY\
+                 WHERE\
+                 { ?x foaf:knows ?y ;\
+                   foaf:name ?nameX .\
+                   ?y foaf:name ?nameY .\
+                   OPTIONAL { ?y foaf:nick ?nickY }  }";
+    var query = aqt.parseQueryString(query);
+    var parsed = aqt.parseSelect(query.units[0]);
+
+    var patterns = aqt.collectBasicTriples(parsed);
+
+    test.ok(patterns.length === 4);    
+
+    test.done();
+}
+
+
+
+exports.exampleCollectG1 = function(test) {
+    var query = "PREFIX : <http://example/>\
+                 SELECT * { GRAPH ?g { ?s ?p ?o } }";
+    var query = aqt.parseQueryString(query);
+    var parsed = aqt.parseSelect(query.units[0]);
+
+    var patterns = aqt.collectBasicTriples(parsed);
+    
+    test.ok(patterns.length === 1);    
+    test.ok(patterns[0].graph != null);    
+
+    test.done();
+}
+
+exports.exampleCollectG2 = function(test) {
+    var query = "PREFIX : <http://example/>\
+                 SELECT * { GRAPH <http://test.com/graph1> { ?s ?p ?o } }";
+    var query = aqt.parseQueryString(query);
+    var parsed = aqt.parseSelect(query.units[0]);
+
+    var patterns = aqt.collectBasicTriples(parsed);
+
+    test.ok(patterns.length === 1);    
+    test.ok(patterns[0].graph.value === "http://test.com/graph1");    
+
+    test.done();
+}

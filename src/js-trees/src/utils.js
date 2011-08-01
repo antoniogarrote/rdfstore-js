@@ -45,6 +45,17 @@ Utils.include = function(a,v) {
     return false;
 };
 
+Utils.remove = function(a,v) {
+    var acum = [];
+    for(var i=0; i<a.length; i++) {
+        if(a[i] !== v) {
+            acum.push(a[i]);
+        }
+    }
+
+    return acum;
+};
+
 Utils.repeat = function(c,max,floop,fend,env) {
     if(arguments.length===4) { env = {}; }
     if(c<max) {

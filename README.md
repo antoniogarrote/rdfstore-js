@@ -367,6 +367,9 @@ The main difference between both methods is that *subscribe* receives the triple
     // stop receiving notifications
     store.stopObservingNode(cb);
 
+In the same way, there are *startObservingQuery* and *stopObservingQuery* functions that makes possible to set up callbacks for whole SPARQL queries. 
+The store will try to be smart and not perform unnecessary evaluations of these query after quad insertion/deletions. Nevertheless too broad queries must be used carefully with the events API.
+
 ##Reusable modules
 
 rdfstore-js is built from a collection of general purpose modules. Some of these modules can be easily extracted from the library and used on their own.
@@ -389,4 +392,4 @@ Antonio Garrote, email:antoniogarrote@gmail.com, twitter:@antoniogarrote.
 
 ## License
 
-Licensed under the [GNU Affero General Public License Version 3 (AGPLV3)](http://www.gnu.org/licenses/agpl.html), copyright Antonio Garrote 2011.
+Licensed under the [GNU Lesser General Public License Version 3 (LGPLV3)](http://www.gnu.org/licenses/lgpl.html), copyright Antonio Garrote 2011.
