@@ -1,0 +1,21 @@
+# a comment
+@prefix dc: <http://purl.org/dc/elements/1.1/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+# another comment
+@prefix swrc: <http://swrc.ontoware.org/ontology#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix bench: <http://localhost/vocabulary/bench/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix person: <http://localhost/persons/> .
+bench:Journal rdfs:subClassOf foaf:Document.
+bench:Proceedings rdfs:subClassOf foaf:Document.
+bench:Inproceedings rdfs:subClassOf foaf:Document.
+# this is a comment
+bench:Article rdfs:subClassOf foaf:Document.
+bench:Www rdfs:subClassOf foaf:Document.
+bench:MastersThesis rdfs:subClassOf foaf:Document.
+bench:PhDThesis rdfs:subClassOf foaf:Document.
+bench:Incollection rdfs:subClassOf foaf:Document.
+bench:Book rdfs:subClassOf foaf:Document.

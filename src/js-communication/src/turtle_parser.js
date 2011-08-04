@@ -198,11 +198,6 @@ TurtleParser.parser = (function(){
       }
       
       function parse_statement() {
-          statementCounter++;
-          if(statementCounter % 1000 == 0) {
-              console.log(""+statementCounter);
-              printTime();
-          }
         var cacheKey = 'statement@' + pos;
         var cachedResult = cache[cacheKey];
         if (cachedResult) {
@@ -5188,7 +5183,7 @@ TurtleParser.parser = (function(){
         }
         
         var savedReportMatchFailures = reportMatchFailures;
-          reportMatchFailures = false
+        reportMatchFailures = false;
         if (input.substr(pos).match(/^[ ]/) !== null) {
           var result5 = input.charAt(pos);
           pos++;
@@ -5281,24 +5276,24 @@ TurtleParser.parser = (function(){
         }
         if (result1 !== null) {
           var result2 = [];
-          if (input.substr(pos).match(/^[^#xA#xD]/) !== null) {
+          if (input.substr(pos).match(/^[^\n\r]/) !== null) {
             var result3 = input.charAt(pos);
             pos++;
           } else {
             var result3 = null;
             if (reportMatchFailures) {
-              matchFailed("[^#xA#xD]");
+              matchFailed("[^\\n\\r]");
             }
           }
           while (result3 !== null) {
             result2.push(result3);
-            if (input.substr(pos).match(/^[^#xA#xD]/) !== null) {
+            if (input.substr(pos).match(/^[^\n\r]/) !== null) {
               var result3 = input.charAt(pos);
               pos++;
             } else {
               var result3 = null;
               if (reportMatchFailures) {
-                matchFailed("[^#xA#xD]");
+                matchFailed("[^\\n\\r]");
               }
             }
           }

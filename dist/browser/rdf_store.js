@@ -2196,11 +2196,6 @@ TurtleParser.parser = (function(){
       }
       
       function parse_statement() {
-          statementCounter++;
-          if(statementCounter % 1000 == 0) {
-              console.log(""+statementCounter);
-              printTime();
-          }
         var cacheKey = 'statement@' + pos;
         var cachedResult = cache[cacheKey];
         if (cachedResult) {
@@ -7186,7 +7181,7 @@ TurtleParser.parser = (function(){
         }
         
         var savedReportMatchFailures = reportMatchFailures;
-          reportMatchFailures = false
+        reportMatchFailures = false;
         if (input.substr(pos).match(/^[ ]/) !== null) {
           var result5 = input.charAt(pos);
           pos++;
@@ -7279,24 +7274,24 @@ TurtleParser.parser = (function(){
         }
         if (result1 !== null) {
           var result2 = [];
-          if (input.substr(pos).match(/^[^#xA#xD]/) !== null) {
+          if (input.substr(pos).match(/^[^\n\r]/) !== null) {
             var result3 = input.charAt(pos);
             pos++;
           } else {
             var result3 = null;
             if (reportMatchFailures) {
-              matchFailed("[^#xA#xD]");
+              matchFailed("[^\\n\\r]");
             }
           }
           while (result3 !== null) {
             result2.push(result3);
-            if (input.substr(pos).match(/^[^#xA#xD]/) !== null) {
+            if (input.substr(pos).match(/^[^\n\r]/) !== null) {
               var result3 = input.charAt(pos);
               pos++;
             } else {
               var result3 = null;
               if (reportMatchFailures) {
-                matchFailed("[^#xA#xD]");
+                matchFailed("[^\\n\\r]");
               }
             }
           }
@@ -34501,24 +34496,24 @@ SparqlParser.parser = (function(){
         }
         if (result1 !== null) {
           var result2 = [];
-          if (input.substr(pos).match(/^[^#xA#xD]/) !== null) {
+          if (input.substr(pos).match(/^[^\n\r]/) !== null) {
             var result3 = input.charAt(pos);
             pos++;
           } else {
             var result3 = null;
             if (reportMatchFailures) {
-              matchFailed("[^#xA#xD]");
+              matchFailed("[^\\n\\r]");
             }
           }
           while (result3 !== null) {
             result2.push(result3);
-            if (input.substr(pos).match(/^[^#xA#xD]/) !== null) {
+            if (input.substr(pos).match(/^[^\n\r]/) !== null) {
               var result3 = input.charAt(pos);
               pos++;
             } else {
               var result3 = null;
               if (reportMatchFailures) {
-                matchFailed("[^#xA#xD]");
+                matchFailed("[^\\n\\r]");
               }
             }
           }
@@ -39920,6 +39915,7 @@ Callbacks.ANYTHING = {'token': 'var',
 
 Callbacks.added = 'added';
 Callbacks.deleted = 'deleted';
+Callbacks.eventsFlushed = 'eventsFlushed';
 
 Callbacks.CallbacksBackend = function() {
     this.aqt = new AbstractQueryTree.AbstractQueryTree();
@@ -39927,6 +39923,7 @@ Callbacks.CallbacksBackend = function() {
     this.indexMap = {};
     this.observersMap = {};
     this.queriesIndexMap = {};
+    this.emptyNotificationsMap = {};
     this.queriesList = [];
     this.pendingQueries = [];
     this.matchedQueries = [];
@@ -39979,8 +39976,10 @@ Callbacks.CallbacksBackend.prototype.endGraphModification = function(callback) {
         that.updateInProgress = null;
         this.sendNotification(Callbacks['deleted'], tmp[Callbacks['deleted']],function(){
             that.sendNotification(Callbacks['added'], tmp[Callbacks['added']], function(){
-                that.dispatchQueries(function(){
-                    callback(true);
+                that.sendEmptyNotification(Callbacks['eventsFlushed'], null, function(){
+                    that.dispatchQueries(function(){
+                        callback(true);
+                    });
                 });
             });
         });
@@ -40012,6 +40011,14 @@ Callbacks.CallbacksBackend.prototype.sendNotification = function(event, quadsPai
 
     if(doneCallback != null)
         doneCallback(true);
+};
+
+Callbacks.CallbacksBackend.prototype.sendEmptyNotification = function(event, value, doneCallback) {
+    var callbacks = this.emptyNotificationsMap[event] || [];
+    for(var i=0; i<callbacks.length; i++) {
+        callbacks[i](event, value);
+    }
+    doneCallback();
 };
 
 Callbacks.CallbacksBackend.prototype.dispatchNotifications = function(notificationsMap) {
@@ -40054,6 +40061,20 @@ Callbacks.CallbacksBackend.prototype._searchCallbacksInIndex = function(index, o
             break;
         }
     }
+};
+
+Callbacks.CallbacksBackend.prototype.subscribeEmpty = function(event, callback) {
+    var callbacks = this.emptyNotificationsMap[event] || [];
+    callbacks.push(callback);
+    this.emptyNotificationsMap[event] = callbacks;
+};
+
+Callbacks.CallbacksBackend.prototype.unsubscribeEmpty = function(event, callback) {
+    var callbacks = this.emptyNotificationsMap[event];
+    if(callbacks != null) {
+        callbacks = Utils.remove(callbacks, callback);
+    }
+    this.emptyNotificationsMap[event] = callbacks;
 };
 
 Callbacks.CallbacksBackend.prototype.subscribe = function(s,p,o,g,callback, doneCallback) {
@@ -40179,25 +40200,31 @@ Callbacks.CallbacksBackend.prototype.observeNode = function() {
     this.engine.execute(query,  function(success, graph){
         if(success) {
             var node = graph;
+            var mustFlush = false;
             var observer = function(event, triples){
-                for(var i = 0; i<triples.length; i++) {
-                    var triple = triples[i];
-                    var s = RDFJSInterface.buildRDFResource(triple.subject,bindings,that.engine,queryEnv);
-                    var p = RDFJSInterface.buildRDFResource(triple.predicate,bindings,that.engine,queryEnv);
-                    var o = RDFJSInterface.buildRDFResource(triple.object,bindings,that.engine,queryEnv);
-                    if(s!=null && p!=null && o!=null) {
-                        triple = new RDFJSInterface.Triple(s,p,o);
-                        if(event === Callbacks['added']) {
-                            node.add(triple);
-                        } else if(event === Callbacks['deleted']) {
-                            node.remove(triple);
+                if(event === 'eventsFlushed' && mustFlush ) {
+                    mustFlush = false;
+                    callback(node);
+                } else {
+                    mustFlush = true;
+                    for(var i = 0; i<triples.length; i++) {
+                        var triple = triples[i];
+                        var s = RDFJSInterface.buildRDFResource(triple.subject,bindings,that.engine,queryEnv);
+                        var p = RDFJSInterface.buildRDFResource(triple.predicate,bindings,that.engine,queryEnv);
+                        var o = RDFJSInterface.buildRDFResource(triple.object,bindings,that.engine,queryEnv);
+                        if(s!=null && p!=null && o!=null) {
+                            triple = new RDFJSInterface.Triple(s,p,o);
+                            if(event === Callbacks['added']) {
+                                node.add(triple);
+                            } else if(event === Callbacks['deleted']) {
+                                node.remove(triple);
+                            }
                         }
                     }
                 }
-
-                callback(node);
             };
             that.observersMap[callback] = observer;
+            that.subscribeEmpty(Callbacks['eventsFlushed'], observer);
             that.subscribe(uri,null,null,null,observer,doneCallback);
             callback(node);
         } else {
@@ -40210,6 +40237,7 @@ Callbacks.CallbacksBackend.prototype.stopObservingNode = function(callback) {
     var observer = this.observersMap[callback];
     if(observer) {
         this.unsubscribe(observer);
+        this.unsubscribeEmpty(Callbacks['eventsFlushed'],observer);
         return true;
     } else {
         return false;

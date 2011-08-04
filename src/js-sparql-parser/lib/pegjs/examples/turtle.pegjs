@@ -862,7 +862,7 @@ WS "[145] WS"
   comment 	::= 	'#' ( [^#xA#xD] )*
 */
 COMMENT " COMMENT"
-  = '#'( [^#xA#xD] )*
+  = '#'([^\u000A\u000D])*
 
 /*
   [146]  	ANON	  ::=  	'[' WS* ']'

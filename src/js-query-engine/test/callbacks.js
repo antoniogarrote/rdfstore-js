@@ -133,24 +133,63 @@ exports.simpleObserve1 = function(test){
             
             var count = 0;
             var numTriples = 0;
-            engine.callbacksBackend.observeNode("http://example/book", null, function(graph) {
+            var observerCallback = function(graph) {
                 count++;
                 numTriples = graph.toArray().length;
-            }, function() {
+                if(count ===3) {
+                    engine.callbacksBackend.stopObservingNode(observerCallback);
+                }
+            };
+
+            engine.callbacksBackend.observeNode("http://example/book", null, observerCallback, function() {
                 engine.execute('INSERT DATA {  <http://example/book> <http://example.com/vocab#title> <http://test.com/example> }', function(){
                     engine.execute('INSERT DATA {  <http://example/book> <http://example.com/vocab#other> <http://test.com/example2> }', function(){
                         // this should not trigger the callback
                         engine.execute('INSERT DATA {  <http://example/book2> <http://example.com/vocab#other> <http://test.com/example3> }', function(){
                             engine.execute('DELETE DATA {  <http://example/book> <http://example.com/vocab#other> <http://test.com/example2> }', function(){
                                 test.ok(count === 3);
-                                test.ok(numTriples = 1);
-
+                                test.ok(numTriples === 1);
+                                test.ok(engine.callbacksBackend.emptyNotificationsMap[Callbacks['eventsFlushed']].length === 0);
                                 test.done();
                             });
                         });
                     });
                 });
             });
+        });
+    });
+};
+
+exports.simpleObserve2 = function(test){
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            
+            var count = 0;
+            var numTriples = 0;
+            var triples = [];
+            var observerCallback = function(graph) {
+                count++;
+                numTriples = graph.toArray().length;
+                triples = graph.toArray();
+                if(count ===1) {
+                    engine.callbacksBackend.stopObservingNode(observerCallback);
+                }
+            };
+
+                engine.execute('INSERT DATA {  <http://example/book> <http://example.com/vocab#title> <http://test.com/example> }', function(){
+                    engine.callbacksBackend.observeNode("http://example/book", null, observerCallback, function() {
+                        engine.execute('DELETE {  <http://example/book> <http://example.com/vocab#title> <http://test.com/example> } INSERT { <http://example/book> <http://example.com/vocab#title> <http://test.com/example2> } WHERE { <http://example/book> <http://example.com/vocab#title> <http://test.com/example> }', function(){
+                            test.ok(count === 1);
+                            test.ok(numTriples === 1);                            
+                            test.ok(triples.length === 1);
+                            test.ok(triples[0]['object'].valueOf() === "http://test.com/example2");
+                            test.ok(engine.callbacksBackend.emptyNotificationsMap[Callbacks['eventsFlushed']].length === 0);
+                            test.done();
+                        });
+                    });
+                });
         });
     });
 };

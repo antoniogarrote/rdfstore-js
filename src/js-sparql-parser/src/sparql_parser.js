@@ -25546,24 +25546,24 @@ SparqlParser.parser = (function(){
         }
         if (result1 !== null) {
           var result2 = [];
-          if (input.substr(pos).match(/^[^#xA#xD]/) !== null) {
+          if (input.substr(pos).match(/^[^\n\r]/) !== null) {
             var result3 = input.charAt(pos);
             pos++;
           } else {
             var result3 = null;
             if (reportMatchFailures) {
-              matchFailed("[^#xA#xD]");
+              matchFailed("[^\\n\\r]");
             }
           }
           while (result3 !== null) {
             result2.push(result3);
-            if (input.substr(pos).match(/^[^#xA#xD]/) !== null) {
+            if (input.substr(pos).match(/^[^\n\r]/) !== null) {
               var result3 = input.charAt(pos);
               pos++;
             } else {
               var result3 = null;
               if (reportMatchFailures) {
-                matchFailed("[^#xA#xD]");
+                matchFailed("[^\\n\\r]");
               }
             }
           }
