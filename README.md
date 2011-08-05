@@ -207,6 +207,11 @@ The following interface is a convenience API to work with Javascript code instea
     });
 
 
+    /* Exporting a graph to N3 (this function is not part of W3C's API)*/
+    store.graph(graphUri, function(graph){
+      var serialized = graph.toNT();
+    });
+
      
     /* retrieving a single node in the graph as a JS Interface API graph object */
 

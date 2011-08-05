@@ -1,4 +1,5 @@
 var Store = require("./../src/store").Store;
+var TurtleParser = require("./../../js-communication/src/turtle_parser").TurtleParser;
 
 exports.testIntegration1 = function(test){
     new Store.Store(function(store){
@@ -641,3 +642,25 @@ exports.testRegisteredGraph = function(test) {
     });
 };
 
+exports.testExport1 = function(test) {
+    Store.create(function(store) {
+        store.load('remote', 'http://dbpedia.org/resource/Tim_Berners-Lee', 'http://test.com/graph-to-export', function(success, result) {
+
+            var graph = store.graph('http://test.com/graph-to-export', function(success, graph){
+                var n3 = "";
+
+                graph.forEach(function(triple) {
+                    n3 = n3 + triple.toString();
+                });
+
+                var result = TurtleParser.parser.parse(n3);
+
+                test.ok(result.length === 162);
+                test.ok(graph.toNT() == n3);
+
+                test.done();
+
+            });
+        });
+    });
+};

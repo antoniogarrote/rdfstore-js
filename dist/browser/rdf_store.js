@@ -35830,7 +35830,7 @@ RDFJSInterface.NamedNode.prototype.toString = function(){
 };
 
 RDFJSInterface.NamedNode.prototype.toNT = function() {
-    return this.toString();
+    return "<"+this.toString()+">";
 };
 
 RDFJSInterface.NamedNode.prototype.valueOf = function() {
@@ -35851,7 +35851,7 @@ RDFJSInterface.Triple.prototype.equals = function(otherTriple) {
 };
 
 RDFJSInterface.Triple.prototype.toString = function() {
-    return this.subject.toNT()+", "+this.predicate.toNT()+", "+this.object.toNT()+"\r\n";
+    return this.subject.toNT()+" "+this.predicate.toNT()+" "+this.object.toNT()+" . \r\n";
 };
 
 // Graph interface
@@ -36016,6 +36016,15 @@ RDFJSInterface.Graph.prototype.removeMatches = function(subject, predicate, obje
     return this;
 };
 
+RDFJSInterface.Graph.prototype.toNT = function() {
+    var n3 = "";
+
+    this.forEach(function(triple) {
+        n3 = n3 + triple.toString();
+    });
+
+    return n3;
+};
 
 // Builders for the query engine
 
