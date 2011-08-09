@@ -283,3 +283,38 @@ exports.simpleCallbackQuery2 = function(test){
         });
     })
 };
+
+
+exports.simpleCallbackQuery3 = function(test){
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+
+            var callbacksBackend = engine.callbacksBackend;
+
+            var callbacksCounter = 0;
+
+            callbacksBackend.observeQuery("select ?subject where { ?subject <http://test.com/named> ?o }",
+                                          function(bindings) {
+                                              if(callbacksCounter == 0) {
+                                                  callbacksCounter++;
+                                                  test.ok(bindings.length === 0);
+                                              } else if(callbacksCounter === 1) {
+                                                  callbacksCounter++;
+                                                  test.ok(bindings.length === 1);
+                                                  setTimeout(function(){
+                                                      test.done();
+                                                  }, 2000);
+                                              } else {
+                                                  test.ok(false);
+                                                  test.done();
+                                              }
+                                          });
+  
+            engine.execute('INSERT DATA {  <http://test.com/subject> <http://test.com/named> "value" }', function(){
+                            // callbacks should have been fired
+            });
+        });
+    })
+};
