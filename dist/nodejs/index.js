@@ -40222,7 +40222,7 @@ Callbacks.CallbacksBackend.prototype.observeNode = function() {
                 if(event === 'eventsFlushed' && mustFlush ) {
                     mustFlush = false;
                     callback(node);
-                } else {
+                } else if(event !== 'eventsFlushed') {
                     mustFlush = true;
                     for(var i = 0; i<triples.length; i++) {
                         var triple = triples[i];
@@ -40587,9 +40587,9 @@ Store.Store.prototype.startObservingQuery = function() {
     var callback = arguments[1];
     var endCallback = arguments[2];
     if(endCallback!=null) {
-        this.engine.callbacksBackend.observeQuery(uri, callback, endCallback);
+        this.engine.callbacksBackend.observeQuery(query, callback, endCallback);
     } else {
-        this.engine.callbacksBackend.observeQuery(uri, callback, function(){});
+        this.engine.callbacksBackend.observeQuery(query, callback, function(){});
     }
 };
 

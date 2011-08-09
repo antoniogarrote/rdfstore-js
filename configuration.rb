@@ -59,7 +59,7 @@ BUILD_CONFIGURATION = {
       :engines => {:node => "0.4"},
       :repository =>  {:type => "git", :url => "https://github.com/antoniogarrote/rdfstore-js.git"},
       :dependencies => {
-        "binary" => ">=0.2.1",
+        "binary" => ">=0.2.2",
         "put"    => ">=0.0.5"
       }
     }
