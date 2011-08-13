@@ -5,37 +5,31 @@ var QueryFilters = exports.QueryFilters;
 // imports
 var Utils = require("./../../js-trees/src/utils").Utils;
 
-QueryFilters.checkFilters = function(pattern, bindings, nullifyErrors, queryEnv, queryEngine, callback) {
+QueryFilters.checkFilters = function(pattern, bindings, nullifyErrors, queryEnv, queryEngine) {
 
     var filters = pattern.filter;
     var nullified = [];
     if(filters==null || pattern.length != null) {
-        return callback(true, bindings);
+        return bindings;
     }
 
-    Utils.repeat(0, filters.length, function(k,env) {                
-        var filter = filters[env._i];
-        var floop = arguments.callee;
+    for(var i=0; i<filters.length; i++) {
+        var filter = filters[i];
 
-        QueryFilters.run(filter.value, bindings, nullifyErrors, queryEnv, queryEngine, function(success, filteredBindings){
-            if(success) {
-                var acum = [];
-                for(var i=0; i<filteredBindings.length; i++) {
-                    if(filteredBindings[i]["__nullify__"]!=null) {
-                        nullified.push(filteredBindings[i]);
-                    } else {
-                        acum.push(filteredBindings[i]);
-                    }
-                }
-                bindings = acum;
-                k(floop, env);
+        var filteredBindings = QueryFilters.run(filter.value, bindings, nullifyErrors, queryEnv, queryEngine);
+        var acum = [];
+        for(var j=0; j<filteredBindings.length; j++) {
+            if(filteredBindings[j]["__nullify__"]!=null) {
+                nullified.push(filteredBindings[j]);
             } else {
-                callback(false, filteredBindings);
+                acum.push(filteredBindings[j]);
             }
-        })
-    }, function(env){
-        callback(true,bindings.concat(nullified));
-    });
+        }
+
+        bindings = acum;
+    }
+
+    return bindings.concat(nullified);
 };
 
 QueryFilters.boundVars = function(filterExpr) {
@@ -94,58 +88,48 @@ QueryFilters.boundVars = function(filterExpr) {
     }
 };
 
-QueryFilters.run = function(filterExpr, bindings, nullifyFilters, env, queryEngine, callback) {    
-    queryEngine.copyDenormalizedBindings(bindings, env.outCache, function(success, denormBindings){
-        if(success === true) {
-            var filteredBindings = [];
-            for(var i=0; i<bindings.length; i++) {
-                var thisDenormBindings = denormBindings[i];
-                var ebv = QueryFilters.runFilter(filterExpr, thisDenormBindings, queryEngine, env);
-                // ebv can be directly a RDFTerm (e.g. atomic expression in filter)
-                // this additional call to ebv will return -> true/false/error
-                var ebv = QueryFilters.ebv(ebv);
-                //console.log("EBV:")
-                //console.log(ebv)
-                //console.log("FOR:")
-                //console.log(thisDenormBindings)
-                if(QueryFilters.isEbvError(ebv)) {
-                    // error
-                    if(nullifyFilters) {
-                        var thisBindings = {"__nullify__": true, "bindings": bindings[i]};
-                        filteredBindings.push(thisBindings);
-                    }
-                } else if(ebv === true) {
-                    // true
-                    filteredBindings.push(bindings[i]);
-                } else {
-                    // false
-                    if(nullifyFilters) {
-                        var thisBindings = {"__nullify__": true, "bindings": bindings[i]};
-                        filteredBindings.push(thisBindings);
-                    }
-                }
+QueryFilters.run = function(filterExpr, bindings, nullifyFilters, env, queryEngine) {    
+    var denormBindings = queryEngine.copyDenormalizedBindings(bindings, env.outCache);
+    var filteredBindings = [];
+    for(var i=0; i<bindings.length; i++) {
+        var thisDenormBindings = denormBindings[i];
+        var ebv = QueryFilters.runFilter(filterExpr, thisDenormBindings, queryEngine, env);
+        // ebv can be directly a RDFTerm (e.g. atomic expression in filter)
+        // this additional call to ebv will return -> true/false/error
+        var ebv = QueryFilters.ebv(ebv);
+        //console.log("EBV:")
+        //console.log(ebv)
+        //console.log("FOR:")
+        //console.log(thisDenormBindings)
+        if(QueryFilters.isEbvError(ebv)) {
+            // error
+            if(nullifyFilters) {
+                var thisBindings = {"__nullify__": true, "bindings": bindings[i]};
+                filteredBindings.push(thisBindings);
             }
-            callback(true, filteredBindings);
+        } else if(ebv === true) {
+            // true
+            filteredBindings.push(bindings[i]);
         } else {
-            callback(success, denormBindings);
+            // false
+            if(nullifyFilters) {
+                var thisBindings = {"__nullify__": true, "bindings": bindings[i]};
+                filteredBindings.push(thisBindings);
+            }
         }
-    });
+    }
+    return filteredBindings;
 };
 
 QueryFilters.collect = function(filterExpr, bindings, env, queryEngine, callback) {
-    queryEngine.copyDenormalizedBindings(bindings, env.outCache, function(success, denormBindings){
-        if(success === true) {
-            var filteredBindings = [];
-            for(var i=0; i<bindings.length; i++) {
-                var thisDenormBindings = denormBindings[i];
-                var ebv = QueryFilters.runFilter(filterExpr, thisDenormBindings, queryEngine, env);
-                filteredBindings.push({binding:bindings[i], value:ebv});
-            }
-            callback(true, filteredBindings);
-        } else {
-            callback(success, denormBindings);
-        }
-    });
+    var denormBindings = queryEngine.copyDenormalizedBindings(bindings, env.outCache);
+    var filteredBindings = [];
+    for(var i=0; i<denormBindings.length; i++) {
+        var thisDenormBindings = denormBindings[i];
+        var ebv = QueryFilters.runFilter(filterExpr, thisDenormBindings, queryEngine, env);
+        filteredBindings.push({binding:bindings[i], value:ebv});
+    }
+    return(filteredBindings);
 };
 
 QueryFilters.runDistinct = function(projectedBindings, projectionVariables) {
@@ -1363,8 +1347,12 @@ QueryFilters.runUnaryExpression = function(unaryexpression, expression, bindings
         }
     } else if(unaryexpression === '-') {
         if(QueryFilters.isNumeric(op)) {
-            op.value = -op.value;
-            return op;
+            var clone = {};
+            for(var p in op) {
+                clone[p] = op[p];
+            }
+            clone.value = -clone.value;
+            return clone;
         } else {
             return QueryFilters.ebvError();
         }

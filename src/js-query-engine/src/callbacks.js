@@ -4,7 +4,6 @@ var Callbacks = exports.Callbacks;
 
 //imports
 var Utils = require("./../../js-trees/src/utils").Utils;
-var QuadBackend = require("./../../js-rdf-persistence/src/quad_backend").QuadBackend;
 var QuadIndexCommon = require("./../../js-rdf-persistence/src/quad_index_common").QuadIndexCommon;
 var RDFJSInterface = require("./rdf_js_interface").RDFJSInterface;
 var AbstractQueryTree = require("./../../js-sparql-parser/src/abstract_query_tree").AbstractQueryTree;
@@ -181,44 +180,38 @@ Callbacks.CallbacksBackend.prototype.subscribe = function(s,p,o,g,callback, done
     var quad = this._tokenizeComponents(s,p,o,g);
     var queryEnv = {blanks:{}, outCache:{}};
     var that = this;
-    this.engine.normalizeQuad(quad, queryEnv, true, function(success, normalized){
-        if(success == true) {
-            var pattern =  new QuadIndexCommon.Pattern(normalized);        
-            var indexKey = that._indexForPattern(pattern);
-            var indexOrder = that.componentOrders[indexKey];
-            var index = that.indexMap[indexKey];
-            for(var i=0; i<indexOrder.length; i++) {
-                var component = indexOrder[i];
-                var quadValue = normalized[component];
-                if(quadValue === '_') {
-                    if(index['_'] == null) {
-                        index['_'] = [];
-                    }
-                    that.callbackCounter++;
-                    index['_'].push(that.callbackCounter);
-                    that.callbacksMap[that.callbackCounter] = callback;
-                    that.callbacksInverseMap[callback] = that.callbackCounter;
-                    break;
-                } else {
-                    if(i===indexOrder.length-1) {
-                        index[quadValue] = index[quadValue] || {'_':[]};
-                        that.callbackCounter++;
-                        index[quadValue]['_'].push(that.callbackCounter);
-                        that.callbacksMap[that.callbackCounter] = callback;
-                        that.callbacksInverseMap[callback] = that.callbackCounter;
-                    } else {
-                        index[quadValue] = index[quadValue] || {};
-                        index = index[quadValue];
-                    }
-                }
+    var normalized = this.engine.normalizeQuad(quad, queryEnv, true);
+    var pattern =  new QuadIndexCommon.Pattern(normalized);        
+    var indexKey = that._indexForPattern(pattern);
+    var indexOrder = that.componentOrders[indexKey];
+    var index = that.indexMap[indexKey];
+    for(var i=0; i<indexOrder.length; i++) {
+        var component = indexOrder[i];
+        var quadValue = normalized[component];
+        if(quadValue === '_') {
+            if(index['_'] == null) {
+                index['_'] = [];
             }
-            if(doneCallback != null)
-                doneCallback(true);
-
+            that.callbackCounter++;
+            index['_'].push(that.callbackCounter);
+            that.callbacksMap[that.callbackCounter] = callback;
+            that.callbacksInverseMap[callback] = that.callbackCounter;
+            break;
         } else {
-            doneCallback(false);
+            if(i===indexOrder.length-1) {
+                index[quadValue] = index[quadValue] || {'_':[]};
+                that.callbackCounter++;
+                index[quadValue]['_'].push(that.callbackCounter);
+                that.callbacksMap[that.callbackCounter] = callback;
+                that.callbacksInverseMap[callback] = that.callbackCounter;
+            } else {
+                index[quadValue] = index[quadValue] || {};
+                index = index[quadValue];
+            }
         }
-    });
+    }
+    if(doneCallback != null)
+        doneCallback(true);
 };
 
 Callbacks.CallbacksBackend.prototype.unsubscribe = function(callback) {
@@ -325,10 +318,14 @@ Callbacks.CallbacksBackend.prototype.observeNode = function() {
             };
             that.observersMap[callback] = observer;
             that.subscribeEmpty(Callbacks['eventsFlushed'], observer);
-            that.subscribe(uri,null,null,null,observer,doneCallback);
-            callback(node);
+            that.subscribe(uri,null,null,null,observer,function(){
+                callback(node);
+                if(doneCallback)
+                    doneCallback(true)
+            });
         } else {
-            doneCallback(false);
+            if(doneCallback)
+                doneCallback(false);
         }
     });
 };
@@ -361,55 +358,50 @@ Callbacks.CallbacksBackend.prototype.observeQuery = function(query, callback, en
     this.queriesList.push(counter);
     this.queriesCallbacksMap[counter] = callback;
 
-    Utils.repeat(0, patterns.length,
-                 function(k,env) {
-                     floop = arguments.callee;
-                     quad = patterns[env._i];
-                     if(quad.graph == null) {
-                         quad.graph = that.engine.lexicon.defaultGraphUriTerm;
-                     }
+    for(var i=0; i<patterns.length; i++) {
+        quad = patterns[i];
+        if(quad.graph == null) {
+            quad.graph = that.engine.lexicon.defaultGraphUriTerm;
+        }
 
-                     that.engine.normalizeQuad(quad, queryEnv, true, function(success, normalized){
-                         pattern =  new QuadIndexCommon.Pattern(normalized);        
-                         indexKey = that._indexForPattern(pattern);
-                         indexOrder = that.componentOrders[indexKey];
-                         index = that.queriesIndexMap[indexKey];
+        var normalized = that.engine.normalizeQuad(quad, queryEnv, true);
+        pattern =  new QuadIndexCommon.Pattern(normalized);        
+        indexKey = that._indexForPattern(pattern);
+        indexOrder = that.componentOrders[indexKey];
+        index = that.queriesIndexMap[indexKey];
 
-                         for(var i=0; i<indexOrder.length; i++) {
-                             var component = indexOrder[i];
-                             var quadValue = normalized[component];
-                             if(typeof(quadValue) === 'string') {
-                                 if(index['_'] == null) {
-                                     index['_'] = [];
-                                 }
-                                 index['_'].push(counter);
-                                 break;
-                             } else {
-                                 if(i===indexOrder.length-1) {
-                                     index[quadValue] = index[quadValue] || {'_':[]};
-                                     index[quadValue]['_'].push(counter);
-                                 } else {
-                                     index[quadValue] = index[quadValue] || {};
-                                     index = index[quadValue];
-                                 }
-                             }
-                         }
+        for(var i=0; i<indexOrder.length; i++) {
+            var component = indexOrder[i];
+            var quadValue = normalized[component];
+            if(typeof(quadValue) === 'string') {
+                if(index['_'] == null) {
+                    index['_'] = [];
+                }
+                index['_'].push(counter);
+                break;
+            } else {
+                if(i===indexOrder.length-1) {
+                    index[quadValue] = index[quadValue] || {'_':[]};
+                    index[quadValue]['_'].push(counter);
+                } else {
+                    index[quadValue] = index[quadValue] || {};
+                    index = index[quadValue];
+                }
+            }
+        }
 
-                         k(floop,env);
-                     });
-                 },
-                 function(env) {
-                     that.engine.execute(query,
-                                         function(success, results){
-                                             if(success){
-                                                 callback(results);
-                                             } else {
-                                                 console.log("ERROR in query callback "+results);
-                                             }                                             
-                                         });
-                     if(endCallback != null)
-                         endCallback();
-                 });
+    }
+
+    this.engine.execute(query, function(success, results){
+        if(success){
+            callback(results);
+        } else {
+            console.log("ERROR in query callback "+results);
+        }                                             
+    });
+
+    if(endCallback != null)
+        endCallback();
 };
 
 Callbacks.CallbacksBackend.prototype.stopObservingQuery = function(query) {

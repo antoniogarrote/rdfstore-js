@@ -415,23 +415,11 @@ Utils.hashTerm = function(term) {
 
 // end of ./src/js-trees/src/utils.js 
 // exports
-var InMemoryAsyncBTree = {};
+var InMemoryBTree = {};
 
 var left = -1;
 var right = 1;
 
-
-
-InMemoryAsyncBTree._repeat = function(c,max,floop,fend,env) {
-    if(c<max) {
-        env._i = c;
-        floop(function(floop,env){
-            InMemoryAsyncBTree._repeat(c+1, max, floop,fend,env);
-        },env);
-    } else {
-        fend(env);
-    }
-}
 
 /*
  * @doc
@@ -446,31 +434,26 @@ InMemoryAsyncBTree._repeat = function(c,max,floop,fend,env) {
  *
  * An implementation of an in memory B-Tree.
  */
-InMemoryAsyncBTree.Tree = function(order,f) {
+
+InMemoryBTree.Tree = function(order) {
     if(arguments.length != 0) {
         this.order = order;
         this.root = this._allocateNode();
         this.root.isLeaf = true;
         this.root.level = 0;
-        var that = this;
-        this._diskWrite(this.root, function(root){
-            that.root = root;
-            that._updateRootNode(that.root, function(n){
-                that.comparator = function(a,b) {
-                    if(a < b) {
-                        return -1;
-                    } else if(a > b){
-                        return 1;
-                    } else {
-                        return 0;
-                    }
-                };
-                that.merger = null;
-                // we notify we are ready
-                if(f!=null) {
-                    f(that);
-                }
-            })});
+        this._diskWrite(this.root);
+        this._updateRootNode(this.root);
+
+        this.comparator = function(a,b) {
+            if(a < b) {
+                return -1;
+            } else if(a > b){
+                return 1;
+            } else {
+                return 0;
+            }
+        };
+        this.merger = null;
     }
 };
 
@@ -482,19 +465,18 @@ InMemoryAsyncBTree.Tree = function(order,f) {
  *
  * @returns the new alloacted node
  */
-InMemoryAsyncBTree.Tree.prototype._allocateNode = function() {
-    return new InMemoryAsyncBTree.Node();
-};
+InMemoryBTree.Tree.prototype._allocateNode = function() {
+    return new InMemoryBTree.Node();
+}
 
 /**
  * _diskWrite
  *
  * Persists the node to secondary memory.
  */
-InMemoryAsyncBTree.Tree.prototype._diskWrite= function(node, f) {
+InMemoryBTree.Tree.prototype._diskWrite= function(node) {
     // dummy implementation;
     // no-op
-    f(node);
 };
 
 
@@ -504,28 +486,27 @@ InMemoryAsyncBTree.Tree.prototype._diskWrite= function(node, f) {
  * Retrieves a node from secondary memory using the provided
  * pointer
  */
-InMemoryAsyncBTree.Tree.prototype._diskRead = function(pointer, f) {
+InMemoryBTree.Tree.prototype._diskRead = function(pointer) {
     // dummy implementation;
     // no-op
-    f(pointer);
+    return pointer;
 };
 
-InMemoryAsyncBTree.Tree.prototype._diskDelete= function(node,f) {
+
+InMemoryBTree.Tree.prototype._diskDelete= function(node) {
     // dummy implmentation
     // no-op
-    f();
 };
-
 
 /**
  * _updateRootNode
  *
  * Updates the pointer to the root node stored in disk.
  */
-InMemoryAsyncBTree.Tree.prototype._updateRootNode = function(node,f) {
+InMemoryBTree.Tree.prototype._updateRootNode = function(node) {
     // dummy implementation;
     // no-op
-    f(node)
+    return node;
 };
 
 
@@ -535,33 +516,33 @@ InMemoryAsyncBTree.Tree.prototype._updateRootNode = function(node,f) {
  * Retrieves the node matching the given value.
  * If no node is found, null is returned.
  */
-InMemoryAsyncBTree.Tree.prototype.search = function(key,f, checkExists) {
+InMemoryBTree.Tree.prototype.search = function(key, checkExists) {
+    var searching = true;
     var node = this.root;
-    var tree = this;
-    tree.__search(tree,key,node,f, checkExists);
-};
-InMemoryAsyncBTree.Tree.prototype.__search = function(tree,key,node, f, checkExists) {
-    var idx = 0;
-    while(idx < node.numberActives && tree.comparator(key, node.keys[idx].key) === 1) {
-        idx++;
+
+    while(searching) {
+        var idx = 0;
+        while(idx < node.numberActives && this.comparator(key, node.keys[idx].key) === 1) {
+            idx++;
+        }
+
+        if(idx < node.numberActives && this.comparator(node.keys[idx].key,key) === 0) {
+            if(checkExists != null && checkExists == true) {
+                return true;
+            } else {
+                return node.keys[idx].data;
+            }
+        } else {
+            if(node.isLeaf === true) {
+                searching = false;
+            } else {
+                node = this._diskRead(node.children[idx]);
+            }
+        }
     }
 
-    if(idx < node.numberActives && tree.comparator(node.keys[idx].key,key) === 0) {
-        if(checkExists!=null && checkExists == true) {
-            f(true);        
-        } else {
-            f(node.keys[idx].data);
-        }
-    } else {
-        if(node.isLeaf === true) {
-            f(null)
-        } else {
-            tree._diskRead(node.children[idx],function(node){
-                tree.__search(tree,key,node,f, checkExists)
-            });
-        }
-    }
-}
+    return null;
+};
 
 
 /**
@@ -569,64 +550,42 @@ InMemoryAsyncBTree.Tree.prototype.__search = function(tree,key,node, f, checkExi
  * Applies a function to all the nodes key and data in the the
  * tree in key order.
  */
-InMemoryAsyncBTree.Tree.prototype.walk = function(f) {
-    this.__walk(this,this.root,f,function(){});
+InMemoryBTree.Tree.prototype.walk = function(f) {
+    this._walk(f,this.root);
 };
-InMemoryAsyncBTree.Tree.prototype.__walk = function(tree,node,f,callback) {
+
+InMemoryBTree.Tree.prototype._walk = function(f,node) {
     if(node.isLeaf) {
         for(var i=0; i<node.numberActives; i++) {
             f(node.keys[i]);
         }
-        return callback();
     } else {
-
-        var max = node.numberActives;
-        var loopf1 = function(c,env){
-            tree._diskRead(node.children[env._i], function(n){
-                tree.__walk(tree,n,f,function(){
-                    tree._diskRead(node.keys[env._i], function(n){
-                        f(n);
-                        c(loopf1,env);
-                    })
-                });
-            });
-        };
-        InMemoryAsyncBTree._repeat(0,max,loopf1,function(env){
-            tree._diskRead(node.children[max],function(node){
-                tree.__walk(tree,node,f,function(){callback();});
-            });
-        },{});
+        for(var i=0; i<node.numberActives; i++) {
+            this._walk(f,this._diskRead(node.children[i]));
+            f(node.keys[i]);
+        }
+        this._walk(f,this._diskRead(node.children[node.numberActives]));
     }
 };
-
 
 /**
  * walkNodes
  * Applies a function to all the nodes in the the
  * tree in key order.
  */
-InMemoryAsyncBTree.Tree.prototype.walkNodes = function(f) {
-    this.__walkNodes(this,root,f,function(){});
+InMemoryBTree.Tree.prototype.walkNodes = function(f) {
+    this._walkNodes(f,this.root);
 };
-InMemoryAsyncBTree.Tree.prototype.__walkNodes = function(tree,node,f,callback) {
+
+InMemoryBTree.Tree.prototype._walkNodes = function(f,node) {
     if(node.isLeaf) {
         f(node);
-        return callback();
     } else {
         f(node);
-        var max = node.numberActives;
-        var loopf1 = function(c,env){
-            tree._diskRead(node.children[env._i], function(n){
-                tree.__walkNodes(tree,n,f,function(){
-                    c(loopf1,env);
-                });
-            });
-        };
-        InMemoryAsyncBTree._repeat(0,max,loopf1,function(env){
-            tree._diskRead(node.children[max],function(n){
-                tree.__walkNodes(tree,n,f,function(){});
-            });
-        },{});
+        for(var i=0; i<node.numberActives; i++) {
+            this._walkNodes(f,this._diskRead(node.children[i]));
+        }
+        this._walkNodes(f,this._diskRead(node.children[node.numberActives]));
     }
 };
 
@@ -635,7 +594,7 @@ InMemoryAsyncBTree.Tree.prototype.__walkNodes = function(tree,node,f,callback) {
  *
  * Split the child node and adjusts the parent.
  */
-InMemoryAsyncBTree.Tree.prototype._splitChild = function(parent, index, child, callback) {
+InMemoryBTree.Tree.prototype._splitChild = function(parent, index, child) {
     var newChild = this._allocateNode();
     newChild.isLeaf = child.isLeaf;
     newChild.level = child.level;
@@ -676,15 +635,9 @@ InMemoryAsyncBTree.Tree.prototype._splitChild = function(parent, index, child, c
     parent.keys[index] = newParentChild;
     parent.numberActives++;
 
-    var that = this;
-    this._diskWrite(newChild,function(newChild){
-        that._diskWrite(parent,function(parent){
-            parent.children[index+1] = newChild;
-            that._diskWrite(child,function(child){
-                return callback(parent);
-            });
-        });
-    });
+    this._diskWrite(newChild);
+    this._diskWrite(parent);
+    this._diskWrite(child);
 };
 
 /**
@@ -693,8 +646,7 @@ InMemoryAsyncBTree.Tree.prototype._splitChild = function(parent, index, child, c
  * Creates a new node with value key and data and inserts it
  * into the tree.
  */
-InMemoryAsyncBTree.Tree.prototype.insert = function(key,data,callback) {
-
+InMemoryBTree.Tree.prototype.insert = function(key,data) {
     if(this.root.numberActives === (2 * this.order - 1)) {
         var newRoot = this._allocateNode();
         newRoot.isLeaf = false;
@@ -702,16 +654,12 @@ InMemoryAsyncBTree.Tree.prototype.insert = function(key,data,callback) {
         newRoot.numberActives = 0;
         newRoot.children[0] = this.root;
 
-        var that = this;
-        this._splitChild(newRoot, 0, this.root, function(updatedParent){
-            newRoot = updatedParent; // @warning tricky!
-            that.root = newRoot;
-            that._updateRootNode(newRoot, function(newRoot){
-                that._insertNonFull(newRoot, key, data, callback);
-            });
-        });
+        this._splitChild(newRoot, 0, this.root);
+        this.root = newRoot;
+        this._updateRootNode(this.root);
+        this._insertNonFull(newRoot, key, data);
     } else {
-        this._insertNonFull(this.root, key, data,callback);
+        this._insertNonFull(this.root, key, data);
     }
 };
 
@@ -722,48 +670,34 @@ InMemoryAsyncBTree.Tree.prototype.insert = function(key,data,callback) {
  * in the prvided node, or splits it and go deeper
  * in the BTree hierarchy.
  */
-InMemoryAsyncBTree.Tree.prototype._insertNonFull = function(node,key,data,callback) {
-    var idx = node.numberActives -1;
-    this.__insertNonFull(this,node,idx,key,data,callback);
-}
-InMemoryAsyncBTree.Tree.prototype.__insertNonFull = function(tree,node,idx,key,data,callback) {
-    if(!node.isLeaf) {
-        while(idx>=0 && tree.comparator(key,node.keys[idx].key) === -1) {
+InMemoryBTree.Tree.prototype._insertNonFull = function(node,key,data) {
+    var idx = node.numberActives - 1;
+
+    while(!node.isLeaf) {
+        while(idx>=0 && this.comparator(key,node.keys[idx].key) === -1) {
             idx--;
         }
         idx++;
-        var that = tree;
-        tree._diskRead(node.children[idx],function(child) {
-            if(child.numberActives === 2*that.order -1) {
-                that._splitChild(node,idx,child,function(){
-                    if(that.comparator(key, node.keys[idx].key)===1) {
-                        idx++;
-                    }
-                    that._diskRead(node.children[idx], function(node){
-                        idx = node.numberActives -1;
-                        that.__insertNonFull(tree,node,idx,key,data,callback);
-                    });
-                });
-            } else {
-                that._diskRead(node.children[idx], function(node){
-                    idx = node.numberActives -1;
-                    that.__insertNonFull(tree,node,idx,key,data,callback);
-                });
+        var child = this._diskRead(node.children[idx]);
+
+        if(child.numberActives === 2*this.order -1) {
+            this._splitChild(node,idx,child);
+            if(this.comparator(key, node.keys[idx].key)===1) {
+                idx++;
             }
-        });
-
-    } else {
-        while(idx>=0 && tree.comparator(key,node.keys[idx].key) === -1) {
-            node.keys[idx+1] = node.keys[idx];
-            idx--;
         }
-
-        node.keys[idx+1] = {key: key, data:data}
-        node.numberActives++;
-        tree._diskWrite(node, function(node){
-            return callback(node);
-        });
+        node = this._diskRead(node.children[idx]);
+        idx = node.numberActives -1;
     }
+
+    while(idx>=0 && this.comparator(key,node.keys[idx].key) === -1) {
+        node.keys[idx+1] = node.keys[idx];
+        idx--;
+    }
+
+    node.keys[idx+1] = {key: key, data:data}
+    node.numberActives++;
+    this._diskWrite(node);
 };
 
 /**
@@ -775,185 +709,167 @@ InMemoryAsyncBTree.Tree.prototype.__insertNonFull = function(tree,node,idx,key,d
  * @param key the key to be deleted
  * @returns true if the key is deleted false otherwise
  */
-InMemoryAsyncBTree.Tree.prototype['delete'] = function(key,callback) {
+InMemoryBTree.Tree.prototype['delete'] = function(key) {
     var node = this.root;
-    InMemoryAsyncBTree.Tree.prototype.__deleteSearchNode(this,key,node,callback);
-};
-InMemoryAsyncBTree.Tree.prototype.__deleteSearchNode = function(tree,key,node,callback) {
-    i = 0;
+    var parent = null;
+    var searching = true;
+    var idx = null;
+    var lsibling = null;
+    var rsibling = null;
+    var shouldContinue = true;
 
-    if(node.numberActives === 0) {
-        return callback(false);
-    }
+    while(shouldContinue === true) {
+        shouldContinue = false;
 
-    while(i<node.numberActives && tree.comparator(key, node.keys[i].key) === 1) {
-        i++;
-    }
+        while(searching === true) {
+            i = 0;
 
-    idx = i;
-
-    if(i<node.numberActives && tree.comparator(key, node.keys[i].key) === 0) {
-        return tree.__deleteNodeFound(tree,key,node,callback);
-    }
-
-    if(node.isLeaf === true) {
-        return callback(false);
-    }
-
-    parent = node;
-    tree._diskRead(node.children[i], function(node){
-        if(node===null) {
-            return callback(false);
-        }
-
-        var isLsiblingNull = false;
-        var isRsiblingNull = false;
-        var rsiblingIndex = null;
-        var lsiblingIndex = null;
-
-        if(idx === parent.numberActives) {
-            isRsiblingNull = true;
-            lsiblingIndex = parent.children[idx-1]
-            rsiblingIndex = parent.children[idx-1]
-        } else if(idx === 0) {
-            isLsiblingNull = true
-            rsiblingIndex = parent.children[1];
-            lsiblingIndex = parent.children[1];
-        } else {
-            lsiblingIndex = parent.children[idx-1];
-            rsiblingIndex = parent.children[idx+1];
-        }
-
-        tree._diskRead(lsiblingIndex, function(lsibling){
-            tree._diskRead(rsiblingIndex, function(rsibling){
-                if(isRsiblingNull===true) {
-                    rsibling = null;
-                }
-                if(isLsiblingNull===true) {
-                    lsibling = null;
-                }
-
-                if(node.numberActives === (tree.order-1) && parent != null) {
-                    if(rsibling != null && rsibling.numberActives > (tree.order-1)) {
-                        // The current node has (t - 1) keys but the right sibling has > (t - 1) keys
-                        tree._moveKey(parent,i,left, function(parent){
-                            tree.__deleteSearchNode(tree,key,node,callback);
-                        });
-                    } else if(lsibling != null && lsibling.numberActives > (tree.order-1)) {
-                        // The current node has (t - 1) keys but the left sibling has > (t - 1) keys
-                        tree._moveKey(parent,i,right, function(parent){
-                            tree.__deleteSearchNode(tree,key,node,callback);
-                        });
-                    } else if(lsibling != null && lsibling.numberActives === (tree.order-1)) {
-                        // The current node has (t - 1) keys but the left sibling has (t - 1) keys
-                        tree._mergeSiblings(parent,i,left,function(node) {
-                            tree.__deleteSearchNode(tree,key,node,callback);
-                        });
-                    } else if(rsibling != null && rsibling.numberActives === (tree.order-1)){
-                        // The current node has (t - 1) keys but the left sibling has (t - 1) keys
-                        tree._mergeSiblings(parent,i,right,function(node) {
-                            tree.__deleteSearchNode(tree,key,node,callback);
-                        });
-                    }
-                } else {
-                    tree.__deleteSearchNode(tree,key,node,callback);
-                }
-            });
-        })
-    });
-};
-InMemoryAsyncBTree.Tree.prototype.__deleteNodeFound = function(tree,key,node,callback) {
-    //Case 1 : The node containing the key is found and is the leaf node.
-    //Also the leaf node has keys greater than the minimum required.
-    //Simply remove the key
-    if(node.isLeaf && (node.numberActives > (tree.order-1))) {
-        tree._deleteKeyFromNode(node,idx,function(){
-            callback(true);
-        });
-        return true;
-    }
-
-
-    //If the leaf node is the root permit deletion even if the number of keys is
-    //less than (t - 1)
-    if(node.isLeaf && (node === tree.root)) {
-        tree._deleteKeyFromNode(node,idx, function(){
-            callback(true);
-        });
-        return true;
-    }
-
-
-    //Case 2: The node containing the key is found and is an internal node
-    if(node.isLeaf === false) {
-        tree._diskRead(node.children[idx], function(tmpNode) {
-            if(tmpNode.numberActives > (tree.order-1)) {
-                tree._getMaxKeyPos(tree,tmpNode,function(subNodeIdx){
-                    key = subNodeIdx.node.keys[subNodeIdx.index];
-
-                    node.keys[idx] = key;
-
-                    tree._diskWrite(node,function(node){
-                        node = tmpNode;
-                        key = key.key;
-                        tree.__deleteSearchNode(tree,key,node,callback);
-                    });
-                });
-            } else {
-                tree._diskRead(node.children[idx+1],function(tmpNode2){
-                    if (tmpNode2.numberActives >(tree.order-1)) {
-                        tree._getMinKeyPos(tree,tmpNode2, function(subNodeIdx){
-                            key = subNodeIdx.node.keys[subNodeIdx.index];
-
-                            node.keys[idx] = key;
-
-                            tree._diskWrite(node,function(node){
-                                node = tmpNode2;
-                                key = key.key;
-                                tree.__deleteSearchNode(tree,key,node,callback);
-                            });
-                        });
-                    } else if(tmpNode.numberActives === (tree.order-1) && tmpNode2.numberActives === (tree.order-1)) {
-
-                        tree._mergeNodes(tmpNode, node.keys[idx], tmpNode2,function(combNode){
-
-                            node.children[idx] = combNode;
-
-                            idx++;
-                            for(var i=idx; i<node.numberActives; i++) {
-          	                node.children[i] = node.children[i+1];
-          	                node.keys[i-1] = node.keys[i];
-                            }
-                            // freeing unused references
-                            node.children[i] = null;
-                            node.keys[i-1] = null;
-
-                            node.numberActives--;
-                            if (node.numberActives === 0 && tree.root === node) {
-                                tree.root = combNode;
-                            }
-
-                            tree._diskWrite(node, function(node){
-                                tree.__deleteSearchNode(tree,key,combNode,callback);
-                            });
-                        });
-                    }
-                });
+            if(node.numberActives === 0) {
+                return false;
             }
-        });
-    } // end case 2
 
-    // Case 3:
-    // In this case start from the top of the tree and continue
-    // moving to the leaf node making sure that each node that
-    // we encounter on the way has atleast 't' (order of the tree)
-    // keys
-    if(node.isLeaf && (node.numberActives > tree.order - 1)) {
-        tree._deleteKeyFromNode(node,idx, function(node){
-            tree.__deleteSearchNode(tree,key,node,callback);
-        });
+            while(i<node.numberActives && this.comparator(key, node.keys[i].key) === 1) {
+                i++;
+            }
+
+            idx = i;
+
+            if(i<node.numberActives && this.comparator(key, node.keys[i].key) === 0) {
+                searching = false;
+            }
+
+            if(searching === true) {
+
+                if(node.isLeaf === true) {
+                    return false;
+                }
+
+                parent = node;
+                node = this._diskRead(node.children[i]);
+
+                if(node===null) {
+                    return false;
+                }
+
+                if(idx === parent.numberActives) {
+                    lsibling = this._diskRead(parent.children[idx-1]);
+                    rsibling = null;
+                } else if(idx === 0) {
+                    lsibling = null;
+                    rsibling = this._diskRead(parent.children[1]);
+                } else {
+                    lsibling = this._diskRead(parent.children[idx-1]);
+                    rsibling = this._diskRead(parent.children[idx+1]);
+                }
+
+
+                if(node.numberActives === (this.order-1) && parent != null) {
+                    if(rsibling != null && rsibling.numberActives > (this.order-1)) {
+                        // The current node has (t - 1) keys but the right sibling has > (t - 1) keys
+                        this._moveKey(parent,i,left);
+                    } else if(lsibling != null && lsibling.numberActives > (this.order-1)) {
+                        // The current node has (t - 1) keys but the left sibling has > (t - 1) keys
+                        this._moveKey(parent,i,right);
+                    } else if(lsibling != null && lsibling.numberActives === (this.order-1)) {
+                        // The current node has (t - 1) keys but the left sibling has (t - 1) keys
+                        node = this._mergeSiblings(parent,i,left);
+                    } else if(rsibling != null && rsibling.numberActives === (this.order-1)){
+                        // The current node has (t - 1) keys but the left sibling has (t - 1) keys
+                        node = this._mergeSiblings(parent,i,right);
+                    }
+                }
+            }
+        }
+
+
+        //Case 1 : The node containing the key is found and is the leaf node.
+        //Also the leaf node has keys greater than the minimum required.
+        //Simply remove the key
+        if(node.isLeaf && (node.numberActives > (this.order-1))) {
+            this._deleteKeyFromNode(node,idx);
+            return true;
+        }
+
+
+        //If the leaf node is the root permit deletion even if the number of keys is
+        //less than (t - 1)
+        if(node.isLeaf && (node === this.root)) {
+            this._deleteKeyFromNode(node,idx);
+            return true;
+        }
+
+
+        //Case 2: The node containing the key is found and is an internal node
+        if(node.isLeaf === false) {
+            var tmpNode = null;
+            var tmpNode2 = null;
+            if((tmpNode=this._diskRead(node.children[idx])).numberActives > (this.order-1)) {
+                var subNodeIdx = this._getMaxKeyPos(tmpNode);
+                key = subNodeIdx.node.keys[subNodeIdx.index];
+
+                node.keys[idx] = key;
+
+                //this._delete(node.children[idx],key.key);
+                this._diskWrite(node);
+                node = tmpNode;
+                key = key.key;
+                shouldContinue = true;
+                searching = true;
+            } else if ((tmpNode = this._diskRead(node.children[idx+1])).numberActives >(this.order-1)) {
+                var subNodeIdx = this._getMinKeyPos(tmpNode);
+                key = subNodeIdx.node.keys[subNodeIdx.index];
+
+                node.keys[idx] = key;
+
+                //this._delete(node.children[idx+1],key.key);
+                this._diskWrite(node);
+                node = tmpNode;
+                key = key.key;
+                shouldContinue = true;
+                searching = true;
+            } else if((tmpNode = this._diskRead(node.children[idx])).numberActives === (this.order-1) &&
+                      (tmpNode2 = this._diskRead(node.children[idx+1])).numberActives === (this.order-1)) {
+
+                var combNode = this._mergeNodes(tmpNode, node.keys[idx], tmpNode2);
+                node.children[idx] = combNode;
+
+                idx++;
+                for(var i=idx; i<node.numberActives; i++) {
+          	    node.children[i] = node.children[i+1];
+          	    node.keys[i-1] = node.keys[i];
+                }
+                // freeing unused references
+                node.children[i] = null;
+                node.keys[i-1] = null;
+
+                node.numberActives--;
+                if (node.numberActives === 0 && this.root === node) {
+                    this.root = combNode;
+                }
+
+                this._diskWrite(node);
+
+                node = combNode;
+                shouldContinue = true;
+                searching = true;
+            }
+        }
+
+
+        // Case 3:
+	// In this case start from the top of the tree and continue
+	// moving to the leaf node making sure that each node that
+	// we encounter on the way has atleast 't' (order of the tree)
+	// keys
+	if(node.isLeaf && (node.numberActives > this.order - 1) && searching===false) {
+            this._deleteKeyFromNode(node,idx);
+	}
+
+        if(shouldContinue === false) {
+            return true;
+        }
     }
-}
+};
 
 /**
  * _moveKey
@@ -966,59 +882,53 @@ InMemoryAsyncBTree.Tree.prototype.__deleteNodeFound = function(tree,key,node,cal
  * @param i Index of the key in the parent
  * @param position left, or right
  */
-InMemoryAsyncBTree.Tree.prototype._moveKey = function(parent,i,position, callback) {
+InMemoryBTree.Tree.prototype._moveKey = function(parent,i,position) {
 
     if(position===right) {
         i--;
     }
 
-    var that = this
     //var lchild = parent.children[i-1];
-    that._diskRead(parent.children[i], function(lchild) {
-        that._diskRead(parent.children[i+1],function(rchild){
+    var lchild = this._diskRead(parent.children[i]);
+    var rchild = this._diskRead(parent.children[i+1]);
 
-            if(position == left) {
-                lchild.keys[lchild.numberActives] = parent.keys[i];
-                lchild.children[lchild.numberActives+1] = rchild.children[0];
-                rchild.children[0] = null;
-                lchild.numberActives++;
 
-                parent.keys[i] = rchild.keys[0];
+    if(position == left) {
+        lchild.keys[lchild.numberActives] = parent.keys[i];
+        lchild.children[lchild.numberActives+1] = rchild.children[0];
+        rchild.children[0] = null;
+        lchild.numberActives++;
 
-                for(var _i=1; _i<rchild.numberActives; _i++) {
-                    rchild.keys[_i-1] = rchild.keys[_i];
-                    rchild.children[_i-1] = rchild.children[_i];
-                }
-                rchild.children[rchild.numberActives-1] = rchild.children[rchild.numberActives];
-                rchild.numberActives--;
-            } else {
-                rchild.children[rchild.numberActives+1] = rchild.children[rchild.numberActives];
-                for(var _i=rchild.numberActives; _i>0; _i--) {
-                    rchild.children[_i] = rchild.children[_i-1];
-                    rchild.keys[_i] = rchild.keys[_i-1];
-                }
-                rchild.keys[0] = null;
-                rchild.children[0] = null;
+        parent.keys[i] = rchild.keys[0];
 
-                rchild.children[0] = lchild.children[lchild.numberActives];
-                rchild.keys[0] = parent.keys[i];
-                rchild.numberActives++;
+        for(var _i=1; _i<rchild.numberActives; _i++) {
+            rchild.keys[_i-1] = rchild.keys[_i];
+            rchild.children[_i-1] = rchild.children[_i];
+        }
+        rchild.children[rchild.numberActives-1] = rchild.children[rchild.numberActives];
+        rchild.numberActives--;
+    } else {
+        rchild.children[rchild.numberActives+1] = rchild.children[rchild.numberActives];
+        for(var _i=rchild.numberActives; _i>0; _i--) {
+            rchild.children[_i] = rchild.children[_i-1];
+            rchild.keys[_i] = rchild.keys[_i-1];
+        }
+        rchild.keys[0] = null;
+        rchild.children[0] = null;
 
-                lchild.children[lchild.numberActives] = null;
-                parent.keys[i] = lchild.keys[lchild.numberActives-1];
-                lchild.keys[lchild.numberActives-1] = null;
-                lchild.numberActives--;
-            }
+        rchild.children[0] = lchild.children[lchild.numberActives];
+        rchild.keys[0] = parent.keys[i];
+        rchild.numberActives++;
 
-            that._diskWrite(lchild, function(lchild){
-                that._diskWrite(rchild, function(rchild){
-                    that._diskWrite(parent, function(parent){
-                        return callback(parent);
-                    });
-                });
-            });
-        });
-    });
+        lchild.children[lchild.numberActives] = null;
+        parent.keys[i] = lchild.keys[lchild.numberActives-1];
+        lchild.keys[lchild.numberActives-1] = null;
+        lchild.numberActives--;
+    }
+
+    this._diskWrite(lchild);
+    this._diskWrite(rchild);
+    this._diskWrite(parent);
 }
 
 /**
@@ -1030,84 +940,71 @@ InMemoryAsyncBTree.Tree.prototype._moveKey = function(parent,i,position, callbac
  * @param parent the node whose children will be merged
  * @param i Index of the key in the parent pointing to the nodes to merge
  */
-InMemoryAsyncBTree.Tree.prototype._mergeSiblings = function(parent,index,pos,callback) {
+InMemoryBTree.Tree.prototype._mergeSiblings = function(parent,index,pos) {
     var i,j;
     var n1, n2;
-    var tolookn1, tolookn2;
 
     if (index === (parent.numberActives)) {
         index--;
-        tolookn1 = parent.children[parent.numberActives - 1];
-        tolookn2 = parent.children[parent.numberActives]
+	n1 = this._diskRead(parent.children[parent.numberActives - 1]);
+	n2 = this._diskRead(parent.children[parent.numberActives]);
     } else {
-        tolookn1 = parent.children[index];
-        tolookn2 = parent.children[index + 1];
+        n1 = this._diskRead(parent.children[index]);
+	n2 = this._diskRead(parent.children[index + 1]);
     }
 
-    var that = this;
-    that._diskRead(tolookn1, function(n1){
-        that._diskRead(tolookn2, function(n2){
+    //Merge the current node with the left node
+    var newNode = this._allocateNode();
+    newNode.isLeaf = n1.isLeaf;
+    newNode.level = n1.level;
 
-            //Merge the current node with the left node
-            var newNode = that._allocateNode();
-            newNode.isLeaf = n1.isLeaf;
-            newNode.level = n1.level;
+    for(j=0; j<this.order-1; j++) {
+	newNode.keys[j] = n1.keys[j];
+	newNode.children[j] = n1.children[j];
+    }
 
-            for(j=0; j<that.order-1; j++) {
-	        newNode.keys[j] = n1.keys[j];
-	        newNode.children[j] = n1.children[j];
-            }
+    newNode.keys[this.order-1] = parent.keys[index];
+    newNode.children[this.order-1] = n1.children[this.order-1];
 
-            newNode.keys[that.order-1] = parent.keys[index];
-            newNode.children[that.order-1] = n1.children[that.order-1];
+    for(j=0; j<this.order-1; j++) {
+	newNode.keys[j+this.order] = n2.keys[j];
+	newNode.children[j+this.order] = n2.children[j];
+    }
+    newNode.children[2*this.order-1] = n2.children[this.order-1];
 
-            for(j=0; j<that.order-1; j++) {
-	        newNode.keys[j+that.order] = n2.keys[j];
-	        newNode.children[j+that.order] = n2.children[j];
-            }
-            newNode.children[2*that.order-1] = n2.children[that.order-1];
+    parent.children[index] = newNode;
 
-            parent.children[index] = newNode;
+    for(j=index; j<parent.numberActives;j++) {
+	parent.keys[j] = parent.keys[j+1];
+	parent.children[j+1] = parent.children[j+2];
+    }
 
-            for(j=index; j<parent.numberActives;j++) {
-	        parent.keys[j] = parent.keys[j+1];
-	        parent.children[j+1] = parent.children[j+2];
-            }
+    newNode.numberActives = n1.numberActives + n2.numberActives+1;
+    parent.numberActives--;
 
-            newNode.numberActives = n1.numberActives + n2.numberActives+1;
-            parent.numberActives--;
+    for(i=parent.numberActives; i<2*this.order-1; i++) {
+	parent.keys[i] = null;
+    }
 
-            for(i=parent.numberActives; i<2*that.order-1; i++) {
-	        parent.keys[i] = null;
-            }
+    if (parent.numberActives === 0 && this.root === parent) {
+	this.root = newNode;
+	if(newNode.level) {
+	    newNode.isLeaf = false;
+	} else {
+	    newNode.isLeaf = true;
+        }
+    }
 
-            if (parent.numberActives === 0 && that.root === parent) {
-	        that.root = newNode;
-	        if(newNode.level) {
-	            newNode.isLeaf = false;
-	        } else {
-	            newNode.isLeaf = true;
-                }
-            }
+    this._diskWrite(newNode);
+    if(this.root === newNode) {
+        this._updateRootNode(this.root);
+    }
+    this._diskWrite(parent);
+    this._diskDelete(n1);
+    this._diskDelete(n2);
 
-            that._diskWrite(newNode, function(newNode){
-                that._diskWrite(parent,function(parent){
-                    that._diskDelete(n1,function(){
-                        that._diskDelete(n2,function(){
-                            if(that.root === newNode) {
-                                that._updateRootNode(that.root,function(){
-                                    return callback(newNode);
-                                });
-                            } else {
-                                return callback(newNode);
-                            }
-                        });
-                    });
-                });
-            });
-        });
-    });
-};
+    return newNode;
+}
 
 /**
  * _deleteKeyFromNode
@@ -1118,7 +1015,7 @@ InMemoryAsyncBTree.Tree.prototype._mergeSiblings = function(parent,index,pos,cal
  * @param index The index of the key that will be deletd.
  * @return true if the key can be deleted, false otherwise
  */
-InMemoryAsyncBTree.Tree.prototype._deleteKeyFromNode = function(node,index,callback) {
+InMemoryBTree.Tree.prototype._deleteKeyFromNode = function(node,index) {
     var keysMax = (2*this.order)-1;
     if(node.numberActives < keysMax) {
         keysMax = node.numberActives;
@@ -1141,12 +1038,12 @@ InMemoryAsyncBTree.Tree.prototype._deleteKeyFromNode = function(node,index,callb
 
     node.numberActives--;
 
-    this._diskWrite(node,function(node){
-        return callback(node);
-    });
+    this._diskWrite(node);
+
+    return true;
 }
 
-InMemoryAsyncBTree.Tree.prototype._mergeNodes = function(n1, key, n2, callback) {
+InMemoryBTree.Tree.prototype._mergeNodes = function(n1, key, n2) {
     var newNode;
     var i;
 
@@ -1171,15 +1068,11 @@ InMemoryAsyncBTree.Tree.prototype._mergeNodes = function(n1, key, n2, callback) 
     newNode.level = n1.level;
 
 
-    var that = this;
-    this._diskWrite(newNode, function(newNode){
-        that._diskDelete(n1, function(){
-            that._diskDelete(n2, function(){
-                return callback(newNode);
-            });
-        })
-    });
-};
+    this._diskWrite(newNode);
+    // @todo
+    // delte old nodes from disk
+    return newNode;
+}
 
 /**
  * audit
@@ -1187,7 +1080,7 @@ InMemoryAsyncBTree.Tree.prototype._mergeNodes = function(n1, key, n2, callback) 
  * Checks that the tree data structure is
  * valid.
  */
-InMemoryAsyncBTree.Tree.prototype.audit = function(showOutput) {
+InMemoryBTree.Tree.prototype.audit = function(showOutput) {
     var errors = [];
     var alreadySeen = [];
     var that = this;
@@ -1307,24 +1200,26 @@ InMemoryAsyncBTree.Tree.prototype.audit = function(showOutput) {
  *  Used to get the position of the MAX key within the subtree
  *  @return An object containing the key and position of the key
  */
-InMemoryAsyncBTree.Tree.prototype._getMaxKeyPos = function(tree,node,callback) {
+InMemoryBTree.Tree.prototype._getMaxKeyPos = function(node) {
     var node_pos = {};
 
-    if(node === null) {
-	return callback(null);
+    while(true) {
+	if(node === null) {
+	    break;
+	}
+
+	if(node.isLeaf === true) {
+	    node_pos.node  = node;
+	    node_pos.index = node.numberActives - 1;
+	    return node_pos;
+	} else {
+	    node_pos.node  = node;
+	    node_pos.index = node.numberActives - 1;
+	    node = this._diskRead(node.children[node.numberActives]);
+	}
     }
 
-    if(node.isLeaf === true) {
-	node_pos.node  = node;
-	node_pos.index = node.numberActives - 1;
-	return callback(node_pos);
-    } else {
-	node_pos.node  = node;
-	node_pos.index = node.numberActives - 1;
-	tree._diskRead(node.children[node.numberActives],function(node){
-            return tree._getMaxKeyPos(tree,node,callback);
-        });
-    }
+    return node_pos;
 }
 
 /**
@@ -1333,24 +1228,26 @@ InMemoryAsyncBTree.Tree.prototype._getMaxKeyPos = function(tree,node,callback) {
  *  Used to get the position of the MAX key within the subtree
  *  @return An object containing the key and position of the key
  */
-InMemoryAsyncBTree.Tree.prototype._getMinKeyPos = function(tree,node,callback) {
+InMemoryBTree.Tree.prototype._getMinKeyPos = function(node) {
     var node_pos = {};
 
-    if(node === null) {
-        callback(null);
+    while(true) {
+	if(node === null) {
+	    break;
+	}
+
+	if(node.isLeaf === true) {
+	    node_pos.node  = node;
+	    node_pos.index = 0;
+	    return node_pos;
+	} else {
+	    node_pos.node  = node;
+	    node_pos.index = 0;
+	    node = this._diskRead(node.children[0]);
+	}
     }
 
-    if(node.isLeaf === true) {
-	node_pos.node  = node;
-	node_pos.index = 0;
-        return callback(node_pos);
-    } else {
-	node_pos.node  = node;
-	node_pos.index = 0;
-	tree._diskRead(node.children[0], function(node){
-            return tree._getMinKeyPos(tree,node, callback);
-        });
-    }
+    return node_pos;
 }
 
 
@@ -1362,7 +1259,7 @@ InMemoryAsyncBTree.Tree.prototype._getMinKeyPos = function(tree,node,callback) {
  * A Tree node augmented with BTree
  * node structures
  */
-InMemoryAsyncBTree.Node = function() {
+InMemoryBTree.Node = function() {
     this.numberActives = 0;
     this.isLeaf = null;
     this.keys = [];
@@ -1370,7 +1267,7 @@ InMemoryAsyncBTree.Node = function() {
     this.level = 0;
 };
 
-// end of ./src/js-trees/src/in_memory_async_b_tree.js 
+// end of ./src/js-trees/src/in_memory_b_tree.js 
 // exports
 var QuadIndexCommon = {};
 
@@ -1450,127 +1347,117 @@ QuadIndexCommon.Pattern = function(components) {
 var QuadIndex = {};
 
 // imports
-var BaseTree = InMemoryAsyncBTree;
+var BaseTree = InMemoryBTree;
 
 QuadIndex.Tree = function(params,callback) {
     if(arguments != 0) {
         this.componentOrder = params.componentOrder;
 
         // @todo change this if using the file backed implementation
-        BaseTree.Tree.call(this, params.order, function(tree){
-            tree.comparator = function(a,b) {
-                for(var i=0; i< tree.componentOrder.length; i++) {
-                    var component = tree.componentOrder[i];
+        BaseTree.Tree.call(this, params.order);
+        this.comparator = function(a,b) {
+            for(var i=0; i< this.componentOrder.length; i++) {
+                var component = this.componentOrder[i];
+                var vala = a[component];
+                var valb = b[component];
+                if(vala < valb) {
+                    return -1;
+                } else if(vala > valb) {
+                    return 1;
+                }
+            }
+            return 0;
+        }
 
-                    var vala = a[component];
-                    var valb = b[component];
-
-                    if(vala < valb) {
-                        return -1;
-                    } else if(vala > valb) {
-                        return 1;
+        this.rangeComparator = function(a,b) {
+            for(var i=0; i<this.componentOrder.length; i++) {
+                var component = this.componentOrder[i];
+                if(b[component] == null || a[component]==null) {
+                    return 0;
+                } else {
+                    if(a[component] < b[component] ) {
+                        return -1
+                    } else if(a[component] > b[component]) {
+                        return 1
                     }
                 }
-
-                return 0;
             }
+            
+            return 0;
+        }
 
-            tree.rangeComparator = function(a,b) {
-                for(var i=0; i<tree.componentOrder.length; i++) {
-                    var component = tree.componentOrder[i];
-                    if(b[component] == null || a[component]==null) {
-                        return 0;
-                    } else {
-                        if(a[component] < b[component] ) {
-                            return -1
-                        } else if(a[component] > b[component]) {
-                            return 1
-                        }
-                    }
-                }
-
-                return 0;
-            }
-            callback(tree);
-        });
+        if(callback!=null) {
+            callback(this);
+        }
     }
 }
 
 Utils['extends'](BaseTree.Tree, QuadIndex.Tree);
 
 QuadIndex.Tree.prototype.insert = function(quad, callback) {
-    BaseTree.Tree.prototype.insert.call(this, quad, null, function(result){
-        callback(result);
-    });
+    BaseTree.Tree.prototype.insert.call(this, quad, null);
+    if(callback)
+        callback(true);
+
+    return true
 };
 
 QuadIndex.Tree.prototype.search = function(quad, callback) {
-    BaseTree.Tree.prototype.search.call(this, quad, function(result){
-        callback(result);
-    }, true); // true -> check exists : hack only present in the inMemoryAsyncBTree implementation
+    var result = BaseTree.Tree.prototype.search.call(this, quad, true); // true -> check exists : hack only present in the inMemoryAsyncBTree implementation
+    if(callback)
+        callback(result)
+
+    return result;
 };
 
 QuadIndex.Tree.prototype.range = function(pattern, callback) {
-    this._rangeTraverse(this,this.root, pattern, callback);
+    var result = this._rangeTraverse(this,this.root, pattern);
+    if(callback)
+        callback(result);
+
+    return result;
 }
 
-QuadIndex.Tree.prototype._rangeTraverse = function(tree,node, pattern, callback) {
+QuadIndex.Tree.prototype._rangeTraverse = function(tree,node, pattern) {
     var patternKey  = pattern.key;
     var acum = [];
     var pendingNodes = [node];
+    var node, idxMin, idxMax;
 
-    Utilsmeanwhile(pendingNodes.length > 0, function(k,em){
-        var mainLoopf = arguments.callee;
-        var node = pendingNodes.shift();
-        var idxMin = 0;
+    while(pendingNodes.length > 0) {
+        node = pendingNodes.shift();
+        idxMin = 0;
 
         while(idxMin < node.numberActives && tree.rangeComparator(node.keys[idxMin].key,patternKey) === -1) {
             idxMin++;
         }
         if(node.isLeaf === true) {
-            var idxMax = idxMin;
+            idxMax = idxMin;
 
             while(idxMax < node.numberActives && tree.rangeComparator(node.keys[idxMax].key,patternKey) === 0) {
                 acum.push(node.keys[idxMax].key);
                 idxMax++;
             }
 
-            if(pendingNodes.length === 0) {
-                k(false,mainLoopf,em);
-            } else {
-                k(true,mainLoopf,em);
-            }
         } else {
-            tree._diskRead(node.children[idxMin], function(childNode){
-                pendingNodes.push(childNode);
+            var childNode = tree._diskRead(node.children[idxMin]);
+            pendingNodes.push(childNode);
 
-                Utilsmeanwhile(true,
-                            function(kk,e){
-                                var loopf = arguments.callee;
-                                if(e.idxMax < node.numberActives && tree.rangeComparator(node.keys[e.idxMax].key,patternKey) === 0) {
-                                    acum.push(node.keys[e.idxMax].key);
-                                    e.idxMax++;
-                                    tree._diskRead(node.children[e.idxMax], function(childNode){
-                                        pendingNodes.push(childNode);
-                                        kk(true,loopf,e);
-                                    })
-                                } else {
-                                    kk(false,loopf,e);
-                                }
-                            },
-                            function(e){
-                                if(pendingNodes.length===0) {
-                                    k(false,mainLoopf,em);
-                                } else {
-                                    k(true,mainLoopf,em);
-                                }
-                            },
-                            {idxMax: idxMin});
-            })
+            var idxMax = idxMin;
+            while(true) {
+                if(idxMax < node.numberActives && tree.rangeComparator(node.keys[idxMax].key,patternKey) === 0) {
+                    acum.push(node.keys[idxMax].key);
+                    idxMax++;
+                    childNode = tree._diskRead(node.children[idxMax]);
+                    pendingNodes.push(childNode);
+                } else {
+                    break;
+                }
+            }
         }
-    }, function(e) {
-        callback(acum);
-    })
+    }
+    
+    return acum;
 };
 
 // end of ./src/js-rdf-persistence/src/quad_index.js 
@@ -1604,19 +1491,16 @@ QuadBackend.QuadBackend = function(configuration, callback) {
             GSP: ['graph', 'subject', 'predicate', 'object'],
             OS: ['object', 'subject', 'predicate', 'graph']
         }
-        var that = this;
-        Utils.repeat(0, this.indices.length,function(k,e) {
-            var indexKey = that.indices[e._i];
-            var floop = arguments.callee;
-            new QuadIndex.Tree({order: that.treeOrder,
-                                componentOrder: that.componentOrders[indexKey]},
-                               function(tree){
-                                   that.indexMap[indexKey] = tree;
-                                   k(floop,e);
-                               });
-        }, function(e) {
-            callback(that);
-        });
+
+        for(var i=0; i<this.indices.length; i++) {
+            var indexKey = this.indices[i];
+            var tree = new QuadIndex.Tree({order: this.treeOrder,
+                                           componentOrder: this.componentOrders[indexKey]});
+            this.indexMap[indexKey] = tree;
+        }
+        
+        if(callback)
+            callback(this);        
     }
 }
 
@@ -1642,53 +1526,54 @@ QuadBackend.QuadBackend.prototype._indexForPattern = function(pattern) {
 
 
 QuadBackend.QuadBackend.prototype.index = function(quad, callback) {
-    var that = this;
+    for(var i=0; i<this.indices.length; i++) {
+        var indexKey = this.indices[i];
+        var index= this.indexMap[indexKey];
 
-    Utils.repeat(0, this.indices.length,function(k,e) {
-        var indexKey = that.indices[e._i];
-        var index= that.indexMap[indexKey];
-        var floop = arguments.callee;
+        index.insert(quad);
+    }
 
-        index.insert(quad, function(result){
-            k(floop, e);
-        });
-    }, function(e) {
+    if(callback)
         callback(true);
-    });
+
+    return true;
 }
 
 QuadBackend.QuadBackend.prototype.range = function(pattern, callback)  {
     var indexKey = this._indexForPattern(pattern);
     var index = this.indexMap[indexKey];
-    index.range(pattern, function(quads){
+    var quads = index.range(pattern);
+    if(callback) 
         callback(quads);
-    });
+
+    return quads;
 }
 
 QuadBackend.QuadBackend.prototype.search = function(quad, callback)  {
     var indexKey = this.indices[0];
     var index= this.indexMap[indexKey];
+    var result = index.search(quad);
 
-    index.search(quad, function(result){
+    if(callback)
         callback(result!=null);
-    });
+
+    return (result!=null)
 }
 
 
 QuadBackend.QuadBackend.prototype['delete'] = function(quad, callback) {
-    var that = this;
+    var indexKey, index;
+    for(var i=0; i<this.indices.length; i++) {
+        indexKey = this.indices[i];
+        index= this.indexMap[indexKey];
 
-    Utils.repeat(0, this.indices.length,function(k,e) {
-        var indexKey = that.indices[e._i];
-        var index= that.indexMap[indexKey];
-        var floop = arguments.callee;
+        index['delete'](quad);
+    }
 
-        index['delete'](quad, function(result){
-            k(floop, e);
-        });
-    }, function(e) {
-        callback(that);
-    });
+    if(callback)
+        callback(true);
+
+    return true;
 }
 
 // end of ./src/js-rdf-persistence/src/quad_backend.js 
@@ -1725,14 +1610,14 @@ Lexicon.Lexicon = function(callback){
     }
 };
 
-Lexicon.Lexicon.prototype.registerGraph = function(oid, callback){
+Lexicon.Lexicon.prototype.registerGraph = function(oid){
     if(oid != this.defaultGraphOid) {
         this.knownGraphs[oid] = true;
     }
-    callback(true);
+    return true
 };
 
-Lexicon.Lexicon.prototype.registeredGraphs = function(shouldReturnUris,callback) {
+Lexicon.Lexicon.prototype.registeredGraphs = function(shouldReturnUris) {
     var acum = [];
 
     for(var g in this.knownGraphs) {
@@ -1742,12 +1627,12 @@ Lexicon.Lexicon.prototype.registeredGraphs = function(shouldReturnUris,callback)
             acum.push(g);
         }
     }
-    callback(true, acum);
+    return acum;
 };
 
-Lexicon.Lexicon.prototype.registerUri = function(uri, callback) {
+Lexicon.Lexicon.prototype.registerUri = function(uri) {
     if(uri === this.defaultGraphUri) {
-        callback(this.defaultGraphOid);
+        return(this.defaultGraphOid);
     } else if(this.uriToOID[uri] == null){
         var oid = this.oidCounter
         var oidStr = 'u'+oid;
@@ -1756,38 +1641,38 @@ Lexicon.Lexicon.prototype.registerUri = function(uri, callback) {
         this.uriToOID[uri] =[oid, 0];
         this.OIDToUri[oidStr] = uri;
 
-        callback(oid);
+        return(oid);
     } else {
         var oidCounter = this.uriToOID[uri];
         var oid = oidCounter[0];
         var counter = oidCounter[1] + 1;
         this.uriToOID[uri] = [oid, counter];
-        callback(oid);
+        return(oid);
     }
 };
 
-Lexicon.Lexicon.prototype.resolveUri = function(uri, callback) {
+Lexicon.Lexicon.prototype.resolveUri = function(uri) {
     if(uri === this.defaultGraphUri) {
-        callback(this.defaultGraphOid);
+        return(this.defaultGraphOid);
     } else {
         var oidCounter = this.uriToOID[uri];
         if(oidCounter != null) {
-            callback(oidCounter[0]);
+            return(oidCounter[0]);
         } else {
-            callback(-1);
+            return(-1);
         }
     }
 };
 
-Lexicon.Lexicon.prototype.registerBlank = function(label, callback) {
+Lexicon.Lexicon.prototype.registerBlank = function(label) {
     var oid = this.oidCounter;
     this.oidCounter++;
     var oidStr = ""+oid;
     this.OIDToBlank[oidStr] = true;
-    callback(oidStr);
+    return(oidStr);
 };
 
-Lexicon.Lexicon.prototype.resolveBlank = function(label, callback) {
+Lexicon.Lexicon.prototype.resolveBlank = function(label) {
 //    @todo
 //    this is failing with unicode tests... e.g. kanji2
 
@@ -1796,10 +1681,10 @@ Lexicon.Lexicon.prototype.resolveBlank = function(label, callback) {
 
     var oid = this.oidCounter;
     this.oidCounter++
-    callback(""+oid);
+    return(""+oid);
 };
 
-Lexicon.Lexicon.prototype.registerLiteral = function(literal, callback) {
+Lexicon.Lexicon.prototype.registerLiteral = function(literal) {
     if(this.literalToOID[literal] == null){
         var oid = this.oidCounter;
         var oidStr =  'l'+ oid;
@@ -1808,22 +1693,22 @@ Lexicon.Lexicon.prototype.registerLiteral = function(literal, callback) {
         this.literalToOID[literal] = [oid, 0];
         this.OIDToLiteral[oidStr] = literal;
 
-        callback(oid);
+        return(oid);
     } else {
         var oidCounter = this.literalToOID[literal];
         var oid = oidCounter[0];
         var counter = oidCounter[1] + 1;
         this.literalToOID[literal] = [oid, counter];
-        callback(oid);
+        return(oid);
     }
 };
 
-Lexicon.Lexicon.prototype.resolveLiteral = function(literal, callback) {
+Lexicon.Lexicon.prototype.resolveLiteral = function(literal) {
     var oidCounter = this.literalToOID[literal];
     if(oidCounter != null ) {
-        callback(oidCounter[0]); 
+        return(oidCounter[0]); 
     } else {
-        callback(-1); 
+        return(-1); 
     }
 }
 
@@ -1851,10 +1736,10 @@ Lexicon.Lexicon.prototype.parseUri = function(uriString) {
     return {token: "uri", value:uriString};
 };
 
-Lexicon.Lexicon.prototype.retrieve = function(oid,callback) {
+Lexicon.Lexicon.prototype.retrieve = function(oid) {
     try {
         if(oid === this.defaultGraphOid) {
-            callback({ token: "uri", 
+            return({ token: "uri", 
                        value:this.defaultGraphUri,
                        prefix: null,
                        suffix: null,
@@ -1862,15 +1747,15 @@ Lexicon.Lexicon.prototype.retrieve = function(oid,callback) {
         } else {
           var maybeUri = this.OIDToUri['u'+oid];
           if(maybeUri) {
-              callback(this.parseUri(maybeUri));
+              return(this.parseUri(maybeUri));
           } else {
               var maybeLiteral = this.OIDToLiteral['l'+oid];
               if(maybeLiteral) {
-                  callback(this.parseLiteral(maybeLiteral));
+                  return(this.parseLiteral(maybeLiteral));
               } else {
                   var maybeBlank = this.OIDToBlank[""+oid];
                   if(maybeBlank) {
-                      callback({token:"blank", value:"_:"+oid});
+                      return({token:"blank", value:"_:"+oid});
                   } else {
                       throw("Null value for OID");
                   }
@@ -1892,7 +1777,7 @@ Lexicon.Lexicon.prototype.retrieve = function(oid,callback) {
 };
 
 
-Lexicon.Lexicon.prototype.unregister = function(quad, key,callback) {
+Lexicon.Lexicon.prototype.unregister = function(quad, key) {
     try {
         this.unregisterTerm(quad.subject.token, key.subject);
         this.unregisterTerm(quad.predicate.token, key.predicate);
@@ -1900,11 +1785,11 @@ Lexicon.Lexicon.prototype.unregister = function(quad, key,callback) {
         if(quad.graph!=null) {
             this.unregisterTerm(quad.graph.token, key.graph); 
         }
-        callback(true);
+        return(true);
     } catch(e) {
         console.log("Error unregistering quad");
         console.log(e.message);
-        callback(false);
+        return(false);
     }
 }
 
@@ -35569,8 +35454,10 @@ RDFJSInterface.UrisMap.prototype.shrink = function(iri) {
     for(var ns in this) {
         var prefix = this[ns];
         if(iri.indexOf(prefix) === 0) {
-            var suffix = iri.split(prefix)[1];
-            return ns + ":" + suffix;
+            if(prefix !== '') {
+                var suffix = iri.split(prefix)[1];
+                return ns + ":" + suffix;
+            }
         }
     }
 
@@ -36083,37 +35970,31 @@ var QueryFilters = {};
 
 // imports
 
-QueryFilters.checkFilters = function(pattern, bindings, nullifyErrors, queryEnv, queryEngine, callback) {
+QueryFilters.checkFilters = function(pattern, bindings, nullifyErrors, queryEnv, queryEngine) {
 
     var filters = pattern.filter;
     var nullified = [];
     if(filters==null || pattern.length != null) {
-        return callback(true, bindings);
+        return bindings;
     }
 
-    Utils.repeat(0, filters.length, function(k,env) {                
-        var filter = filters[env._i];
-        var floop = arguments.callee;
+    for(var i=0; i<filters.length; i++) {
+        var filter = filters[i];
 
-        QueryFilters.run(filter.value, bindings, nullifyErrors, queryEnv, queryEngine, function(success, filteredBindings){
-            if(success) {
-                var acum = [];
-                for(var i=0; i<filteredBindings.length; i++) {
-                    if(filteredBindings[i]["__nullify__"]!=null) {
-                        nullified.push(filteredBindings[i]);
-                    } else {
-                        acum.push(filteredBindings[i]);
-                    }
-                }
-                bindings = acum;
-                k(floop, env);
+        var filteredBindings = QueryFilters.run(filter.value, bindings, nullifyErrors, queryEnv, queryEngine);
+        var acum = [];
+        for(var j=0; j<filteredBindings.length; j++) {
+            if(filteredBindings[j]["__nullify__"]!=null) {
+                nullified.push(filteredBindings[j]);
             } else {
-                callback(false, filteredBindings);
+                acum.push(filteredBindings[j]);
             }
-        })
-    }, function(env){
-        callback(true,bindings.concat(nullified));
-    });
+        }
+
+        bindings = acum;
+    }
+
+    return bindings.concat(nullified);
 };
 
 QueryFilters.boundVars = function(filterExpr) {
@@ -36172,58 +36053,48 @@ QueryFilters.boundVars = function(filterExpr) {
     }
 };
 
-QueryFilters.run = function(filterExpr, bindings, nullifyFilters, env, queryEngine, callback) {    
-    queryEngine.copyDenormalizedBindings(bindings, env.outCache, function(success, denormBindings){
-        if(success === true) {
-            var filteredBindings = [];
-            for(var i=0; i<bindings.length; i++) {
-                var thisDenormBindings = denormBindings[i];
-                var ebv = QueryFilters.runFilter(filterExpr, thisDenormBindings, queryEngine, env);
-                // ebv can be directly a RDFTerm (e.g. atomic expression in filter)
-                // this additional call to ebv will return -> true/false/error
-                var ebv = QueryFilters.ebv(ebv);
-                //console.log("EBV:")
-                //console.log(ebv)
-                //console.log("FOR:")
-                //console.log(thisDenormBindings)
-                if(QueryFilters.isEbvError(ebv)) {
-                    // error
-                    if(nullifyFilters) {
-                        var thisBindings = {"__nullify__": true, "bindings": bindings[i]};
-                        filteredBindings.push(thisBindings);
-                    }
-                } else if(ebv === true) {
-                    // true
-                    filteredBindings.push(bindings[i]);
-                } else {
-                    // false
-                    if(nullifyFilters) {
-                        var thisBindings = {"__nullify__": true, "bindings": bindings[i]};
-                        filteredBindings.push(thisBindings);
-                    }
-                }
+QueryFilters.run = function(filterExpr, bindings, nullifyFilters, env, queryEngine) {    
+    var denormBindings = queryEngine.copyDenormalizedBindings(bindings, env.outCache);
+    var filteredBindings = [];
+    for(var i=0; i<bindings.length; i++) {
+        var thisDenormBindings = denormBindings[i];
+        var ebv = QueryFilters.runFilter(filterExpr, thisDenormBindings, queryEngine, env);
+        // ebv can be directly a RDFTerm (e.g. atomic expression in filter)
+        // this additional call to ebv will return -> true/false/error
+        var ebv = QueryFilters.ebv(ebv);
+        //console.log("EBV:")
+        //console.log(ebv)
+        //console.log("FOR:")
+        //console.log(thisDenormBindings)
+        if(QueryFilters.isEbvError(ebv)) {
+            // error
+            if(nullifyFilters) {
+                var thisBindings = {"__nullify__": true, "bindings": bindings[i]};
+                filteredBindings.push(thisBindings);
             }
-            callback(true, filteredBindings);
+        } else if(ebv === true) {
+            // true
+            filteredBindings.push(bindings[i]);
         } else {
-            callback(success, denormBindings);
+            // false
+            if(nullifyFilters) {
+                var thisBindings = {"__nullify__": true, "bindings": bindings[i]};
+                filteredBindings.push(thisBindings);
+            }
         }
-    });
+    }
+    return filteredBindings;
 };
 
 QueryFilters.collect = function(filterExpr, bindings, env, queryEngine, callback) {
-    queryEngine.copyDenormalizedBindings(bindings, env.outCache, function(success, denormBindings){
-        if(success === true) {
-            var filteredBindings = [];
-            for(var i=0; i<bindings.length; i++) {
-                var thisDenormBindings = denormBindings[i];
-                var ebv = QueryFilters.runFilter(filterExpr, thisDenormBindings, queryEngine, env);
-                filteredBindings.push({binding:bindings[i], value:ebv});
-            }
-            callback(true, filteredBindings);
-        } else {
-            callback(success, denormBindings);
-        }
-    });
+    var denormBindings = queryEngine.copyDenormalizedBindings(bindings, env.outCache);
+    var filteredBindings = [];
+    for(var i=0; i<denormBindings.length; i++) {
+        var thisDenormBindings = denormBindings[i];
+        var ebv = QueryFilters.runFilter(filterExpr, thisDenormBindings, queryEngine, env);
+        filteredBindings.push({binding:bindings[i], value:ebv});
+    }
+    return(filteredBindings);
 };
 
 QueryFilters.runDistinct = function(projectedBindings, projectionVariables) {
@@ -37441,8 +37312,12 @@ QueryFilters.runUnaryExpression = function(unaryexpression, expression, bindings
         }
     } else if(unaryexpression === '-') {
         if(QueryFilters.isNumeric(op)) {
-            op.value = -op.value;
-            return op;
+            var clone = {};
+            for(var p in op) {
+                clone[p] = op[p];
+            }
+            clone.value = -clone.value;
+            return clone;
         } else {
             return QueryFilters.ebvError();
         }
@@ -37834,7 +37709,7 @@ QueryPlan.variablesIntersectionBGP = function(bgpa, bgpb) {
     return intersection;
 };
 
-QueryPlan.executeAndBGPs = function(bgps, dataset, queryEngine, env, callback) {
+QueryPlan.executeAndBGPs = function(bgps, dataset, queryEngine, env) {
     //for(var i=0; i<bgps.length; i++) {
     //    if(bgps[i].graph == null) {
     //        bgps[i].graph = dataset;
@@ -37842,46 +37717,32 @@ QueryPlan.executeAndBGPs = function(bgps, dataset, queryEngine, env, callback) {
     //        bgps[i].graph = dataset;
     //    }
     //}
-
     var pairs = Utils.partition(bgps,2);
-
-    QueryPlan.buildBushyJoinTreeBase(pairs, dataset, queryEngine, env, function(success, results){
-        if(success) {
-            callback(true, results);
-        } else {
-            callback(false, results);
-        }
-    });
+    return QueryPlan.buildBushyJoinTreeBase(pairs, dataset, queryEngine, env);
 };
 
-QueryPlan.buildBushyJoinTreeBase = function(pairs, dataset, queryEngine, queryEnv, callback) {
-    var that = this;
-    Utils.repeat(0, pairs.length, function(k, env) {
-        var floop = arguments.callee;
-        var pair = pairs[env._i];
+QueryPlan.buildBushyJoinTreeBase = function(pairs, dataset, queryEngine, queryEnv) {
+    var acum = [];
+    for(var i=0; i<pairs.length; i++) {
+        var pair = pairs[i];
         var bgpa = pair[0];
         var bgpb = pair[1];
-        QueryPlan.executeAndBGP(bgpa,bgpb, dataset, queryEngine, queryEnv, function(success, results){
-            if(success) {
-                if(env.acum == null) {
-                    env.acum = [];
-                }
-                env.acum.push(results);
+        results = QueryPlan.executeAndBGP(bgpa,bgpb, dataset, queryEngine, queryEnv);
+        if(results!=null) {
+            acum.push(results);
 
-                k(floop, env);
-            } else {
-                callback(success,results);
-            }
-        });
-    }, function(env){
-        QueryPlan.buildBushyJoinTreeBranches(env.acum, callback);
-    });
+        } else {
+            return null;
+        }
+    }
+    return QueryPlan.buildBushyJoinTreeBranches(acum);
 };
 
-QueryPlan.buildBushyJoinTreeBranches = function(bindingsList, callback) {
-    var that = this;
-    if(bindingsList.length == 1){
-        callback(true, bindingsList[0]);
+// @todo
+// remove recursion here
+QueryPlan.buildBushyJoinTreeBranches = function(bindingsList) {
+    if(bindingsList.length === 1){
+        return bindingsList[0];
     } else {
         var pairs = Utils.partition(bindingsList,2);
         var acum = [];
@@ -37892,7 +37753,7 @@ QueryPlan.buildBushyJoinTreeBranches = function(bindingsList, callback) {
             var result =  QueryPlan.executeAndBindings(bindingsa, bindingsb);
             acum.push(result);
         }
-        QueryPlan.buildBushyJoinTreeBranches(acum, callback);
+        return QueryPlan.buildBushyJoinTreeBranches(acum);
     }
 };
 
@@ -37914,145 +37775,112 @@ QueryPlan.executeAndBindings = function(bindingsa, bindingsb) {
     }
 };
 
-QueryPlan.executeAndBGP = function(bgpa, bgpb, dataset, queryEngine, queryEnv, callback) {
+QueryPlan.executeAndBGP = function(bgpa, bgpb, dataset, queryEngine, queryEnv) {
     if(bgpa==null) {
-        QueryPlan.executeEmptyJoinBGP(bgpb, dataset, queryEngine, queryEnv, callback);
+        return QueryPlan.executeEmptyJoinBGP(bgpb, dataset, queryEngine, queryEnv);
     } else if(bgpb==null) {
-        QueryPlan.executeEmptyJoinBGP(bgpa, dataset, queryEngine, queryEnv, callback);
+        return QueryPlan.executeEmptyJoinBGP(bgpa, dataset, queryEngine, queryEnv);
     } else {
         var joinVars = QueryPlan.variablesIntersectionBGP(bgpa,bgpb);
         if(joinVars.length === 0) {
             // range a, range b -> cartesian product
-            QueryPlan.executeCrossProductBGP(joinVars, bgpa, bgpb, dataset, queryEngine, queryEnv, callback);
+            return QueryPlan.executeCrossProductBGP(joinVars, bgpa, bgpb, dataset, queryEngine, queryEnv);
         } else {
             // join on intersection vars
-            QueryPlan.executeJoinBGP(joinVars, bgpa, bgpb, dataset, queryEngine, queryEnv, callback);
+            return QueryPlan.executeJoinBGP(joinVars, bgpa, bgpb, dataset, queryEngine, queryEnv);
         }
     }
 };
 
-QueryPlan.executeEmptyJoinBGP = function(bgp, dataset, queryEngine, queryEnv, callback) {
-    QueryPlan.executeBGPDatasets(bgp, dataset, queryEngine, queryEnv, function(success, bindings){
-        if(success == true) {
-            callback(true, bindings);
-        } else {
-            callback(false, bindings);
-        }
-    });
+QueryPlan.executeEmptyJoinBGP = function(bgp, dataset, queryEngine, queryEnv) {
+    return QueryPlan.executeBGPDatasets(bgp, dataset, queryEngine, queryEnv);
 };
 
-QueryPlan.executeJoinBGP = function(joinVars, bgpa, bgpb, dataset, queryEngine, queryEnv, callback) {
-    QueryPlan.executeBGPDatasets(bgpa, dataset, queryEngine, queryEnv, function(success, bindingsa){
-        if(success) {
-            QueryPlan.executeBGPDatasets(bgpb, dataset, queryEngine, queryEnv, function(success, bindingsb){
-                if(success) {
-                    //queryEngine.copyDenormalizedBindings(bindingsa, queryEnv.outCache||[], function(success, denormBindingsa){
-                        //var bindingsb = QueryPlan.buildBindingsFromRange(resultsb, bgpb);
-                        //queryEngine.copyDenormalizedBindings(bindingsb, queryEnv.outCache||[], function(success, denormBindingsb){
-                            var bindings = QueryPlan.joinBindings(bindingsa, bindingsb);
-                            callback(true, bindings);
-                        //});
-                    //});
-                } else {
-                    callback(false, results);
-                }
-            });
+QueryPlan.executeJoinBGP = function(joinVars, bgpa, bgpb, dataset, queryEngine, queryEnv) {
+    var bindingsa = QueryPlan.executeBGPDatasets(bgpa, dataset, queryEngine, queryEnv);
+    if(bindingsa!=null) {
+        var bindingsb = QueryPlan.executeBGPDatasets(bgpb, dataset, queryEngine, queryEnv);
+        if(bindingsb!=null) {
+            return QueryPlan.joinBindings(bindingsa, bindingsb);
         } else {
-            callback(false, results);
+            return null;
         }
-    });
+    } else {
+        return null;
+    }
 };
 
-QueryPlan.executeBGPDatasets = function(bgp, dataset, queryEngine, queryEnv,callback) {
+QueryPlan.executeBGPDatasets = function(bgp, dataset, queryEngine, queryEnv) {
     // avoid duplicate queries in the same graph
     // merge of graphs is not guaranted here.
     var duplicates = {};
 
     if(bgp.graph == null) {
         //union through all default graph(s)
-        Utils.repeat(0, dataset['default'].length, function(k, env) {
-            var floop = arguments.callee;
-            if(duplicates[dataset['default'][env._i].oid] == null) {
-                duplicates[dataset['default'][env._i].oid] = true;
-                env.acum = env.acum || [];
-                bgp.graph = dataset['default'][env._i];//.oid
-                queryEngine.rangeQuery(bgp, queryEnv, function(success, results) {                
-                    if(success) {
-                        results = QueryPlan.buildBindingsFromRange(results, bgp);
-                        env.acum.push(results);
-                        k(floop, env);
-                    } else {
-                        k(floop, env);              
-                    }
-                });
-            } else {
-                k(floop, env);
+        var acum = [];
+        for(var i=0; i<dataset['default'].length; i++) {
+            if(duplicates[dataset['default'][i].oid] == null) {
+                duplicates[dataset['default'][i].oid] = true;
+                bgp.graph = dataset['default'][i];//.oid
+                var results = queryEngine.rangeQuery(bgp, queryEnv);
+                results = QueryPlan.buildBindingsFromRange(results, bgp);
+                acum.push(results);
             }
-        }, function(env){
-            var acumBindings = QueryPlan.unionManyBindings(env.acum||[]);
-            callback(true, acumBindings);
-        });
+        }
+        var acumBindings = QueryPlan.unionManyBindings(acum);
+        return acumBindings;
     } else if(bgp.graph.token === 'var') {
-        var graphVar = bgp.graph.value;
-        
         // union through all named datasets
-        Utils.repeat(0, dataset.named.length, function(k, env) {
-            var floop = arguments.callee;
-            if(duplicates[dataset.named[env._i].oid] == null) {
-                duplicates[dataset.named[env._i].oid] = true;
-                env.acum = env.acum || [];
-                bgp.graph = dataset.named[env._i];//.oid
-                 
-                queryEngine.rangeQuery(bgp, queryEnv, function(success, results) {
-                    if(success) {
-                        results = QueryPlan.buildBindingsFromRange(results, bgp);
-                        // add the graph bound variable to the result 
-                        for(var i=0; i< results.length; i++) {
-                            results[i][graphVar] = dataset.named[env._i].oid;
-                        }
-                        env.acum.push(results);
-                        k(floop, env);
-                    } else {
-                        callback(false, results);
+        var graphVar = bgp.graph.value;        
+        var acum = [];
+
+        for(var i=0; i<dataset.named.length; i++) {
+            if(duplicates[dataset.named[i].oid] == null) {
+                duplicates[dataset.named[i].oid] = true;
+                bgp.graph = dataset.named[i];//.oid
+                
+                var results = queryEngine.rangeQuery(bgp, queryEnv);
+                if(results != null) {
+                    results = QueryPlan.buildBindingsFromRange(results, bgp);
+                    // add the graph bound variable to the result 
+                    for(var j=0; j< results.length; j++) {
+                        results[j][graphVar] = dataset.named[i].oid;
                     }
-                });
-            } else {
-                k(floop, env);
+                    acum.push(results);
+                } else {
+                    return null;
+                }
             }
-        }, function(env){
-            var acumBindings = QueryPlan.unionManyBindings(env.acum||[]);
-            callback(true, acumBindings);
-        });
+        }
+        
+        var acumBindings = QueryPlan.unionManyBindings(acum||[]);
+        return acumBindings;
 
     } else {
         // graph already has an active value, just match.
         // Filtering the results will still be necessary
-        queryEngine.rangeQuery(bgp, queryEnv, function(success, results) {
-            if(success) {
-                results = QueryPlan.buildBindingsFromRange(results, bgp);
-                callback(true,results);
-            } else {
-                callback(false, results);
-            }
-        });
+        var results = queryEngine.rangeQuery(bgp, queryEnv);
+        if(results!=null) {
+            results = QueryPlan.buildBindingsFromRange(results, bgp);
+            return results;
+        } else {
+            return null;
+        }
     }
 };
 
-QueryPlan.executeCrossProductBGP = function(joinVars, bgpa, bgpb, dataset, queryEngine, queryEnv, callback) {
-    QueryPlan.executeBGPDatasets(bgpa, dataset, queryEngine, queryEnv, function(success, bindingsa){
-        if(success) {
-            QueryPlan.executeBGPDatasets(bgpb, dataset, queryEngine, queryEnv, function(success, bindingsb){
-                if(success) {
-                    var bindings = QueryPlan.crossProductBindings(bindingsa, bindingsb);
-                    callback(true, bindings);
-                } else {
-                    callback(false, results);
-                }
-            });
+QueryPlan.executeCrossProductBGP = function(joinVars, bgpa, bgpb, dataset, queryEngine, queryEnv) {
+    var bindingsa = QueryPlan.executeBGPDatasets(bgpa, dataset, queryEngine, queryEnv);
+    if(bindingsa!=null) {
+        var bindingsb = QueryPlan.executeBGPDatasets(bgpb, dataset, queryEngine, queryEnv);
+        if(bindingsb!=null) {
+            return QueryPlan.crossProductBindings(bindingsa, bindingsb);
         } else {
-            callback(false, results);
+            return null;
         }
-    });
+    } else {
+        return null;
+    }
 };
 
 QueryPlan.buildBindingsFromRange = function(results, bgp) {
@@ -38169,30 +37997,30 @@ QueryPlan.augmentMissingBindings = function(bindinga, bindingb) {
 };
 
 /*
-QueryPlan.diff = function(bindingsa, biundingsb) {
-    var result = [];
+  QueryPlan.diff = function(bindingsa, biundingsb) {
+  var result = [];
 
-    for(var i=0; i< bindingsa.length; i++) {
-        var bindinga = bindingsa[i];
-        var matched = false;
-        for(var j=0; j<bindingsb.length; j++) {
-            var bindingb = bindingsb[j];
-            if(QueryPlan.areCompatibleBindings(bindinga, bindingb)){
-                matched = true;
-                result.push(QueryPlan.mergeBindings(bindinga, bindingb));
-            }
-        }
-        if(matched === false) {
-            // missing bindings must be present for further processing
-            // e.g. filtering by not present value (see DAWG tests
-            // bev-6)
-            QueryPlan.augmentMissingBindings(bindinga, bindingb);
-            result.push(bindinga);
-        }
-    }
+  for(var i=0; i< bindingsa.length; i++) {
+  var bindinga = bindingsa[i];
+  var matched = false;
+  for(var j=0; j<bindingsb.length; j++) {
+  var bindingb = bindingsb[j];
+  if(QueryPlan.areCompatibleBindings(bindinga, bindingb)){
+  matched = true;
+  result.push(QueryPlan.mergeBindings(bindinga, bindingb));
+  }
+  }
+  if(matched === false) {
+  // missing bindings must be present for further processing
+  // e.g. filtering by not present value (see DAWG tests
+  // bev-6)
+  QueryPlan.augmentMissingBindings(bindinga, bindingb);
+  result.push(bindinga);
+  }
+  }
 
-    return result;    
-};
+  return result;    
+  };
 */
 QueryPlan.leftOuterJoinBindings = function(bindingsa, bindingsb) {
     var result = [];
@@ -38228,7 +38056,7 @@ QueryPlan.crossProductBindings = function(bindingsa, bindingsb) {
         for(var j=0; j<bindingsb.length; j++) {
             var bindingb = bindingsb[j];
             result.push(QueryPlan.mergeBindings(bindinga, bindingb));
-         }
+        }
     }
 
     return result;
@@ -38246,7 +38074,7 @@ QueryPlan.unionManyBindings = function(bindingLists) {
     }
 
     return acum;
-}
+};
 
 // end of ./src/js-query-engine/src/query_plan.js 
 // exports
@@ -38265,7 +38093,6 @@ QueryEngine.QueryEngine = function(params) {
 };
 
 // Utils
-
 QueryEngine.QueryEngine.prototype.registerNsInEnvironment = function(prologue, env) {
     var prefixes = prologue.prefixes;
     var toSave = {};
@@ -38347,54 +38174,38 @@ QueryEngine.QueryEngine.prototype.applyLimitOffset = function(offset, limit, bin
 };
 
 
-QueryEngine.QueryEngine.prototype.applySingleOrderBy = function(orderFilters, modifiedBindings, outEnv, callback) {
-    var that = this;
-    Utils.repeat(0, orderFilters.length, function(k,env){
-        var floop = arguments.callee;
-        var orderFilter = orderFilters[env._i];
-        QueryFilters.collect(orderFilter.expression, [modifiedBindings], outEnv, that, function(success, results){
-            if(success) {
-                env.acum = env.acum || [];
-                env.acum.push(results[0].value);
-                k(floop, env);
-            } else {
-                callback(false, results);
-            }
-        });
-    }, function(env) {
-        callback(true, {binding:modifiedBindings, value:env.acum});
-    });
+QueryEngine.QueryEngine.prototype.applySingleOrderBy = function(orderFilters, modifiedBindings, outEnv) {
+    var acum = [];
+    for(var i=0; i<orderFilters.length; i++) {
+        var orderFilter = orderFilters[i];
+        var results = QueryFilters.collect(orderFilter.expression, [modifiedBindings], outEnv, this);
+        acum.push(results[0].value);
+    }
+    return {binding:modifiedBindings, value:acum};
 };
 
-QueryEngine.QueryEngine.prototype.applyOrderBy = function(order, modifiedBindings, outEnv, callback) {
+QueryEngine.QueryEngine.prototype.applyOrderBy = function(order, modifiedBindings, outEnv) {
     var that = this;
+    var acum = [];
     if(order != null && order.length > 0) {
-        Utils.repeat(0, modifiedBindings.length, function(k,env) {
-            var floop = arguments.callee;
-            var bindings = modifiedBindings[env._i];
-            that.applySingleOrderBy(order, bindings, outEnv, function(success, results){
-                if(success) {
-                    env.acum = env.acum || [];
-                    env.acum.push(results);
-                    k(floop, env);
-                } else {
-                    callback(false, results);
-                }
-            });
-        }, function(env) {
-            var results = env.acum || [];
-            results.sort(function(a,b){
-                return that.compareFilteredBindings(a, b, order, outEnv);
-            });
-            var toReturn = [];
-            for(var i=0; i<results.length; i++) {
-                toReturn.push(results[i].binding);
-            }
+        for(var i=0; i<modifiedBindings.length; i++) {
+            var bindings = modifiedBindings[i];
+            var results = that.applySingleOrderBy(order, bindings, outEnv);
+            acum.push(results);
+        }
 
-            callback(true,toReturn);
+        acum.sort(function(a,b){
+            return that.compareFilteredBindings(a, b, order, outEnv);
         });
+
+        var toReturn = [];
+        for(var i=0; i<acum.length; i++) {
+            toReturn.push(acum[i].binding);
+        }
+
+        return toReturn;
     } else {
-        callback(true,modifiedBindings);
+        return modifiedBindings;
     }
 };
 
@@ -38517,24 +38328,18 @@ QueryEngine.QueryEngine.prototype.removeDefaultGraphBindings = function(bindings
 };
 
 
-QueryEngine.QueryEngine.prototype.aggregateBindings = function(projection, bindingsGroup, env, callback) {
-    this.copyDenormalizedBindings(bindingsGroup, env.outCache, function(result, denormBindings) {
-        if(result===true) {
-            var aggregatedBindings = {};
-            for(var i=0; i<projection.length; i++) {
-                var aggregatedValue = QueryFilters.runAggregator(projection[i], denormBindings, this, env);
-                if(projection[i].alias) {
-                    aggregatedBindings[projection[i].alias.value] = aggregatedValue; 
-                } else {
-                    aggregatedBindings[projection[i].value.value] = aggregatedValue; 
-                }
-            }
-
-            callback(true,aggregatedBindings);
+QueryEngine.QueryEngine.prototype.aggregateBindings = function(projection, bindingsGroup, env) {
+    var denormBindings = this.copyDenormalizedBindings(bindingsGroup, env.outCache);
+    var aggregatedBindings = {};
+    for(var i=0; i<projection.length; i++) {
+        var aggregatedValue = QueryFilters.runAggregator(projection[i], denormBindings, this, env);
+        if(projection[i].alias) {
+            aggregatedBindings[projection[i].alias.value] = aggregatedValue; 
         } else {
-            callback(result, denormBindings);
+            aggregatedBindings[projection[i].value.value] = aggregatedValue; 
         }
-    });
+    }
+    return(aggregatedBindings);
 };
 
 
@@ -38580,179 +38385,125 @@ QueryEngine.QueryEngine.prototype.resolveNsInEnvironment = function(prefix, env)
 };
 
 
-QueryEngine.QueryEngine.prototype.normalizeTerm = function(term, env, shouldIndex, callback) {
+QueryEngine.QueryEngine.prototype.normalizeTerm = function(term, env, shouldIndex) {
     if(term.token === 'uri') {
         var uri = Utils.lexicalFormBaseUri(term, env);
         if(uri == null) {
-            callback(false, "The prefix "+prefix+" cannot be resolved in the current environment");
+            return(null);
         } else {
             if(shouldIndex) {
-                this.lexicon.registerUri(uri, function(oid){
-                    callback(true, oid);
-                });
+                return(this.lexicon.registerUri(uri));
             } else {
-                this.lexicon.resolveUri(uri, function(oid){
-                    callback(true, oid);
-                });
+                return(this.lexicon.resolveUri(uri));
             }
         }
 
     } else if(term.token === 'literal') {
         var lexicalFormLiteral = Utils.lexicalFormLiteral(term, env);
         if(shouldIndex) {
-            this.lexicon.registerLiteral(lexicalFormLiteral, function(oid){
-                callback(true, oid);
-            });
+           var oid = this.lexicon.registerLiteral(lexicalFormLiteral);
+            return(oid);
         } else {
-            this.lexicon.resolveLiteral(lexicalFormLiteral, function(oid){
-                callback(true, oid);
-            });
+            var oid = this.lexicon.resolveLiteral(lexicalFormLiteral);
+            return(oid);
         }
-        //this.normalizeLiteral(term, env, function(success, result){
-        //    callback(success, result);
-        //})
     } else if(term.token === 'blank') {
         var label = term.label;
         var oid = env.blanks[label];
         if( oid != null) {
-            callback(true,oid);
+            return(oid);
         } else {
             if(shouldIndex) {
-                this.lexicon.registerBlank(label, function(oid) {
-                    env.blanks[label] = oid;
-                    callback(true,oid);
-                });
+                var oid = this.lexicon.registerBlank(label);
+                env.blanks[label] = oid;
+                return(oid);
             } else {
-                this.lexicon.resolveBlank(label, function(oid) {
-                    env.blanks[label] = oid;
-                    callback(true,oid);
-                });
+                var oid = this.lexicon.resolveBlank(label);
+                env.blanks[label] = oid;
+                return(oid);
             }
         }
     } else if(term.token === 'var') {
-        callback(true, term.value);
+        return(term.value);
     } else {
-          callback(false, 'Token of kind '+term.token+' cannot be normalized');
+          return(null);
     }
 };
 
 QueryEngine.QueryEngine.prototype.normalizeDatasets = function(datasets, outerEnv, callback) {
     var that = this;
-    Utils.repeat(0, datasets.length, function(k,env) {
-        var floop = arguments.callee;
-        var dataset = datasets[env._i];
+    for(var i=0; i<datasets.length; i++) {
+        var dataset = datasets[i];
         if(dataset.value === that.lexicon.defaultGraphUri) {
             dataset.oid = that.lexicon.defaultGraphOid;
-            k(floop, env);
         } else {
-            that.normalizeTerm(dataset, outerEnv, false, function(success, result){
-                if(success) {
-                    dataset.oid = result;
-                    k(floop, env);
-                } else {
-                    callback(success, result);
-                }
-            });      
+            var oid = that.normalizeTerm(dataset, outerEnv, false);      
+            if(result != null) {
+                dataset.oid = oid;
+            } else {
+                return(null);
+            }
         }  
-    }, function(env) {
-        callback(true, "ok");
-    });
+    }
+
+    return true
 };
 
-QueryEngine.QueryEngine.prototype.normalizeQuad = function(quad, queryEnv, shouldIndex, callback) {
+QueryEngine.QueryEngine.prototype.normalizeQuad = function(quad, queryEnv, shouldIndex) {
     var subject    = null;
     var predicate  = null;
     var object     = null;
     var graph      = null;
-    var that       = this;
-    var errorFound = false;
-    Utils.seq(function(k){
-        if(quad.graph == null) {
-            graph = 0; // default graph
-            k();
+    var oid;
+
+    if(quad.graph == null) {
+        graph = 0; // default graph
+    } else {
+        oid = this.normalizeTerm(quad.graph, queryEnv, shouldIndex)
+        if(oid!=null) {
+            graph = oid;
+            if(shouldIndex === true)
+                this.lexicon.registerGraph(oid);
         } else {
-          that.normalizeTerm(quad.graph, queryEnv, shouldIndex, function(result, oid){    
-              if(errorFound === false){
-                  if(result===true) {
-                      graph = oid;
-                  } else {
-                      errorFound = true;
-                  }
-              }
-              if(shouldIndex === true && !errorFound) {
-                  that.lexicon.registerGraph(oid, function(succes){
-                      if(succes === false) {
-                          errorFound = true;
-                      }
-                      k();
-                  });
-              } else {
-                  k();
-              }
-          });
+            return null;
         }
-    }, function(k){
-        that.normalizeTerm(quad.subject, queryEnv, shouldIndex, function(result, oid){    
-            if(errorFound === false){
-                if(result===true) {
-                    subject = oid;
-                } else {
-                    errorFound = true;
-                }
-            }
-            k();
-        });
-    }, function(k){
-        that.normalizeTerm(quad.predicate, queryEnv, shouldIndex, function(result, oid){    
-            if(errorFound === false){
-                if(result===true) {
-                    predicate = oid;
-                } else {
-                    errorFound = true;
-                }
-            }
-            k();
-        });
-    }, function(k){
-        that.normalizeTerm(quad.object, queryEnv, shouldIndex, function(result, oid){    
-            if(errorFound === false){
-                if(result===true) {
-                    object = oid;
-                } else {
-                    errorFound = true;
-                }
-            }
-            k();
-        });
-    })(function(){
-        if(errorFound) {
-            callback(false, "Error normalizing quad");
-        } else {
-            callback(true,{subject:subject, 
-                           predicate:predicate, 
-                           object:object, 
-                           graph:graph});
-        }
-    });
+    }
+
+    oid = this.normalizeTerm(quad.subject, queryEnv, shouldIndex);
+    if(oid!=null) {
+        subject = oid;
+    } else {
+        return null
+    }
+
+    oid = this.normalizeTerm(quad.predicate, queryEnv, shouldIndex);
+    if(oid!=null) {
+        predicate = oid;
+    } else {
+        return null
+    }
+
+    oid = this.normalizeTerm(quad.object, queryEnv, shouldIndex);
+    if(oid!=null) {
+        object = oid;
+    } else {
+        return null
+    }
+
+    return({subject:subject, 
+            predicate:predicate, 
+            object:object, 
+            graph:graph});
 };
 
-QueryEngine.QueryEngine.prototype.denormalizeBindingsList = function(bindingsList, envOut, callback) {
+QueryEngine.QueryEngine.prototype.denormalizeBindingsList = function(bindingsList, envOut) {
     var results = [];
-    var that = this;
 
-    Utils.repeat(0, bindingsList.length, function(k,env){
-        var floop = arguments.callee;
-        that.denormalizeBindings(bindingsList[env._i], envOut, function(success, result){
-            if(success) {
-                results.push(result);
-                k(floop, env);
-            } else {
-                callback(false, result);
-            }
-        });
-    }, function(env) {
-        callback(true, results);
-    });
+    for(var i=0; i<bindingsList.length; i++) {
+        result = this.denormalizeBindings(bindingsList[i], envOut)
+        results.push(result);
+    }
+    return(results);
 };
 
 /**
@@ -38762,78 +38513,60 @@ QueryEngine.QueryEngine.prototype.denormalizeBindingsList = function(bindingsLis
  * This is required just to save lookups when final results are generated.
  */
 QueryEngine.QueryEngine.prototype.copyDenormalizedBindings = function(bindingsList, out, callback) {
-
-    var that = this;
     var denormList = [];
-    Utils.repeat(0, bindingsList.length, function(klist,listEnv){
+    for(var i=0; i<bindingsList.length; i++) {
         var denorm = {};
-        var floopList = arguments.callee;
-        var bindings = bindingsList[listEnv._i];
+        var bindings = bindingsList[i];
         var variables = Utils.keys(bindings);
-        Utils.repeat(0, variables.length, function(k, env) {
-            var floop = arguments.callee;
-            var oid = bindings[variables[env._i]];
+        for(var j=0; j<variables.length; j++) {
+            var oid = bindings[variables[j]];
             if(oid == null) {
                 // this can be null, e.g. union different variables (check SPARQL recommendation examples UNION)
-                denorm[variables[env._i]] = null;
-                k(floop, env);
+                denorm[variables[j]] = null;
             } else if(typeof(oid) === 'object') {
                 // the binding is already denormalized, this can happen for example because the value of the
                 // binding is the result of the aggregation of other bindings in a GROUP clause
-                denorm[variables[env._i]] = oid;
-                k(floop, env);
+                denorm[variables[j]] = oid;
             } else {
                 var inOut = out[oid];
                 if(inOut!= null) {
-                    denorm[variables[env._i]] = inOut;
-                    k(floop, env);
+                    denorm[variables[j]] = inOut;
                 } else {                    
-                    that.lexicon.retrieve(oid, function(val){
-                        out[oid] = val;
-                        denorm[variables[env._i]] = val;
-                        k(floop, env);
-                    });
+                    var val = this.lexicon.retrieve(oid);
+                    out[oid] = val;
+                    denorm[variables[j]] = val;
                 }
             }
-        }, function(env){
-            denormList.push(denorm);
-            klist(floopList, listEnv);
-        });
-    }, function(){
-        callback(true, denormList);
-    });
+        }
+        denormList.push(denorm);
+    }
+    return denormList;
 };
 
 QueryEngine.QueryEngine.prototype.denormalizeBindings = function(bindings, envOut, callback) {
     var variables = Utils.keys(bindings);
-    var that = this;
-    Utils.repeat(0, variables.length, function(k, env) {
-        var floop = arguments.callee;
-        var oid = bindings[variables[env._i]];
+
+    for(var i=0; i<variables.length; i++) {
+        var oid = bindings[variables[i]];
         if(oid == null) {
             // this can be null, e.g. union different variables (check SPARQL recommendation examples UNION)
-            bindings[variables[env._i]] = null;
-            k(floop, env);
+            bindings[variables[i]] = null;
         } else {
             if(envOut[oid] != null) {
-                bindings[variables[env._i]] = envOut[oid];
-                k(floop, env);
+                bindings[variables[i]] = envOut[oid];
             } else {
-                that.lexicon.retrieve(oid, function(val){
-                    bindings[variables[env._i]] = val;
-                    k(floop, env);
-                });
+                var val = this.lexicon.retrieve(oid)
+                bindings[variables[i]] = val;
             }
         }
-    }, function(env){
-        callback(true, bindings);
-    });
+    }
+    return bindings;
 };
 
 // Queries execution
 
 QueryEngine.QueryEngine.prototype.execute = function(queryString, callback, defaultDataset, namedDataset){
-    try{
+//    try{
         queryString = Utils.normalizeUnicodeLiterals(queryString);
 
         var syntaxTree = this.abstractQueryTree.parseQueryString(queryString);
@@ -38857,13 +38590,13 @@ QueryEngine.QueryEngine.prototype.execute = function(queryString, callback, defa
                 this.executeQuery(syntaxTree, callback, defaultDataset, namedDataset);
             }
         }
-    } catch(e) {
-        if(e.name && e.name==='SyntaxError') {
-            callback(false, "Syntax error: \nmessage:"+e.message+"\nline "+e.line+", column:"+e.column);
-        } else {
-            callback(false, "Query execution error");
-        }
-    }
+//    } catch(e) {
+//        if(e.name && e.name==='SyntaxError') {
+//            callback(false, "Syntax error: \nmessage:"+e.message+"\nline "+e.line+", column:"+e.column);
+//        } else {
+//            callback(false, "Query execution error");
+//        }
+//    }
 };
 
 // Retrieval queries
@@ -38887,13 +38620,12 @@ QueryEngine.QueryEngine.prototype.executeQuery = function(syntaxTree, callback, 
               if(typeof(result) === 'object' && result.denorm === true) {
                   callback(true, result['bindings']);
               } else {
-                  that.denormalizeBindingsList(result, queryEnv.outCache, function(success, result){
-                      if(success) {                        
-                          callback(true, result);
-                      } else {
-                          callback(false, result);
-                      }
-                  });
+                  var result = that.denormalizeBindingsList(result, queryEnv.outCache);
+                  if(result != null) {                        
+                      callback(true, result);
+                  } else {
+                      callback(false, result);
+                  }
               }
           } else {
               callback(false, result);
@@ -38922,52 +38654,51 @@ QueryEngine.QueryEngine.prototype.executeQuery = function(syntaxTree, callback, 
         this.executeSelect(aqt, queryEnv, defaultDataset, namedDataset, function(success, result){
             if(success) {
                 if(success) {              
-                    that.denormalizeBindingsList(result, queryEnv.outCache, function(success, result){
-                        if(success) { 
-                            var graph = new RDFJSInterface.Graph();
+                    var result = that.denormalizeBindingsList(result, queryEnv.outCache);
+                    if(result != null) { 
+                        var graph = new RDFJSInterface.Graph();
                             
-                            // CONSTRUCT WHERE {} case
-                            if(aqt.template == null) {
-                                aqt.template = {triplesContext: aqt.pattern};
-                            }
+                        // CONSTRUCT WHERE {} case
+                        if(aqt.template == null) {
+                            aqt.template = {triplesContext: aqt.pattern};
+                        }
 
-                            var blankIdCounter = 1;
-                            for(var i=0; i<result.length; i++) {
-                                var bindings = result[i];
-                                var blankMap = {};
-                                for(var j=0; j<aqt.template.triplesContext.length; j++) {
-                                    // fresh IDs for blank nodes in the construct template
-                                    var components = ['subject', 'predicate', 'object'];
-                                    var tripleTemplate = aqt.template.triplesContext[j];                                    
-                                    for(var p=0; p<components.length; p++) {
-                                        var component = components[p];
-                                        if(tripleTemplate[component].token === 'blank') {
-                                            if(blankMap[tripleTemplate[component].value] != null) {
-                                                tripleTemplate[component].value = blankMap[tripleTemplate[component].value];
-                                            } else {
-                                                var blankId = "_:b"+blankIdCounter;
-                                                blankIdCounter++;
-                                                blankMap[tripleTemplate[component].value] = blankId;
-                                                tripleTemplate[component].value = blankId;
-                                            }
+                        var blankIdCounter = 1;
+                        for(var i=0; i<result.length; i++) {
+                            var bindings = result[i];
+                            var blankMap = {};
+                            for(var j=0; j<aqt.template.triplesContext.length; j++) {
+                                // fresh IDs for blank nodes in the construct template
+                                var components = ['subject', 'predicate', 'object'];
+                                var tripleTemplate = aqt.template.triplesContext[j];                                    
+                                for(var p=0; p<components.length; p++) {
+                                    var component = components[p];
+                                    if(tripleTemplate[component].token === 'blank') {
+                                        if(blankMap[tripleTemplate[component].value] != null) {
+                                            tripleTemplate[component].value = blankMap[tripleTemplate[component].value];
+                                        } else {
+                                            var blankId = "_:b"+blankIdCounter;
+                                            blankIdCounter++;
+                                            blankMap[tripleTemplate[component].value] = blankId;
+                                            tripleTemplate[component].value = blankId;
                                         }
                                     }
-                                    var s = RDFJSInterface.buildRDFResource(tripleTemplate.subject,bindings,that,queryEnv);
-                                    var p = RDFJSInterface.buildRDFResource(tripleTemplate.predicate,bindings,that,queryEnv);
-                                    var o = RDFJSInterface.buildRDFResource(tripleTemplate.object,bindings,that,queryEnv);
-                                    if(s!=null && p!=null && o!=null) {
-                                        var triple = new RDFJSInterface.Triple(s,p,o);
-                                        graph.add(triple);
+                                }
+                                var s = RDFJSInterface.buildRDFResource(tripleTemplate.subject,bindings,that,queryEnv);
+                                var p = RDFJSInterface.buildRDFResource(tripleTemplate.predicate,bindings,that,queryEnv);
+                                var o = RDFJSInterface.buildRDFResource(tripleTemplate.object,bindings,that,queryEnv);
+                                if(s!=null && p!=null && o!=null) {
+                                    var triple = new RDFJSInterface.Triple(s,p,o);
+                                    graph.add(triple);
                                     //} else {
                                     //    return callback(false, "Error creating output graph")
-                                    }
                                 }
                             }
-                            callback(true,graph);
-                        } else {
-                            callback(false, result);
                         }
-                    });
+                        callback(true,graph);
+                    } else {
+                        callback(false, result);
+                    }
                 } else {
                     callback(false, result);
                 }
@@ -39001,94 +38732,72 @@ QueryEngine.QueryEngine.prototype.executeSelect = function(unit, env, defaultDat
             dataset['default'].push(this.lexicon.defaultGraphUriTerm);
         }
 
-        that.normalizeDatasets(dataset['default'].concat(dataset.named), env, function(success, results){
-            if(success) {
-                that.executeSelectUnit(projection, dataset, unit.pattern, env, function(success, result){
-                  if(success) {
-                      // detect single group
-                      if(unit.group!=null && unit.group === "") {
-                          var foundUniqueGroup = false;
-                          for(var i=0; i<unit.projection.length; i++) {
-                              if(unit.projection[i].expression!=null && unit.projection[i].expression.expressionType === 'aggregate') {
-                                  foundUniqueGroup = true;
-                                  break;
-                              }
-                          }
-                          if(foundUniqueGroup === true) {
-                              unit.group = 'singleGroup';
-                          }
-                      }
-                      if(unit.group && unit.group != "") {
-                          if(that.checkGroupSemantics(unit.group,projection)) {
-                            that.groupSolution(result, unit.group, env, function(success, groupedBindings){
+        if (that.normalizeDatasets(dataset['default'].concat(dataset.named), env) != null) {
+            var result = that.executeSelectUnit(projection, dataset, unit.pattern, env);
+            if(result != null) {
+                // detect single group
+                if(unit.group!=null && unit.group === "") {
+                    var foundUniqueGroup = false;
+                    for(var i=0; i<unit.projection.length; i++) {
+                        if(unit.projection[i].expression!=null && unit.projection[i].expression.expressionType === 'aggregate') {
+                            foundUniqueGroup = true;
+                            break;
+                        }
+                    }
+                    if(foundUniqueGroup === true) {
+                        unit.group = 'singleGroup';
+                    }
+                }
+                if(unit.group && unit.group != "") {
+                    if(that.checkGroupSemantics(unit.group,projection)) {
+                        var groupedBindings = that.groupSolution(result, unit.group, env);
                              
-                                var aggregatedBindings = [];
-                                var foundError = false;
-                             
-                                Utils.repeat(0, groupedBindings.length, function(k,loopEnv) {
-                                    var floop = arguments.callee;
-                                    if(!foundError) {
-                                        that.aggregateBindings(projection, groupedBindings[loopEnv._i], env, function(result, resultingBindings){
-                                            if(result) {
-                                                aggregatedBindings.push(resultingBindings);
-                                                k(floop, loopEnv);
-                                            } else {
-                                                foundError = true;
-                                                k(floop, loopEnv);
-                                            }
-                                        });
-                                    } else {
-                                        k(floop, loopEnv);
-                                    }
-                                },function(env){
-                                    callback(!foundError, {'bindings': aggregatedBindings, 'denorm':true});
-                                });
-                            });
-                          } else {
-                              callback(false, "Incompatible Group and Projection variables");
-                          }
-                      } else {
-                          that.applyOrderBy(order, result, env, function(success, orderedBindings){
-                              if(success) {
-                                  var projectedBindings = that.projectBindings(projection, orderedBindings);
-                                  modifiedBindings = that.applyModifier(modifier, projectedBindings);
-                                  var limitedBindings  = that.applyLimitOffset(offset, limit, modifiedBindings);
-                                  filteredBindings = that.removeDefaultGraphBindings(limitedBindings, dataset);
-                                      
-                                  callback(true, filteredBindings);
-
-                              } else {
-                                  callback(false, orderedBindings);
-                              }
-                          });
-                      }
-
-                  } else { // fail selectUnit
-                    callback(false, result);
-                  }
-                });
-            } else { // fail  normalizaing datasets
-                callback(false,results);
+                        var aggregatedBindings = [];
+                        var foundError = false;
+                            
+                        for(var i=0; i<groupedBindings.length; i++) {
+                            var resultingBindings = that.aggregateBindings(projection, groupedBindings[i], env)
+                            aggregatedBindings.push(resultingBindings);
+                        }
+                        callback(true, {'bindings': aggregatedBindings, 'denorm':true});
+                    } else {
+                        callback(false, "Incompatible Group and Projection variables");
+                    }
+                } else {
+                    var orderedBindings = that.applyOrderBy(order, result, env)
+                    var projectedBindings = that.projectBindings(projection, orderedBindings);
+                    modifiedBindings = that.applyModifier(modifier, projectedBindings);
+                    var limitedBindings  = that.applyLimitOffset(offset, limit, modifiedBindings);
+                    filteredBindings = that.removeDefaultGraphBindings(limitedBindings, dataset);
+                    
+                    callback(true, filteredBindings);
+                }
+                
+            } else { // fail selectUnit
+                console.log("ERROR selectUnit");
+                callback(false, result);
             }
-        }); // end normalize datasets
+        } else { // fail  normalizaing datasets
+            console.log("ERROR normalizing");
+            callback(false,results);
+        }
     } else {
         callback(false,"Cannot execute " + unit.kind + " query as a select query");
     }
 };
 
 
-QueryEngine.QueryEngine.prototype.groupSolution = function(bindings, group, queryEnv, callback){
+QueryEngine.QueryEngine.prototype.groupSolution = function(bindings, group, queryEnv){
     var order = [];
     var filteredBindings = [];
     var initialized = false;
     var that = this;
     if(group === 'singleGroup') {
-        callback(true, [bindings]);
-
+        return [bindings];
     } else {
-        Utils.repeat(0, bindings.length, function(kk, outEnv) {
+        for(var i=0; i<bindings.length; i++) {
             var outFloop = arguments.callee;
-            var currentBindings = bindings[outEnv._i];
+            var currentBindings = bindings[i];
             var mustAddBindings = true;
 
             /**
@@ -39097,9 +38806,9 @@ QueryEngine.QueryEngine.prototype.groupSolution = function(bindings, group, quer
              * If it is the first iteration we also save in a different array the order for the 
              * grouped variables that will be used later to build the final groups
              */
-            Utils.repeat(0, group.length, function(k, env) {
+            for(var j=0; j<group.length; j++) {
                 var floop = arguments.callee;
-                var currentOrderClause = group[env._i];
+                var currentOrderClause = group[j];
                 var orderVariable = null;
 
                 if(currentOrderClause.token === 'var') {
@@ -39109,7 +38818,6 @@ QueryEngine.QueryEngine.prototype.groupSolution = function(bindings, group, quer
                         order.push(orderVariable);
                     }
 
-                    k(floop, env);
                 } else if(currentOrderClause.token === 'aliased_expression') {
                     orderVariable = currentOrderClause.alias.value;
                     if(initialized == false) {
@@ -39118,92 +38826,81 @@ QueryEngine.QueryEngine.prototype.groupSolution = function(bindings, group, quer
 
                     if(currentOrderClause.expression.primaryexpression === 'var') {
                         currentBindings[currentOrderClause.alias.value] = currentBindings[currentOrderClause.expression.value.value];
-                        k(floop, env);
-
                     } else {
-                        that.copyDenormalizedBindings([currentBindings], queryEnv.outCache, function(success, denormBindings){
-                            var filterResultEbv = QueryFilters.runFilter(currentOrderClause.expression, denormBindings[0], that, queryEnv);
-                            if(!QueryFilters.isEbvError(filterResultEbv)) {
-                                if(filterResultEbv.value != null) {
-                                    filterResultEbv.value = ""+filterResultEbv.value;
-                                }
-                                currentBindings[currentOrderClause.alias.value]= filterResultEbv;
-                            } else {
-                                mustAddBindings = false;
-                            }
-                            
-                            k(floop, env);
-                        });
-                    }
-                } else {
-                    // In this case, we create an additional variable in the binding to hold the group variable value
-                    that.copyDenormalizedBindings([currentBindings], queryEnv.outCache, function(success, denormBindings){
-                        var filterResultEbv = QueryFilters.runFilter(currentOrderClause, denormBindings[0], that, queryEnv);
+                        var denormBindings = this.copyDenormalizedBindings([currentBindings], queryEnv.outCache);
+                        var filterResultEbv = QueryFilters.runFilter(currentOrderClause.expression, denormBindings[0], that, queryEnv);
                         if(!QueryFilters.isEbvError(filterResultEbv)) {
-                            currentBindings["groupCondition"+env._i] = filterResultEbv;
-                            orderVariable = "groupCondition"+env._i;
-                            if(initialized == false) {
-                                order.push(orderVariable);
+                            if(filterResultEbv.value != null) {
+                                filterResultEbv.value = ""+filterResultEbv.value;
                             }
-                         
+                            currentBindings[currentOrderClause.alias.value]= filterResultEbv;
                         } else {
                             mustAddBindings = false;
                         }
+                    }
+                } else {
+                    // In this case, we create an additional variable in the binding to hold the group variable value
+                    var denormBindings = that.copyDenormalizedBindings([currentBindings], queryEnv.outCache);
+                    var filterResultEbv = QueryFilters.runFilter(currentOrderClause, denormBindings[0], that, queryEnv);
+                    if(!QueryFilters.isEbvError(filterResultEbv)) {
+                        currentBindings["groupCondition"+env._i] = filterResultEbv;
+                        orderVariable = "groupCondition"+env._i;
+                        if(initialized == false) {
+                            order.push(orderVariable);
+                        }
+                        
+                    } else {
+                        mustAddBindings = false;
+                    }
                          
-                        k(floop, env);
-                    });
                 }
                 
-            }, function(env){
-                if(initialized == false) {
-                    initialized = true;
-                } 
-                if(mustAddBindings === true) {
-                    filteredBindings.push(currentBindings);
-                }
-                kk(outFloop, outEnv);
-            });
-
-        }, function(outEnv) {
-            /**
-             * After processing all the bindings, we build the group using the
-             * information stored about the order of the group variables.
-             */
-            var dups = {};
-            var groupMap = {};
-            var groupCounter = 0;
-            for(var i=0; i<filteredBindings.length; i++) {
-                var currentTransformedBinding = filteredBindings[i];
-                var key = "";
-                for(var j=0; j<order.length; j++) {
-                    var maybeObject = currentTransformedBinding[order[j]];
-                    if(typeof(maybeObject) === 'object') {
-                        key = key + maybeObject.value;
-                    } else {
-                        key = key + maybeObject;
-                    }
-                }
-
-                if(dups[key] == null) {
-                    //currentTransformedBinding["__group__"] = groupCounter; 
-                    groupMap[key] = groupCounter;
-                    dups[key] = [currentTransformedBinding];
-                    //groupCounter++
+            }
+            if(initialized == false) {
+                initialized = true;
+            } 
+            if(mustAddBindings === true) {
+                filteredBindings.push(currentBindings);
+            }
+        }
+        /**
+         * After processing all the bindings, we build the group using the
+         * information stored about the order of the group variables.
+         */
+        var dups = {};
+        var groupMap = {};
+        var groupCounter = 0;
+        for(var i=0; i<filteredBindings.length; i++) {
+            var currentTransformedBinding = filteredBindings[i];
+            var key = "";
+            for(var j=0; j<order.length; j++) {
+                var maybeObject = currentTransformedBinding[order[j]];
+                if(typeof(maybeObject) === 'object') {
+                    key = key + maybeObject.value;
                 } else {
-                    //currentTransformedBinding["__group__"] = dups[key][0]["__group__"]; 
-                    dups[key].push(currentTransformedBinding);
+                    key = key + maybeObject;
                 }
             }
 
-            // The final result is an array of arrays with all the groups
-            var groups = [];
-            
-            for(var k in dups) {
-                groups.push(dups[k]);
+            if(dups[key] == null) {
+                //currentTransformedBinding["__group__"] = groupCounter; 
+                groupMap[key] = groupCounter;
+                dups[key] = [currentTransformedBinding];
+                //groupCounter++
+            } else {
+                //currentTransformedBinding["__group__"] = dups[key][0]["__group__"]; 
+                dups[key].push(currentTransformedBinding);
             }
+        }
 
-            callback(true, groups);
-        });
+        // The final result is an array of arrays with all the groups
+        var groups = [];
+            
+        for(var k in dups) {
+            groups.push(dups[k]);
+        }
+
+        return groups;
     };
 };
 
@@ -39211,34 +38908,34 @@ QueryEngine.QueryEngine.prototype.groupSolution = function(bindings, group, quer
 /**
  * Here, all the constructions of the SPARQL algebra are handled
  */
-QueryEngine.QueryEngine.prototype.executeSelectUnit = function(projection, dataset, pattern, env, callback) {
+QueryEngine.QueryEngine.prototype.executeSelectUnit = function(projection, dataset, pattern, env) {
     if(pattern.kind === "BGP") {
-        this.executeAndBGP(projection, dataset, pattern, env, callback);
+        return this.executeAndBGP(projection, dataset, pattern, env);
     } else if(pattern.kind === "UNION") {
-        this.executeUNION(projection, dataset, pattern.value, env, callback);            
+        return this.executeUNION(projection, dataset, pattern.value, env);            
     } else if(pattern.kind === "JOIN") {
-        this.executeJOIN(projection, dataset, pattern, env, callback);            
+        return this.executeJOIN(projection, dataset, pattern, env);            
     } else if(pattern.kind === "LEFT_JOIN") {
-        this.executeLEFT_JOIN(projection, dataset, pattern, env, callback);            
+        return this.executeLEFT_JOIN(projection, dataset, pattern, env);            
     } else if(pattern.kind === "FILTER") {
         // Some components may have the filter inside the unit
-        var that = this;
-        this.executeSelectUnit(projection, dataset, pattern.value, env, function(success, results){
-            if(success) {
-                QueryFilters.checkFilters(pattern, results, false, env, that, callback);
-            } else {
-                callback(false, results);
-            }
-        });
+        var results = this.executeSelectUnit(projection, dataset, pattern.value, env);
+        if(results != null) {
+            results = QueryFilters.checkFilters(pattern, results, false, env, this);
+            return results;
+        } else {
+            return [];
+        }
     } else if(pattern.kind === "EMPTY_PATTERN") {
         // as an example of this case  check DAWG test case: algebra/filter-nested-2
-        callback(true, []);
+        return [];
     } else {
-        callback(false, "Cannot execute query pattern " + pattern.kind + ". Not implemented yet.");
+        console.log("Cannot execute query pattern " + pattern.kind + ". Not implemented yet.");
+        return null;
     }
 };
 
-QueryEngine.QueryEngine.prototype.executeUNION = function(projection, dataset, patterns, env, callback) {
+QueryEngine.QueryEngine.prototype.executeUNION = function(projection, dataset, patterns, env) {
     var setQuery1 = patterns[0];
     var setQuery2 = patterns[1];
     var set1 = null;
@@ -39251,43 +38948,31 @@ QueryEngine.QueryEngine.prototype.executeUNION = function(projection, dataset, p
     var that = this;
     var sets = [];
 
-    Utils.seq(function(k){
-        that.executeSelectUnit(projection, dataset, setQuery1, env, function(success, results){
-            if(success) {
-                set1 = results;
-                return k();
-            } else {
-                return callback(false, results);
-            }
-        });
-    }, function(k) {
-        that.executeSelectUnit(projection, dataset, setQuery2, env, function(success, results){
-            if(success) {
-                set2 = results;
-                return k();
-            } else {
-                return callback(false, results);
-            }
-        });
-    })(function(){
-        var result = QueryPlan.unionBindings(set1, set2);
-        QueryFilters.checkFilters(patterns, result, false, env, that, callback);
-    });
+    set1 = that.executeSelectUnit(projection, dataset, setQuery1, env);
+    if(set1==null) {
+        return null;
+    }
+    set2 = that.executeSelectUnit(projection, dataset, setQuery2, env);
+    if(set2==null) {
+        return null;
+    }
+
+    var result = QueryPlan.unionBindings(set1, set2);
+    result = QueryFilters.checkFilters(patterns, result, false, env, that);
+    return result;
 };
 
-QueryEngine.QueryEngine.prototype.executeAndBGP = function(projection, dataset, patterns, env, callback) {
+QueryEngine.QueryEngine.prototype.executeAndBGP = function(projection, dataset, patterns, env) {
     var that = this;
-
-    QueryPlan.executeAndBGPs(patterns.value, dataset, this, env, function(success,result){
-        if(success) {
-            QueryFilters.checkFilters(patterns, result, false, env, that, callback);
-        } else {
-            callback(false, result);
-        }
-    });
+    var result = QueryPlan.executeAndBGPs(patterns.value, dataset, this, env);
+    if(result!=null) {
+        return QueryFilters.checkFilters(patterns, result, false, env, that);
+    } else {
+        return null;
+    }
 };
 
-QueryEngine.QueryEngine.prototype.executeLEFT_JOIN = function(projection, dataset, patterns, env, callback) {
+QueryEngine.QueryEngine.prototype.executeLEFT_JOIN = function(projection, dataset, patterns, env) {
     var setQuery1 = patterns.lvalue;
     var setQuery2 = patterns.rvalue;
 
@@ -39297,99 +38982,86 @@ QueryEngine.QueryEngine.prototype.executeLEFT_JOIN = function(projection, datase
     var that = this;
     var sets = [];
 
-    Utils.seq(function(k){
-        that.executeSelectUnit(projection, dataset, setQuery1, env, function(success, results){
-            if(success) {
-                set1 = results;
-                return k();
-            } else {
-                return callback(false, results);
-            }
-        });
-    }, function(k) {
-        that.executeSelectUnit(projection, dataset, setQuery2, env, function(success, results){
-            if(success) {
-                set2 = results;
-                return k();
-            } else {
-                return callback(false, results);
-            }
-        });
-    })(function(){
-        var result = QueryPlan.leftOuterJoinBindings(set1, set2);
-        //console.log("SETS:")
-        //console.log(set1)
-        //console.log(set2)
-        //console.log("---")
-        //console.log(result);
+    set1 = that.executeSelectUnit(projection, dataset, setQuery1, env);
+    if(set1==null) {
+        return null;
+    }
+     
+    set2 = that.executeSelectUnit(projection, dataset, setQuery2, env);
+    if(set2==null) {
+        return null;
+    }
 
-        QueryFilters.checkFilters(patterns, result, true, env, that, function(success, bindings){
-            //console.log("---")
-            //console.log(bindings)
-            //console.log("\r\n")
-            if(success) {
-                if(set1.length>1 && set2.length>1) {
-                    var vars = [];
-                    var vars1 = {};
-                    for(var p in set1[0]) {
-                        vars1[p] = true;
-                    }
-                    for(p in set2[0]) {
-                        if(vars1[p] != true) {
-                            vars.push(p);
-                        }
-                    }
-                    acum = [];
-                    duplicates = {};
-                    for(var i=0; i<bindings.length; i++) {
-                        if(bindings[i]["__nullify__"] === true) {
-                            for(var j=0; j<vars.length; j++) {
-                                bindings[i]["bindings"][vars[j]] = null;
-                            }                            
-                            var idx = [];
-                            var idxColl = [];
-                            for(var p in bindings[i]["bindings"]) {
-                                if(bindings[i]["bindings"][p] != null) {
-                                    idx.push(p+bindings[i]["bindings"][p]);
-                                    idx.sort();
-                                    idxColl.push(idx.join(""));
-                                }
-                            }
-                            // reject duplicates -> (set union)
-                            if(duplicates[idx.join("")]==null) {
-                                for(j=0; j<idxColl.length; j++) {
-                                    //console.log(" - "+idxColl[j])
-                                    duplicates[idxColl[j]] = true;
-                                }
-                                ////duplicates[idx.join("")]= true
-                                acum.push(bindings[i]["bindings"]);
-                            }
-                        } else {
-                            acum.push(bindings[i]);
-                            var idx = [];
-                            var idxColl = [];
-                            for(var p in bindings[i]) {
-                                idx.push(p+bindings[i][p]);
-                                idx.sort();
-                                //console.log(idx.join("") + " -> ok");
-                                duplicates[idx.join("")] = true;
-                            }
+    
+    var result = QueryPlan.leftOuterJoinBindings(set1, set2);
+    //console.log("SETS:")
+    //console.log(set1)
+    //console.log(set2)
+    //console.log("---")
+    //console.log(result);
 
-                        }
-                    }
-                
-                    callback(true, acum);
-                } else {
-                    callback(true, bindings);
+    var bindings = QueryFilters.checkFilters(patterns, result, true, env, that);
+    //console.log("---")
+    //console.log(bindings)
+    //console.log("\r\n")
+    
+    if(set1.length>1 && set2.length>1) {
+            var vars = [];
+            var vars1 = {};
+            for(var p in set1[0]) {
+                vars1[p] = true;
+            }
+            for(p in set2[0]) {
+                if(vars1[p] != true) {
+                    vars.push(p);
                 }
-            } else {
-                callback(false, bindings);
             }
-        });
-    });
+            acum = [];
+            duplicates = {};
+            for(var i=0; i<bindings.length; i++) {
+                if(bindings[i]["__nullify__"] === true) {
+                    for(var j=0; j<vars.length; j++) {
+                        bindings[i]["bindings"][vars[j]] = null;
+                    }                            
+                    var idx = [];
+                    var idxColl = [];
+                    for(var p in bindings[i]["bindings"]) {
+                        if(bindings[i]["bindings"][p] != null) {
+                            idx.push(p+bindings[i]["bindings"][p]);
+                            idx.sort();
+                            idxColl.push(idx.join(""));
+                        }
+                    }
+                    // reject duplicates -> (set union)
+                    if(duplicates[idx.join("")]==null) {
+                        for(j=0; j<idxColl.length; j++) {
+                            //console.log(" - "+idxColl[j])
+                            duplicates[idxColl[j]] = true;
+                        }
+                        ////duplicates[idx.join("")]= true
+                        acum.push(bindings[i]["bindings"]);
+                    }
+                } else {
+                    acum.push(bindings[i]);
+                    var idx = [];
+                    var idxColl = [];
+                    for(var p in bindings[i]) {
+                        idx.push(p+bindings[i][p]);
+                        idx.sort();
+                        //console.log(idx.join("") + " -> ok");
+                        duplicates[idx.join("")] = true;
+                    }
+
+                }
+            }
+            
+        return acum;
+    } else {
+        return bindings;
+    }
 };
 
-QueryEngine.QueryEngine.prototype.executeJOIN = function(projection, dataset, patterns, env, callback) {
+QueryEngine.QueryEngine.prototype.executeJOIN = function(projection, dataset, patterns, env) {
     var setQuery1 = patterns.lvalue;
     var setQuery2 = patterns.rvalue;
     var set1 = null;
@@ -39398,57 +39070,48 @@ QueryEngine.QueryEngine.prototype.executeJOIN = function(projection, dataset, pa
     var that = this;
     var sets = [];
 
-    Utils.seq(function(k){
-        that.executeSelectUnit(projection, dataset, setQuery1, env, function(success, results){
-            if(success) {
-                set1 = results;
-                return k();
-            } else {
-                return callback(false, results);
-            }
-        });
-    }, function(k) {
-        that.executeSelectUnit(projection, dataset, setQuery2, env, function(success, results){
-            if(success) {
-                set2 = results;
-                return k();
-            } else {
-                return callback(false, results);
-            }
-        });
-    })(function(){
-        var result = QueryPlan.joinBindings(set1, set2);
 
-        QueryFilters.checkFilters(patterns, result, false, env, that, callback);
-    });
+    set1 = that.executeSelectUnit(projection, dataset, setQuery1, env);
+    if(set1 == null) {
+        return null;
+    }
+
+    set2 = that.executeSelectUnit(projection, dataset, setQuery2, env);
+    if(set2 == null) {
+        return null;
+    }
+
+    var result = QueryPlan.joinBindings(set1, set2);
+
+    result = QueryFilters.checkFilters(patterns, result, false, env, that);
+    return result;
 };
 
 
-QueryEngine.QueryEngine.prototype.rangeQuery = function(quad, queryEnv, callback) {
+QueryEngine.QueryEngine.prototype.rangeQuery = function(quad, queryEnv) {
     var that = this;
     //console.log("BEFORE:");
     //console.log("QUAD:");
     //console.log(quad);
-    that.normalizeQuad(quad, queryEnv, false, function(success, key){
-        if(success == true) {
-            //console.log("RANGE QUERY:")
-            //console.log(success);
-            //console.log(key);
-            //console.log(new QuadIndexCommon.Pattern(key));
-            //console.log(key);
-            that.backend.range(new QuadIndexCommon.Pattern(key),function(quads){
-                //console.log("retrieved");
-                //console.log(quads)
-                if(quads == null || quads.length == 0) {
-                    callback(true, []);
-                } else {
-                    callback(true, quads);
-                }
-            });
+    var key = that.normalizeQuad(quad, queryEnv, false)
+    if(key != null) {
+        //console.log("RANGE QUERY:")
+        //console.log(success);
+        //console.log(key);
+        //console.log(new QuadIndexCommon.Pattern(key));
+        //console.log(key);
+        var quads = that.backend.range(new QuadIndexCommon.Pattern(key));
+        //console.log("retrieved");
+        //console.log(quads)
+        if(quads == null || quads.length == 0) {
+            return [];
         } else {
-            callback(false, "Cannot normalize quad: "+quad);
+            return quads;
         }
-    });
+    } else {
+        console.log("ERROR normalizing quad");
+        return null;
+    }
 };
 
 // Update queries
@@ -39465,33 +39128,20 @@ QueryEngine.QueryEngine.prototype.executeUpdate = function(syntaxTree, callback)
 
         var aqt = that.abstractQueryTree.parseExecutableUnit(units[i]);
         if(aqt.kind === 'insertdata') {
-            Utils.repeat(0, aqt.quads.length, function(k,env) {                
-                var quad = aqt.quads[env._i];
-                var floop = arguments.callee;
-                that._executeQuadInsert(quad, queryEnv, function(result, error) {
-                    if(result === true) {
-                        k(floop, env);
-                    } else {
-                        callback(false, error);
-                    }
-                });
-            }, function(env) {
-                callback(true);
-            });
+            for(var j=0; j<aqt.quads.length; j++) {
+                var quad = aqt.quads[j];
+                var result = that._executeQuadInsert(quad, queryEnv);
+                if(result !== true) {
+                    return callback(false, error);
+                }
+            }
+            callback(true);
         } else if(aqt.kind === 'deletedata') {
-            Utils.repeat(0, aqt.quads.length, function(k,env) {                
-                var quad = aqt.quads[env._i];
-                var floop = arguments.callee;
-                that._executeQuadDelete(quad, queryEnv, function(result, error) {
-                    if(result === true) {
-                        k(floop, env);
-                    } else {
-                        callback(false, error);
-                    }
-                });
-            }, function(env) {
-                callback(true);
-            });
+            for(var j=0; j<aqt.quads.length; j++) {
+                var quad = aqt.quads[j];
+                this._executeQuadDelete(quad, queryEnv);
+            }
+            callback(true);
         } else if(aqt.kind === 'modify') {
             this._executeModifyQuery(aqt, queryEnv, callback);
         } else if(aqt.kind === 'create') {
@@ -39507,7 +39157,8 @@ QueryEngine.QueryEngine.prototype.executeUpdate = function(syntaxTree, callback)
                     console.log("Error loading graph");
                     console.log(result);
                 } else {
-                    that.batchLoad(result, callback);
+                    var result = that.batchLoad(result);
+                    callback(result!=null, result||"error batch loading quads");
                 }
             });
         } else if(aqt.kind === 'drop') {
@@ -39521,124 +39172,92 @@ QueryEngine.QueryEngine.prototype.executeUpdate = function(syntaxTree, callback)
 };
 
 QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
-    var that = this;
     var subject    = null;
     var predicate  = null;
     var object     = null;
     var graph      = null;
     var oldLimit = Utils.stackCounterLimit;
-    Utils.stackCounter = 0;
-    Utils.stackCounterLimit = 10;
+    var counter = 0;
+    var success = true;
 
-    Utils.repeat(0, quads.length, function(kk,env){
-        if(env.success == null) {
-            env.success = true;
-            env.counter = 0;
-        }
-        var floop = arguments.callee;
-        var quad = quads[env._i];
+    for(var i=0; i<quads.length; i++) {
 
-        if(env.success) {
-          Utils.seq(function(k) {
-              // subject
-              if(quad.subject['uri'] || quad.subject.token === 'uri') {
-                  that.lexicon.registerUri(quad.subject.uri || quad.subject.value, function(oid){
-                      subject = oid;
-                      k();
-                  });
+        var quad = quads[i];
 
-              } else if(quad.subject['literal'] || quad.subject.token === 'literal') {
-                  that.lexicon.registerLiteral(quad.subject.literal || quad.subject.value, function(oid){
-                      subject = oid;                    
-                      k();
-                  });
-              } else {
-                  that.lexicon.registerBlank(quad.subject.blank || quad.subject.value, function(oid){
-                      subject = oid;
-                      k();
-                  });
-              }
-          }, function(k) {
-              // predicate
-              if(quad.predicate['uri'] || quad.predicate.token === 'uri') {
-                  that.lexicon.registerUri(quad.predicate.uri || quad.predicate.value, function(oid){
-                      predicate = oid;
-                      k();
-                  });
-              } else if(quad.predicate['literal'] || quad.predicate.token === 'literal') {
-                  that.lexicon.registerLiteral(quad.predicate.literal || quad.predicate.value, function(oid){
-                      predicate = oid;                    
-                      k();
-                  });
-              } else {
-                  that.lexicon.registerBlank(quad.predicate.blank || quad.predicate.value, function(oid){
-                      predicate = oid;
-                      k();
-                  });
-              }
-          }, function(k) {
-              // object
-              if(quad.object['uri'] || quad.object.token === 'uri') {
-                  that.lexicon.registerUri(quad.object.uri || quad.object.value, function(oid){
-                      object = oid;
-                      k();
-                  });
-              } else if(quad.object['literal'] || quad.object.token === 'literal') {
-                  that.lexicon.registerLiteral(quad.object.literal || quad.object.value, function(oid){
-                      object = oid;                    
-                      k();
-                  });
-              } else {
-                  that.lexicon.registerBlank(quad.object.blank || quad.object.value, function(oid){
-                      object = oid;
-                      k();
-                  });
-              }
-          }, function(k) {
-              // graph
-              if(quad.graph['uri'] || quad.graph.token === 'uri') {
-                  that.lexicon.registerUri(quad.graph.uri || quad.graph.value, function(oid){
-                      that.lexicon.registerGraph(oid,function(){
-                          graph = oid;
-                          k();
-                      });
-                  });
-              } else if(quad.graph['literal'] || quad.graph.token === 'literal') {
-                  that.lexicon.registerLiteral(quad.graph.literal || quad.graph.value, function(oid){
-                      graph = oid;                    
-                      k();
-                  });
-              } else {
-                  that.lexicon.registerBlank(quad.graph.blank || quad.graph.value, function(oid){
-                      graph = oid;
-                      k();
-                  });
-              }
-          })(function(result){
-              var quad = {subject: subject, predicate:predicate, object:object, graph: graph};
-              var key = new QuadIndexCommon.NodeKey(quad);
+            // subject
+            if(quad.subject['uri'] || quad.subject.token === 'uri') {
+                var oid = this.lexicon.registerUri(quad.subject.uri || quad.subject.value);
+                subject = oid;
+            } else if(quad.subject['literal'] || quad.subject.token === 'literal') {
+                var oid = this.lexicon.registerLiteral(quad.subject.literal || quad.subject.value);
+                subject = oid;                    
+            } else {
+                var oid = this.lexicon.registerBlank(quad.subject.blank || quad.subject.value)
+                subject = oid;
+            }
+
+            // predicate
+            if(quad.predicate['uri'] || quad.predicate.token === 'uri') {
+                var oid = this.lexicon.registerUri(quad.predicate.uri || quad.predicate.value);
+                predicate = oid;
+            } else if(quad.predicate['literal'] || quad.predicate.token === 'literal') {
+                var oid = this.lexicon.registerLiteral(quad.predicate.literal || quad.predicate.value);
+                predicate = oid;                    
+            } else {
+                var oid = this.lexicon.registerBlank(quad.predicate.blank || quad.predicate.value)
+                predicate = oid;
+            }
+
+            // object
+            if(quad.object['uri'] || quad.object.token === 'uri') {
+                var oid = this.lexicon.registerUri(quad.object.uri || quad.object.value);
+                object = oid;
+            } else if(quad.object['literal'] || quad.object.token === 'literal') {
+                var oid = this.lexicon.registerLiteral(quad.object.literal || quad.object.value);
+                object = oid;                    
+            } else {
+                var oid = this.lexicon.registerBlank(quad.object.blank || quad.object.value)
+                object = oid;
+            }
+
+            // graph
+            if(quad.graph['uri'] || quad.graph.token === 'uri') {
+                var oid = this.lexicon.registerUri(quad.graph.uri || quad.graph.value);
+                this.lexicon.registerGraph(oid);
+                graph = oid;
+
+            } else if(quad.graph['literal'] || quad.graph.token === 'literal') {
+                var oid = this.lexicon.registerLiteral(quad.graph.literal || quad.graph.value);
+                graph = oid;                    
+            } else {
+                var oid = this.lexicon.registerBlank(quad.graph.blank || quad.graph.value)
+                graph = oid;
+            }
+
+
+            var quad = {subject: subject, predicate:predicate, object:object, graph: graph};
+            var key = new QuadIndexCommon.NodeKey(quad);
               
-              that.backend.index(key, function(result, error){
-                  if(result == true){
-                      env.counter = env.counter + 1;
-                      kk(floop, env);
-                  } else {
-                      env.success = false;
-                      kk(floop, env);
-                  }
-              });            
-          });
-        } else {
-            kk(floop, env);
-        }
-    }, function(env){
-        Utils.stackCounterLimit = oldLimit;
-        if(env.success) {
-            callback(true, env.counter);
-        } else {
-            callback(false, "error loading quads");
-        }
-    });
+            var result = this.backend.index(key)
+            if(result == true){
+                counter = counter + 1;
+            } else {
+                success = false;
+                break;
+            }
+
+    }
+
+    if(success) {
+        if(callback)
+            callback(true, counter);
+        return counter;
+    } else {
+        if(callback)
+            callback(false, null);
+
+        return null;
+    }
 };
 
 // Low level operations for update queries
@@ -39680,22 +39299,19 @@ QueryEngine.QueryEngine.prototype._executeModifyQuery = function(aqt, queryEnv, 
             aqt.projection = [{"token": "variable", "kind": "*"}];
 
             that.executeSelect(aqt, queryEnv, defaultGraph, namedGraph, function(success, result) {                
-
-                if(success) {
-                    return that.denormalizeBindingsList(result, queryEnv.outCache, function(success, result){
-                        if(success) {
-                            bindings = result;
-                        } else {
-                            querySuccess = false;
-                        }
-                        return k();
-                    }); 
+                if(success) {                    
+                    var result = that.denormalizeBindingsList(result, queryEnv.outCache);
+                    if(result!=null) {
+                        bindings = result;
+                    } else {
+                        querySuccess = false;
+                    }
+                    return k();
                 } else {
                     querySuccess = false;
                     return k();
                 }
             });
-
         },function(k) {
             // delete query
 
@@ -39724,15 +39340,12 @@ QueryEngine.QueryEngine.prototype._executeModifyQuery = function(aqt, queryEnv, 
                     }
                 }
 
-                Utils.repeat(0, quads.length, function(kk,env) {                
-                    var quad = quads[env._i];
-                    var floop = arguments.callee;
-                    that._executeQuadDelete(quad, queryEnv, function(result, error) {
-                        kk(floop, env);
-                    });
-                }, function(env) {
-                    k();
-                });
+                var quad;
+                for(var j=0; j<quads.length; j++) {
+                    quad = quads[j];
+                    that._executeQuadDelete(quad, queryEnv);
+                }
+                k();
             } else {
                 k();
             }
@@ -39764,15 +39377,12 @@ QueryEngine.QueryEngine.prototype._executeModifyQuery = function(aqt, queryEnv, 
                     }
                 }
 
-                Utils.repeat(0, quads.length, function(kk,env) {                
-                    var quad = quads[env._i];
-                    var floop = arguments.callee;
-                    that._executeQuadInsert(quad, queryEnv, function(result, error) {
-                        kk(floop, env);
-                    });
-                }, function(env) {
-                    k();
-                });
+                for(var i=0; i<quads.length; i++) {
+                    var quad = quads[i];
+                    that._executeQuadInsert(quad, queryEnv);
+                }
+
+                k();
             } else {
                 k();
             }
@@ -39782,50 +39392,48 @@ QueryEngine.QueryEngine.prototype._executeModifyQuery = function(aqt, queryEnv, 
     });
 };
 
-QueryEngine.QueryEngine.prototype._executeQuadInsert = function(quad, queryEnv, callback) {
+QueryEngine.QueryEngine.prototype._executeQuadInsert = function(quad, queryEnv) {
     var that = this;
-    this.normalizeQuad(quad, queryEnv, true, function(success,normalized) {
-        if(success === true) {
-            var key = new QuadIndexCommon.NodeKey(normalized);
-            that.backend.search(key,function(result) {
-                if(result){
-                    callback(true, "duplicated");
-                } else {
-                    that.backend.index(key, function(result, error){
-                        if(result == true){
-                            that.callbacksBackend.nextGraphModification(Callbacks.added, [quad, normalized]);
-                            callback(true);
-                        } else {
-                            callback(false, error);
-                        }
-                    });
-                }
-            });
+    var normalized = this.normalizeQuad(quad, queryEnv, true);
+    if(normalized != null) {
+        var key = new QuadIndexCommon.NodeKey(normalized);
+        var result = that.backend.search(key);
+        if(result){
+            return(result);
         } else {
-            callback(false, result);
+            var result = that.backend.index(key);
+            if(result == true){
+                that.callbacksBackend.nextGraphModification(Callbacks.added, [quad, normalized]);
+                return true;
+            } else {
+                console.log("ERROR inserting quad");
+                return false;
+            }
         }
-    });
+    } else {
+        console.log("ERROR normalizing quad");
+        return false;
+    }
 };
 
-QueryEngine.QueryEngine.prototype._executeQuadDelete = function(quad, queryEnv, callback) {
+QueryEngine.QueryEngine.prototype._executeQuadDelete = function(quad, queryEnv) {
     var that = this;
-    this.normalizeQuad(quad, queryEnv, false, function(success,normalized) {
-        if(success === true) {
-            var key = new QuadIndexCommon.NodeKey(normalized);
-            that.backend['delete'](key, function(result, error){
-                that.lexicon.unregister(quad, key, function(result, error){
-                    if(result == true){
-                        that.callbacksBackend.nextGraphModification(Callbacks['deleted'], [quad, normalized]);
-                        callback(true);
-                    } else {
-                        callback(false, error);
-                    }
-                });
-            });
+    var normalized = this.normalizeQuad(quad, queryEnv, false);
+    if(normalized != null) {
+        var key = new QuadIndexCommon.NodeKey(normalized);
+        that.backend['delete'](key);
+        var result = that.lexicon.unregister(quad, key);
+        if(result == true){
+            that.callbacksBackend.nextGraphModification(Callbacks['deleted'], [quad, normalized]);
+            return true;
         } else {
-            callback(false, result);
+            console.log("ERROR unregistering quad");
+            return false;
         }
-    });
+    } else {
+        console.log("ERROR normalizing quad");
+        return false;
+    }
 };
 
 QueryEngine.QueryEngine.prototype._executeClearGraph = function(destinyGraph, queryEnv, callback) {
@@ -39833,27 +39441,26 @@ QueryEngine.QueryEngine.prototype._executeClearGraph = function(destinyGraph, qu
         this.execute("DELETE { ?s ?p ?o } WHERE { ?s ?p ?o }", callback);
     } else if(destinyGraph === 'named') {
         var that = this;
-        this.lexicon.registeredGraphs(true,function(success, graphs){
-            if(success === true) {
-                var foundErrorDeleting = false;
-                Utils.repeat(0, graphs.length,function(k,env) {
-                    var graph = graphs[env._i];
-                    var floop = arguments.callee;
-                    if(!foundErrorDeleting) {
-                        that.execute("DELETE { GRAPH <"+graph+"> { ?s ?p ?o } } WHERE { GRAPH <"+graph+"> { ?s ?p ?o } }", function(success, results){
-                            foundErrorDeleting = !success;
-                            k(floop, env);
-                        });
-                    } else {
+        var graphs = this.lexicon.registeredGraphs(true);
+        if(graphs!=null) {
+            var foundErrorDeleting = false;
+            Utils.repeat(0, graphs.length,function(k,env) {
+                var graph = graphs[env._i];
+                var floop = arguments.callee;
+                if(!foundErrorDeleting) {
+                    that.execute("DELETE { GRAPH <"+graph+"> { ?s ?p ?o } } WHERE { GRAPH <"+graph+"> { ?s ?p ?o } }", function(success, results){
+                        foundErrorDeleting = !success;
                         k(floop, env);
-                    }
-                }, function(env) {
-                    callback(!foundErrorDeleting);
-                });
-            } else {
-                callback(false, "Error deleting named graphs");
-            }
-        });
+                    });
+                } else {
+                    k(floop, env);
+                }
+            }, function(env) {
+                callback(!foundErrorDeleting);
+            });
+        } else {
+            callback(false, "Error deleting named graphs");
+        }
     } else if(destinyGraph === 'all') {
         var that = this;
         this.execute("CLEAR DEFAULT", function(success, result) {
@@ -40090,44 +39697,38 @@ Callbacks.CallbacksBackend.prototype.subscribe = function(s,p,o,g,callback, done
     var quad = this._tokenizeComponents(s,p,o,g);
     var queryEnv = {blanks:{}, outCache:{}};
     var that = this;
-    this.engine.normalizeQuad(quad, queryEnv, true, function(success, normalized){
-        if(success == true) {
-            var pattern =  new QuadIndexCommon.Pattern(normalized);        
-            var indexKey = that._indexForPattern(pattern);
-            var indexOrder = that.componentOrders[indexKey];
-            var index = that.indexMap[indexKey];
-            for(var i=0; i<indexOrder.length; i++) {
-                var component = indexOrder[i];
-                var quadValue = normalized[component];
-                if(quadValue === '_') {
-                    if(index['_'] == null) {
-                        index['_'] = [];
-                    }
-                    that.callbackCounter++;
-                    index['_'].push(that.callbackCounter);
-                    that.callbacksMap[that.callbackCounter] = callback;
-                    that.callbacksInverseMap[callback] = that.callbackCounter;
-                    break;
-                } else {
-                    if(i===indexOrder.length-1) {
-                        index[quadValue] = index[quadValue] || {'_':[]};
-                        that.callbackCounter++;
-                        index[quadValue]['_'].push(that.callbackCounter);
-                        that.callbacksMap[that.callbackCounter] = callback;
-                        that.callbacksInverseMap[callback] = that.callbackCounter;
-                    } else {
-                        index[quadValue] = index[quadValue] || {};
-                        index = index[quadValue];
-                    }
-                }
+    var normalized = this.engine.normalizeQuad(quad, queryEnv, true);
+    var pattern =  new QuadIndexCommon.Pattern(normalized);        
+    var indexKey = that._indexForPattern(pattern);
+    var indexOrder = that.componentOrders[indexKey];
+    var index = that.indexMap[indexKey];
+    for(var i=0; i<indexOrder.length; i++) {
+        var component = indexOrder[i];
+        var quadValue = normalized[component];
+        if(quadValue === '_') {
+            if(index['_'] == null) {
+                index['_'] = [];
             }
-            if(doneCallback != null)
-                doneCallback(true);
-
+            that.callbackCounter++;
+            index['_'].push(that.callbackCounter);
+            that.callbacksMap[that.callbackCounter] = callback;
+            that.callbacksInverseMap[callback] = that.callbackCounter;
+            break;
         } else {
-            doneCallback(false);
+            if(i===indexOrder.length-1) {
+                index[quadValue] = index[quadValue] || {'_':[]};
+                that.callbackCounter++;
+                index[quadValue]['_'].push(that.callbackCounter);
+                that.callbacksMap[that.callbackCounter] = callback;
+                that.callbacksInverseMap[callback] = that.callbackCounter;
+            } else {
+                index[quadValue] = index[quadValue] || {};
+                index = index[quadValue];
+            }
         }
-    });
+    }
+    if(doneCallback != null)
+        doneCallback(true);
 };
 
 Callbacks.CallbacksBackend.prototype.unsubscribe = function(callback) {
@@ -40234,10 +39835,14 @@ Callbacks.CallbacksBackend.prototype.observeNode = function() {
             };
             that.observersMap[callback] = observer;
             that.subscribeEmpty(Callbacks['eventsFlushed'], observer);
-            that.subscribe(uri,null,null,null,observer,doneCallback);
-            callback(node);
+            that.subscribe(uri,null,null,null,observer,function(){
+                callback(node);
+                if(doneCallback)
+                    doneCallback(true)
+            });
         } else {
-            doneCallback(false);
+            if(doneCallback)
+                doneCallback(false);
         }
     });
 };
@@ -40270,55 +39875,50 @@ Callbacks.CallbacksBackend.prototype.observeQuery = function(query, callback, en
     this.queriesList.push(counter);
     this.queriesCallbacksMap[counter] = callback;
 
-    Utils.repeat(0, patterns.length,
-                 function(k,env) {
-                     floop = arguments.callee;
-                     quad = patterns[env._i];
-                     if(quad.graph == null) {
-                         quad.graph = that.engine.lexicon.defaultGraphUriTerm;
-                     }
+    for(var i=0; i<patterns.length; i++) {
+        quad = patterns[i];
+        if(quad.graph == null) {
+            quad.graph = that.engine.lexicon.defaultGraphUriTerm;
+        }
 
-                     that.engine.normalizeQuad(quad, queryEnv, true, function(success, normalized){
-                         pattern =  new QuadIndexCommon.Pattern(normalized);        
-                         indexKey = that._indexForPattern(pattern);
-                         indexOrder = that.componentOrders[indexKey];
-                         index = that.queriesIndexMap[indexKey];
+        var normalized = that.engine.normalizeQuad(quad, queryEnv, true);
+        pattern =  new QuadIndexCommon.Pattern(normalized);        
+        indexKey = that._indexForPattern(pattern);
+        indexOrder = that.componentOrders[indexKey];
+        index = that.queriesIndexMap[indexKey];
 
-                         for(var i=0; i<indexOrder.length; i++) {
-                             var component = indexOrder[i];
-                             var quadValue = normalized[component];
-                             if(typeof(quadValue) === 'string') {
-                                 if(index['_'] == null) {
-                                     index['_'] = [];
-                                 }
-                                 index['_'].push(counter);
-                                 break;
-                             } else {
-                                 if(i===indexOrder.length-1) {
-                                     index[quadValue] = index[quadValue] || {'_':[]};
-                                     index[quadValue]['_'].push(counter);
-                                 } else {
-                                     index[quadValue] = index[quadValue] || {};
-                                     index = index[quadValue];
-                                 }
-                             }
-                         }
+        for(var i=0; i<indexOrder.length; i++) {
+            var component = indexOrder[i];
+            var quadValue = normalized[component];
+            if(typeof(quadValue) === 'string') {
+                if(index['_'] == null) {
+                    index['_'] = [];
+                }
+                index['_'].push(counter);
+                break;
+            } else {
+                if(i===indexOrder.length-1) {
+                    index[quadValue] = index[quadValue] || {'_':[]};
+                    index[quadValue]['_'].push(counter);
+                } else {
+                    index[quadValue] = index[quadValue] || {};
+                    index = index[quadValue];
+                }
+            }
+        }
 
-                         k(floop,env);
-                     });
-                 },
-                 function(env) {
-                     that.engine.execute(query,
-                                         function(success, results){
-                                             if(success){
-                                                 callback(results);
-                                             } else {
-                                                 console.log("ERROR in query callback "+results);
-                                             }                                             
-                                         });
-                     if(endCallback != null)
-                         endCallback();
-                 });
+    }
+
+    this.engine.execute(query, function(success, results){
+        if(success){
+            callback(results);
+        } else {
+            console.log("ERROR in query callback "+results);
+        }                                             
+    });
+
+    if(endCallback != null)
+        endCallback();
 };
 
 Callbacks.CallbacksBackend.prototype.stopObservingQuery = function(query) {
@@ -40419,7 +40019,7 @@ Store.Store = function(arg1, arg2) {
     }
 
     if(params['treeOrder'] == null) {
-        params['treeOrder'] = 2;
+        params['treeOrder'] = 15;
     }
 
     this.rdf = RDFJSInterface.rdf;
@@ -40756,7 +40356,6 @@ Store.Store.prototype.load = function(){
         var parser = this.engine.rdfLoader.parsers[mediaType];
 
         var that = this;
-
         this.engine.rdfLoader.loadFromFile(parser, {'token':'uri', 'value':graph.valueOf()}, data, function(success, quads) {
             if(success) {
                 that.engine.batchLoad(quads,callback);
@@ -40790,20 +40389,15 @@ Store.Store.prototype.registerParser = function(mediaType, parser) {
  * in the store
  */
 Store.Store.prototype.registeredGraphs = function(callback) {
-    this.engine.lexicon.registeredGraphs(true, function(success, graphs) {
-        if(success) {
-            var acum = [];
-            for(var i=0; i<graphs.length; i++) {
-                var graph = graphs[i];
-                var uri = new RDFJSInterface.NamedNode(graph);
-                acum.push(uri);
-            }
+    var graphs = this.engine.lexicon.registeredGraphs(true);
+    var acum = [];
+    for(var i=0; i<graphs.length; i++) {
+        var graph = graphs[i];
+        var uri = new RDFJSInterface.NamedNode(graph);
+        acum.push(uri);
+    }
 
-            return callback(true, acum);
-        } else {
-            return callback(success, graphs);
-        }
-    });
+    return callback(true, acum);    
 };
 
 Store.Store.prototype._nodeToQuery = function(term) {

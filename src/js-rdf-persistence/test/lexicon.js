@@ -29,34 +29,24 @@ exports.testLexiconInterface = function(test) {
     var uri = "http://test.com/1";
     var literal = '"this is a literal"';
 
-    lexicon.registerUri(uri, function(oid){
-        oid1 = oid;
-    });
+    oid1= lexicon.registerUri(uri);
 
-    lexicon.registerLiteral(literal, function(oid){
-        oid2 = oid;
-    });
+    oid2 = lexicon.registerLiteral(literal);
 
-    lexicon.retrieve(oid1,function(result){
-        test.ok(result.value===uri);
-    });
+    test.ok(uri===lexicon.retrieve(oid1).value);
 
-    lexicon.retrieve(oid2,function(result){
-        test.ok('"'+result.value+'"'===literal);
-    });
+    test.ok('"'+lexicon.retrieve(oid2).value+'"'===literal);
     
     try {
-        lexicon.retrieve(34234234234,function(result){
-            test.ok(false);
-        });
+        lexicon.retrieve(34234234234);
+        test.ok(false);
     } catch (e) {
         test.ok(true);
     }
 
     try {
-        lexicon.retrieve(34234234234,function(result){
-            test.ok(false);
-        });
+        lexicon.retrieve(34234234234);
+        test.ok(false)
     } catch (e) {
         test.ok(true);
     }

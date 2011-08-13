@@ -65,18 +65,17 @@ exports.indexAndRetrievalTest = function(test) {
             backend.range(pattern, function(results){
                 test.ok(results.length===1);
 
-                backend.delete(results[0], function(){
-                    for(var i=0; i<backend.indices.length; i++) {
-                        var indexKey = backend.indices[i];
-                        var index = backend.indexMap[indexKey];
+                backend.delete(results[0]);
+                for(var i=0; i<backend.indices.length; i++) {
+                    var indexKey = backend.indices[i];
+                    var index = backend.indexMap[indexKey];
 
-                        test.ok(index.root.numberActives === 0);
-                        test.ok(index.root.keys.length === 0);
-                    }
+                    test.ok(index.root.numberActives === 0);
+                    test.ok(index.root.keys.length === 0);
+                }
 
-                    test.done();
-                });
+                test.done();
             });
-        })
+        });
     });
 }

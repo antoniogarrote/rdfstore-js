@@ -6,7 +6,7 @@ BUILD_CONFIGURATION = {
     # list of mdoules to pack
     :modules => [
                  "./src/js-trees/src/utils.js",
-                 "./src/js-trees/src/in_memory_async_b_tree.js",
+                 "./src/js-trees/src/in_memory_b_tree.js",
                  "./src/js-rdf-persistence/src/quad_index_common.js",
                  "./src/js-rdf-persistence/src/quad_index.js",
                  "./src/js-rdf-persistence/src/quad_backend.js",
@@ -29,7 +29,7 @@ BUILD_CONFIGURATION = {
     # list of mdoules to pack
     :modules => [
                  "./src/js-trees/src/utils.js",
-                 "./src/js-trees/src/in_memory_async_b_tree.js",
+                 "./src/js-trees/src/in_memory_b_tree.js",
                  "./src/js-rdf-persistence/src/quad_index_common.js",
                  "./src/js-rdf-persistence/src/quad_index.js",
                  "./src/js-rdf-persistence/src/quad_backend.js",
@@ -49,7 +49,7 @@ BUILD_CONFIGURATION = {
                 ],
     :package => {
       :name    => "rdfstore",
-      :version => "0.2.2",
+      :version => "0.3.0",
       :description => "RDF graph store supporting the SPARQL query language",
       :keywords => ["RDF", "SPARQL", "graph", "store"],
       :author  => {

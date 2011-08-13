@@ -111,8 +111,10 @@ RDFJSInterface.UrisMap.prototype.shrink = function(iri) {
     for(var ns in this) {
         var prefix = this[ns];
         if(iri.indexOf(prefix) === 0) {
-            var suffix = iri.split(prefix)[1];
-            return ns + ":" + suffix;
+            if(prefix !== '') {
+                var suffix = iri.split(prefix)[1];
+                return ns + ":" + suffix;
+            }
         }
     }
 

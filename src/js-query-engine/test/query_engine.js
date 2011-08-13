@@ -77,12 +77,11 @@ exports.testInsertDataSimpleQueryLiteral = function(test){
                     }
                 }
 
-                engine.lexicon.retrieve(o, function(result){
-                    test.ok(result.token === "literal");
-                    test.ok(result.value === "2");
-                    test.ok(result.type === "http://www.w3.org/2001/XMLSchema#integer");
-                    test.done();
-                });
+                var result = engine.lexicon.retrieve(o);
+                test.ok(result.token === "literal");
+                test.ok(result.value === "2");
+                test.ok(result.type === "http://www.w3.org/2001/XMLSchema#integer");
+                test.done();
             });
 
         })
@@ -510,7 +509,6 @@ exports.testOrderBy1 = function(test) {
                               _:z    foaf:name   'Marie' .\
                               _:z    foaf:mbox   <mailto:alice.smith@example.com> .\
                             }", function(success, result) {
-
                                 engine.execute("PREFIX foaf:    <http://xmlns.com/foaf/0.1/>\
                                                 SELECT ?name WHERE { ?x foaf:name ?name } ORDER BY ?name",
                                                function(success, results) {
@@ -553,7 +551,6 @@ exports.testOrderBy2 = function(test) {
         });
     });
 };
-
 
 exports.testOrderBy3 = function(test) {
     new Lexicon.Lexicon(function(lexicon){
@@ -1122,23 +1119,19 @@ exports.testClearGraph4 = function(test){
            engine.execute("CLEAR ALL", function(success, results){
                test.ok(success);
                engine.execute("SELECT *  { ?s ?p ?o } ", function(success, results) {
-
                    test.ok(results);
                    test.ok(results.length === 0);
 
                engine.execute("SELECT * { GRAPH <http://example/president27> { ?s ?p ?o } }", function(success, results) {
-
                      test.ok(success);
                      test.ok(results.length === 0);
 
                    engine.execute("SELECT * { GRAPH <http://example/president25> { ?s ?p ?o } }", function(success, results) {
-
                        test.ok(results.length === 0);
-                       engine.lexicon.registeredGraphs(true,function(success, graphs) {
-                           test.ok(success);
-                           test.ok(graphs.length === 0);
-                           test.done();
-                       });
+                       var graphs = engine.lexicon.registeredGraphs(true);
+                       test.ok(success);
+                       test.ok(graphs.length === 0);
+                       test.done();
                    });
                });
                });
@@ -1357,11 +1350,10 @@ exports.testDrop4 = function(test){
                    engine.execute("SELECT * { GRAPH <http://example/president25> { ?s ?p ?o } }", function(success, results) {
 
                        test.ok(results.length === 0);
-                       engine.lexicon.registeredGraphs(true,function(success, graphs) {
-                           test.ok(success);
-                           test.ok(graphs.length === 0);
-                           test.done();
-                       });
+                       var graphs = engine.lexicon.registeredGraphs(true);
+                       test.ok(success);
+                       test.ok(graphs.length === 0);
+                       test.done();
                    });
                });
                });
@@ -1613,3 +1605,5 @@ exports.testGroupSum2 = function(test) {
         });
     });
 };
+
+

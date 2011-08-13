@@ -23,6 +23,7 @@ QueryEngine.QueryEngine = function(params) {
 };
 
 // Utils
+
 QueryEngine.QueryEngine.prototype.registerNsInEnvironment = function(prologue, env) {
     var prefixes = prologue.prefixes;
     var toSave = {};
@@ -663,52 +664,51 @@ QueryEngine.QueryEngine.prototype.executeSelect = function(unit, env, defaultDat
         }
 
         if (that.normalizeDatasets(dataset.default.concat(dataset.named), env) != null) {
-            var result = that.executeSelectUnit(projection, dataset, unit.pattern, env);
-            if(result != null) {
-                // detect single group
-                if(unit.group!=null && unit.group === "") {
-                    var foundUniqueGroup = false;
-                    for(var i=0; i<unit.projection.length; i++) {
-                        if(unit.projection[i].expression!=null && unit.projection[i].expression.expressionType === 'aggregate') {
-                            foundUniqueGroup = true;
-                            break;
+            that.executeSelectUnit(projection, dataset, unit.pattern, env, function(success, result){
+                if(success) {
+                    // detect single group
+                    if(unit.group!=null && unit.group === "") {
+                        var foundUniqueGroup = false;
+                        for(var i=0; i<unit.projection.length; i++) {
+                            if(unit.projection[i].expression!=null && unit.projection[i].expression.expressionType === 'aggregate') {
+                                foundUniqueGroup = true;
+                                break;
+                            }
+                        }
+                        if(foundUniqueGroup === true) {
+                            unit.group = 'singleGroup';
                         }
                     }
-                    if(foundUniqueGroup === true) {
-                        unit.group = 'singleGroup';
-                    }
-                }
-                if(unit.group && unit.group != "") {
-                    if(that.checkGroupSemantics(unit.group,projection)) {
-                        var groupedBindings = that.groupSolution(result, unit.group, env);
+                    if(unit.group && unit.group != "") {
+                        if(that.checkGroupSemantics(unit.group,projection)) {
+                            var groupedBindings = that.groupSolution(result, unit.group, env);
                              
-                        var aggregatedBindings = [];
-                        var foundError = false;
+                            var aggregatedBindings = [];
+                            var foundError = false;
                             
-                        for(var i=0; i<groupedBindings.length; i++) {
-                            var resultingBindings = that.aggregateBindings(projection, groupedBindings[i], env)
-                            aggregatedBindings.push(resultingBindings);
+                            for(var i=0; i<groupedBindings.length; i++) {
+                                var resultingBindings = that.aggregateBindings(projection, groupedBindings[i], env)
+                                aggregatedBindings.push(resultingBindings);
+                            }
+                            callback(true, {'bindings': aggregatedBindings, 'denorm':true});
+                        } else {
+                            callback(false, "Incompatible Group and Projection variables");
                         }
-                        callback(true, {'bindings': aggregatedBindings, 'denorm':true});
                     } else {
-                        callback(false, "Incompatible Group and Projection variables");
+                        var orderedBindings = that.applyOrderBy(order, result, env)
+                        var projectedBindings = that.projectBindings(projection, orderedBindings);
+                        modifiedBindings = that.applyModifier(modifier, projectedBindings);
+                        var limitedBindings  = that.applyLimitOffset(offset, limit, modifiedBindings);
+                        filteredBindings = that.removeDefaultGraphBindings(limitedBindings, dataset);
+                                
+                        callback(true, filteredBindings);
                     }
-                } else {
-                    var orderedBindings = that.applyOrderBy(order, result, env)
-                    var projectedBindings = that.projectBindings(projection, orderedBindings);
-                    modifiedBindings = that.applyModifier(modifier, projectedBindings);
-                    var limitedBindings  = that.applyLimitOffset(offset, limit, modifiedBindings);
-                    filteredBindings = that.removeDefaultGraphBindings(limitedBindings, dataset);
-                    
-                    callback(true, filteredBindings);
+
+                } else { // fail selectUnit
+                    callback(false, result);
                 }
-                
-            } else { // fail selectUnit
-                console.log("ERROR selectUnit");
-                callback(false, result);
-            }
+            });
         } else { // fail  normalizaing datasets
-            console.log("ERROR normalizing");
             callback(false,results);
         }
     } else {
@@ -840,32 +840,33 @@ QueryEngine.QueryEngine.prototype.groupSolution = function(bindings, group, quer
  */
 QueryEngine.QueryEngine.prototype.executeSelectUnit = function(projection, dataset, pattern, env) {
     if(pattern.kind === "BGP") {
-        return this.executeAndBGP(projection, dataset, pattern, env);
+        this.executeAndBGP(projection, dataset, pattern, env, callback);
     } else if(pattern.kind === "UNION") {
-        return this.executeUNION(projection, dataset, pattern.value, env);            
+        this.executeUNION(projection, dataset, pattern.value, env, callback);            
     } else if(pattern.kind === "JOIN") {
-        return this.executeJOIN(projection, dataset, pattern, env);            
+        this.executeJOIN(projection, dataset, pattern, env, callback);            
     } else if(pattern.kind === "LEFT_JOIN") {
-        return this.executeLEFT_JOIN(projection, dataset, pattern, env);            
+        this.executeLEFT_JOIN(projection, dataset, pattern, env, callback);            
     } else if(pattern.kind === "FILTER") {
         // Some components may have the filter inside the unit
-        var results = this.executeSelectUnit(projection, dataset, pattern.value, env);
-        if(results != null) {
-            results = QueryFilters.checkFilters(pattern, results, false, env, this);
-            return results;
-        } else {
-            return [];
-        }
+        var that = this;
+        this.executeSelectUnit(projection, dataset, pattern.value, env, function(success, results){
+            if(success) {
+                results = QueryFilters.checkFilters(pattern, results, false, env, that);
+                callback(true, results);
+            } else {
+                callback(false, results);
+            }
+        });
     } else if(pattern.kind === "EMPTY_PATTERN") {
         // as an example of this case  check DAWG test case: algebra/filter-nested-2
-        return [];
+        callback(true, []);
     } else {
-        console.log("Cannot execute query pattern " + pattern.kind + ". Not implemented yet.");
-        return null;
+        callback(false, "Cannot execute query pattern " + pattern.kind + ". Not implemented yet.");
     }
 };
 
-QueryEngine.QueryEngine.prototype.executeUNION = function(projection, dataset, patterns, env) {
+QueryEngine.QueryEngine.prototype.executeUNION = function(projection, dataset, patterns, env, callback) {
     var setQuery1 = patterns[0];
     var setQuery2 = patterns[1];
     var set1 = null;
@@ -878,31 +879,45 @@ QueryEngine.QueryEngine.prototype.executeUNION = function(projection, dataset, p
     var that = this;
     var sets = [];
 
-    set1 = that.executeSelectUnit(projection, dataset, setQuery1, env);
-    if(set1==null) {
-        return null;
-    }
-    set2 = that.executeSelectUnit(projection, dataset, setQuery2, env);
-    if(set2==null) {
-        return null;
-    }
-
-    var result = QueryPlan.unionBindings(set1, set2);
-    result = QueryFilters.checkFilters(patterns, result, false, env, that);
-    return result;
+    Utils.seq(function(k){
+        that.executeSelectUnit(projection, dataset, setQuery1, env, function(success, results){
+            if(success) {
+                set1 = results;
+                return k();
+            } else {
+                return callback(false, results);
+            }
+        });
+    }, function(k) {
+        that.executeSelectUnit(projection, dataset, setQuery2, env, function(success, results){
+            if(success) {
+                set2 = results;
+                return k();
+            } else {
+                return callback(false, results);
+            }
+        });
+    })(function(){
+        var result = QueryPlan.unionBindings(set1, set2);
+        result = QueryFilters.checkFilters(patterns, result, false, env, that);
+        callback(true, result);
+    });
 };
 
-QueryEngine.QueryEngine.prototype.executeAndBGP = function(projection, dataset, patterns, env) {
+QueryEngine.QueryEngine.prototype.executeAndBGP = function(projection, dataset, patterns, env, callback) {
     var that = this;
-    var result = QueryPlan.executeAndBGPs(patterns.value, dataset, this, env);
-    if(result!=null) {
-        return QueryFilters.checkFilters(patterns, result, false, env, that);
-    } else {
-        return null;
-    }
+
+    QueryPlan.executeAndBGPs(patterns.value, dataset, this, env, function(success,result){
+        if(success) {
+            result = QueryFilters.checkFilters(patterns, result, false, env, that);
+            callback(true, result);
+        } else {
+            callback(false, result);
+        }
+    });
 };
 
-QueryEngine.QueryEngine.prototype.executeLEFT_JOIN = function(projection, dataset, patterns, env) {
+QueryEngine.QueryEngine.prototype.executeLEFT_JOIN = function(projection, dataset, patterns, env, callback) {
     var setQuery1 = patterns.lvalue;
     var setQuery2 = patterns.rvalue;
 
@@ -912,30 +927,37 @@ QueryEngine.QueryEngine.prototype.executeLEFT_JOIN = function(projection, datase
     var that = this;
     var sets = [];
 
-    set1 = that.executeSelectUnit(projection, dataset, setQuery1, env);
-    if(set1==null) {
-        return null;
-    }
-     
-    set2 = that.executeSelectUnit(projection, dataset, setQuery2, env);
-    if(set2==null) {
-        return null;
-    }
+    Utils.seq(function(k){
+        that.executeSelectUnit(projection, dataset, setQuery1, env, function(success, results){
+            if(success) {
+                set1 = results;
+                return k();
+            } else {
+                return callback(false, results);
+            }
+        });
+    }, function(k) {
+        that.executeSelectUnit(projection, dataset, setQuery2, env, function(success, results){
+            if(success) {
+                set2 = results;
+                return k();
+            } else {
+                return callback(false, results);
+            }
+        });
+    })(function(){
+        var result = QueryPlan.leftOuterJoinBindings(set1, set2);
+        //console.log("SETS:")
+        //console.log(set1)
+        //console.log(set2)
+        //console.log("---")
+        //console.log(result);
 
-    
-    var result = QueryPlan.leftOuterJoinBindings(set1, set2);
-    //console.log("SETS:")
-    //console.log(set1)
-    //console.log(set2)
-    //console.log("---")
-    //console.log(result);
-
-    var bindings = QueryFilters.checkFilters(patterns, result, true, env, that);
-    //console.log("---")
-    //console.log(bindings)
-    //console.log("\r\n")
-    
-    if(set1.length>1 && set2.length>1) {
+        var bindings = QueryFilters.checkFilters(patterns, result, true, env, that);
+        //console.log("---")
+        //console.log(bindings)
+        //console.log("\r\n")
+        if(set1.length>1 && set2.length>1) {
             var vars = [];
             var vars1 = {};
             for(var p in set1[0]) {
@@ -985,13 +1007,14 @@ QueryEngine.QueryEngine.prototype.executeLEFT_JOIN = function(projection, datase
                 }
             }
             
-        return acum;
-    } else {
-        return bindings;
-    }
+            callback(true, acum);
+        } else {
+            callback(true, bindings);
+        }
+    });
 };
 
-QueryEngine.QueryEngine.prototype.executeJOIN = function(projection, dataset, patterns, env) {
+QueryEngine.QueryEngine.prototype.executeJOIN = function(projection, dataset, patterns, env, callback) {
     var setQuery1 = patterns.lvalue;
     var setQuery2 = patterns.rvalue;
     var set1 = null;
@@ -1000,25 +1023,34 @@ QueryEngine.QueryEngine.prototype.executeJOIN = function(projection, dataset, pa
     var that = this;
     var sets = [];
 
+    Utils.seq(function(k){
+        that.executeSelectUnit(projection, dataset, setQuery1, env, function(success, results){
+            if(success) {
+                set1 = results;
+                return k();
+            } else {
+                return callback(false, results);
+            }
+        });
+    }, function(k) {
+        that.executeSelectUnit(projection, dataset, setQuery2, env, function(success, results){
+            if(success) {
+                set2 = results;
+                return k();
+            } else {
+                return callback(false, results);
+            }
+        });
+    })(function(){
+        var result = QueryPlan.joinBindings(set1, set2);
 
-    set1 = that.executeSelectUnit(projection, dataset, setQuery1, env);
-    if(set1 == null) {
-        return null;
-    }
-
-    set2 = that.executeSelectUnit(projection, dataset, setQuery2, env);
-    if(set2 == null) {
-        return null;
-    }
-
-    var result = QueryPlan.joinBindings(set1, set2);
-
-    result = QueryFilters.checkFilters(patterns, result, false, env, that);
-    return result;
+        result = QueryFilters.checkFilters(patterns, result, false, env, that);
+        callback(true, result);
+    });
 };
 
 
-QueryEngine.QueryEngine.prototype.rangeQuery = function(quad, queryEnv) {
+QueryEngine.QueryEngine.prototype.rangeQuery = function(quad, queryEnv, callback) {
     var that = this;
     //console.log("BEFORE:");
     //console.log("QUAD:");
@@ -1030,17 +1062,17 @@ QueryEngine.QueryEngine.prototype.rangeQuery = function(quad, queryEnv) {
         //console.log(key);
         //console.log(new QuadIndexCommon.Pattern(key));
         //console.log(key);
-        var quads = that.backend.range(new QuadIndexCommon.Pattern(key));
-        //console.log("retrieved");
-        //console.log(quads)
-        if(quads == null || quads.length == 0) {
-            return [];
-        } else {
-            return quads;
-        }
+        that.backend.range(new QuadIndexCommon.Pattern(key),function(quads){
+            //console.log("retrieved");
+            //console.log(quads)
+            if(quads == null || quads.length == 0) {
+                callback(true, []);
+            } else {
+                callback(true, quads);
+            }
+        });
     } else {
-        console.log("ERROR normalizing quad");
-        return null;
+        callback(false, "Cannot normalize quad: "+quad);
     }
 };
 
@@ -1058,20 +1090,33 @@ QueryEngine.QueryEngine.prototype.executeUpdate = function(syntaxTree, callback)
 
         var aqt = that.abstractQueryTree.parseExecutableUnit(units[i]);
         if(aqt.kind === 'insertdata') {
-            for(var j=0; j<aqt.quads.length; j++) {
-                var quad = aqt.quads[j];
-                var result = that._executeQuadInsert(quad, queryEnv);
-                if(result !== true) {
-                    return callback(false, error);
-                }
-            }
-            callback(true);
+            Utils.repeat(0, aqt.quads.length, function(k,env) {                
+                var quad = aqt.quads[env._i];
+                var floop = arguments.callee;
+                that._executeQuadInsert(quad, queryEnv, function(result, error) {
+                    if(result === true) {
+                        k(floop, env);
+                    } else {
+                        callback(false, error);
+                    }
+                });
+            }, function(env) {
+                callback(true);
+            });
         } else if(aqt.kind === 'deletedata') {
-            for(var j=0; j<aqt.quads.length; j++) {
-                var quad = aqt.quads[j];
-                this._executeQuadDelete(quad, queryEnv);
-            }
-            callback(true);
+            Utils.repeat(0, aqt.quads.length, function(k,env) {                
+                var quad = aqt.quads[env._i];
+                var floop = arguments.callee;
+                that._executeQuadDelete(quad, queryEnv, function(result, error) {
+                    if(result === true) {
+                        k(floop, env);
+                    } else {
+                        callback(false, error);
+                    }
+                });
+            }, function(env) {
+                callback(true);
+            });
         } else if(aqt.kind === 'modify') {
             this._executeModifyQuery(aqt, queryEnv, callback);
         } else if(aqt.kind === 'create') {
@@ -1087,8 +1132,7 @@ QueryEngine.QueryEngine.prototype.executeUpdate = function(syntaxTree, callback)
                     console.log("Error loading graph");
                     console.log(result);
                 } else {
-                    var result = that.batchLoad(result);
-                    callback(result!=null, result||"error batch loading quads");
+                    that.batchLoad(result, callback);
                 }
             });
         } else if(aqt.kind === 'drop') {
@@ -1102,65 +1146,72 @@ QueryEngine.QueryEngine.prototype.executeUpdate = function(syntaxTree, callback)
 };
 
 QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
+    var that = this;
     var subject    = null;
     var predicate  = null;
     var object     = null;
     var graph      = null;
     var oldLimit = Utils.stackCounterLimit;
-    var counter = 0;
-    var success = true;
+    Utils.stackCounter = 0;
+    Utils.stackCounterLimit = 10;
 
-    for(var i=0; i<quads.length; i++) {
+    Utils.repeat(0, quads.length, function(kk,env){
+        if(env.success == null) {
+            env.success = true;
+            env.counter = 0;
+        }
+        var floop = arguments.callee;
+        var quad = quads[env._i];
 
-        var quad = quads[i];
+        if(env.success) {
 
             // subject
             if(quad.subject['uri'] || quad.subject.token === 'uri') {
-                var oid = this.lexicon.registerUri(quad.subject.uri || quad.subject.value);
+                var oid = that.lexicon.registerUri(quad.subject.uri || quad.subject.value);
                 subject = oid;
             } else if(quad.subject['literal'] || quad.subject.token === 'literal') {
-                var oid = this.lexicon.registerLiteral(quad.subject.literal || quad.subject.value);
+                var oid = that.lexicon.registerLiteral(quad.subject.literal || quad.subject.value);
                 subject = oid;                    
             } else {
-                var oid = this.lexicon.registerBlank(quad.subject.blank || quad.subject.value)
+                var oid = that.lexicon.registerBlank(quad.subject.blank || quad.subject.value)
                 subject = oid;
             }
 
             // predicate
             if(quad.predicate['uri'] || quad.predicate.token === 'uri') {
-                var oid = this.lexicon.registerUri(quad.predicate.uri || quad.predicate.value);
+                var oid = that.lexicon.registerUri(quad.predicate.uri || quad.predicate.value);
                 predicate = oid;
             } else if(quad.predicate['literal'] || quad.predicate.token === 'literal') {
-                var oid = this.lexicon.registerLiteral(quad.predicate.literal || quad.predicate.value);
+                var oid = that.lexicon.registerLiteral(quad.predicate.literal || quad.predicate.value);
                 predicate = oid;                    
             } else {
-                var oid = this.lexicon.registerBlank(quad.predicate.blank || quad.predicate.value)
+                var oid = that.lexicon.registerBlank(quad.predicate.blank || quad.predicate.value)
                 predicate = oid;
             }
 
             // object
             if(quad.object['uri'] || quad.object.token === 'uri') {
-                var oid = this.lexicon.registerUri(quad.object.uri || quad.object.value);
+                var oid = that.lexicon.registerUri(quad.object.uri || quad.object.value);
                 object = oid;
             } else if(quad.object['literal'] || quad.object.token === 'literal') {
-                var oid = this.lexicon.registerLiteral(quad.object.literal || quad.object.value);
+                var oid = that.lexicon.registerLiteral(quad.object.literal || quad.object.value);
                 object = oid;                    
             } else {
-                var oid = this.lexicon.registerBlank(quad.object.blank || quad.object.value)
+                var oid = that.lexicon.registerBlank(quad.object.blank || quad.object.value)
                 object = oid;
             }
 
             // graph
             if(quad.graph['uri'] || quad.graph.token === 'uri') {
-                var oid = this.lexicon.registerUri(quad.graph.uri || quad.graph.value);
-                this.lexicon.registerGraph(oid);
+                var oid = that.lexicon.registerUri(quad.graph.uri || quad.graph.value);
+                that.lexicon.registerGraph(oid);
                 graph = oid;
 
             } else if(quad.graph['literal'] || quad.graph.token === 'literal') {
-                var oid = this.lexicon.registerLiteral(quad.graph.literal || quad.graph.value);
+                var oid = that.lexicon.registerLiteral(quad.graph.literal || quad.graph.value);
                 graph = oid;                    
             } else {
-                var oid = this.lexicon.registerBlank(quad.graph.blank || quad.graph.value)
+                var oid = that.lexicon.registerBlank(quad.graph.blank || quad.graph.value)
                 graph = oid;
             }
 
@@ -1168,26 +1219,26 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
             var quad = {subject: subject, predicate:predicate, object:object, graph: graph};
             var key = new QuadIndexCommon.NodeKey(quad);
               
-            var result = this.backend.index(key)
-            if(result == true){
-                counter = counter + 1;
-            } else {
-                success = false;
-                break;
-            }
-
-    }
-
-    if(success) {
-        if(callback)
-            callback(true, counter);
-        return counter;
-    } else {
-        if(callback)
-            callback(false, null);
-
-        return null;
-    }
+            that.backend.index(key, function(result, error){
+                if(result == true){
+                    env.counter = env.counter + 1;
+                    kk(floop, env);
+                } else {
+                    env.success = false;
+                    kk(floop, env);
+                }
+            });            
+        } else {
+            kk(floop, env);
+        }
+    }, function(env){
+        Utils.stackCounterLimit = oldLimit;
+        if(env.success) {
+            callback(true, env.counter);
+        } else {
+            callback(false, "error loading quads");
+        }
+    });
 };
 
 // Low level operations for update queries
@@ -1229,7 +1280,7 @@ QueryEngine.QueryEngine.prototype._executeModifyQuery = function(aqt, queryEnv, 
             aqt.projection = [{"token": "variable", "kind": "*"}];
 
             that.executeSelect(aqt, queryEnv, defaultGraph, namedGraph, function(success, result) {                
-                if(success) {                    
+                if(success) {
                     var result = that.denormalizeBindingsList(result, queryEnv.outCache);
                     if(result!=null) {
                         bindings = result;
@@ -1270,12 +1321,15 @@ QueryEngine.QueryEngine.prototype._executeModifyQuery = function(aqt, queryEnv, 
                     }
                 }
 
-                var quad;
-                for(var j=0; j<quads.length; j++) {
-                    quad = quads[j];
-                    that._executeQuadDelete(quad, queryEnv);
-                }
-                k();
+                Utils.repeat(0, quads.length, function(kk,env) {                
+                    var quad = quads[env._i];
+                    var floop = arguments.callee;
+                    that._executeQuadDelete(quad, queryEnv, function(result, error) {
+                        kk(floop, env);
+                    });
+                }, function(env) {
+                    k();
+                });
             } else {
                 k();
             }
@@ -1307,12 +1361,15 @@ QueryEngine.QueryEngine.prototype._executeModifyQuery = function(aqt, queryEnv, 
                     }
                 }
 
-                for(var i=0; i<quads.length; i++) {
-                    var quad = quads[i];
-                    that._executeQuadInsert(quad, queryEnv);
-                }
-
-                k();
+                Utils.repeat(0, quads.length, function(kk,env) {                
+                    var quad = quads[env._i];
+                    var floop = arguments.callee;
+                    that._executeQuadInsert(quad, queryEnv, function(result, error) {
+                        kk(floop, env);
+                    });
+                }, function(env) {
+                    k();
+                });
             } else {
                 k();
             }
@@ -1322,47 +1379,46 @@ QueryEngine.QueryEngine.prototype._executeModifyQuery = function(aqt, queryEnv, 
     });
 };
 
-QueryEngine.QueryEngine.prototype._executeQuadInsert = function(quad, queryEnv) {
+QueryEngine.QueryEngine.prototype._executeQuadInsert = function(quad, queryEnv, callback) {
     var that = this;
-    var normalized = this.normalizeQuad(quad, queryEnv, true);
+    var normalized = this.normalizeQuad(quad, queryEnv, true)
     if(normalized != null) {
         var key = new QuadIndexCommon.NodeKey(normalized);
-        var result = that.backend.search(key);
-        if(result){
-            return(result);
-        } else {
-            var result = that.backend.index(key);
-            if(result == true){
-                that.callbacksBackend.nextGraphModification(Callbacks.added, [quad, normalized]);
-                return true;
+        that.backend.search(key,function(result) {
+            if(result){
+                callback(true, "duplicated");
             } else {
-                console.log("ERROR inserting quad");
-                return false;
+                that.backend.index(key, function(result, error){
+                    if(result == true){
+                        that.callbacksBackend.nextGraphModification(Callbacks.added, [quad, normalized]);
+                        callback(true);
+                    } else {
+                        callback(false, error);
+                    }
+                });
             }
-        }
+        });
     } else {
-        console.log("ERROR normalizing quad");
-        return false;
+        callback(false, result);
     }
 };
 
-QueryEngine.QueryEngine.prototype._executeQuadDelete = function(quad, queryEnv) {
+QueryEngine.QueryEngine.prototype._executeQuadDelete = function(quad, queryEnv, callback) {
     var that = this;
     var normalized = this.normalizeQuad(quad, queryEnv, false);
     if(normalized != null) {
         var key = new QuadIndexCommon.NodeKey(normalized);
-        that.backend.delete(key);
-        var result = that.lexicon.unregister(quad, key);
-        if(result == true){
-            that.callbacksBackend.nextGraphModification(Callbacks['deleted'], [quad, normalized]);
-            return true;
-        } else {
-            console.log("ERROR unregistering quad");
-            return false;
-        }
+        that.backend.delete(key, function(result, error){
+            var result = that.lexicon.unregister(quad, key);
+            if(result == true){
+                that.callbacksBackend.nextGraphModification(Callbacks['deleted'], [quad, normalized]);
+                callback(true);
+            } else {
+                callback(false, error);
+            }
+        });
     } else {
-        console.log("ERROR normalizing quad");
-        return false;
+        callback(false, result);
     }
 };
 

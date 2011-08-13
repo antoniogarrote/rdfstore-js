@@ -146,3 +146,40 @@ exports.randomArrays = function(test) {
     }
     test.done();
 }
+
+var shuffle = function(o){ //v1.0
+    for(var j, x, i = o.length; i; j = parseInt(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
+    return o;
+};
+
+
+exports.testDeletionBig = function(test) {
+    var t = new btree.Tree(15);
+    var acum = [];
+    var limit = 150000;
+    for(var i=0; i<limit; i++) {
+        acum.push(i);
+    }
+
+    acum = shuffle(acum);
+
+    for(var i=0; i<limit; i++) {
+        t.insert(acum[i],acum[i]);
+    }
+
+    var d = t.search(9);
+    test.ok(d===9)
+        
+    acum = shuffle(acum);
+    var before = new Date().getTime();
+    console.log("*** DELETING");
+    for(var i=0; i<limit; i++) {
+        t.delete(acum[i]);
+    }
+        
+    var after = new Date().getTime();
+    console.log("*** DELETED -> "+(after-before));
+    test.ok(t.root.numberActives===0);
+    test.done();
+       
+}

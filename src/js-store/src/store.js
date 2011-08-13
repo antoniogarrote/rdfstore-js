@@ -35,7 +35,7 @@ Store.Store = function(arg1, arg2) {
     }
 
     if(params['treeOrder'] == null) {
-        params['treeOrder'] = 2;
+        params['treeOrder'] = 15;
     }
 
     this.rdf = RDFJSInterface.rdf;
@@ -372,7 +372,6 @@ Store.Store.prototype.load = function(){
         var parser = this.engine.rdfLoader.parsers[mediaType];
 
         var that = this;
-
         this.engine.rdfLoader.loadFromFile(parser, {'token':'uri', 'value':graph.valueOf()}, data, function(success, quads) {
             if(success) {
                 that.engine.batchLoad(quads,callback);
@@ -406,20 +405,15 @@ Store.Store.prototype.registerParser = function(mediaType, parser) {
  * in the store
  */
 Store.Store.prototype.registeredGraphs = function(callback) {
-    this.engine.lexicon.registeredGraphs(true, function(success, graphs) {
-        if(success) {
-            var acum = [];
-            for(var i=0; i<graphs.length; i++) {
-                var graph = graphs[i];
-                var uri = new RDFJSInterface.NamedNode(graph);
-                acum.push(uri);
-            }
+    var graphs = this.engine.lexicon.registeredGraphs(true);
+    var acum = [];
+    for(var i=0; i<graphs.length; i++) {
+        var graph = graphs[i];
+        var uri = new RDFJSInterface.NamedNode(graph);
+        acum.push(uri);
+    }
 
-            return callback(true, acum);
-        } else {
-            return callback(success, graphs);
-        }
-    });
+    return callback(true, acum);    
 };
 
 Store.Store.prototype._nodeToQuery = function(term) {

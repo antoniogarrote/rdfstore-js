@@ -32,16 +32,19 @@ QuadBackend.QuadBackend = function(configuration, callback) {
             GSP: ['graph', 'subject', 'predicate', 'object'],
             OS: ['object', 'subject', 'predicate', 'graph']
         }
-
-        for(var i=0; i<this.indices.length; i++) {
-            var indexKey = this.indices[i];
-            var tree = new QuadIndex.Tree({order: this.treeOrder,
-                                           componentOrder: this.componentOrders[indexKey]});
-            this.indexMap[indexKey] = tree;
-        }
-        
-        if(callback)
-            callback(this);        
+        var that = this;
+        Utils.repeat(0, this.indices.length,function(k,e) {
+            var indexKey = that.indices[e._i];
+            var floop = arguments.callee;
+            new QuadIndex.Tree({order: that.treeOrder,
+                                componentOrder: that.componentOrders[indexKey]},
+                               function(tree){
+                                   that.indexMap[indexKey] = tree;
+                                   k(floop,e);
+                               });
+        }, function(e) {
+            callback(that);
+        });
     }
 }
 
@@ -67,52 +70,51 @@ QuadBackend.QuadBackend.prototype._indexForPattern = function(pattern) {
 
 
 QuadBackend.QuadBackend.prototype.index = function(quad, callback) {
-    for(var i=0; i<this.indices.length; i++) {
-        var indexKey = this.indices[i];
-        var index= this.indexMap[indexKey];
+    var that = this;
 
-        index.insert(quad);
-    }
+    Utils.repeat(0, this.indices.length,function(k,e) {
+        var indexKey = that.indices[e._i];
+        var index= that.indexMap[indexKey];
+        var floop = arguments.callee;
 
-    if(callback)
+        index.insert(quad, function(result){
+            k(floop, e);
+        });
+    }, function(e) {
         callback(true);
-
-    return true;
+    });
 }
 
 QuadBackend.QuadBackend.prototype.range = function(pattern, callback)  {
     var indexKey = this._indexForPattern(pattern);
     var index = this.indexMap[indexKey];
-    var quads = index.range(pattern);
-    if(callback) 
+    index.range(pattern, function(quads){
         callback(quads);
-
-    return quads;
+    });
 }
 
 QuadBackend.QuadBackend.prototype.search = function(quad, callback)  {
     var indexKey = this.indices[0];
     var index= this.indexMap[indexKey];
-    var result = index.search(quad);
 
-    if(callback)
+    index.search(quad, function(result){
         callback(result!=null);
-
-    return (result!=null)
+    });
 }
 
 
 QuadBackend.QuadBackend.prototype.delete = function(quad, callback) {
-    var indexKey, index;
-    for(var i=0; i<this.indices.length; i++) {
-        indexKey = this.indices[i];
-        index= this.indexMap[indexKey];
+    var that = this;
 
-        index.delete(quad);
-    }
+    Utils.repeat(0, this.indices.length,function(k,e) {
+        var indexKey = that.indices[e._i];
+        var index= that.indexMap[indexKey];
+        var floop = arguments.callee;
 
-    if(callback)
-        callback(true);
-
-    return true;
+        index.delete(quad, function(result){
+            k(floop, e);
+        });
+    }, function(e) {
+        callback(that);
+    });
 }

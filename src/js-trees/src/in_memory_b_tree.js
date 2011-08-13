@@ -101,7 +101,7 @@ InMemoryBTree.Tree.prototype._updateRootNode = function(node) {
  * Retrieves the node matching the given value.
  * If no node is found, null is returned.
  */
-InMemoryBTree.Tree.prototype.search = function(key) {
+InMemoryBTree.Tree.prototype.search = function(key, checkExists) {
     var searching = true;
     var node = this.root;
 
@@ -112,7 +112,11 @@ InMemoryBTree.Tree.prototype.search = function(key) {
         }
 
         if(idx < node.numberActives && this.comparator(node.keys[idx].key,key) === 0) {
-            return node.keys[idx].data;
+            if(checkExists != null && checkExists == true) {
+                return true;
+            } else {
+                return node.keys[idx].data;
+            }
         } else {
             if(node.isLeaf === true) {
                 searching = false;

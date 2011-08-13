@@ -471,7 +471,6 @@ exports.testLoad1 = function(test) {
               "age": "41",
               "homepage": "http://example.org/home/"
             };
-        
         store.load("application/json", input, "ex:test", function(success, results){
               store.node("ex:john_smith", "ex:test", function(success, graph) {
                 test.ok(graph.toArray().length === 3);
