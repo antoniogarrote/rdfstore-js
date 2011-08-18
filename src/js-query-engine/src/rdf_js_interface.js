@@ -326,7 +326,7 @@ RDFJSInterface.Literal = function(value, language, datatype) {
     RDFJSInterface.RDFNode.call(this, "Literal");
     this.nominalValue = value;
     if(language != null) {
-        this.nominalValue = this.nominalValue
+        this.language = language;
     } else if(datatype != null) {
         this.datatype = datatype;
     }
@@ -602,7 +602,7 @@ RDFJSInterface.buildBlankNode = function(value, bindings, engine, env) {
 };
 
 RDFJSInterface.buildLiteral = function(value, bindings, engine, env) {
-    return new RDFJSInterface.Literal(value.value, value.language, value.type);
+    return new RDFJSInterface.Literal(value.value, value.lang, value.type);
 };
 
 RDFJSInterface.buildNamedNode = function(value, bindings, engine, env) {

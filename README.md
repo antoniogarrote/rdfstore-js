@@ -17,7 +17,7 @@ rdfstore-js is a pure Javascript implementation of a RDF graph store with suppor
           store.execute('PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
                          PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
                          PREFIX : <http://example.org/>\
-                         SELECT ?s FROM NAMED :people { GRAPH ?g { ?s rdf:type foaf:People } }',
+                         SELECT ?s FROM NAMED :people { GRAPH ?g { ?s rdf:type foaf:Person } }',
                          function(success, results) {
 
                            console.log(peopleGraph.toArray()[0].subject.valueOf() === results[0].s.value);
