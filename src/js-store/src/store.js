@@ -8,6 +8,8 @@ var QuadBackend = require("./../../js-rdf-persistence/src/quad_backend").QuadBac
 var Lexicon = require("./../../js-rdf-persistence/src/lexicon").Lexicon;
 var RDFJSInterface = require("./../../js-query-engine/src/rdf_js_interface.js").RDFJSInterface;
 
+Store.VERSION = "0.3.1";
+
 Store.create = function(){
     if(arguments.length == 1) {
         return new Store.Store(arguments[0]);

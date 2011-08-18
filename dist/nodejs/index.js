@@ -1634,7 +1634,6 @@ Lexicon.Lexicon.prototype.registerUri = function(uri) {
     if(uri === this.defaultGraphUri) {
         return(this.defaultGraphOid);
     } else if(this.uriToOID[uri] == null){
-        console.log("STORING "+uri);
         var oid = this.oidCounter
         var oidStr = 'u'+oid;
         this.oidCounter++;
@@ -35678,7 +35677,7 @@ RDFJSInterface.Literal = function(value, language, datatype) {
     RDFJSInterface.RDFNode.call(this, "Literal");
     this.nominalValue = value;
     if(language != null) {
-        this.nominalValue = this.nominalValue
+        this.language = language;
     } else if(datatype != null) {
         this.datatype = datatype;
     }
@@ -35954,7 +35953,7 @@ RDFJSInterface.buildBlankNode = function(value, bindings, engine, env) {
 };
 
 RDFJSInterface.buildLiteral = function(value, bindings, engine, env) {
-    return new RDFJSInterface.Literal(value.value, value.language, value.type);
+    return new RDFJSInterface.Literal(value.value, value.lang, value.type);
 };
 
 RDFJSInterface.buildNamedNode = function(value, bindings, engine, env) {
@@ -37785,9 +37784,6 @@ QueryPlan.executeAndBindings = function(bindingsa, bindingsb) {
 };
 
 QueryPlan.executeAndBGP = function(bgpa, bgpb, dataset, queryEngine, queryEnv) {
-    console.log("*** AND BGP");
-    console.log(bgpa);
-    console.log(bgpb);
     if(bgpa==null) {
         return QueryPlan.executeEmptyJoinBGP(bgpb, dataset, queryEngine, queryEnv);
     } else if(bgpb==null) {
@@ -37850,8 +37846,7 @@ QueryPlan.executeBGPDatasets = function(bgp, dataset, queryEngine, queryEnv) {
             if(duplicates[dataset.named[i].oid] == null) {
                 duplicates[dataset.named[i].oid] = true;
                 bgp.graph = dataset.named[i];//.oid
-                console.log("RANGE QUERY");
-                console.log(bgp);
+                
                 var results = queryEngine.rangeQuery(bgp, queryEnv);
                 if(results != null) {
                     results = QueryPlan.buildBindingsFromRange(results, bgp);
@@ -38401,14 +38396,12 @@ QueryEngine.QueryEngine.prototype.resolveNsInEnvironment = function(prefix, env)
 QueryEngine.QueryEngine.prototype.normalizeTerm = function(term, env, shouldIndex) {
     if(term.token === 'uri') {
         var uri = Utils.lexicalFormBaseUri(term, env);
-        console.log("*** URI:"+uri);
         if(uri == null) {
             return(null);
         } else {
             if(shouldIndex) {
                 return(this.lexicon.registerUri(uri));
             } else {
-                console.log("RESOLVING");
                 return(this.lexicon.resolveUri(uri));
             }
         }
@@ -38449,9 +38442,6 @@ QueryEngine.QueryEngine.prototype.normalizeDatasets = function(datasets, outerEn
     var that = this;
     for(var i=0; i<datasets.length; i++) {
         var dataset = datasets[i];
-        console.log("*** normalizing");
-        console.log(dataset);
-        console.log(outerEnv);
         if(dataset.value === that.lexicon.defaultGraphUri) {
             dataset.oid = that.lexicon.defaultGraphOid;
         } else {
@@ -38501,7 +38491,6 @@ QueryEngine.QueryEngine.prototype.normalizeQuad = function(quad, queryEnv, shoul
         return null
     }
 
-    console.log("normalizing object");
     oid = this.normalizeTerm(quad.object, queryEnv, shouldIndex);
     if(oid!=null) {
         object = oid;
@@ -38587,14 +38576,12 @@ QueryEngine.QueryEngine.prototype.denormalizeBindings = function(bindings, envOu
 QueryEngine.QueryEngine.prototype.execute = function(queryString, callback, defaultDataset, namedDataset){
     try{
         queryString = Utils.normalizeUnicodeLiterals(queryString);
-        console.log(queryString);
+
         var syntaxTree = this.abstractQueryTree.parseQueryString(queryString);
-        console.log(syntaxTree)
         if(syntaxTree == null) {
             callback(false,"Error parsing query string");
         } else {
             if(syntaxTree.token === 'query' && syntaxTree.kind == 'update')  {
-                console.log("UPDATE");
                 this.callbacksBackend.startGraphModification();
                 var that = this;
                 this.executeUpdate(syntaxTree, function(success, result){
@@ -38608,7 +38595,6 @@ QueryEngine.QueryEngine.prototype.execute = function(queryString, callback, defa
                     }
                 });
             } else if(syntaxTree.token === 'query' && syntaxTree.kind == 'query') {
-                console.log("QUERY");
                 this.executeQuery(syntaxTree, callback, defaultDataset, namedDataset);
             }
         }
@@ -38637,10 +38623,7 @@ QueryEngine.QueryEngine.prototype.executeQuery = function(syntaxTree, callback, 
 
     // can be anything else but a select???
     if(aqt.kind === 'select') {
-      console.log("EXECUTING SELECT");
       this.executeSelect(aqt, queryEnv, defaultDataset, namedDataset, function(success, result){
-          console.log("SELECT RESULT");
-          console.log(result);
           if(success) {
               if(typeof(result) === 'object' && result.denorm === true) {
                   callback(true, result['bindings']);
@@ -38758,8 +38741,6 @@ QueryEngine.QueryEngine.prototype.executeSelect = function(unit, env, defaultDat
         }
 
         if (that.normalizeDatasets(dataset['default'].concat(dataset.named), env) != null) {
-            console.log("DATASET");
-            console.log(dataset);
             var result = that.executeSelectUnit(projection, dataset, unit.pattern, env);
             if(result != null) {
                 // detect single group
@@ -38936,8 +38917,6 @@ QueryEngine.QueryEngine.prototype.groupSolution = function(bindings, group, quer
  * Here, all the constructions of the SPARQL algebra are handled
  */
 QueryEngine.QueryEngine.prototype.executeSelectUnit = function(projection, dataset, pattern, env) {
-    console.log("EXECUTING SELECT UNIT");
-    console.log(pattern);
     if(pattern.kind === "BGP") {
         return this.executeAndBGP(projection, dataset, pattern, env);
     } else if(pattern.kind === "UNION") {
@@ -39119,16 +39098,16 @@ QueryEngine.QueryEngine.prototype.executeJOIN = function(projection, dataset, pa
 
 QueryEngine.QueryEngine.prototype.rangeQuery = function(quad, queryEnv) {
     var that = this;
-    console.log("BEFORE:");
-    console.log("QUAD:");
-    console.log(quad);
+    //console.log("BEFORE:");
+    //console.log("QUAD:");
+    //console.log(quad);
     var key = that.normalizeQuad(quad, queryEnv, false)
     if(key != null) {
-        console.log("RANGE QUERY:")
-        console.log(key);
-        console.log(new QuadIndexCommon.Pattern(key));
-        console.log(key);
-        
+        //console.log("RANGE QUERY:")
+        //console.log(success);
+        //console.log(key);
+        //console.log(new QuadIndexCommon.Pattern(key));
+        //console.log(key);
         var quads = that.backend.range(new QuadIndexCommon.Pattern(key));
         //console.log("retrieved");
         //console.log(quads)
@@ -40020,6 +39999,8 @@ Callbacks.CallbacksBackend.prototype.dispatchQueries = function(callback) {
 Store = {};
 
 // imports
+
+Store.VERSION = "0.3.1";
 
 Store.create = function(){
     if(arguments.length == 1) {
