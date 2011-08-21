@@ -392,7 +392,7 @@ QueryEngine.QueryEngine.prototype.normalizeQuad = function(quad, queryEnv, shoul
         oid = this.normalizeTerm(quad.graph, queryEnv, shouldIndex)
         if(oid!=null) {
             graph = oid;
-            if(shouldIndex === true)
+            if(shouldIndex === true && quad.graph.token!='var')
                 this.lexicon.registerGraph(oid);
         } else {
             return null;

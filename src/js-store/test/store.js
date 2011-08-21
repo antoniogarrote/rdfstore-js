@@ -654,7 +654,7 @@ exports.testExport1 = function(test) {
 
                 var result = TurtleParser.parser.parse(n3);
 
-                test.ok(result.length === 162);
+                test.ok(result.length === 171);
 
                 // an easier way
                 test.ok(graph.toNT() == n3);

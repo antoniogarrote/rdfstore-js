@@ -228,7 +228,12 @@ Callbacks.CallbacksBackend.prototype._tokenizeComponents = function(s, p, o, g) 
     if(s == null) {
         pattern['subject'] = Callbacks.ANYTHING;
     } else {
-        pattern['subject'] = {'token': 'uri', 'value':s};
+        if(s.indexOf("_:") == 0) {
+            console.log("BLANK!!");
+            pattern['subject'] = {'token': 'blank', 'value':s};
+        } else {
+            pattern['subject'] = {'token': 'uri', 'value':s};
+        }
     }
 
     if(p == null) {

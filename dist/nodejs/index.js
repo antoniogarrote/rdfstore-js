@@ -38470,7 +38470,7 @@ QueryEngine.QueryEngine.prototype.normalizeQuad = function(quad, queryEnv, shoul
         oid = this.normalizeTerm(quad.graph, queryEnv, shouldIndex)
         if(oid!=null) {
             graph = oid;
-            if(shouldIndex === true)
+            if(shouldIndex === true && quad.graph.token!='var')
                 this.lexicon.registerGraph(oid);
         } else {
             return null;
@@ -39753,7 +39753,12 @@ Callbacks.CallbacksBackend.prototype._tokenizeComponents = function(s, p, o, g) 
     if(s == null) {
         pattern['subject'] = Callbacks.ANYTHING;
     } else {
-        pattern['subject'] = {'token': 'uri', 'value':s};
+        if(s.indexOf("_:") == 0) {
+            console.log("BLANK!!");
+            pattern['subject'] = {'token': 'blank', 'value':s};
+        } else {
+            pattern['subject'] = {'token': 'uri', 'value':s};
+        }
     }
 
     if(p == null) {
@@ -40000,7 +40005,7 @@ Store = {};
 
 // imports
 
-Store.VERSION = "0.3.1";
+Store.VERSION = "0.3.2";
 
 Store.create = function(){
     if(arguments.length == 1) {
