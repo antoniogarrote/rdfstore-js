@@ -1109,72 +1109,89 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
     var oldLimit = Utils.stackCounterLimit;
     var counter = 0;
     var success = true;
+    var blanks = {};
+    var maybeBlankOid, oid, quad, key;
 
     for(var i=0; i<quads.length; i++) {
+        quad = quads[i];
 
-        var quad = quads[i];
-
-            // subject
-            if(quad.subject['uri'] || quad.subject.token === 'uri') {
-                var oid = this.lexicon.registerUri(quad.subject.uri || quad.subject.value);
-                subject = oid;
-            } else if(quad.subject['literal'] || quad.subject.token === 'literal') {
-                var oid = this.lexicon.registerLiteral(quad.subject.literal || quad.subject.value);
-                subject = oid;                    
-            } else {
-                var oid = this.lexicon.registerBlank(quad.subject.blank || quad.subject.value)
-                subject = oid;
+        // subject
+        if(quad.subject['uri'] || quad.subject.token === 'uri') {
+            oid = this.lexicon.registerUri(quad.subject.uri || quad.subject.value);
+            subject = oid;
+        } else if(quad.subject['literal'] || quad.subject.token === 'literal') {
+            oid = this.lexicon.registerLiteral(quad.subject.literal || quad.subject.value);
+            subject = oid;                    
+        } else {
+            maybeBlankOid = blanks[quad.subject.blank || quad.subject.value];
+            if(maybeBlankOid == null) {
+                maybeBlankOid = this.lexicon.registerBlank(quad.subject.blank || quad.subject.value)
+                blanks[(quad.subject.blank || quad.subject.value)] = maybeBlankOid;
             }
+            subject = maybeBlankOid;
+        }
 
-            // predicate
-            if(quad.predicate['uri'] || quad.predicate.token === 'uri') {
-                var oid = this.lexicon.registerUri(quad.predicate.uri || quad.predicate.value);
-                predicate = oid;
-            } else if(quad.predicate['literal'] || quad.predicate.token === 'literal') {
-                var oid = this.lexicon.registerLiteral(quad.predicate.literal || quad.predicate.value);
-                predicate = oid;                    
-            } else {
-                var oid = this.lexicon.registerBlank(quad.predicate.blank || quad.predicate.value)
-                predicate = oid;
+        // predicate
+        if(quad.predicate['uri'] || quad.predicate.token === 'uri') {
+            oid = this.lexicon.registerUri(quad.predicate.uri || quad.predicate.value);
+            predicate = oid;
+        } else if(quad.predicate['literal'] || quad.predicate.token === 'literal') {
+            oid = this.lexicon.registerLiteral(quad.predicate.literal || quad.predicate.value);
+            predicate = oid;                    
+        } else {
+            maybeBlankOid = blanks[quad.predicate.blank || quad.predicate.value];
+            if(maybeBlankOid == null) {
+                maybeBlankOid = this.lexicon.registerBlank(quad.predicate.blank || quad.predicate.value)
+                blanks[(quad.predicate.blank || quad.predicate.value)] = maybeBlankOid;
             }
+            predicate = oid;
+        }
 
-            // object
-            if(quad.object['uri'] || quad.object.token === 'uri') {
-                var oid = this.lexicon.registerUri(quad.object.uri || quad.object.value);
-                object = oid;
-            } else if(quad.object['literal'] || quad.object.token === 'literal') {
-                var oid = this.lexicon.registerLiteral(quad.object.literal || quad.object.value);
-                object = oid;                    
-            } else {
-                var oid = this.lexicon.registerBlank(quad.object.blank || quad.object.value)
-                object = oid;
+        // object
+        if(quad.object['uri'] || quad.object.token === 'uri') {
+            oid = this.lexicon.registerUri(quad.object.uri || quad.object.value);
+            object = oid;
+        } else if(quad.object['literal'] || quad.object.token === 'literal') {
+            oid = this.lexicon.registerLiteral(quad.object.literal || quad.object.value);
+            object = oid;                    
+        } else {
+            maybeBlankOid = blanks[quad.object.blank || quad.object.value];
+            if(maybeBlankOid == null) {
+                maybeBlankOid = this.lexicon.registerBlank(quad.object.blank || quad.object.value)
+                blanks[(quad.object.blank || quad.object.value)] = maybeBlankOid;
             }
+            object = oid;
+        }
 
-            // graph
-            if(quad.graph['uri'] || quad.graph.token === 'uri') {
-                var oid = this.lexicon.registerUri(quad.graph.uri || quad.graph.value);
-                this.lexicon.registerGraph(oid);
-                graph = oid;
+        // graph
+        if(quad.graph['uri'] || quad.graph.token === 'uri') {
+            oid = this.lexicon.registerUri(quad.graph.uri || quad.graph.value);
+            this.lexicon.registerGraph(oid);
+            graph = oid;
 
-            } else if(quad.graph['literal'] || quad.graph.token === 'literal') {
-                var oid = this.lexicon.registerLiteral(quad.graph.literal || quad.graph.value);
-                graph = oid;                    
-            } else {
-                var oid = this.lexicon.registerBlank(quad.graph.blank || quad.graph.value)
-                graph = oid;
+        } else if(quad.graph['literal'] || quad.graph.token === 'literal') {
+            oid = this.lexicon.registerLiteral(quad.graph.literal || quad.graph.value);
+            graph = oid;                    
+        } else {
+            maybeBlankOid = blanks[quad.graph.blank || quad.graph.value];
+            if(maybeBlankOid == null) {
+                maybeBlankOid = this.lexicon.registerBlank(quad.graph.blank || quad.graph.value)
+                blanks[(quad.graph.blank || quad.graph.value)] = maybeBlankOid;
             }
+            graph = oid;
+        }
 
 
-            var quad = {subject: subject, predicate:predicate, object:object, graph: graph};
-            var key = new QuadIndexCommon.NodeKey(quad);
-              
-            var result = this.backend.index(key)
-            if(result == true){
-                counter = counter + 1;
-            } else {
-                success = false;
-                break;
-            }
+        quad = {subject: subject, predicate:predicate, object:object, graph: graph};
+        key = new QuadIndexCommon.NodeKey(quad);
+          
+        var result = this.backend.index(key)
+        if(result == true){
+            counter = counter + 1;
+        } else {
+            success = false;
+            break;
+        }
 
     }
 

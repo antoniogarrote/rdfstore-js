@@ -494,6 +494,35 @@ exports.testLoad2 = function(test) {
     });
 };
 
+exports.testLoad3 = function(test) {
+    Store.create(function(store) {
+        
+        store.setPrefix("ex", "http://example.org/examples/");
+
+        var graph = store.rdf.createGraph();
+
+        input = "_:a <http://test.com/p1> 'test'. _:a <http://test.com/p2> 'test2'. _:b <http://test.com/p1> 'test' .";
+        store.load("text/n3", input, "ex:test", function(success, results){
+            store.execute("select ?s { GRAPH <http://example.org/examples/test> { ?s ?p ?o } }", function(success, results) {
+                test.ok(success);
+
+                var blankIds = {};
+
+                for(var i=0; i<results.length; i++) {
+                     var blankId = results[i].s.value;
+                    blankIds[blankId] = true;
+                }
+                var counter = 0;
+                for(var p in blankIds) {
+                    counter++;
+                }
+
+                test.ok(counter === 2);
+                test.done();
+            });
+        });
+    });
+};
 
 exports.testEventsAPI1 = function(test){
     var counter = 0;
@@ -654,7 +683,7 @@ exports.testExport1 = function(test) {
 
                 var result = TurtleParser.parser.parse(n3);
 
-                test.ok(result.length === 171);
+                test.ok(result.length === 194);
 
                 // an easier way
                 test.ok(graph.toNT() == n3);

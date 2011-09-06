@@ -879,7 +879,7 @@ OptionalGraphPattern "[54] OptionalGraphPattern"
   [55]  	GraphGraphPattern	  ::=  	'GRAPH' VarOrIRIref GroupGraphPattern
 */
 GraphGraphPattern "[55] GraphGraphPattern"
-  = WS* 'GRAPH' WS* g:VarOrIRIref WS* gg:GroupGraphPattern {
+  = WS* ('G'/'g')('R'/'r')('A'/'a')('P'/'p')('H'/'h') WS* g:VarOrIRIref WS* gg:GroupGraphPattern {
       for(var i=0; i<gg.patterns.length; i++) {
         var quads = []
         var ts = gg.patterns[i];

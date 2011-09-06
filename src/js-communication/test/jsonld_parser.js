@@ -11,7 +11,7 @@ exports.testParsing1 = function(test) {
     test.ok(result.length === 4);
     for(var i=0; i<result.length; i++) {
         var triple = result[i];
-        test.ok(triple.subject.token === "uri");
+        test.ok(triple.subject.token === "blank");
         test.ok(triple.subject.value.indexOf("_:") === 0);
         if(triple.predicate.value === 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type') {
             test.ok(triple.object.value === "http://xmlns.com/foaf/0.1/Person");
@@ -47,7 +47,7 @@ exports.testParsing2 = function(test) {
     test.ok(result.length === 5);
     for(var i=0; i<result.length; i++) {
         var triple = result[i];
-        test.ok(triple.subject.token === "uri");
+        test.ok(triple.subject.token === "blank");
         test.ok(triple.subject.value.indexOf("_:") === 0);
         if(triple.predicate.value === 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type') {
             test.ok(triple.object.value === "http://xmlns.com/foaf/0.1/Person");

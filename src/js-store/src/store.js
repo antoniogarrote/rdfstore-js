@@ -8,7 +8,7 @@ var QuadBackend = require("./../../js-rdf-persistence/src/quad_backend").QuadBac
 var Lexicon = require("./../../js-rdf-persistence/src/lexicon").Lexicon;
 var RDFJSInterface = require("./../../js-query-engine/src/rdf_js_interface.js").RDFJSInterface;
 
-Store.VERSION = "0.3.2";
+Store.VERSION = "0.3.3";
 
 Store.create = function(){
     if(arguments.length == 1) {
@@ -294,6 +294,7 @@ Store.Store.prototype._nodeToQuery = function(term) {
 };
 
 Store.Store.prototype.delete = function() {
+
     var graph;
     var triples;
     var callback;

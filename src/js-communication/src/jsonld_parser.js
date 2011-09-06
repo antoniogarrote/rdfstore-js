@@ -65,8 +65,10 @@ JSONLDParser.parser.parse = function(data, graph) {
 
 JSONLDParser.parser.parseListOfNodes = function(data, state, inheritedSubject, inheritedPredicate, triples, nodeId) {
 
+    var token, blankLabel;
+
     for(var i=0; i<data.length; i++) {
-        var token = data[i];
+        token = data[i];
 
         //create a new processor state. 
         processorState = { activeSubject: null,
@@ -105,7 +107,8 @@ JSONLDParser.parser.parseListOfNodes = function(data, state, inheritedSubject, i
 
                 processorState.activeSubject = JSONLDParser.parser.parseIri(value,processorState['activeContext']);
             } else {
-                processorState.activeSubject = {'token':'uri', 'value':"_:"+nodeId};
+                blankLabel = "_:"+nodeId;
+                processorState.activeSubject = {'token':'blank', 'value':blankLabel};
                 nodeId++;
             }
 

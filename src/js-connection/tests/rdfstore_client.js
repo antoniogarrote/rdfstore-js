@@ -1,5 +1,5 @@
 var RDFStoreClient = require("./../src/rdfstore_client.js").RDFStoreClient;
-
+/**
 exports.testConnection1 = function(test) {
     new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", [], function(success,connection) {
         test.ok(success);
@@ -491,7 +491,7 @@ exports.testConnectionLoad1 = function(test) {
     });
 };
 
-/**
+
  * dbpedia is DOWN!!!
  **
 exports.testLoad2 = function(test) {
@@ -510,7 +510,7 @@ exports.testLoad2 = function(test) {
 
 exports.testEventsAPI1 = function(test){
     var counter = 0;
-    new RDFStoreClient.RDFStoreClient("/Users/antonio/Development/Projects/js/rdfstore-js/src/js-connection/src/rdfstore_worker.js", [], function(success, connection) {
+    new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", [], function(success, connection) {
         connection.execute('INSERT DATA {  <http://example/book> <http://example.com/vocab#title> <http://test.com/example> }', function(result, msg){
             connection.startObservingNode("http://example/book",function(graph){
                 var observerFn = arguments.callee;
@@ -535,4 +535,123 @@ exports.testEventsAPI1 = function(test){
         });
     });
 };
+
+
+exports.testEventsAPI2 = function(test){
+    var counter = 0;
+    new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", [], function(success, connection) {
+        connection.execute('INSERT DATA { GRAPH <http://example/graph> { <http://example/book> <http://example.com/vocab#title> <http://test.com/example> } }', function(result, msg){
+            connection.startObservingNode("http://example/book", "http://example/graph", function(graph){
+                var observerFn = arguments.callee;
+                if(counter === 0) {
+                    counter++;
+                    test.ok(graph.toArray().length === 1);
+                    connection.execute('INSERT DATA { GRAPH <http://example/graph> { <http://example/book> <http://example.com/vocab#title2> <http://test.com/example2> } }');
+                } else if(counter === 1) {
+                    counter++;
+                    test.ok(graph.toArray().length === 2);
+                    connection.execute('DELETE DATA { GRAPH <http://example/graph> { <http://example/book> <http://example.com/vocab#title2> <http://test.com/example2> } }');
+                } else if(counter === 2) {
+                    counter++;
+                    test.ok(graph.toArray().length === 1);
+                    connection.stopObservingNode(observerFn);
+                    connection.execute('INSERT DATA { GRAPH <http://example/graph> { <http://example/book> <http://example.com/vocab#title2> <http://test.com/example3> } }');                    
+                    test.done();
+                } else if(counter === 3) {
+                    test.ok(false);
+                }
+            });
+        });
+    });
+};
+
+
+exports.testEventsAPI3 = function(test){
+    var counter = 0;
+    new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", [], function(success, connection) {
+        connection.subscribe("http://example/book",null,null,null,function(event, triples){
+            var observerFn = arguments.callee;
+            if(counter === 0) {
+                counter++;
+                test.ok(event === 'added');
+                test.ok(triples.length === 1);
+
+                test.ok(triples[0].subject.valueOf() === 'http://example/book');
+                test.ok(triples[0].object.valueOf() === 'http://test.com/example');
+            } else if(counter === 1) {
+                counter++;
+                test.ok(event === 'added');
+                test.ok(triples.length === 2);
+            } else if(counter === 2) {
+                counter++;
+                test.ok(event === 'deleted');
+                test.ok(triples.length === 1);
+                connection.unsubscribe(observerFn);
+            } else if(counter === 3) {
+                test.ok(false);
+            }
+        });
+        
+        connection.execute('INSERT DATA {  <http://example/book> <http://example.com/vocab#title> <http://test.com/example> }', function(){
+            connection.execute('INSERT DATA {  <http://example/book> <http://example.com/vocab#title2> <http://test.com/example2>.\
+                                          <http://example/book> <http://example.com/vocab#title3> <http://test.com/example3> }', function(){
+                connection.execute('DELETE DATA {  <http://example/book> <http://example.com/vocab#title2> <http://test.com/example2> }',function(){
+                    connection.execute('INSERT DATA {  <http://example/book> <http://example.com/vocab#title2> <http://test.com/example3> }', function(){
+                        test.done();
+                    });                    
+                });
+            });
+        });
+    });
+}
 */
+
+exports.testRegisteredGraph = function(test) {
+    new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", [], function(success, connection) {
+        var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
+                     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\
+                     PREFIX : <http://example.org/people/>\
+                     INSERT DATA {\
+                       GRAPH :alice {\
+                         :alice\
+                             rdf:type        foaf:Person ;\
+                             foaf:name       "Alice" ;\
+                             foaf:mbox       <mailto:alice@work> ;\
+                             foaf:knows      :bob ;\
+                         .\
+                       }\
+                     }';
+        connection.execute(query, function(success, results) {
+
+            var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
+                         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\
+                         PREFIX : <http://example.org/people/>\
+                         INSERT DATA {\
+                           GRAPH :bob {\
+                              :bob\
+                                  rdf:type        foaf:Person ;\
+                                  foaf:name       "Bob" ; \
+                                  foaf:knows      :alice ;\
+                                  foaf:mbox       <mailto:bob@home> ;\
+                                  .\
+                           }\
+                         }'
+        connection.execute(query, function(success, results) {
+
+            connection.registeredGraphs(function(results,graphs) {
+                test.ok(graphs.length === 2);
+                var values = [];
+                for(var i=0; i<graphs.length; i++) {
+                    values.push(graphs[i].valueOf());
+                }
+                values.sort();
+                test.ok(values[0] === 'http://example.org/people/alice');
+                test.ok(values[1] === 'http://example.org/people/bob');
+                test.done();
+            });
+        });
+        });
+    });
+};

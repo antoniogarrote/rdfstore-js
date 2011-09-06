@@ -363,8 +363,7 @@ Utils.lexicalFormTerm = function(term, ns) {
     } else if(term.token === 'literal') {
         return {'literal': Utils.lexicalFormLiteral(term, ns)};
     } else if(term.token === 'blank') {
-        var label = '_:'+ns.blank;
-        ns.blank = ns.blank+1;
+        var label = '_:'+term.label;
         return {'blank': label};
     } else {
         callback(false, 'Token of kind '+term.token+' cannot transformed into its lexical form');
