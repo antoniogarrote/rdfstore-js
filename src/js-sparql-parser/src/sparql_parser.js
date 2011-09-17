@@ -41,6 +41,7 @@ SparqlParser.parser = (function(){
         "DECIMAL": parse_DECIMAL,
         "DECIMAL_NEGATIVE": parse_DECIMAL_NEGATIVE,
         "DECIMAL_POSITIVE": parse_DECIMAL_POSITIVE,
+        "DOCUMENT": parse_DOCUMENT,
         "DOUBLE": parse_DOUBLE,
         "DOUBLE_NEGATIVE": parse_DOUBLE_NEGATIVE,
         "DOUBLE_POSITIVE": parse_DOUBLE_POSITIVE,
@@ -138,6 +139,7 @@ SparqlParser.parser = (function(){
         "SolutionModifier": parse_SolutionModifier,
         "String": parse_String,
         "SubSelect": parse_SubSelect,
+        "TURTLE": parse_TURTLE,
         "TriplesBlock": parse_TriplesBlock,
         "TriplesNode": parse_TriplesNode,
         "TriplesSameSubject": parse_TriplesSameSubject,
@@ -155,7 +157,11 @@ SparqlParser.parser = (function(){
         "Verb": parse_Verb,
         "VerbPath": parse_VerbPath,
         "WS": parse_WS,
-        "WhereClause": parse_WhereClause
+        "WhereClause": parse_WhereClause,
+        "base": parse_base,
+        "directive": parse_directive,
+        "prefixID": parse_prefixID,
+        "statement": parse_statement
       };
       
       if (startRule !== undefined) {
@@ -163,7 +169,7 @@ SparqlParser.parser = (function(){
           throw new Error("Invalid rule name: " + quote(startRule) + ".");
         }
       } else {
-        startRule = "SPARQL";
+        startRule = "DOCUMENT";
       }
       
       var pos = 0;
@@ -224,6 +230,36 @@ SparqlParser.parser = (function(){
         }
         
         rightmostMatchFailuresExpected.push(failure);
+      }
+      
+      function parse_DOCUMENT() {
+        var cacheKey = 'DOCUMENT@' + pos;
+        var cachedResult = cache[cacheKey];
+        if (cachedResult) {
+          pos = cachedResult.nextPos;
+          return cachedResult.result;
+        }
+        
+        
+        var result2 = parse_SPARQL();
+        if (result2 !== null) {
+          var result0 = result2;
+        } else {
+          var result1 = parse_TURTLE();
+          if (result1 !== null) {
+            var result0 = result1;
+          } else {
+            var result0 = null;;
+          };
+        }
+        
+        
+        
+        cache[cacheKey] = {
+          nextPos: pos,
+          result:  result0
+        };
+        return result0;
       }
       
       function parse_SPARQL() {
@@ -865,6 +901,428 @@ SparqlParser.parser = (function(){
         if (reportMatchFailures && result0 === null) {
           matchFailed("[5] PrefixDecl");
         }
+        
+        cache[cacheKey] = {
+          nextPos: pos,
+          result:  result0
+        };
+        return result0;
+      }
+      
+      function parse_TURTLE() {
+        var cacheKey = 'TURTLE@' + pos;
+        var cachedResult = cache[cacheKey];
+        if (cachedResult) {
+          pos = cachedResult.nextPos;
+          return cachedResult.result;
+        }
+        
+        
+        var savedPos0 = pos;
+        var result1 = [];
+        var result3 = parse_statement();
+        while (result3 !== null) {
+          result1.push(result3);
+          var result3 = parse_statement();
+        }
+        var result2 = result1 !== null
+          ? (function(sts) {
+                  return sts;
+              })(result1)
+          : null;
+        if (result2 !== null) {
+          var result0 = result2;
+        } else {
+          var result0 = null;
+          pos = savedPos0;
+        }
+        
+        
+        
+        cache[cacheKey] = {
+          nextPos: pos,
+          result:  result0
+        };
+        return result0;
+      }
+      
+      function parse_statement() {
+        var cacheKey = 'statement@' + pos;
+        var cachedResult = cache[cacheKey];
+        if (cachedResult) {
+          pos = cachedResult.nextPos;
+          return cachedResult.result;
+        }
+        
+        
+        var savedPos2 = pos;
+        var savedPos3 = pos;
+        var result14 = [];
+        var result21 = parse_WS();
+        while (result21 !== null) {
+          result14.push(result21);
+          var result21 = parse_WS();
+        }
+        if (result14 !== null) {
+          var result15 = parse_directive();
+          if (result15 !== null) {
+            var result16 = [];
+            var result20 = parse_WS();
+            while (result20 !== null) {
+              result16.push(result20);
+              var result20 = parse_WS();
+            }
+            if (result16 !== null) {
+              if (input.substr(pos, 1) === ".") {
+                var result17 = ".";
+                pos += 1;
+              } else {
+                var result17 = null;
+                if (reportMatchFailures) {
+                  matchFailed("\".\"");
+                }
+              }
+              if (result17 !== null) {
+                var result18 = [];
+                var result19 = parse_WS();
+                while (result19 !== null) {
+                  result18.push(result19);
+                  var result19 = parse_WS();
+                }
+                if (result18 !== null) {
+                  var result12 = [result14, result15, result16, result17, result18];
+                } else {
+                  var result12 = null;
+                  pos = savedPos3;
+                }
+              } else {
+                var result12 = null;
+                pos = savedPos3;
+              }
+            } else {
+              var result12 = null;
+              pos = savedPos3;
+            }
+          } else {
+            var result12 = null;
+            pos = savedPos3;
+          }
+        } else {
+          var result12 = null;
+          pos = savedPos3;
+        }
+        var result13 = result12 !== null
+          ? (function(d) {
+                  return d;
+              })(result12[1])
+          : null;
+        if (result13 !== null) {
+          var result11 = result13;
+        } else {
+          var result11 = null;
+          pos = savedPos2;
+        }
+        if (result11 !== null) {
+          var result0 = result11;
+        } else {
+          var savedPos0 = pos;
+          var savedPos1 = pos;
+          var result6 = [];
+          var result10 = parse_WS();
+          while (result10 !== null) {
+            result6.push(result10);
+            var result10 = parse_WS();
+          }
+          if (result6 !== null) {
+            var result7 = parse_TriplesBlock();
+            if (result7 !== null) {
+              var result8 = [];
+              var result9 = parse_WS();
+              while (result9 !== null) {
+                result8.push(result9);
+                var result9 = parse_WS();
+              }
+              if (result8 !== null) {
+                var result4 = [result6, result7, result8];
+              } else {
+                var result4 = null;
+                pos = savedPos1;
+              }
+            } else {
+              var result4 = null;
+              pos = savedPos1;
+            }
+          } else {
+            var result4 = null;
+            pos = savedPos1;
+          }
+          var result5 = result4 !== null
+            ? (function(ts) {
+                    return ts;
+                })(result4[1])
+            : null;
+          if (result5 !== null) {
+            var result3 = result5;
+          } else {
+            var result3 = null;
+            pos = savedPos0;
+          }
+          if (result3 !== null) {
+            var result0 = result3;
+          } else {
+            var result2 = parse_WS();
+            if (result2 !== null) {
+              var result1 = [];
+              while (result2 !== null) {
+                result1.push(result2);
+                var result2 = parse_WS();
+              }
+            } else {
+              var result1 = null;
+            }
+            if (result1 !== null) {
+              var result0 = result1;
+            } else {
+              var result0 = null;;
+            };
+          };
+        }
+        
+        
+        
+        cache[cacheKey] = {
+          nextPos: pos,
+          result:  result0
+        };
+        return result0;
+      }
+      
+      function parse_directive() {
+        var cacheKey = 'directive@' + pos;
+        var cachedResult = cache[cacheKey];
+        if (cachedResult) {
+          pos = cachedResult.nextPos;
+          return cachedResult.result;
+        }
+        
+        
+        var result2 = parse_prefixID();
+        if (result2 !== null) {
+          var result0 = result2;
+        } else {
+          var result1 = parse_base();
+          if (result1 !== null) {
+            var result0 = result1;
+          } else {
+            var result0 = null;;
+          };
+        }
+        
+        
+        
+        cache[cacheKey] = {
+          nextPos: pos,
+          result:  result0
+        };
+        return result0;
+      }
+      
+      function parse_base() {
+        var cacheKey = 'base@' + pos;
+        var cachedResult = cache[cacheKey];
+        if (cachedResult) {
+          pos = cachedResult.nextPos;
+          return cachedResult.result;
+        }
+        
+        
+        var savedPos0 = pos;
+        var savedPos1 = pos;
+        var result3 = [];
+        var result8 = parse_WS();
+        while (result8 !== null) {
+          result3.push(result8);
+          var result8 = parse_WS();
+        }
+        if (result3 !== null) {
+          if (input.substr(pos, 5) === "@base") {
+            var result4 = "@base";
+            pos += 5;
+          } else {
+            var result4 = null;
+            if (reportMatchFailures) {
+              matchFailed("\"@base\"");
+            }
+          }
+          if (result4 !== null) {
+            var result7 = parse_WS();
+            if (result7 !== null) {
+              var result5 = [];
+              while (result7 !== null) {
+                result5.push(result7);
+                var result7 = parse_WS();
+              }
+            } else {
+              var result5 = null;
+            }
+            if (result5 !== null) {
+              var result6 = parse_IRI_REF();
+              if (result6 !== null) {
+                var result1 = [result3, result4, result5, result6];
+              } else {
+                var result1 = null;
+                pos = savedPos1;
+              }
+            } else {
+              var result1 = null;
+              pos = savedPos1;
+            }
+          } else {
+            var result1 = null;
+            pos = savedPos1;
+          }
+        } else {
+          var result1 = null;
+          pos = savedPos1;
+        }
+        var result2 = result1 !== null
+          ? (function(i) {
+                registerDefaultPrefix(i);
+          
+                base = {};
+                base.token = 'base';
+                base.value = i;
+          
+                return base;
+          })(result1[3])
+          : null;
+        if (result2 !== null) {
+          var result0 = result2;
+        } else {
+          var result0 = null;
+          pos = savedPos0;
+        }
+        
+        
+        
+        cache[cacheKey] = {
+          nextPos: pos,
+          result:  result0
+        };
+        return result0;
+      }
+      
+      function parse_prefixID() {
+        var cacheKey = 'prefixID@' + pos;
+        var cachedResult = cache[cacheKey];
+        if (cachedResult) {
+          pos = cachedResult.nextPos;
+          return cachedResult.result;
+        }
+        
+        
+        var savedPos0 = pos;
+        var savedPos1 = pos;
+        var result3 = [];
+        var result13 = parse_WS();
+        while (result13 !== null) {
+          result3.push(result13);
+          var result13 = parse_WS();
+        }
+        if (result3 !== null) {
+          if (input.substr(pos, 7) === "@prefix") {
+            var result4 = "@prefix";
+            pos += 7;
+          } else {
+            var result4 = null;
+            if (reportMatchFailures) {
+              matchFailed("\"@prefix\"");
+            }
+          }
+          if (result4 !== null) {
+            var result12 = parse_WS();
+            if (result12 !== null) {
+              var result5 = [];
+              while (result12 !== null) {
+                result5.push(result12);
+                var result12 = parse_WS();
+              }
+            } else {
+              var result5 = null;
+            }
+            if (result5 !== null) {
+              var result11 = parse_PN_PREFIX();
+              var result6 = result11 !== null ? result11 : '';
+              if (result6 !== null) {
+                if (input.substr(pos, 1) === ":") {
+                  var result7 = ":";
+                  pos += 1;
+                } else {
+                  var result7 = null;
+                  if (reportMatchFailures) {
+                    matchFailed("\":\"");
+                  }
+                }
+                if (result7 !== null) {
+                  var result8 = [];
+                  var result10 = parse_WS();
+                  while (result10 !== null) {
+                    result8.push(result10);
+                    var result10 = parse_WS();
+                  }
+                  if (result8 !== null) {
+                    var result9 = parse_IRI_REF();
+                    if (result9 !== null) {
+                      var result1 = [result3, result4, result5, result6, result7, result8, result9];
+                    } else {
+                      var result1 = null;
+                      pos = savedPos1;
+                    }
+                  } else {
+                    var result1 = null;
+                    pos = savedPos1;
+                  }
+                } else {
+                  var result1 = null;
+                  pos = savedPos1;
+                }
+              } else {
+                var result1 = null;
+                pos = savedPos1;
+              }
+            } else {
+              var result1 = null;
+              pos = savedPos1;
+            }
+          } else {
+            var result1 = null;
+            pos = savedPos1;
+          }
+        } else {
+          var result1 = null;
+          pos = savedPos1;
+        }
+        var result2 = result1 !== null
+          ? (function(p, l) {
+          
+                registerPrefix(p,l);
+          
+                prefix = {};
+                prefix.token = 'prefix';
+                prefix.prefix = p;
+                prefix.local = l;
+          
+                return prefix;
+          })(result1[3], result1[6])
+          : null;
+        if (result2 !== null) {
+          var result0 = result2;
+        } else {
+          var result0 = null;
+          pos = savedPos0;
+        }
+        
+        
         
         cache[cacheKey] = {
           nextPos: pos,

@@ -35,6 +35,11 @@
     }
 }
 
+DOCUMENT = 
+  SPARQL
+  / TURTLE
+
+
 SPARQL =
   QueryUnit
   / UpdateUnit
@@ -95,6 +100,69 @@ PrefixDecl "[5] PrefixDecl"
 
       return prefix;
 }
+
+/*
+  [1]	turtleDoc 	::= 	statement*
+  @turtle
+*/
+TURTLE
+    = sts:statement* {
+        return sts;
+    }
+
+/*
+  [2]	statement 	::= 	directive '.' | triples '.' | ws+
+  @turtle
+*/
+statement
+    = WS* d:directive WS* '.' WS* {
+        return d;
+    }
+    / WS* ts:TriplesBlock WS* {
+        return ts;
+    }
+    / WS+
+
+/*
+  [3]	directive 	::= 	prefixID | base
+  @turtle
+*/
+directive
+    = prefixID
+    / base
+
+/*
+  [5]	base 	::= 	'@base' ws+ uriref
+  @turtle
+*/
+base
+  = WS* '@base' WS+ i:IRI_REF {
+      registerDefaultPrefix(i);
+
+      base = {};
+      base.token = 'base';
+      base.value = i;
+
+      return base;
+}
+
+/*
+  [4]	prefixID 	::= 	'@prefix' ws+ prefixName? ':' uriref
+  @turtle
+*/
+prefixID
+  = WS* '@prefix'  WS+ p:PN_PREFIX? ':' WS* l:IRI_REF {
+
+      registerPrefix(p,l);
+
+      prefix = {};
+      prefix.token = 'prefix';
+      prefix.prefix = p;
+      prefix.local = l;
+
+      return prefix;
+}
+
 
 /*
   @todo

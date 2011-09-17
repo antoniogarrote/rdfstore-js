@@ -90,7 +90,7 @@ var Store = require(__dirname+"/./../../js-store/src/store").Store;
                 postMessage({'callback':msg.callback[0], 'result':result, 'success':success});
             };
 
-            RDFStoreWorker.observingCallbacks[msg.callback[0]] = cb;
+            RDFStoreWorker.observingCallbacks[msg.args[0]] = cb;
             msg.args.push(cb);
 
 

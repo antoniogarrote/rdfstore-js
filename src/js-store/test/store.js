@@ -481,6 +481,7 @@ exports.testLoad1 = function(test) {
     });
 };
 
+/*
 exports.testLoad2 = function(test) {
     Store.create(function(store) {
         store.load('remote', 'http://dbpedia.org/resource/Tim_Berners-Lee', function(success, result) {
@@ -493,6 +494,7 @@ exports.testLoad2 = function(test) {
         });
     });
 };
+*/
 
 exports.testLoad3 = function(test) {
     Store.create(function(store) {
