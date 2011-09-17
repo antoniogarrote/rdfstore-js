@@ -18,7 +18,7 @@ InMemoryAsyncBTree._repeat = function(c,max,floop,fend,env) {
     }
 }
 
-/*
+/**
  * @doc
  * Implementation based on <http://www.gossamer-threads.com/lists/linux/kernel/667935>
  *

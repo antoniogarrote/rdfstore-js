@@ -6,9 +6,63 @@ var Store = exports.Store;
 var QueryEngine = require("./../../js-query-engine/src/query_engine").QueryEngine;
 var QuadBackend = require("./../../js-rdf-persistence/src/quad_backend").QuadBackend;
 var Lexicon = require("./../../js-rdf-persistence/src/lexicon").Lexicon;
-var RDFJSInterface = require("./../../js-query-engine/src/rdf_js_interface.js").RDFJSInterface;
+var RDFJSInterface = require("./../../js-query-engine/src/rdf_js_interface").RDFJSInterface;
+var RDFStoreClient = require("./../../js-connection/src/rdfstore_client").RDFStoreClient;
+var Worker = require('webworker');
 
-Store.VERSION = "0.3.3";
+Store.VERSION = "0.4.1";
+
+/**
+ * Tries to create a new RDFStore instance that will be
+ * executed in a web worker.
+ * The first argument to this function is the URL/FS location 
+ * of the store script. 
+ * This parameter is mandatory in the browser. It is safe to
+ * ignore this parameter in Node.js.
+ * If support for web workers is not present, a regular
+ * store object will be initialized and returned.
+ *
+ * @param {String} [scriptPath] URL of the RDFStore script
+ * @param {Object[]} [args] Arguments to be passed to the store that will be created
+ * @param {Function} callback Callback function that will be invoked with an error flag and the connection/store object.
+ */
+Store.connect = function() {
+    var path, args, callback;
+    if(arguments.length == 1) {
+        path = __dirname;
+        args = {};
+        callback = arguments[0]
+    } if(arguments.length == 2) {
+        if(typeof(arguments[0]) === 'string') {
+            path = arguments[0];
+            args = {};
+        } else {
+            path = __dirname+"/index.js";
+            args = arguments[0];
+        }
+        callback = arguments[1];
+    } else {
+        path = arguments[0];
+        args = arguments[1];
+        callback = arguments[2];
+    }
+    try {
+        if(!!Worker) {
+            new RDFStoreClient.RDFStoreClient(path, args, function(success,connection) {
+                callback(success, connection);
+            });
+        } else {
+            Store.create(args,function(connection){
+                callback(false, connection);
+            });
+        }
+    } catch(e) {
+        console.log(e)
+        Store.create(args,function(connection){
+            callback(false, connection);
+        });        
+    }
+};
 
 Store.create = function(){
     if(arguments.length == 1) {
@@ -69,14 +123,14 @@ Store.Store = function(arg1, arg2) {
  *
  * @arguments:
  * 1)
- * - query
- * - callback (optional)
+ * @param {String} query
+ * @param {Function} [callback]
  * 
  * 2)
- * - query
- * - URIs default namespaces
- * - URIs named namespaces
- * - callback (optional)
+ * @param {String} query
+ * @param {String} URIs default namespaces
+ * @param {String} URIs named namespaces
+ * @param {Function} [callback]
  */
 Store.Store.prototype.execute = function() {
     if(arguments.length === 3) {
@@ -111,16 +165,15 @@ Store.Store.prototype.executeWithEnvironment = function() {
     var namedGraphs;
 
     if(arguments.length === 3) {
-        queryString = arguments[0];
-        callback = function(){};
+        queryString   = arguments[0];
+        callback      = function(){};
         defaultGraphs = arguments[1];
-        namedGraphs = arguments[2];
+        namedGraphs   = arguments[2];
     } else if(arguments.length === 4) {
-        queryString = arguments[0];
-        callback = arguments [3];
+        queryString   = arguments[0];
+        callback      = arguments [3];
         defaultGraphs = arguments[1];
-        namedGraphs = arguments[2];
-
+        namedGraphs   = arguments[2];
     }
     this.engine.execute(queryString, callback, defaultGraphs, namedGraphs);
 };
@@ -440,11 +493,11 @@ Store.Store.prototype._nodeToQuery = function(term) {
  */
 Store.Store.prototype.getNetworkTransport = function() {
     return NetworkTransport;
-}
+};
 
 /**
  * Sets the network transport used by the store;
  */
 Store.Store.prototype.setNetworkTransport = function(networkTransportImpl) {
     NetworkTransport = networkTransportImpl;
-}
+};

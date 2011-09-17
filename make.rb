@@ -65,7 +65,9 @@ end
 
 def write_nodejs_coda(of)
   js_code =<<__END
-module.exports = Store;
+try{
+  module.exports = Store;
+}catch(e){}
 })();
 __END
 
@@ -137,6 +139,8 @@ def process_file_for_nodejs(of, f)
       puts " * ignoring: #{line}"
     elsif (line =~ /var *([a-zA-Z]+) *= *require\(['\"]{1,1}[a-zA-Z_\.\/-]*['\"]{1,1}\)\.\1;/) == 0
       puts " * ignoring: #{line}"
+    elsif (line =~ /var *([a-zA-Z]+) *= *require\(__dirname\+['\"]{1,1}[a-zA-Z_\.\/-]*['\"]{1,1}\)\.\1;/) == 0
+      puts " * ignoring: #{line}"
     elsif (line =~ /var BaseTree *= *require\(['\"]{1,1}[a-zA-Z_\.\/-]*['\"]{1,1}\)\./) == 0
       puts " * writing right MemoryTree"
       tree = line.split(".")[-1];
@@ -206,6 +210,14 @@ end
 def write_browser_preamble(of)
   js_code =<<__END
 (function() {\r\n
+
+try {
+  console = console || {};
+} catch(e) {
+  console = console || {};
+  console.log = function(e){};
+}
+
 __END
   of << js_code
 end
@@ -219,6 +231,10 @@ def process_file_for_browser(of, f)
       puts " * ignoring: #{line}"
     elsif (line =~ /var *([a-zA-Z]+) *= *require\(['\"]{1,1}[a-zA-Z_\.\/-]*['\"]{1,1}\)\.\1;/) == 0
       puts " * ignoring: #{line}"
+    elsif (line =~ /var *([a-zA-Z]+) *= *require\(__dirname\+['\"]{1,1}[a-zA-Z_\.\/-]*['\"]{1,1}\)\.\1;/) == 0
+      puts " * ignoring: #{line}"
+    elsif (line =~ /var *([a-zA-Z]+) *= *require\(['\"]webworker[\"']\);/)
+      puts " * ignoring require for NodeJS WebWorkers: #{line}"  
     elsif (line =~ /var BaseTree *= *require\(['\"]{1,1}[a-zA-Z_\.\/-]*['\"]{1,1}\)\./) == 0
       puts " * writing right MemoryTree"
       tree = line.split(".")[-1];
@@ -241,8 +257,10 @@ end
 
 def write_browser_coda(of)
   js_code =<<__END
-window.rdfstore = Store;
-})(window);
+try {
+  window.rdfstore = Store;
+} catch(e) { }
+})();
 __END
 
   of << js_code;
@@ -305,7 +323,7 @@ else
   elsif ARGV[0] == "test_min"
     test_minimized
   elsif ARGV[0] == "tests"
-    exec 'nodeunit ./src/js-trees/tests/* ./src/js-store/test/* ./src/js-sparql-parser/test/* ./src/js-rdf-persistence/test/* ./src/js-query-engine/test/* ./src/js-communication/test/*'
+    exec 'nodeunit ./src/js-trees/tests/* ./src/js-store/test/* ./src/js-sparql-parser/test/* ./src/js-rdf-persistence/test/* ./src/js-query-engine/test/* ./src/js-communication/test/* ./src/js-connection/tests/*'
   else
     puts "Unknown configuration: #{ARGV[0]}"
     puts "USAGE make.rb [nodejs | browser | tests | test_min]"

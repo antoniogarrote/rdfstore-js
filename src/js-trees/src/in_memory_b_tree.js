@@ -6,7 +6,7 @@ var left = -1;
 var right = 1;
 
 
-/*
+/**
  * @doc
  * Implementation based on <http://www.gossamer-threads.com/lists/linux/kernel/667935>
  *

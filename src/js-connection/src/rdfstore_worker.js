@@ -1,36 +1,33 @@
-var sys = require('sys');
-
 // imports
 var RDFJSInterface = require(__dirname+"/./../../js-query-engine/src/rdf_js_interface.js").RDFJSInterface;
 var Store = require(__dirname+"/./../../js-store/src/store").Store;
 
-
-//// Checks if this is a webworker
-//if(onmessage != null && postMessage != null) {
-    
+    console.log("TEST?");
+    console.log(this);
     RDFStoreWorker = {};
 
     RDFStoreWorker.observingCallbacks = {};
 
-    RDFStoreWorker.handleCreate = function(args, cb) {
-        console.log("in handling create");
+    RDFStoreWorker.handleCreate = function(argsObject, cb) {
+        args = [argsObject];
+        //console.log("in handling create");
         args.push(function(result){
-            console.log("created!!!");
+            //console.log("created!!!");
             // Stores the store object in the worker
             RDFStoreWorker.store = result;
-            console.log("posting MESSAGE!");
+            //console.log("posting MESSAGE!");
 
             postMessage({'callback':cb, 'result':'created', 'success':true});
         });
-        console.log("creating");
+        //console.log("creating");
         Store.create.apply(Store,args)
     };
 
     RDFStoreWorker.receive = function(packet) {
         var msg = packet.data || packet;
-        console.log("RECEIVED...");
+        //console.log("RECEIVED...");
         if(msg.fn === 'create' && msg.args !=null) {
-            console.log("handling create");
+            //console.log("handling create");
             RDFStoreWorker.handleCreate(msg.args, msg.callback);
         } else if((msg.fn === 'execute' ||
                    msg.fn === 'executeWithEnvironment' ||
@@ -39,7 +36,7 @@ var Store = require(__dirname+"/./../../js-store/src/store").Store;
                    msg.fn === 'clear' ||
                    msg.fn === 'load') && msg.args != null) {
             msg.args.push(function(success, result){
-                console.log("CALLBACK!");
+                //console.log("CALLBACK!");
                 if(msg.callback!=null) {
                     postMessage({'callback':msg.callback, 'result':result, 'success':success});
                 }
@@ -54,7 +51,7 @@ var Store = require(__dirname+"/./../../js-store/src/store").Store;
                    msg.fn === 'delete') && msg.args != null) {
             try {
                 msg.args.push(function(success, result){
-                    console.log("CALLBACK!");
+                    //console.log("CALLBACK!");
                     if(msg.callback!=null) {
                         postMessage({'callback':msg.callback, 'result':result, 'success':success});
                     }
@@ -72,7 +69,7 @@ var Store = require(__dirname+"/./../../js-store/src/store").Store;
                     msg.args[1] = RDFStoreWorker.adaptJSInterface(msg.args[1]);
                 }
                 msg.args[0] = RDFStoreWorker.store.rdf.createGraph(toWrap.triples)
-                console.log("ARGS...");
+                //console.log("ARGS...");
                 
                 RDFStoreWorker.store[msg.fn].apply(RDFStoreWorker.store,msg.args);
             } catch(e) {
@@ -86,7 +83,7 @@ var Store = require(__dirname+"/./../../js-store/src/store").Store;
         } else if(msg.fn === 'startObservingQuery' && msg.args != null) {
             // regular callback
             var cb = function(success, result){
-                console.log("CALLBACK OBSERVING QUERY!");
+                //console.log("CALLBACK OBSERVING QUERY!");
                 postMessage({'callback':msg.callback[0], 'result':result, 'success':success});
             };
 
@@ -96,7 +93,7 @@ var Store = require(__dirname+"/./../../js-store/src/store").Store;
 
             // end register callback
             msg.args.push(function(success, result) {
-                console.log("CALLBACK END REGISTER OBSERVING QUERY!");
+                //console.log("CALLBACK END REGISTER OBSERVING QUERY!");
                 if(msg.callback && msg.callback[1] !=null) {
                     postMessage({'callback':msg.callback[1], 'result':result, 'success':success});                    
                 }
@@ -114,7 +111,7 @@ var Store = require(__dirname+"/./../../js-store/src/store").Store;
         } else if(msg.fn === 'startObservingNode' && msg.args != null) {
             // regular callback
             var cb = function(result){
-                console.log("CALLBACK OBSERVING NODE!");
+                //console.log("CALLBACK OBSERVING NODE!");
                 postMessage({'callback':msg.callback, 'result':result});
             };
 
@@ -125,8 +122,8 @@ var Store = require(__dirname+"/./../../js-store/src/store").Store;
         } else if(msg.fn === 'stopObservingNode' && msg.args != null) {
             var cb = RDFStoreWorker.observingCallbacks[msg.args[0]];
             if(cb) {
-                console.log("WORKER STOP OBSERVING");
-                console.log(cb);
+                //console.log("WORKER STOP OBSERVING");
+                //console.log(cb);
                 RDFStoreWorker.store[msg.fn].apply(RDFStoreWorker.store,[cb]);
             }
 
@@ -134,7 +131,7 @@ var Store = require(__dirname+"/./../../js-store/src/store").Store;
         } else if(msg.fn === 'subscribe' && msg.args != null) {
             // regular callback
             var cb = function(event,result){
-                console.log("CALLBACK OBSERVING NODE!");
+                //console.log("CALLBACK OBSERVING NODE!");
                 postMessage({'callback':msg.callback, 'event':event, 'result':result});
             };
 
@@ -145,15 +142,15 @@ var Store = require(__dirname+"/./../../js-store/src/store").Store;
         } else if(msg.fn === 'stopObservingNode' && msg.args != null) {
             var cb = RDFStoreWorker.observingCallbacks[msg.args[0]];
             if(cb) {
-                console.log("WORKER UNSUBSCRIBE");
-                console.log(cb);
+                //console.log("WORKER UNSUBSCRIBE");
+                //console.log(cb);
                 RDFStoreWorker.store[msg.fn].apply(RDFStoreWorker.store,[cb]);
             }
 
             delete RDFStoreWorker.observingCallbacks[msg.args[0]];
         } else if(msg.fn === 'registeredGraphs' && msg.args != null) {
             var cb = function(success, result){
-                console.log("CALLBACK!");
+                //console.log("CALLBACK!");
                 if(msg.callback!=null) {
                     postMessage({'callback':msg.callback, 'result':result, 'success':success});
                 }
@@ -173,6 +170,5 @@ var Store = require(__dirname+"/./../../js-store/src/store").Store;
         }
     };
     // set the receiver message
-    sys.debug("setting handler");
     onmessage = RDFStoreWorker.receive;
-//}
+

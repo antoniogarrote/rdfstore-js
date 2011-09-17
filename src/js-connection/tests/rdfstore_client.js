@@ -1,14 +1,15 @@
 var RDFStoreClient = require("./../src/rdfstore_client.js").RDFStoreClient;
-/**
+var Store = require("./../../js-store/src/store.js").Store;
+
 exports.testConnection1 = function(test) {
-    new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", [], function(success,connection) {
+    new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", {}, function(success,connection) {
         test.ok(success);
         test.done();
     });
 };
 
 exports.testConnectionIntegration1 = function(test){
-    new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", [], function(success,connection) {
+    new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", {}, function(success,connection) {
         test.ok(success);
         connection.execute('INSERT DATA {  <http://example/book3> <http://example.com/vocab#title> <http://test.com/example> }', function(result, msg){
             connection.execute('SELECT * { ?s ?p ?o }', function(success,results) {
@@ -25,7 +26,7 @@ exports.testConnectionIntegration1 = function(test){
 };
 
 exports.testConnectionIntegration2 = function(test){
-    new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", [], function(success,connection) {
+    new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", {}, function(success,connection) {
         connection.execute('INSERT DATA {  <http://example/book3> <http://example.com/vocab#title> <http://test.com/example> }', function(){
             connection.execute('SELECT * { ?s ?p ?o }', function(success,results) {
                 test.ok(success === true);
@@ -42,7 +43,7 @@ exports.testConnectionIntegration2 = function(test){
 
 
 exports.testConnectionGraph1 = function(test) {
-    new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", [], function(success,connection) {
+    new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", {}, function(success,connection) {
         var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
                      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
                      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\
@@ -62,11 +63,11 @@ exports.testConnectionGraph1 = function(test) {
                          .\
                      }';
         connection.execute(query, function(success, results) {
-            console.log("CONNECTION:");
-            console.log(connection);
+            //console.log("CONNECTION:");
+            //console.log(connection);
             connection.graph(function(success, graph){
-                console.log("RESULTS");
-                console.log(success);
+                //console.log("RESULTS");
+                //console.log(success);
 
                 var results = graph.filter( connection.rdf.filters.describes("http://example.org/people/alice") );
 
@@ -85,7 +86,7 @@ exports.testConnectionGraph1 = function(test) {
 };
 
 exports.testConnectionGraph2 = function(test) {
-    new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", [], function(success,connection) {
+    new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", {}, function(success,connection) {
         var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
                      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
                      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\
@@ -132,7 +133,7 @@ exports.testConnectionGraph2 = function(test) {
 };
 
 exports.testConnectionSubject1 = function(test) {
-    new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", [], function(success,connection) {
+    new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", {}, function(success,connection) {
         var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
                      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
                      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\
@@ -153,8 +154,8 @@ exports.testConnectionSubject1 = function(test) {
                      }';
         connection.execute(query, function(success, results) {
             connection.node("http://example.org/people/alice", function(succes, graph){
-                console.log("HEY");
-                console.log(graph);
+                //console.log("HEY");
+                //console.log(graph);
                 test.ok(graph.toArray().length === 4);
                 test.done();
             });
@@ -163,7 +164,7 @@ exports.testConnectionSubject1 = function(test) {
 };
 
 exports.testConnectionSubject2 = function(test) {
-    new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", [], function(success,connection) {
+    new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", {}, function(success,connection) {
         var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
                      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
                      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\
@@ -212,7 +213,7 @@ exports.testConnectionSubject2 = function(test) {
 
 
 exports.testConnectionPrefixes = function(test) {
-    new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", [], function(success,connection) {
+    new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", {}, function(success,connection) {
         var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
                      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
                      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\
@@ -263,7 +264,7 @@ exports.testConnectionPrefixes = function(test) {
 
 
 exports.testConnectionDefaultPrefix = function(test) {
-    new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", [], function(success,connection) {
+    new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", {}, function(success,connection) {
         var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
                      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
                      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\
@@ -312,7 +313,7 @@ exports.testConnectionDefaultPrefix = function(test) {
 };
 
 exports.testConnectionInsert1 = function(test) {
-    new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", [], function(success,connection) {
+    new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", {}, function(success,connection) {
         connection.setPrefix("ex", "http://example.org/people/");
 
         var graph = connection.rdf.createGraph();
@@ -337,7 +338,7 @@ exports.testConnectionInsert1 = function(test) {
 };
 
 exports.testConnectionInsert2 = function(test) {
-    new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", [], function(success,connection) {
+    new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", {}, function(success,connection) {
         connection.setPrefix("ex", "http://example.org/people/");
 
         var graph = connection.rdf.createGraph();
@@ -362,7 +363,7 @@ exports.testConnectionInsert2 = function(test) {
 };
 
 exports.testConnectionDelete1 = function(test) {
-    new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", [], function(success,connection) {
+    new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", {}, function(success,connection) {
         connection.setPrefix("ex", "http://example.org/people/");
 
         var graph = connection.rdf.createGraph();
@@ -393,7 +394,7 @@ exports.testConnectionDelete1 = function(test) {
 };
 
 exports.testConnectionDelete2 = function(test) {
-    new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", [], function(success,connection) {
+    new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", {}, function(success,connection) {
         connection.setPrefix("ex", "http://example.org/people/");
 
         var graph = connection.rdf.createGraph();
@@ -424,7 +425,7 @@ exports.testConnectionDelete2 = function(test) {
 };
 
 exports.testConnectionClear = function(test) {
-    new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", [], function(success,connection) {
+    new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", {}, function(success,connection) {
         
         connection.setPrefix("ex", "http://example.org/people/");
 
@@ -456,7 +457,7 @@ exports.testConnectionClear = function(test) {
 };
 
 exports.testConnectionLoad1 = function(test) {
-    new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", [], function(success,connection) {
+    new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", {}, function(success,connection) {
         
         connection.setPrefix("ex", "http://example.org/people/");
 
@@ -491,11 +492,9 @@ exports.testConnectionLoad1 = function(test) {
     });
 };
 
-
- * dbpedia is DOWN!!!
- **
+/*
 exports.testLoad2 = function(test) {
-    new RDFStoreClient.RDFStoreClient("/Users/antonio/Development/Projects/js/rdfstore-js/src/js-connection/src/rdfstore_worker.js", [], function(success, connection) {
+    new RDFStoreClient.RDFStoreClient("/Users/antonio/Development/Projects/js/rdfstore-js/src/js-connection/src/rdfstore_worker.js", {}, function(success, connection) {
         connection.load('remote', 'http://dbpedia.org/resource/Tim_Berners-Lee', function(success, result) {
             connection.node('http://dbpedia.org/resource/Tim_Berners-Lee', function(success, graph){
                 test.ok(success);
@@ -506,11 +505,11 @@ exports.testLoad2 = function(test) {
         });
     });
 };
-
+*/
 
 exports.testEventsAPI1 = function(test){
     var counter = 0;
-    new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", [], function(success, connection) {
+    new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", {}, function(success, connection) {
         connection.execute('INSERT DATA {  <http://example/book> <http://example.com/vocab#title> <http://test.com/example> }', function(result, msg){
             connection.startObservingNode("http://example/book",function(graph){
                 var observerFn = arguments.callee;
@@ -539,7 +538,7 @@ exports.testEventsAPI1 = function(test){
 
 exports.testEventsAPI2 = function(test){
     var counter = 0;
-    new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", [], function(success, connection) {
+    new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", {}, function(success, connection) {
         connection.execute('INSERT DATA { GRAPH <http://example/graph> { <http://example/book> <http://example.com/vocab#title> <http://test.com/example> } }', function(result, msg){
             connection.startObservingNode("http://example/book", "http://example/graph", function(graph){
                 var observerFn = arguments.callee;
@@ -568,7 +567,7 @@ exports.testEventsAPI2 = function(test){
 
 exports.testEventsAPI3 = function(test){
     var counter = 0;
-    new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", [], function(success, connection) {
+    new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", {}, function(success, connection) {
         connection.subscribe("http://example/book",null,null,null,function(event, triples){
             var observerFn = arguments.callee;
             if(counter === 0) {
@@ -604,10 +603,10 @@ exports.testEventsAPI3 = function(test){
         });
     });
 }
-*/
+
 
 exports.testRegisteredGraph = function(test) {
-    new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", [], function(success, connection) {
+    new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", {}, function(success, connection) {
         var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
                      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
                      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\
@@ -653,5 +652,13 @@ exports.testRegisteredGraph = function(test) {
             });
         });
         });
+    });
+};
+
+exports.testStoreConnection = function(test) {
+    Store.connect(__dirname+"/../src/rdfstore_worker.js", {}, function(success, connection) {
+        test.ok(success);
+        test.ok(connection.isWebWorkerConnection === true);
+        test.done();
     });
 };

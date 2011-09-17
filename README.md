@@ -42,6 +42,7 @@ Some other features included in the library are the following:
 - Turtle/N3 parser
 - W3C RDF Interfaces API
 - RDF graph events API
+- Parallel execution where WebWorkers are available
 
 ## SPARQL support
 
@@ -375,7 +376,37 @@ The main difference between both methods is that *subscribe* receives the triple
 In the same way, there are *startObservingQuery* and *stopObservingQuery* functions that makes possible to set up callbacks for whole SPARQL queries. 
 The store will try to be smart and not perform unnecessary evaluations of these query after quad insertion/deletions. Nevertheless too broad queries must be used carefully with the events API.
 
-##Reusable modules
+###WebWorkers
+
+RDFStore includes experimental support for [webworkers](http://www.w3.org/TR/workers/) since version 0.4.0 in both browser and node.js versions.
+The store can be initialized in a new thread using the *connect* method of the *Store* object.
+
+The library will try to create a worker and will return a *connection* object providing the same interface of the *store* object.
+If the creation of the worker fails, because webworkers support is not enabled in the platform/browser, a regular *store* object will be returned instead. Since both objects implement the same interface, client code can be wrote without taking into consideration the actual implementation of the store interface.
+
+    Store.connect("/js/rdfstore_min.js", {}, function(success,store) {
+        if(success) {
+          // store is a connection to the worker
+          console.log(store.isWebWorkerConnection === true);
+        } else {
+          // connection was not possible. A store object has been returned instead
+        }       
+        store.execute('INSERT DATA {  <http://example/book3> <http://example.com/vocab#title> <http://test.com/example> }', function(result, msg){
+            store.execute('SELECT * { ?s ?p ?o }', function(success,results) {
+              console.log(results.length === 1);
+            });
+        });
+    });
+
+The *connect* function can receive three arguments, the URL/Path where the script of the store is located, so the webworkers layer can load it, a hash with the aguments for the *Store.create* function that will be used in the actual creation of the store object and a callback that will be invoked with a success notification and the store implementation. In the Node.js version, it is not required to provide the path to the store script, the location of the store module will be provided by default.
+
+At the moment, the usability of this feature is limited to those browsers where the web workers framework is enabled. It has been tested with the current version of Chrome and Firefox Aurora 8.0a2. 
+Support in the Node.js version is provided by the webworkers module. 
+
+Web worker threads execute in the browser in a very restrictive environment due to security reasons. One of these limitations is the impossibility to make AJAX requests. SPARQL queries and the store functionality to load remote resources cannot be executed inside a worker connection. In these cases it is required to load the resource from the main browser thread and then insert the data in the store throught the connection. These restrictions are not present in the Node.js version.
+
+
+##Reusable modules. 
 
 rdfstore-js is built from a collection of general purpose modules. Some of these modules can be easily extracted from the library and used on their own.
 
