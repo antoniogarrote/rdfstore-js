@@ -712,8 +712,8 @@ InMemoryBTree.Tree.prototype.audit = function(showOutput) {
 
         if(n.isLeaf === false) {
           for(var i=0; i<n.numberActives; i++) {
-              var maxLeft = this._diskRead(n.children[i]).keys[this._diskRead(n.children[i]).numberActives -1 ].key
-              var minRight = this._diskRead(n.children[i+1]).keys[0].key
+              var maxLeft = that._diskRead(n.children[i]).keys[that._diskRead(n.children[i]).numberActives -1 ].key
+              var minRight = that._diskRead(n.children[i+1]).keys[0].key
               if(showOutput===true) {
                   console.log("   "+n.keys[i].key + "(" + maxLeft + "," + minRight+ ")");
               }

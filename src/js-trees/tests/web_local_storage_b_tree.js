@@ -1,9 +1,18 @@
 var btree = require("./../src/web_local_storage_b_tree").WebLocalStorageBTree;
 var Utils = require("./../src/utils").Utils;
+var PriorityQueue = require("./../src/priority_queue").PriorityQueue;
+
+exports.testEncodeDecode = function(test) {
+    var input = "1:test6:1:0:1:591:n::2:test2:test8";
+    res = btree.LocalStorageManager.prototype._decode(input);
+    test.ok(res.children.length==2);
+    test.ok(btree.LocalStorageManager.prototype._encode(res)===input);
+    test.done();
+};
 
 exports.testBufferCache = function(test) {
 
-    var pq = new btree.PriorityQueue({maxSize: 3});
+    var pq = new PriorityQueue.PriorityQueue({maxSize: 3});
 
     var testPriorities = function(store, contents) {
         if(contents.length > 1) {
@@ -56,6 +65,7 @@ exports.testInsertionSearchWalk = function(test) {
     t.insert(4,4);
     t.insert(6,6);
     t.insert(3,3);
+
 
     test.ok(t.search(6)===6);
 
@@ -156,15 +166,17 @@ exports.randomArrays = function(test) {
     var max_data = 1000;
 
 
+    var t = new btree.Tree(2, 'test', false);
+    i = 0;
     for(var i=0; i<max; i++) {
         var next = i * 100 /max;
         console.log(next+"%.");
 
-        var t = new btree.Tree(2, 'test', false);
         var data = [];
         for(var j=0; j<max_data; j++) {
             data.push(j);
         }
+
         Utils.shuffle(data);
 
         //console.log("-- Trial:");
@@ -186,13 +198,15 @@ exports.randomArrays = function(test) {
         test.ok(t.audit(false).length===0);
 
         if(acum.length != 0) {
-            //console.log("-------------------------------------");
-            //console.log("!");
+            console.log("-------------------------------------");
+            console.log("!");
         }
         test.ok(acum.length===0);
     }
     test.done();
 }
+
+
 
 var shuffle = function(o){ //v1.0
     for(var j, x, i = o.length; i; j = parseInt(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
@@ -200,7 +214,7 @@ var shuffle = function(o){ //v1.0
 };
 
 exports.testDeletionBig = function(test) {
-    var t = new btree.Tree(15, 'test', false);
+    var t = new btree.Tree(2, 'test', false);
     var acum = [];
     var limit = 15000;
     for(var i=0; i<limit; i++) {
@@ -228,5 +242,34 @@ exports.testDeletionBig = function(test) {
     test.ok(t._diskRead(t.root).numberActives===0);
     test.done();
        
+}
+
+
+exports.testReadCache = function(test) {
+    var t = new btree.Tree(15, 'test', false);
+    var acum = [];
+    var limit = 15000;
+    for(var i=0; i<limit; i++) {
+        acum.push(i);
+    }
+
+    acum = shuffle(acum);
+
+    for(var i=0; i<limit; i++) {
+        t.insert(acum[i],acum[i]);
+    }
+
+
+    var before = new Date().getTime();
+    for(var i=0; i<10000; i++) {
+        var toLook = parseInt(Math.random()*15000);
+        var found = t.search(toLook);
+        test.ok(found == toLook);        
+    }
+    var after = new Date().getTime();
+
+    console.log("SECS "+(after-before));
+
+    test.done();
 }
 

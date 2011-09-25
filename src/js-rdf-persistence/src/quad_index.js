@@ -61,7 +61,7 @@ QuadIndex.Tree.prototype.insert = function(quad, callback) {
 };
 
 QuadIndex.Tree.prototype.search = function(quad, callback) {
-    var result = BaseTree.Tree.prototype.search.call(this, quad, true); // true -> check exists : hack only present in the inMemoryAsyncBTree implementation
+    var result = BaseTree.Tree.prototype.search.call(this, quad, true); // true -> check exists : not present in all the b-tree implementations, check first.
     if(callback)
         callback(result)
 

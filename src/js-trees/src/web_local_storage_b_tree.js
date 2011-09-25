@@ -1,112 +1,7 @@
 // exports
 exports.WebLocalStorageBTree = {};
 var WebLocalStorageBTree = exports.WebLocalStorageBTree;
-
-/**
- * @constructor
- * @class PriorityQueue manages a queue of elements with priorities. Default
- * is highest priority first.
- *
- * @param [options] If low is set to true returns lowest first.
- */
-WebLocalStorageBTree.PriorityQueue = function(options) {
-    var contents = [];
-    var store = {};
-    var sorted = false;
-    var sortStyle;
-    var maxSize = options.maxSize || 10;
-
-    var prioritySortLow = function(a, b) {
-        return store[b].priority - store[a].priority;
-    };
-
-
-    sortStyle = prioritySortLow;
-
-    /**
-     * @private
-     */
-    var sort = function() {
-        contents.sort(sortStyle);
-        sorted = true;
-    };
-
-    var self = {
-        debugContents: contents,
-        debugStore: store,
-        debugSort: sort,
-
-        push: function(pointer, object) {
-            if(contents.length === maxSize) {
-                if(!sorted) {
-                    sort();
-                }
-                if(store[pointer] == null) {
-                    delete store[contents[0]];
-                    contents[0] = pointer;
-                    priority = (store[contents[contents.length - 1]].priority) - 1;
-                    store[pointer] = {object: object, priority: priority};
-                    sorted = false;
-                } else {
-                    priority = (store[contents[contents.length - 1]].priority) - 1;
-                    store[pointer].priority = priority;
-                    sorted = false;
-                }
-            } else if(contents.length === 0){
-                contents.push(pointer);
-                store[pointer] = {object: object, priority: 1000};
-            } else  {
-                priority = (store[contents[contents.length - 1]].priority) - 1
-                if(store[pointer] == null) {
-                    store[pointer] = {object: object, priority: priority};
-                    contents.push(pointer);
-                } else {
-                    store[pointer].priority = priority;
-                    sorted = false;
-                }
-            }
-        },
-
-        remove: function(pointer) {
-            if(store[pointer] != null) {
-                delete store[pointer];
-                var pos = null;
-                for(var i=0; i<contents.length; i++) {
-                    if(contents[i] === pointer) {
-                        pos = i;
-                        break;
-                    }
-                }
-
-                if(pos != null) {
-                    contents.splice(pos,1);
-                }
-            }
-        },
-
-        fetch: function(pointer) {
-            var obj = store[pointer];
-            if(store[pointer] != null) {
-                if(!sorted) {
-                    sort();
-                }
-                priority = (store[contents[contents.length - 1]].priority) - 1;
-                store[pointer].priority = priority;
-                sorted = false;
-                return obj.object;
-            } else {
-                return null;
-            }
-        }
-
-    };
-
-    return self;
-};
-
-
-
-var WebLocalStorageBTree = exports.WebLocalStorageBTree;
+var PriorityQueue = require("./priority_queue").PriorityQueue;
 
 var left = -1;
 var right = 1;
@@ -157,7 +52,8 @@ WebLocalStorageBTree.Tree = function(order, name, persistent, cacheMaxSize) {
         this.order = order;
         this.name = name;
         this.diskManager = new WebLocalStorageBTree.LocalStorageManager(name, storage, cacheMaxSize);
-        this.root = this.diskManager._diskRead("__"+name+"__ROOT_NODE__");
+        this.root = this.diskManager._readRootNode();
+        //this.root = this.diskManager._diskRead("__"+name+"__ROOT_NODE__");
         if(this.root == null) {
             this.root = this._allocateNode();
             this.root.isLeaf = true;
@@ -356,7 +252,6 @@ WebLocalStorageBTree.Tree.prototype._splitChild = function(parent, index, child)
     parent.keys[index] = newParentChild;
     parent.numberActives++;
 
-
     this._diskWrite(parent);
     this._diskWrite(child);
 };
@@ -369,6 +264,8 @@ WebLocalStorageBTree.Tree.prototype._splitChild = function(parent, index, child)
  */
 WebLocalStorageBTree.Tree.prototype.insert = function(key,data) {
     var currentRoot = this._diskRead(this.root);
+
+
     if(currentRoot.numberActives === (2 * this.order - 1)) {
         var newRoot = this._allocateNode();
         newRoot.isLeaf = false;
@@ -401,8 +298,9 @@ WebLocalStorageBTree.Tree.prototype._insertNonFull = function(node,key,data) {
             idx--;
         }
         idx++;
-        var child = this._diskRead(node.children[idx]);
 
+        var child = this._diskRead(node.children[idx]);
+        
         if(child.numberActives === 2*this.order -1) {
             this._splitChild(node,idx,child);
             if(this.comparator(key, node.keys[idx].key)===1) {
@@ -433,7 +331,6 @@ WebLocalStorageBTree.Tree.prototype._insertNonFull = function(node,key,data) {
  * @returns true if the key is deleted false otherwise
  */
 WebLocalStorageBTree.Tree.prototype.delete = function(key) {
-    try {
     var node = this._diskRead(this.root);
     var parent = null;
     var searching = true;
@@ -444,7 +341,6 @@ WebLocalStorageBTree.Tree.prototype.delete = function(key) {
 
     while(shouldContinue === true) {
         shouldContinue = false;
-
         while(searching === true) {
             i = 0;
 
@@ -524,11 +420,12 @@ WebLocalStorageBTree.Tree.prototype.delete = function(key) {
             return true;
         }
 
-
+    try {
         //Case 2: The node containing the key is found and is an internal node
         if(node.isLeaf === false) {
             var tmpNode = null;
             var tmpNode2 = null;
+
             if((tmpNode=this._diskRead(node.children[idx])).numberActives > (this.order-1)) {
                 var subNodeIdx = this._getMaxKeyPos(tmpNode);
                 key = subNodeIdx.node.keys[subNodeIdx.index];
@@ -541,46 +438,54 @@ WebLocalStorageBTree.Tree.prototype.delete = function(key) {
                 key = key.key;
                 shouldContinue = true;
                 searching = true;
-            } else if ((tmpNode = this._diskRead(node.children[idx+1])).numberActives >(this.order-1)) {
-                var subNodeIdx = this._getMinKeyPos(tmpNode);
-                key = subNodeIdx.node.keys[subNodeIdx.index];
+            } else {
+                if ((tmpNode = this._diskRead(node.children[idx+1])).numberActives >(this.order-1)) {
+                    var subNodeIdx = this._getMinKeyPos(tmpNode);
+                    key = subNodeIdx.node.keys[subNodeIdx.index];
 
-                node.keys[idx] = key;
+                    node.keys[idx] = key;
 
-                //this._delete(node.children[idx+1],key.key);
-                this._diskWrite(node);
-                node = tmpNode;
-                key = key.key;
-                shouldContinue = true;
-                searching = true;
-            } else if((tmpNode = this._diskRead(node.children[idx])).numberActives === (this.order-1) &&
-                      (tmpNode2 = this._diskRead(node.children[idx+1])).numberActives === (this.order-1)) {
+                    //this._delete(node.children[idx+1],key.key);
+                    this._diskWrite(node);
+                    node = tmpNode;
+                    key = key.key;
+                    shouldContinue = true;
+                    searching = true;
+                } else {
+                    if((tmpNode = this._diskRead(node.children[idx])).numberActives === (this.order-1) &&
+                       (tmpNode2 = this._diskRead(node.children[idx+1])).numberActives === (this.order-1)) {
 
-                var combNode = this._mergeNodes(tmpNode, node.keys[idx], tmpNode2);
-                node.children[idx] = combNode.pointer;
+                        var combNode = this._mergeNodes(tmpNode, node.keys[idx], tmpNode2);
+                        node.children[idx] = combNode.pointer;
 
-                idx++;
-                for(var i=idx; i<node.numberActives; i++) {
-          	    node.children[i] = node.children[i+1];
-          	    node.keys[i-1] = node.keys[i];
+                        idx++;
+                        for(var i=idx; i<node.numberActives; i++) {
+          	            node.children[i] = node.children[i+1];
+          	            node.keys[i-1] = node.keys[i];
+                        }
+                        // freeing unused references
+                        node.children[i] = null;
+                        node.keys[i-1] = null;
+
+                        node.numberActives--;
+                        if (node.numberActives === 0 && this.root === node.pointer) {
+                            this.root = combNode.pointer;
+                            this._updateRootNode(combNode);
+                        }
+
+                        this._diskWrite(node);
+
+                        node = combNode;
+                        shouldContinue = true;
+                        searching = true;
+                    }
                 }
-                // freeing unused references
-                node.children[i] = null;
-                node.keys[i-1] = null;
-
-                node.numberActives--;
-                if (node.numberActives === 0 && this.root === node.pointer) {
-                    this.root = combNode.pointer;
-                    this._updateRootNode(combNode);
-                }
-
-                this._diskWrite(node);
-
-                node = combNode;
-                shouldContinue = true;
-                searching = true;
             }
         }
+    } catch(e) {
+        console.log("!!!");
+        console.log(e);
+    }
 
 
         // Case 3:
@@ -595,10 +500,6 @@ WebLocalStorageBTree.Tree.prototype.delete = function(key) {
         if(shouldContinue === false) {
             return true;
         }
-    }
-    } catch(e) {
-        console.log("!!!");
-        console.log(e);
     }
 };
 
@@ -1011,7 +912,7 @@ WebLocalStorageBTree.Node = function() {
 WebLocalStorageBTree.LocalStorageManager  = function(name,storage, maxSize) {
     this.name = name;
     this.storage = storage;
-    this.bufferCache = new WebLocalStorageBTree.PriorityQueue({"maxSize": maxSize});
+    this.bufferCache = new PriorityQueue.PriorityQueue({"maxSize": maxSize});
     this.counter = this.storage.getItem("__"+this.name+"__ID_COUNTER__") || 0;
 };
 
@@ -1039,11 +940,13 @@ WebLocalStorageBTree.LocalStorageManager.prototype._diskRead = function(pointer)
     if(node == null) {
         var node = this.storage.getItem(pointer);
         if(node != null) {
-            node = JSON.parse(node)
+            node = this._decode(node)
+            //node = JSON.parse(node)
             node.pointer = pointer;
             this.bufferCache.push(pointer, node);
         }
     }
+
     return node;
 }
 
@@ -1066,7 +969,6 @@ WebLocalStorageBTree.LocalStorageManager.prototype._diskWrite = function(node) {
             if(origChildren[i]==null) {
                 childPointers.push(null);                
             } else if(typeof(origChildren[i]) === 'object') {
-                console.log("HEY!");
                 //this._diskWrite(origChildren[i]);
                 childPointers.push(origChildren[i].pointer);
             } else {
@@ -1076,7 +978,8 @@ WebLocalStorageBTree.LocalStorageManager.prototype._diskWrite = function(node) {
     }
     node.children = childPointers;
 
-    this.storage.setItem(node.pointer, JSON.stringify(node));
+    this.storage.setItem(node.pointer, this._encode(node));
+    //this.storage.setItem(node.pointer, JSON.stringify(node));
     //this.storage.setItem(node.pointer, node);
     node.children = origChildren;
     this.bufferCache.push(node.pointer, node);
@@ -1094,3 +997,116 @@ WebLocalStorageBTree.LocalStorageManager.prototype._updateRootNode = function(no
         throw "Cannot set as root of the b-tree a node without pointer";
     }
 };
+
+WebLocalStorageBTree.LocalStorageManager.prototype._readRootNode = function() {
+    var pointer = this.storage.getItem("__"+this.name+"__ROOT_NODE__");
+    if(pointer == null) {
+        return null;
+    } else {
+        return this._diskRead(pointer);
+    }
+};
+
+WebLocalStorageBTree.LocalStorageManager.prototype._encode = function(node) {
+    //console.log("<<");
+    //console.log(node);
+    encoded = ""+node.numberActives;
+    encoded = encoded+":"+node.pointer;
+    encoded = encoded+":"+node.level;
+    encoded = encoded+":"+(node.isLeaf ? 1 : 0);
+    var numKeys = 0;
+    var keys = "";
+    for(var i=0; i<node.keys.length; i++) {
+        if(node.keys[i] != null) {
+            keys = keys+":"+node.keys[i].key;
+            if(node.keys[i].data==null) {
+                keys = keys+":n:";                
+            } else if(typeof(node.keys[i].data)=='string') {
+                keys = keys+":s:"+(node.keys[i].data);
+            } else if(typeof(node.keys[i].data)=='number') {
+                if(node.keys[i] % 1 ==0) {
+                    keys = keys+":i:"+(node.keys[i].data);
+                } else {
+                    keys = keys+":f:"+(node.keys[i].data);
+                }
+            } else {
+                keys = keys+":o:"+(JSON.stringify(node.keys[i].data).replace(":","&colon;"));
+            }
+            numKeys++;
+        }
+    }
+    encoded = encoded+":"+numKeys+keys;
+    if(node.isLeaf === false) {
+
+        var children = "";
+        var numChildren = 0;       
+
+        for(var i=0; i<node.children.length; i++) {
+            if(node.children[i] != null) {
+                children = children+":"+node.children[i];
+                numChildren++;
+            }
+        }
+
+        encoded = encoded+":"+numChildren+children;        
+    }
+    //console.log("<< "+encoded);
+    return encoded;
+};
+
+WebLocalStorageBTree.LocalStorageManager.prototype._decode = function(encodedNode) {
+    //console.log(">> "+encodedNode);
+    var node =  new WebLocalStorageBTree.Node();
+    var parts = encodedNode.split(":");
+    
+    //encoded = ""+node.numberActives;
+    node.numberActives = parseInt(parts[0]);
+    //encoded = encoded+":"+node.pointer;
+    node.pointer = parts[1];
+    //encoded = encoded+":"+node.level;
+    node.level = parseInt(parts[2]);
+    //encoded = encoded+":"+(node.isLeaf ? 1 : 0);
+    if(parts[3] === '1') {
+        node.isLeaf = true;
+    } else {
+        node.isLeaf = false;
+    }
+
+    var numKeys = parseInt(parts[4]);
+    var counter = 5;
+    var key,type,data
+    for(var i=0; i<numKeys; i++) {
+        key = parseInt(parts[counter]);
+        type = parts[counter+1];
+        data = parts[counter+2]
+
+        if(type === 'n') {
+            data = undefined
+        } else if(type === 'i') {
+            data = parseInt(data);
+        } else if(type === 'f') {
+            data = parseFloat(data);
+        } else if(type === 'o') {
+            data = JSON.parse(data.replace("&colon;",":"));
+        }
+
+        node.keys.push({ "key": key, "data":data});
+
+
+        counter = counter+3;
+    }
+
+    if(node.isLeaf === false) {        
+        var numChildren = parseInt(parts[counter]);
+        counter++;
+        for(var i=0; i<numChildren; i++) {
+            node.children[i] = parts[counter];
+            counter++;
+        }
+    }
+
+    //console.log(" >> ");
+    //console.log(node);
+    return node;
+};
+
