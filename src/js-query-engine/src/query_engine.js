@@ -496,7 +496,7 @@ QueryEngine.QueryEngine.prototype.denormalizeBindings = function(bindings, envOu
 // Queries execution
 
 QueryEngine.QueryEngine.prototype.execute = function(queryString, callback, defaultDataset, namedDataset){
-    try{
+    //try{
         queryString = Utils.normalizeUnicodeLiterals(queryString);
 
         var syntaxTree = this.abstractQueryTree.parseQueryString(queryString);
@@ -520,13 +520,13 @@ QueryEngine.QueryEngine.prototype.execute = function(queryString, callback, defa
                 this.executeQuery(syntaxTree, callback, defaultDataset, namedDataset);
             }
         }
-    } catch(e) {
-        if(e.name && e.name==='SyntaxError') {
-            callback(false, "Syntax error: \nmessage:"+e.message+"\nline "+e.line+", column:"+e.column);
-        } else {
-            callback(false, "Query execution error");
-        }
-    }
+    //} catch(e) {
+    //    if(e.name && e.name==='SyntaxError') {
+    //        callback(false, "Syntax error: \nmessage:"+e.message+"\nline "+e.line+", column:"+e.column);
+    //    } else {
+    //        callback(false, "Query execution error");
+    //    }
+    //}
 };
 
 // Retrieval queries
@@ -1026,10 +1026,8 @@ QueryEngine.QueryEngine.prototype.rangeQuery = function(quad, queryEnv) {
     var key = that.normalizeQuad(quad, queryEnv, false)
     if(key != null) {
         //console.log("RANGE QUERY:")
-        //console.log(success);
         //console.log(key);
         //console.log(new QuadIndexCommon.Pattern(key));
-        //console.log(key);
         var quads = that.backend.range(new QuadIndexCommon.Pattern(key));
         //console.log("retrieved");
         //console.log(quads)

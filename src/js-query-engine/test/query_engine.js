@@ -1,14 +1,16 @@
 var QueryEngine = require("./../src/query_engine").QueryEngine;
 var QuadBackend = require("./../../js-rdf-persistence/src/quad_backend").QuadBackend;
 var Lexicon = require("./../../js-rdf-persistence/src/lexicon").Lexicon;
+//var Lexicon = require("./../../js-rdf-persistence/src/web_local_storage_lexicon").WebLocalStorageLexicon;
+
 
 exports.testInsertDataSimpleQuery = function(test){
     new Lexicon.Lexicon(function(lexicon){
         new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
             var engine = new QueryEngine.QueryEngine({backend: backend,
                                                       lexicon: lexicon});      
-            engine.execute('INSERT DATA {  <http://example/book3> <http://example.com/vocab#title> <http://test.com/example> }', function(result){
-                test.ok(result===true);
+            engine.execute('INSERT DATA {  <http://example/book3> <http://example.com/vocab#title> <http://test.com/example> }', function(result,msg){
+              test.ok(result===true);
 
                 var s = null;
                 var p = null;
@@ -19,18 +21,19 @@ exports.testInsertDataSimpleQuery = function(test){
                     var index = engine.backend.indices[i];
                     var tree = engine.backend.indexMap[index];
 
-                    test.ok(tree.root.keys.length === 1);
+                    var treeRoot = tree._diskRead(tree.root);
+                    test.ok(treeRoot.keys.length === 1);
 
                     if(captured === false) {
                         captured = true;
 
-                        s = tree.root.keys[0].subject;
-                        p = tree.root.keys[0].predicate;
-                        o = tree.root.keys[0].object;
+                        s = treeRoot.keys[0].subject;
+                        p = treeRoot.keys[0].predicate;
+                        o = treeRoot.keys[0].object;
                     } else {
-                        test.ok(s === tree.root.keys[0].subject);
-                        test.ok(p === tree.root.keys[0].predicate);
-                        test.ok(o === tree.root.keys[0].object);
+                        test.ok(s === treeRoot.keys[0].subject);
+                        test.ok(p === treeRoot.keys[0].predicate);
+                        test.ok(o === treeRoot.keys[0].object);
                     }
                 }
 
@@ -58,22 +61,23 @@ exports.testInsertDataSimpleQueryLiteral = function(test){
                     var index = engine.backend.indices[i];
                     var tree = engine.backend.indexMap[index];
 
-                    test.ok(tree.root.keys.length === 1);
+                    var treeRoot = tree._diskRead(tree.root);
+                    test.ok(treeRoot.keys.length === 1);
 
                     if(captured === false) {
                         captured = true;
 
-                        s = tree.root.keys[0].key.subject;
-                        p = tree.root.keys[0].key.predicate;
-                        o = tree.root.keys[0].key.object;
+                        s = treeRoot.keys[0].key.subject;
+                        p = treeRoot.keys[0].key.predicate;
+                        o = treeRoot.keys[0].key.object;
 
                         test.ok(s != null);
                         test.ok(p != null);
                         test.ok(o != null);
                     } else {
-                        test.ok(s === tree.root.keys[0].key.subject);
-                        test.ok(p === tree.root.keys[0].key.predicate);
-                        test.ok(o === tree.root.keys[0].key.object);
+                        test.ok(s === treeRoot.keys[0].key.subject);
+                        test.ok(p === treeRoot.keys[0].key.predicate);
+                        test.ok(o === treeRoot.keys[0].key.object);
                     }
                 }
 
@@ -159,7 +163,6 @@ exports.testInsertDataTrivialRecovery3 = function(test){
             engine.execute('INSERT DATA {  <http://example/book3> <http://example.com/vocab#title> <http://test.com/example>; <http://example.com/vocab#pages> 95 }',function(success,result){
                 engine.execute('INSERT DATA { <http://example/book4> <http://example.com/vocab#title> <http://test.com/example>; <http://example.com/vocab#pages> 96 }', function(success,result){
                     test.ok( success===true );
-     
                     engine.execute('SELECT * { <http://example/book3> ?p ?o }', function(success, result){
                         test.ok(success === true );
                         test.ok(result.length === 2);
@@ -1605,5 +1608,4 @@ exports.testGroupSum2 = function(test) {
         });
     });
 };
-
 

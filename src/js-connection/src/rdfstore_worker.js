@@ -2,8 +2,6 @@
 var RDFJSInterface = require(__dirname+"/./../../js-query-engine/src/rdf_js_interface.js").RDFJSInterface;
 var Store = require(__dirname+"/./../../js-store/src/store").Store;
 
-    console.log("TEST?");
-    console.log(this);
     RDFStoreWorker = {};
 
     RDFStoreWorker.observingCallbacks = {};

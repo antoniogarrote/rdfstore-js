@@ -43,6 +43,7 @@ Some other features included in the library are the following:
 - W3C RDF Interfaces API
 - RDF graph events API
 - Parallel execution where WebWorkers are available
+- Persistent storage using HTML5 LocalStorage
 
 ## SPARQL support
 
@@ -79,6 +80,7 @@ To use the library in a node.js application, there is available a [package](http
     $npm install rdfstore
 
 It is also possible to use rdfstore-js in a web application being executed in a browser. There is [minimized version](https://raw.github.com/antoniogarrote/rdfstore-js/master/dist/browser/rdf_store_min.js) of the library in a single Javascript file that can be linked from a HTML document. There is also a [minimized and gunzipped version](https://raw.github.com/antoniogarrote/rdfstore-js/master/dist/browser/rdf_store_min.js) available. Both versions have been compiled using Google's Closure Javascript compiler.
+The persistent versions can be found [here (min)](https://raw.github.com/antoniogarrote/rdfstore-js/master/dist/browser_persistent/rdf_store_min.js).
 
 
 ##Building
@@ -93,10 +95,12 @@ To build the library for the browser configuration, execute the following comman
 
     $./make.rb browser
 
-The output of each configuration will be created in the dist subdirectory at the root path of the project.
-You can also run the tests on the minimized version of the library with the command:
+To build the library for the browser, including support for persistent
+storage execute this command:
 
-    $./make.rb test_min
+    $./make.rb browser_persistent
+
+The output of each configuration will be created in the dist subdirectory at the root path of the project.
 
 
 ## Tests
@@ -107,6 +111,11 @@ To execute the whole test suite of the library, including the DAWG test cases fo
 
 The tests depend on [nodeunit](http://search.npmjs.org/#/nodeunit). That node.js library must be installed in order to run the tests.
 
+You can also run the tests on the minimized version of the library with the command:
+
+    $./make.rb test_min
+
+Additionally, there are some smoke tests for both browser versions that can be found ithe 'browsertests' directory.
 
 ## API
 
@@ -136,6 +145,16 @@ This is a small overview of the rdfstore-js API.
     // alt 4
     store = new rdfstore.Store();
 
+###Persistent store creation
+
+In order to use persistent storage in the browser, an option named 'persitent' must be passed with value 'true' in the options for the store. An additional flag 'overwrite' indicates if the data for this store can be used to drop old data or read previously stored data. Optionally, a name for the store can also be passed as an argument. This name can be used to manipulate several persistent stores in the same browser.
+
+At the moment, webworkers cannot be used with the persistent version of the store.
+
+    new rdfstore.Store({persistent:true, name:'myappstore', overwrite:true}, function(store){
+      // Passing overwrite:true to the options will make the store to drop all previous data.
+      // Several stores can be used, providing different names for the stores
+    }
 
 ###Query execution
 

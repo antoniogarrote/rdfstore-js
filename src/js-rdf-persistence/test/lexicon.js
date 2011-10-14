@@ -17,7 +17,7 @@ exports.testParsingLiterals = function(test){
             test.ok(parsed.type==="http://sometypehere.org");
 
             test.done();
-    });
+    },"ignored_name");
 };
 
 exports.testLexiconInterface = function(test) {

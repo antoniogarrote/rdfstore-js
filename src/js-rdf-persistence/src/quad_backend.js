@@ -36,7 +36,10 @@ QuadBackend.QuadBackend = function(configuration, callback) {
         for(var i=0; i<this.indices.length; i++) {
             var indexKey = this.indices[i];
             var tree = new QuadIndex.Tree({order: this.treeOrder,
-                                           componentOrder: this.componentOrders[indexKey]});
+                                           componentOrder: this.componentOrders[indexKey],
+                                           persistent: configuration['persistent'],
+                                           name: (configuration['name']||"")+indexKey,
+                                           cacheMaxSize: configuration['cacheMaxSize']});
             this.indexMap[indexKey] = tree;
         }
         
@@ -44,6 +47,13 @@ QuadBackend.QuadBackend = function(configuration, callback) {
             callback(this);        
     }
 }
+
+QuadBackend.QuadBackend.prototype.clear = function() {
+        for(var i=0; i<this.indices.length; i++) {
+            var indexKey = this.indices[i];
+            this.indexMap[indexKey].clear();
+        }
+};
 
 QuadBackend.QuadBackend.prototype._indexForPattern = function(pattern) {
     var indexKey = pattern.indexKey;

@@ -2,11 +2,44 @@ var btree = require("./../src/web_local_storage_b_tree").WebLocalStorageBTree;
 var Utils = require("./../src/utils").Utils;
 var PriorityQueue = require("./../src/priority_queue").PriorityQueue;
 
-exports.testEncodeDecode = function(test) {
+exports.testDecodeEncode = function(test) {
     var input = "1:test6:1:0:1:591:n::2:test2:test8";
     res = btree.LocalStorageManager.prototype._decode(input);
     test.ok(res.children.length==2);
     test.ok(btree.LocalStorageManager.prototype._encode(res)===input);
+    test.done();
+};
+
+exports.testEncodeDecode = function(test) {
+    var input = {keys:[{key: {subject:1,object:2,predicate:3}, data:null}], 
+                 children: ['a','b'],
+                 isLeaf: false,
+                 pointer: 'pointer',
+                 numberActives: 1,
+                 level: 0};
+    var encoded = btree.LocalStorageManager.prototype._encode(input);
+    var decoded = btree.LocalStorageManager.prototype._decode(encoded);
+    test.ok(input.keys.length === decoded.keys.length);
+    test.ok(input.isLeaf === decoded.isLeaf);
+    test.ok(input.pointer === decoded.pointer);
+    test.ok(input.level === decoded.level);
+    test.ok(input.numberActives === decoded.numberActives);
+    test.ok(input.children.length === decoded.children.length);
+    for(var i=0; i<input.children.length; i++) {
+        test.ok(input.children[i] === decoded.children[i]);
+    }
+    for(var i=0; i<input.keys.length; i++) {
+        var keyInput = input.keys[i];
+        var keyDec = decoded.keys[i];
+        test.ok(keyInput['subject'] === keyDec['subject']);
+        test.ok(keyInput['predicate'] === keyDec['predicate']);
+        test.ok(keyInput['object'] === keyDec['object']);
+        test.ok(keyInput['graph'] === keyDec['graph']);
+        test.ok(keyInput.data == keyDec.data);
+    }
+
+    test.ok(encoded === btree.LocalStorageManager.prototype._encode(decoded));
+
     test.done();
 };
 

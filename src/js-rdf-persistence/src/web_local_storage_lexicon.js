@@ -7,8 +7,8 @@ var WebLocalStorageLexicon = exports.WebLocalStorageLexicon;
  * Temporal implementation of the lexicon
  */
 
-WebLocalStorageLexicon.Lexicon = function(name, callback){
-    this.name = name;
+WebLocalStorageLexicon.Lexicon = function(callback,name){
+    this.name = name || "";
     this.storage = null;
 
     try {
@@ -25,7 +25,11 @@ WebLocalStorageLexicon.Lexicon = function(name, callback){
             },
             removeItem: function(pointer) {
                 //nop
-            }
+            },
+            key: function(index) {
+                return "";
+            },
+            length: 0
         };
     }
 
@@ -84,6 +88,30 @@ WebLocalStorageLexicon.Lexicon.prototype.pointer = function(hashName,val){
     }
 }
 
+WebLocalStorageLexicon.Lexicon.prototype.clear = function() {
+    this.uriToOID = {};
+    this.OIDToUri = {};
+    this.literalToOID = {};
+    this.OIDToLiteral = {};
+    this.blankToOID = {};
+    this.OIDToBlank = {};
+    var localStorageLength = this.storage.length;
+    var lexiconPrefix = this.name+"_l_";
+    var keysToDelete = [];
+
+    for(var i=0; i<localStorageLength; i++) {        
+        // number of elments changes, always get the first key
+        var key = this.storage.key(i);
+        if(key.indexOf(lexiconPrefix) == 0) {
+            keysToDelete.push(key);
+        }
+    }
+
+    for(var i=0; i<keysToDelete.length; i++) {
+        this.storage.removeItem(keysToDelete[i]);
+    }
+};
+
 WebLocalStorageLexicon.Lexicon.prototype.registerGraph = function(oid){
     if(oid != this.defaultGraphOid) {
         this.knownGraphs[oid] = true;
@@ -97,7 +125,7 @@ WebLocalStorageLexicon.Lexicon.prototype.registeredGraphs = function(shouldRetur
 
     for(var g in this.knownGraphs) {
         if(shouldReturnUris === true) {
-            acum.push(this.OIDToUri['u'+g]);
+            acum.push(this.retrieve(g));
         } else {
             acum.push(g);
         }
@@ -288,7 +316,7 @@ WebLocalStorageLexicon.Lexicon.prototype.retrieve = function(oid) {
                           fromStorage = this.storage.getItem(this.pointer("uriToOID", maybeUri));
                           var parts = fromStorage.split(":");
                           var counter = parseInt(parts[1]);
-                          this.uriToOID[uri] = [oid,counter];
+                          this.uriToOID[maybeUri] = [oid,counter];
                           return(this.parseUri(maybeUri));
                       } else {
                           // literal
@@ -299,7 +327,7 @@ WebLocalStorageLexicon.Lexicon.prototype.retrieve = function(oid) {
                               var oidCounter = fromStorage.split(":");
                               var oid = parseInt(oidCounter[0]);
                               var counter = parseInt(oidCounter[1]);
-                              this.literalToOID[literal] = [oid, counter];
+                              this.literalToOID[maybeLiteral] = [oid, counter];
                               return(this.parseLiteral(maybeLiteral));
                           } else {
                               // blank

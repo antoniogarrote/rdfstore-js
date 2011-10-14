@@ -508,6 +508,12 @@ InMemoryBTree.Tree.prototype._updateRootNode = function(node) {
     return node;
 };
 
+InMemoryBTree.Tree.prototype.clear = function() {
+        this.root = this._allocateNode();
+        this.root.isLeaf = true;
+        this.root.level = 0;
+        this._updateRootNode(this.root);
+};
 
 /**
  * search
@@ -1126,8 +1132,8 @@ InMemoryBTree.Tree.prototype.audit = function(showOutput) {
 
         if(n.isLeaf === false) {
           for(var i=0; i<n.numberActives; i++) {
-              var maxLeft = this._diskRead(n.children[i]).keys[this._diskRead(n.children[i]).numberActives -1 ].key
-              var minRight = this._diskRead(n.children[i+1]).keys[0].key
+              var maxLeft = that._diskRead(n.children[i]).keys[that._diskRead(n.children[i]).numberActives -1 ].key
+              var minRight = that._diskRead(n.children[i+1]).keys[0].key
               if(showOutput===true) {
                   console.log("   "+n.keys[i].key + "(" + maxLeft + "," + minRight+ ")");
               }
@@ -1352,8 +1358,10 @@ QuadIndex.Tree = function(params,callback) {
     if(arguments != 0) {
         this.componentOrder = params.componentOrder;
 
+
         // @todo change this if using the file backed implementation
-        BaseTree.Tree.call(this, params.order);
+        BaseTree.Tree.call(this, params.order, params['name'], params['persistent'], params['cacheMaxSize']);
+
         this.comparator = function(a,b) {
             for(var i=0; i< this.componentOrder.length; i++) {
                 var component = this.componentOrder[i];
@@ -1389,7 +1397,7 @@ QuadIndex.Tree = function(params,callback) {
             callback(this);
         }
     }
-}
+};
 
 Utils['extends'](BaseTree.Tree, QuadIndex.Tree);
 
@@ -1402,7 +1410,7 @@ QuadIndex.Tree.prototype.insert = function(quad, callback) {
 };
 
 QuadIndex.Tree.prototype.search = function(quad, callback) {
-    var result = BaseTree.Tree.prototype.search.call(this, quad, true); // true -> check exists : hack only present in the inMemoryAsyncBTree implementation
+    var result = BaseTree.Tree.prototype.search.call(this, quad, true); // true -> check exists : not present in all the b-tree implementations, check first.
     if(callback)
         callback(result)
 
@@ -1410,7 +1418,13 @@ QuadIndex.Tree.prototype.search = function(quad, callback) {
 };
 
 QuadIndex.Tree.prototype.range = function(pattern, callback) {
-    var result = this._rangeTraverse(this,this.root, pattern);
+    var result = null;
+    if(typeof(this.root)==='string') {
+        result = this._rangeTraverse(this,this._diskRead(this.root), pattern);        
+    } else {
+        result = this._rangeTraverse(this,this.root, pattern);
+    }
+
     if(callback)
         callback(result);
 
@@ -1422,7 +1436,6 @@ QuadIndex.Tree.prototype._rangeTraverse = function(tree,node, pattern) {
     var acum = [];
     var pendingNodes = [node];
     var node, idxMin, idxMax;
-
     while(pendingNodes.length > 0) {
         node = pendingNodes.shift();
         idxMin = 0;
@@ -1439,7 +1452,8 @@ QuadIndex.Tree.prototype._rangeTraverse = function(tree,node, pattern) {
             }
 
         } else {
-            var childNode = tree._diskRead(node.children[idxMin]);
+            var pointer = node.children[idxMin]
+            var childNode = tree._diskRead(pointer);
             pendingNodes.push(childNode);
 
             var idxMax = idxMin;
@@ -1455,7 +1469,6 @@ QuadIndex.Tree.prototype._rangeTraverse = function(tree,node, pattern) {
             }
         }
     }
-    
     return acum;
 };
 
@@ -1494,7 +1507,10 @@ QuadBackend.QuadBackend = function(configuration, callback) {
         for(var i=0; i<this.indices.length; i++) {
             var indexKey = this.indices[i];
             var tree = new QuadIndex.Tree({order: this.treeOrder,
-                                           componentOrder: this.componentOrders[indexKey]});
+                                           componentOrder: this.componentOrders[indexKey],
+                                           persistent: configuration['persistent'],
+                                           name: (configuration['name']||"")+indexKey,
+                                           cacheMaxSize: configuration['cacheMaxSize']});
             this.indexMap[indexKey] = tree;
         }
         
@@ -1502,6 +1518,13 @@ QuadBackend.QuadBackend = function(configuration, callback) {
             callback(this);        
     }
 }
+
+QuadBackend.QuadBackend.prototype.clear = function() {
+        for(var i=0; i<this.indices.length; i++) {
+            var indexKey = this.indices[i];
+            this.indexMap[indexKey].clear();
+        }
+};
 
 QuadBackend.QuadBackend.prototype._indexForPattern = function(pattern) {
     var indexKey = pattern.indexKey;
@@ -1586,7 +1609,7 @@ Lexicon = {};
  */
 
 
-Lexicon.Lexicon = function(callback){
+Lexicon.Lexicon = function(callback, _name){
     this.uriToOID = {};
     this.OIDToUri = {};
 
@@ -1764,17 +1787,31 @@ Lexicon.Lexicon.prototype.retrieve = function(oid) {
     } catch(e) {
         console.log("error in lexicon retrieving OID:");
         console.log(oid);
-        if(e.message) {
-            console.log(e.message); 
-        }
-        if(e.stack) {
-            console.log(e.stack);
+        if(e.message || e.stack) {
+            if(e.message) {
+                console.log(e.message); 
+            }
+            if(e.stack) {
+                console.log(e.stack);
+            }
+        } else {
+            console.log(e);
         }
         throw new Error("Unknown retrieving OID in lexicon:"+oid);
 
     }
 };
 
+Lexicon.Lexicon.prototype.clear = function() {
+    this.uriToOID = {};
+    this.OIDToUri = {};
+
+    this.literalToOID = {};
+    this.OIDToLiteral = {};
+
+    this.blankToOID = {};
+    this.OIDToBlank = {};
+};
 
 Lexicon.Lexicon.prototype.unregister = function(quad, key) {
     try {
@@ -33990,7 +34027,7 @@ QueryEngine.QueryEngine.prototype.denormalizeBindings = function(bindings, envOu
 // Queries execution
 
 QueryEngine.QueryEngine.prototype.execute = function(queryString, callback, defaultDataset, namedDataset){
-    try{
+    //try{
         queryString = Utils.normalizeUnicodeLiterals(queryString);
 
         var syntaxTree = this.abstractQueryTree.parseQueryString(queryString);
@@ -34014,13 +34051,13 @@ QueryEngine.QueryEngine.prototype.execute = function(queryString, callback, defa
                 this.executeQuery(syntaxTree, callback, defaultDataset, namedDataset);
             }
         }
-    } catch(e) {
-        if(e.name && e.name==='SyntaxError') {
-            callback(false, "Syntax error: \nmessage:"+e.message+"\nline "+e.line+", column:"+e.column);
-        } else {
-            callback(false, "Query execution error");
-        }
-    }
+    //} catch(e) {
+    //    if(e.name && e.name==='SyntaxError') {
+    //        callback(false, "Syntax error: \nmessage:"+e.message+"\nline "+e.line+", column:"+e.column);
+    //    } else {
+    //        callback(false, "Query execution error");
+    //    }
+    //}
 };
 
 // Retrieval queries
@@ -34520,10 +34557,8 @@ QueryEngine.QueryEngine.prototype.rangeQuery = function(quad, queryEnv) {
     var key = that.normalizeQuad(quad, queryEnv, false)
     if(key != null) {
         //console.log("RANGE QUERY:")
-        //console.log(success);
         //console.log(key);
         //console.log(new QuadIndexCommon.Pattern(key));
-        //console.log(key);
         var quads = that.backend.range(new QuadIndexCommon.Pattern(key));
         //console.log("retrieved");
         //console.log(quads)
@@ -35444,7 +35479,6 @@ try {
     Worker;
     console.log("*** Web workers available");
 } catch(e) {
-    console.log("*** Web workers are not available: "+e);
     Worker = null;
 }
 
@@ -35864,7 +35898,7 @@ Store = {};
 // imports
 var Worker = require('webworker');
 
-Store.VERSION = "0.4.1";
+Store.VERSION = "0.4.2";
 
 /**
  * Tries to create a new RDFStore instance that will be
@@ -35928,6 +35962,15 @@ Store.create = function(){
     };
 };
 
+/**
+ * Creates a new store.
+ *
+ * @param {Function} [callback] Callback that will be invoked when the store has been created
+ * @param {Object} [params]
+ *  - persistent:  should use persistence?
+ *  - name: if using persistence, the name for this store
+ *  - maxCacheSize: if using persistence, maximum size of the index cache
+ */
 Store.Store = function(arg1, arg2) {
     var callback = null;
     var params   = null;
@@ -35953,7 +35996,15 @@ Store.Store = function(arg1, arg2) {
 
     var that = this;
     new Lexicon.Lexicon(function(lexicon){
+        if(params['overwrite'] === true) {
+            // delete lexicon values
+            lexicon.clear();
+        }
         new QuadBackend.QuadBackend(params, function(backend){
+            if(params['overwrite'] === true) {
+                // delete index values
+                backend.clear();
+            }
             params.backend = backend;
             params.lexicon =lexicon;
             that.engine = new QueryEngine.QueryEngine(params);      
@@ -35961,7 +36012,8 @@ Store.Store = function(arg1, arg2) {
                 callback(that);
             }
         })
-    });
+    },
+    params['name']);
 };
 
 
@@ -36359,8 +36411,6 @@ Store.Store.prototype.setNetworkTransport = function(networkTransportImpl) {
 // end of ./src/js-store/src/store.js 
 // imports
 
-    console.log("TEST?");
-    console.log(this);
     RDFStoreWorker = {};
 
     RDFStoreWorker.observingCallbacks = {};

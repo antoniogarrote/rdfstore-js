@@ -10,7 +10,7 @@ var QuadIndexCommon = require("./quad_index_common").QuadIndexCommon;
  */
 
 
-Lexicon.Lexicon = function(callback){
+Lexicon.Lexicon = function(callback, _name){
     this.uriToOID = {};
     this.OIDToUri = {};
 
@@ -188,17 +188,31 @@ Lexicon.Lexicon.prototype.retrieve = function(oid) {
     } catch(e) {
         console.log("error in lexicon retrieving OID:");
         console.log(oid);
-        if(e.message) {
-            console.log(e.message); 
-        }
-        if(e.stack) {
-            console.log(e.stack);
+        if(e.message || e.stack) {
+            if(e.message) {
+                console.log(e.message); 
+            }
+            if(e.stack) {
+                console.log(e.stack);
+            }
+        } else {
+            console.log(e);
         }
         throw new Error("Unknown retrieving OID in lexicon:"+oid);
 
     }
 };
 
+Lexicon.Lexicon.prototype.clear = function() {
+    this.uriToOID = {};
+    this.OIDToUri = {};
+
+    this.literalToOID = {};
+    this.OIDToLiteral = {};
+
+    this.blankToOID = {};
+    this.OIDToBlank = {};
+};
 
 Lexicon.Lexicon.prototype.unregister = function(quad, key) {
     try {

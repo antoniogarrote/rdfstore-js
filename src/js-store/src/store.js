@@ -10,7 +10,7 @@ var RDFJSInterface = require("./../../js-query-engine/src/rdf_js_interface").RDF
 var RDFStoreClient = require("./../../js-connection/src/rdfstore_client").RDFStoreClient;
 var Worker = require('webworker');
 
-Store.VERSION = "0.4.1";
+Store.VERSION = "0.4.2";
 
 /**
  * Tries to create a new RDFStore instance that will be
@@ -74,6 +74,15 @@ Store.create = function(){
     };
 };
 
+/**
+ * Creates a new store.
+ *
+ * @param {Function} [callback] Callback that will be invoked when the store has been created
+ * @param {Object} [params]
+ *  - persistent:  should use persistence?
+ *  - name: if using persistence, the name for this store
+ *  - maxCacheSize: if using persistence, maximum size of the index cache
+ */
 Store.Store = function(arg1, arg2) {
     var callback = null;
     var params   = null;
@@ -99,7 +108,15 @@ Store.Store = function(arg1, arg2) {
 
     var that = this;
     new Lexicon.Lexicon(function(lexicon){
+        if(params['overwrite'] === true) {
+            // delete lexicon values
+            lexicon.clear();
+        }
         new QuadBackend.QuadBackend(params, function(backend){
+            if(params['overwrite'] === true) {
+                // delete index values
+                backend.clear();
+            }
             params.backend = backend;
             params.lexicon =lexicon;
             that.engine = new QueryEngine.QueryEngine(params);      
@@ -107,7 +124,8 @@ Store.Store = function(arg1, arg2) {
                 callback(that);
             }
         })
-    });
+    },
+    params['name']);
 };
 
 

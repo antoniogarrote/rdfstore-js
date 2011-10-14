@@ -11,7 +11,6 @@ try {
     Worker;
     console.log("*** Web workers available");
 } catch(e) {
-    console.log("*** Web workers are not available: "+e);
     Worker = null;
 }
 

@@ -1,8 +1,7 @@
-var Store = require("./../src/store").Store;
-var TurtleParser = require("./../../js-communication/src/turtle_parser").TurtleParser;
+this.suite_store = {};
 
-exports.testIntegration1 = function(test){
-    new Store.Store({name:'test', overwrite:true}, function(store){
+this.suite_store.testIntegration1 = function(test){
+    new rdfstore.Store({persistent:true, name:'test', overwrite:true}, function(store){
         store.execute('INSERT DATA {  <http://example/book3> <http://example.com/vocab#title> <http://test.com/example> }', function(result, msg){
             store.execute('SELECT * { ?s ?p ?o }', function(success,results) {
                 test.ok(success === true);
@@ -11,14 +10,24 @@ exports.testIntegration1 = function(test){
                 test.ok(results[0].p.value === "http://example.com/vocab#title");
                 test.ok(results[0].o.value === "http://test.com/example");
 
-                test.done();
+                // re-open the store and test again
+                new rdfstore.Store({persistent:true, name:'test', overwrite:false}, function(store){
+                    store.execute('SELECT * { ?s ?p ?o }', function(success,results) {
+                        test.ok(success === true);
+                        test.ok(results.length === 1);
+                        test.ok(results[0].s.value === "http://example/book3");
+                        test.ok(results[0].p.value === "http://example.com/vocab#title");
+                        test.ok(results[0].o.value === "http://test.com/example");
+                        test.done();
+                    });
+                });
             });
         });
     });
 }
 
-exports.testIntegration2 = function(test){
-    new Store.Store({treeOrder: 50, name:'test', overwrite:true}, function(store){
+this.suite_store.testIntegration2 = function(test){
+    new rdfstore.Store({treeOrder: 50, name:'test', persistent:true, overwrite:true}, function(store){
         store.execute('INSERT DATA {  <http://example/book3> <http://example.com/vocab#title> <http://test.com/example> }', function(){
             store.execute('SELECT * { ?s ?p ?o }', function(success,results) {
                 test.ok(success === true);
@@ -27,15 +36,25 @@ exports.testIntegration2 = function(test){
                 test.ok(results[0].p.value === "http://example.com/vocab#title");
                 test.ok(results[0].o.value === "http://test.com/example");
 
-                test.done();
+                new rdfstore.Store({treeOrder: 50, name:'test', persistent:true, overwrite:false}, function(store){                
+                    store.execute('SELECT * { ?s ?p ?o }', function(success,results) {
+                        test.ok(success === true);
+                        test.ok(results.length === 1);
+                        test.ok(results[0].s.value === "http://example/book3");
+                        test.ok(results[0].p.value === "http://example.com/vocab#title");
+                        test.ok(results[0].o.value === "http://test.com/example");
+                    
+                        test.done();
+                    });
+                });
             });
         });
     });
 }
 
 
-exports.testGraph1 = function(test) {
-    new Store.Store({name:'test', overwrite:true},function(store) {
+this.suite_store.testGraph1 = function(test) {
+    new rdfstore.Store({name:'test', persistent:true, overwrite:true}, function(store) {
         var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
                      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
                      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\
@@ -66,14 +85,28 @@ exports.testGraph1 = function(test) {
                 test.ok(resultsObject.toArray().length === 1);
                 test.ok((resultsObject.toArray().length + resultsSubject.toArray().length) === resultsCount);
 
-                test.done();
+                new rdfstore.Store({name:'test', persistent:true, overwrite:false}, function(store) {
+                    store.graph(function(succes, graph){
+                        var results = graph.filter( store.rdf.filters.describes("http://example.org/people/alice") );
+
+                        var resultsCount = results.toArray().length;
+
+                        var resultsSubject = results.filter(store.rdf.filters.s("http://example.org/people/alice"))
+                        var resultsObject  = results.filter(store.rdf.filters.o("http://example.org/people/alice"))
+                
+                        test.ok(resultsObject.toArray().length === 1);
+                        test.ok((resultsObject.toArray().length + resultsSubject.toArray().length) === resultsCount);
+
+                        test.done();
+                    });
+                });
             });
         });
     });
 };
 
-exports.testGraph2 = function(test) {
-    new Store.Store({name:'test', overwrite:true},function(store) {
+this.suite_store.testGraph2 = function(test) {
+    new rdfstore.Store({name:'test', overwrite:true, persistent:true}, function(store) {
         var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
                      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
                      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\
@@ -112,7 +145,15 @@ exports.testGraph2 = function(test) {
                 store.graph("http://example.org/people/alice", function(succes, results) {
 
                     test.ok(results.toArray().length === 4);
-                    test.done();
+                    
+                    new rdfstore.Store({name:'test', overwrite:false, persistent:true}, function(store) {                    
+                        store.graph("http://example.org/people/alice", function(succes, results) {
+
+                            test.ok(results.toArray().length === 4);
+                            
+                            test.done();
+                        });
+                    });
                 });
             });
         });
@@ -120,8 +161,8 @@ exports.testGraph2 = function(test) {
     });
 };
 
-exports.testSubject1 = function(test) {
-    new Store.Store({name:'test', overwrite:true},function(store) {
+this.suite_store.testSubject1 = function(test) {
+    new rdfstore.Store({name:'test', overwrite:true, persistent:true}, function(store) {
         var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
                      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
                      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\
@@ -143,14 +184,21 @@ exports.testSubject1 = function(test) {
         store.execute(query, function(success, results) {
             store.node("http://example.org/people/alice", function(succes, graph){
                 test.ok(graph.toArray().length === 4);
-                test.done();
+
+                new rdfstore.Store({name:'test', overwrite:false, persistent:true}, function(store) {                
+                    store.node("http://example.org/people/alice", function(succes, graph){
+                        test.ok(graph.toArray().length === 4);
+                    
+                        test.done();
+                    });
+                });
             });
         });
     });
 };
 
-exports.testSubject2 = function(test) {
-    new Store.Store({name:'test', overwrite:true},function(store) {
+this.suite_store.testSubject2 = function(test) {
+    new rdfstore.Store({name:'test', overwrite:true, persistent:true}, function(store) {
         var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
                      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
                      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\
@@ -189,7 +237,13 @@ exports.testSubject2 = function(test) {
                 store.node("http://example.org/people/alice", "http://example.org/people/alice", function(success, results) {
 
                     test.ok(results.toArray().length === 4);
-                    test.done();
+
+                    new rdfstore.Store({name:'test', overwrite:false, persistent:true}, function(store) {
+                        store.node("http://example.org/people/alice", "http://example.org/people/alice", function(success, results) {
+                            test.ok(results.toArray().length === 4);
+                            test.done();
+                        });
+                    });
                 });
             });
         });
@@ -197,8 +251,9 @@ exports.testSubject2 = function(test) {
     });
 };
 
-exports.testPrefixes = function(test) {
-    new Store.Store({name:'test', overwrite:true},function(store) {
+
+this.suite_store.testPrefixes = function(test) {
+    new rdfstore.Store({name:'test', overwrite:true, persistent:true}, function(store) {
         var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
                      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
                      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\
@@ -238,7 +293,15 @@ exports.testPrefixes = function(test) {
                 store.node("ex:alice", "ex:alice", function(success, results) {
 
                     test.ok(results.toArray().length === 4);
-                    test.done();
+
+                    new rdfstore.Store({name:'test', overwrite:false, persistent:true}, function(store) {
+                        store.node("ex:alice", "ex:alice", function(success, results) {
+
+                            test.ok(results.toArray().length === 4);
+
+                            test.done();
+                        });
+                    });
                 });
             });
         });
@@ -246,8 +309,9 @@ exports.testPrefixes = function(test) {
     });
 };
 
-exports.testDefaultPrefix = function(test) {
-    new Store.Store({name:'test', overwrite:true},function(store) {
+
+this.suite_store.testDefaultPrefix = function(test) {
+    new rdfstore.Store({name:'test', persistent:true, overwrite:true}, function(store) {
         var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
                      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
                      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\
@@ -287,7 +351,21 @@ exports.testDefaultPrefix = function(test) {
                 store.node(":alice", ":alice", function(success, results) {
 
                     test.ok(results.toArray().length === 4);
-                    test.done();
+
+                    new rdfstore.Store({name:'test', persistent:true, overwrite:false}, function(store) {
+
+                        store.setDefaultPrefix("http://example.org/people/");
+                        store.graph(function(succes, graph){
+                            test.ok(graph.toArray().length === 0);
+
+                            store.node(":alice", ":alice", function(success, results) {
+
+                                test.ok(results.toArray().length === 4);
+
+                                test.done();
+                            });
+                        });
+                    });
                 });
             });
         });
@@ -295,8 +373,9 @@ exports.testDefaultPrefix = function(test) {
     });
 };
 
-exports.testInsert1 = function(test) {
-    Store.create({name:'test', overwrite:true},function(store) {
+
+this.suite_store.testInsert1 = function(test) {
+    rdfstore.create({name:'test', overwrite:true, persistent:true}, function(store) {
         
         store.setPrefix("ex", "http://example.org/people/");
 
@@ -314,15 +393,22 @@ exports.testInsert1 = function(test) {
 
             store.node("ex:Alice", function(success, graph) {
                 test.ok(graph.toArray().length === 2);
-                test.done();
+                rdfstore.create({name:'test', overwrite:false, persistent:true}, function(store) {
+                    store.node("ex:Alice", function(success, graph) {
+                        test.ok(graph.toArray().length === 2);
+
+                        test.done();
+                    });
+                });
             });
             
         });
     });
 };
 
-exports.testInsert2 = function(test) {
-    Store.create({name:'test', overwrite:true},function(store) {
+
+this.suite_store.testInsert2 = function(test) {
+    rdfstore.create({name:'test', overwrite:true, persistent:true}, function(store) {
         
         store.setPrefix("ex", "http://example.org/people/");
 
@@ -340,15 +426,22 @@ exports.testInsert2 = function(test) {
 
             store.node("ex:Alice", "ex:alice", function(success, graph) {
                 test.ok(graph.toArray().length === 2);
-                test.done();
+                rdfstore.create({name:'test', overwrite:false, persistent:true}, function(store) {
+                    store.node("ex:Alice", "ex:alice", function(success, graph) {
+                        test.ok(graph.toArray().length === 2);
+
+                        test.done();
+                    });
+                });
             });
             
         });
     });
 };
 
-exports.testDelete1 = function(test) {
-    Store.create({name:'test', overwrite:true},function(store) {
+
+this.suite_store.testDelete1 = function(test) {
+    rdfstore.create({name:'test', persistent:true, overwrite:true}, function(store) {
         
         store.setPrefix("ex", "http://example.org/people/");
 
@@ -366,10 +459,17 @@ exports.testDelete1 = function(test) {
 
             store.node("ex:Alice", function(success, graph) {
                 test.ok(graph.toArray().length === 2);
-                store.delete(graph, function(success, result) {
+                store['delete'](graph, function(success, result) {
                     store.node("ex:Alice", function(success, graph){
                         test.ok(graph.toArray().length === 0);
-                        test.done();
+
+                        rdfstore.create({name:'test', persistent:true, overwrite:false}, function(store) {
+                            store.node("ex:Alice", function(success, graph){
+                                test.ok(graph.toArray().length === 0);
+
+                                test.done();
+                            });
+                        });
                     })
                 });
 
@@ -379,8 +479,9 @@ exports.testDelete1 = function(test) {
     });
 };
 
-exports.testDelete2 = function(test) {
-    Store.create({name:'test', overwrite:true},function(store) {
+
+this.suite_store.testDelete2 = function(test) {
+    rdfstore.create({name:'test', persistent:true, overwrite:true}, function(store) {
         
         store.setPrefix("ex", "http://example.org/people/");
 
@@ -398,10 +499,18 @@ exports.testDelete2 = function(test) {
 
             store.node("ex:Alice", "ex:alice", function(success, graph) {
                 test.ok(graph.toArray().length === 2);
-                store.delete(graph, "ex:alice", function(success, result) {
+                store['delete'](graph, "ex:alice", function(success, result) {
                     store.node("ex:Alice", function(success, graph){
                         test.ok(graph.toArray().length === 0);
-                        test.done();
+
+                        rdfstore.create({name:'test', persistent:true, overwrite:false}, function(store) {
+
+                            store.node("ex:Alice", function(success, graph){
+                                test.ok(graph.toArray().length === 0);
+
+                                test.done();
+                            });
+                        });
                     })
                 });
 
@@ -411,8 +520,8 @@ exports.testDelete2 = function(test) {
     });
 };
 
-exports.testClear = function(test) {
-    Store.create({name:'test', overwrite:true},function(store) {
+this.suite_store.testClear = function(test) {
+    rdfstore.create({name:'test', persistent:true, overwrite:true}, function(store) {
         
         store.setPrefix("ex", "http://example.org/people/");
 
@@ -433,7 +542,14 @@ exports.testClear = function(test) {
                 store.clear("ex:alice", function(success, result) {
                     store.node("ex:Alice", function(success, graph){
                         test.ok(graph.toArray().length === 0);
-                        test.done();
+
+                        rdfstore.create({name:'test', persistent:true, overwrite:false}, function(store) {
+                            store.node("ex:Alice", function(success, graph){
+                                test.ok(graph.toArray().length === 0);
+
+                                test.done();
+                            });
+                        });
                     })
                 });
 
@@ -444,8 +560,8 @@ exports.testClear = function(test) {
 };
 
 
-exports.testLoad1 = function(test) {
-    Store.create({name:'test', overwrite:true},function(store) {
+this.suite_store.testLoad1 = function(test) {
+    rdfstore.create({name:'test', persistent:true, overwrite:true}, function(store) {
         
         store.setPrefix("ex", "http://example.org/people/");
 
@@ -474,30 +590,23 @@ exports.testLoad1 = function(test) {
         store.load("application/json", input, "ex:test", function(success, results){
               store.node("ex:john_smith", "ex:test", function(success, graph) {
                 test.ok(graph.toArray().length === 3);
-                test.done();
+
+                  rdfstore.create({name:'test', persistent:true, overwrite:false}, function(store) {
+                      store.node("ex:john_smith", "ex:test", function(success, graph) {
+                          test.ok(graph.toArray().length === 3);
+
+                          test.done();
+                      });
+                  });
             });
 
         });
     });
 };
 
-/*
-exports.testLoad2 = function(test) {
-    Store.create(function(store) {
-        store.load('remote', 'http://dbpedia.org/resource/Tim_Berners-Lee', function(success, result) {
-            store.node('http://dbpedia.org/resource/Tim_Berners-Lee', function(success, graph){
-                test.ok(success);
-                var results = graph.filter(store.rdf.filters.type(store.rdf.resolve("foaf:Person")));
-                test.ok(results.toArray().length === 1);
-                test.done();
-            });
-        });
-    });
-};
-*/
 
-exports.testLoad3 = function(test) {
-    Store.create({name:'test', overwrite:true},function(store) {
+this.suite_store.testLoad3 = function(test) {
+    rdfstore.create({name:'test', persistent:true, overwrite:true}, function(store) {
         
         store.setPrefix("ex", "http://example.org/examples/");
 
@@ -520,15 +629,36 @@ exports.testLoad3 = function(test) {
                 }
 
                 test.ok(counter === 2);
-                test.done();
+
+                rdfstore.create({name:'test', persistent:true, overwrite:false}, function(store) {
+                    store.execute("select ?s { GRAPH <http://example.org/examples/test> { ?s ?p ?o } }", function(success, results) {
+                        test.ok(success);
+
+                        var blankIds = {};
+
+                        for(var i=0; i<results.length; i++) {
+                            var blankId = results[i].s.value;
+                            blankIds[blankId] = true;
+                        }
+                        var counter = 0;
+                        for(var p in blankIds) {
+                            counter++;
+                        }
+
+                        test.ok(counter === 2);
+
+                        test.done();
+                    });
+                });
             });
         });
     });
 };
 
-exports.testEventsAPI1 = function(test){
+
+this.suite_store.testEventsAPI1 = function(test){
     var counter = 0;
-    new Store.Store({name:'test', overwrite:true},function(store){
+    new rdfstore.Store({name:'test', persistent:true, overwrite:true}, function(store){
         store.execute('INSERT DATA {  <http://example/book> <http://example.com/vocab#title> <http://test.com/example> }', function(result, msg){
             store.startObservingNode("http://example/book",function(graph){
                 var observerFn = arguments.callee;
@@ -554,9 +684,9 @@ exports.testEventsAPI1 = function(test){
     });
 };
 
-exports.testEventsAPI2 = function(test){
+this.suite_store.testEventsAPI2 = function(test){
     var counter = 0;
-    new Store.Store({name:'test', overwrite:true},function(store){
+    new rdfstore.Store({name:'test', persistent:true, overwrite:true}, function(store){
         store.execute('INSERT DATA { GRAPH <http://example/graph> { <http://example/book> <http://example.com/vocab#title> <http://test.com/example> } }', function(result, msg){
             store.startObservingNode("http://example/book", "http://example/graph", function(graph){
                 var observerFn = arguments.callee;
@@ -583,9 +713,9 @@ exports.testEventsAPI2 = function(test){
 };
 
 
-exports.testEventsAPI3 = function(test){
+this.suite_store.testEventsAPI3 = function(test){
     var counter = 0;
-    new Store.Store({name:'test', overwrite:true},function(store){
+    new rdfstore.Store({name:'test', persistent:true, overwrite:true}, function(store){
         store.subscribe("http://example/book",null,null,null,function(event, triples){
             var observerFn = arguments.callee;
             if(counter === 0) {
@@ -622,8 +752,9 @@ exports.testEventsAPI3 = function(test){
     });
 }
 
-exports.testRegisteredGraph = function(test) {
-    new Store.Store({name:'test', overwrite:true},function(store) {
+
+this.suite_store.testRegisteredGraph = function(test) {
+    new rdfstore.Store({name:'test', overwrite:true, persistent:true}, function(store) {
         var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
                      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
                      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\
@@ -665,35 +796,24 @@ exports.testRegisteredGraph = function(test) {
                 values.sort();
                 test.ok(values[0] === 'http://example.org/people/alice');
                 test.ok(values[1] === 'http://example.org/people/bob');
-                test.done();
-            });
-        });
-        });
-    });
-};
 
-/*
-exports.testExport1 = function(test) {
-    Store.create(function(store) {
-        store.load('remote', 'http://dbpedia.org/resource/Tim_Berners-Lee', 'http://test.com/graph-to-export', function(success, result) {
+                new rdfstore.Store({name:'test', overwrite:false, persistent:true}, function(store) {
+                    store.registeredGraphs(function(results,graphs) {
+                        test.ok(graphs.length === 2);
+                        var values = [];
+                        for(var i=0; i<graphs.length; i++) {
+                            values.push(graphs[i].valueOf());
+                        }
+                        values.sort();
+                        test.ok(values[0] === 'http://example.org/people/alice');
+                        test.ok(values[1] === 'http://example.org/people/bob');
 
-            var graph = store.graph('http://test.com/graph-to-export', function(success, graph){
-                var n3 = "";
-
-                graph.forEach(function(triple) {
-                    n3 = n3 + triple.toString();
+                        test.done();
+                    });
                 });
-
-                var result = TurtleParser.parser.parse(n3);
-                test.ok(result.length > 0);
-
-                // an easier way
-                test.ok(graph.toNT() == n3);
-
-                test.done();
-
             });
+        });
         });
     });
 };
-*/
+

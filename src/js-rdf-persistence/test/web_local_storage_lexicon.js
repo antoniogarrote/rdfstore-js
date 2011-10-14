@@ -1,7 +1,7 @@
 var Lexicon = require("./../src/web_local_storage_lexicon").WebLocalStorageLexicon;
 
 exports.testParsingLiterals = function(test){
-    new Lexicon.Lexicon("test",function(lexicon){
+    new Lexicon.Lexicon(function(lexicon){
             var literal1 = '"this is a test"';
             var parsed = lexicon.parseLiteral(literal1);
             test.ok(parsed.value==="this is a test");
@@ -14,11 +14,11 @@ exports.testParsingLiterals = function(test){
             test.ok(parsed.value==="this is another test");
             test.ok(parsed.type==="http://sometypehere.org");
             test.done();
-    });
+    }, "test");
 };
 
 exports.testLexiconInterface = function(test) {
-    var lexicon = new Lexicon.Lexicon("test");
+    var lexicon = new Lexicon.Lexicon(function(){},"test");
 
     var oid1 = null;
     var oid2 = null;

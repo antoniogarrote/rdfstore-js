@@ -35,17 +35,31 @@ WebLocalStorageBTree.Tree = function(order, name, persistent, cacheMaxSize) {
         }
 
         if(storage == null) {
-            storage = { content: {},
-                        setItem: function(pointer, object) {
-                            this.content[pointer] = object;
+            storage = (function(){ 
+                var content = {};
+                return { setItem: function(pointer, object) {
+                            content[pointer] = object;
                         },
                         getItem: function(pointer) {
-                            return (this.content[pointer] || null);
+                            return (content[pointer] || null);
                         },
                         removeItem: function(pointer) {
-                            delete this.content[pointer];
-                        }
-                      };
+                            delete content[pointer];
+                        },
+                        get: function(i) {
+                            var j=0;
+                            for(var k in content) {
+                                if(i===j) {
+                                    return k;
+                                }
+                                j++;
+                            }
+
+                            return "";
+                        },
+                        length: content.length
+                       };
+            })();
         }
 
         this.storage = storage;
@@ -60,6 +74,7 @@ WebLocalStorageBTree.Tree = function(order, name, persistent, cacheMaxSize) {
             this.root.level = 0;
             this._diskWrite(this.root);
             this._updateRootNode(this.root);
+            this.root = this.root.pointer;
         } else {
             this.root = this.diskManager._diskRead(this.root).pointer;
         };
@@ -402,7 +417,6 @@ WebLocalStorageBTree.Tree.prototype.delete = function(key) {
                 }
             }
         }
-
 
         //Case 1 : The node containing the key is found and is the leaf node.
         //Also the leaf node has keys greater than the minimum required.
@@ -829,6 +843,16 @@ WebLocalStorageBTree.Tree.prototype.audit = function(showOutput) {
     return errors;
 }
 
+WebLocalStorageBTree.Tree.prototype.clear = function() {
+    this.diskManager.clear();
+    this.root = this._allocateNode();
+    this.root.isLeaf = true;
+    this.root.level = 0;
+    this._diskWrite(this.root);
+    this._updateRootNode(this.root);
+    this.root = this.root.pointer;
+}
+
 /**
  *  _getMaxKeyPos
  *
@@ -912,8 +936,32 @@ WebLocalStorageBTree.Node = function() {
 WebLocalStorageBTree.LocalStorageManager  = function(name,storage, maxSize) {
     this.name = name;
     this.storage = storage;
+    this.maxSize = maxSize;
     this.bufferCache = new PriorityQueue.PriorityQueue({"maxSize": maxSize});
     this.counter = this.storage.getItem("__"+this.name+"__ID_COUNTER__") || 0;
+};
+
+/**
+ * Cleans all data in the local storage
+ */
+WebLocalStorageBTree.LocalStorageManager.prototype.clear = function() {
+    var localStorageLength = this.storage.length;
+    var keysToDelete = [];
+
+    for(var i=0; i<localStorageLength; i++) {        
+        // number of elments changes, always get the first key
+        var key = this.storage.key(i);
+        if(key.indexOf(this.name) == 0 || key.indexOf("__"+this.name)==0) {
+            keysToDelete.push(key);
+        }
+    }
+
+    for(var i=0; i<keysToDelete.length; i++) {
+        this.storage.removeItem(keysToDelete[i]);
+    }
+
+
+    this.bufferCache = new PriorityQueue.PriorityQueue({"maxSize": this.maxSize});
 };
 
 /**
@@ -1017,8 +1065,14 @@ WebLocalStorageBTree.LocalStorageManager.prototype._encode = function(node) {
     var numKeys = 0;
     var keys = "";
     for(var i=0; i<node.keys.length; i++) {
-        if(node.keys[i] != null) {
-            keys = keys+":"+node.keys[i].key;
+        if(node.keys[i] != null) {          
+            if(typeof(node.keys[i].key) === 'number') {
+                keys = keys+":"+node.keys[i].key;
+            } else {
+                var keyStr = "_"+(node.keys[i].key['subject']||"")+"_"+(node.keys[i].key['predicate']||"")+"_"+(node.keys[i].key['object']||"")+"_"+(node.keys[i].key['graph']||"");
+                keys = keys+":"+keyStr;
+            }
+
             if(node.keys[i].data==null) {
                 keys = keys+":n:";                
             } else if(typeof(node.keys[i].data)=='string') {
@@ -1076,7 +1130,17 @@ WebLocalStorageBTree.LocalStorageManager.prototype._decode = function(encodedNod
     var counter = 5;
     var key,type,data
     for(var i=0; i<numKeys; i++) {
-        key = parseInt(parts[counter]);
+        key = parts[counter];
+        if(key[0]=="_") {
+            var kparts = key.split("_");
+            key = {'subject': (parseInt(kparts[1])||null), 
+                   'predicate': (parseInt(kparts[2])||null), 
+                   'object': (parseInt(kparts[3])||null),
+                   'graph': (parseInt(kparts[4]||null)) };
+
+        } else {
+            key = parseInt(parts[counter]);
+        }
         type = parts[counter+1];
         data = parts[counter+2]
 

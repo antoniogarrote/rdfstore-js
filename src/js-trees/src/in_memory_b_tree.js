@@ -94,6 +94,12 @@ InMemoryBTree.Tree.prototype._updateRootNode = function(node) {
     return node;
 };
 
+InMemoryBTree.Tree.prototype.clear = function() {
+        this.root = this._allocateNode();
+        this.root.isLeaf = true;
+        this.root.level = 0;
+        this._updateRootNode(this.root);
+};
 
 /**
  * search

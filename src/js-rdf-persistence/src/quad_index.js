@@ -3,7 +3,7 @@ exports.QuadIndex = {};
 var QuadIndex = exports.QuadIndex;
 
 // imports
-var BaseTree = require("./../../js-trees/src/in_memory_b_tree").InMemoryBTree;
+var BaseTree = require("./../../js-trees/src/in_memory_b_tree.js").InMemoryBTree;
 var Utils = require("./../../js-trees/src/utils").Utils;
 var QuadIndexCommon = require("./quad_index_common").QuadIndexCommon;
 
@@ -11,8 +11,10 @@ QuadIndex.Tree = function(params,callback) {
     if(arguments != 0) {
         this.componentOrder = params.componentOrder;
 
+
         // @todo change this if using the file backed implementation
-        BaseTree.Tree.call(this, params.order);
+        BaseTree.Tree.call(this, params.order, params['name'], params['persistent'], params['cacheMaxSize']);
+
         this.comparator = function(a,b) {
             for(var i=0; i< this.componentOrder.length; i++) {
                 var component = this.componentOrder[i];
@@ -48,7 +50,7 @@ QuadIndex.Tree = function(params,callback) {
             callback(this);
         }
     }
-}
+};
 
 Utils.extends(BaseTree.Tree, QuadIndex.Tree);
 
@@ -69,7 +71,13 @@ QuadIndex.Tree.prototype.search = function(quad, callback) {
 };
 
 QuadIndex.Tree.prototype.range = function(pattern, callback) {
-    var result = this._rangeTraverse(this,this.root, pattern);
+    var result = null;
+    if(typeof(this.root)==='string') {
+        result = this._rangeTraverse(this,this._diskRead(this.root), pattern);        
+    } else {
+        result = this._rangeTraverse(this,this.root, pattern);
+    }
+
     if(callback)
         callback(result);
 
@@ -81,7 +89,6 @@ QuadIndex.Tree.prototype._rangeTraverse = function(tree,node, pattern) {
     var acum = [];
     var pendingNodes = [node];
     var node, idxMin, idxMax;
-
     while(pendingNodes.length > 0) {
         node = pendingNodes.shift();
         idxMin = 0;
@@ -98,7 +105,8 @@ QuadIndex.Tree.prototype._rangeTraverse = function(tree,node, pattern) {
             }
 
         } else {
-            var childNode = tree._diskRead(node.children[idxMin]);
+            var pointer = node.children[idxMin]
+            var childNode = tree._diskRead(pointer);
             pendingNodes.push(childNode);
 
             var idxMax = idxMin;
@@ -114,6 +122,5 @@ QuadIndex.Tree.prototype._rangeTraverse = function(tree,node, pattern) {
             }
         }
     }
-    
     return acum;
 };
