@@ -672,7 +672,7 @@ exports.testRegisteredGraph = function(test) {
     });
 };
 
-/*
+
 exports.testExport1 = function(test) {
     Store.create(function(store) {
         store.load('remote', 'http://dbpedia.org/resource/Tim_Berners-Lee', 'http://test.com/graph-to-export', function(success, result) {
@@ -696,4 +696,4 @@ exports.testExport1 = function(test) {
         });
     });
 };
-*/
+

@@ -368,7 +368,7 @@ QueryEngine.QueryEngine.prototype.normalizeDatasets = function(datasets, outerEn
             dataset.oid = that.lexicon.defaultGraphOid;
         } else {
             var oid = that.normalizeTerm(dataset, outerEnv, false);      
-            if(result != null) {
+            if(oid != null) {
                 dataset.oid = oid;
             } else {
                 return(null);

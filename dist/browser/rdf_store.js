@@ -33899,7 +33899,7 @@ QueryEngine.QueryEngine.prototype.normalizeDatasets = function(datasets, outerEn
             dataset.oid = that.lexicon.defaultGraphOid;
         } else {
             var oid = that.normalizeTerm(dataset, outerEnv, false);      
-            if(result != null) {
+            if(oid != null) {
                 dataset.oid = oid;
             } else {
                 return(null);
@@ -35896,7 +35896,7 @@ var Store = {};
 
 // imports
 
-Store.VERSION = "0.4.2";
+Store.VERSION = "0.4.3";
 
 /**
  * Tries to create a new RDFStore instance that will be
