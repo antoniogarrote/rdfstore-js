@@ -463,25 +463,25 @@ exports.testLoad1 = function(test) {
                  "@type":
                  {
                     "xsd:integer": "age",
-                    "xsd:anyURI": "homepage",
+                    "@iri": "homepage",
                  }
               },
-              "@": "ex:john_smith",
+              "@subject": "ex:john_smith",
               "name": "John Smith",
               "age": "41",
               "homepage": "http://example.org/home/"
             };
         store.load("application/json", input, "ex:test", function(success, results){
               store.node("ex:john_smith", "ex:test", function(success, graph) {
-                test.ok(graph.toArray().length === 3);
-                test.done();
+                  test.ok(graph.toArray().length === 3);
+                  test.done();
             });
 
         });
     });
 };
 
-/*
+
 exports.testLoad2 = function(test) {
     Store.create(function(store) {
         store.load('remote', 'http://dbpedia.org/resource/Tim_Berners-Lee', function(success, result) {
@@ -494,7 +494,7 @@ exports.testLoad2 = function(test) {
         });
     });
 };
-*/
+
 
 exports.testLoad3 = function(test) {
     Store.create({name:'test', overwrite:true},function(store) {

@@ -4,7 +4,8 @@ exports.testParsing1 = function(test) {
     var input = {  "rdf:type": "foaf:Person",
                    "foaf:name": "Manu Sporny",
                    "foaf:homepage": "http://manu.sporny.org/",
-                   "sioc:avatar": "http://twitter.com/account/profile_image/manusporny"};
+                   "sioc:avatar": "http://twitter.com/account/profile_image/manusporny",
+                   '@context': {'@coerce':{'@iri':['sioc:avatar', 'foaf:homepage']}}};
     
     var result = JSONLDParser.parser.parse(input);
 
@@ -25,7 +26,7 @@ exports.testParsing1 = function(test) {
             test.ok(triple.object.token === "uri");
         } else if(triple.predicate.value === 'http://rdfs.org/sioc/ns#avatar') {
             test.ok(triple.object.value === "http://twitter.com/account/profile_image/manusporny");
-            test.ok(triple.object.token === "literal");
+            test.ok(triple.object.token === "uri");
         } else {
             test.ok(false);
         }
@@ -35,8 +36,9 @@ exports.testParsing1 = function(test) {
 };
 
 exports.testParsing2 = function(test) {
-    var input = { "@context": { "myvocab": "http://example.org/myvocab#" },
-                  "a": "foaf:Person",
+    var input = { "@context": { "myvocab": "http://example.org/myvocab#",
+                                '@coerce':{'@iri':['sioc:avatar', 'foaf:homepage']} },
+                  "@type": "foaf:Person",
                   "foaf:name": "Manu Sporny",
                   "foaf:homepage": "http://manu.sporny.org/",
                   "sioc:avatar": "http://twitter.com/account/profile_image/manusporny",
@@ -61,7 +63,7 @@ exports.testParsing2 = function(test) {
             test.ok(triple.object.token === "uri");
         } else if(triple.predicate.value === 'http://rdfs.org/sioc/ns#avatar') {
             test.ok(triple.object.value === "http://twitter.com/account/profile_image/manusporny");
-            test.ok(triple.object.token === "literal");
+            test.ok(triple.object.token === "uri");
         } else if(triple.predicate.value === 'http://example.org/myvocab#personality') {
             test.ok(triple.object.value === "friendly");
             test.ok(triple.object.token === "literal");
@@ -76,20 +78,20 @@ exports.testParsing2 = function(test) {
 exports.testParsing3 = function(test) {
     var input = [
         {
-            "@": "_:bnode1",
-            "a": "foaf:Person",
+            "@subject": "_:bnode1",
+            "@type": "foaf:Person",
             "foaf:homepage": "http://example.com/bob/",
             "foaf:name": "Bob"
         },
         {
-            "@": "_:bnode2",
-            "a": "foaf:Person",
+            "@subject": "_:bnode2",
+            "@type": "foaf:Person",
             "foaf:homepage": "http://example.com/eve/",
             "foaf:name": "Eve"
         },
         {
-            "@": "_:bnode3",
-            "a": "foaf:Person",
+            "@subject": "_:bnode3",
+            "@type": "foaf:Person",
             "foaf:homepage": "http://example.com/manu/",
             "foaf:name": "Manu"
         }
@@ -127,10 +129,10 @@ exports.testParsing4 = function(test) {
             "vcard": "http://microformats.org/profile/hcard#vcard",
             "url": "http://microformats.org/profile/hcard#url",
             "fn": "http://microformats.org/profile/hcard#fn",
-            "@coerce": { "xsd:anyURI": "url" }
+            "@coerce": { "@iri": "url" }
         },
-        "@": "_:bnode1",
-        "a": "vcard",
+        "@subject": "_:bnode1",
+        "@type": "vcard",
         "url": "http://tantek.com/",
         "fn": "Tantek Çelik"
     };
@@ -140,8 +142,8 @@ exports.testParsing4 = function(test) {
     test.ok(result.length === 3);
  
     for(var i=0; i<result.length; i++) {
-        test.ok(result[i].subject.value === "_:bnode1");
-        test.ok(result[i].subject.token === 'uri');
+        test.ok(result[i].subject.value[0] === "_");
+        test.ok(result[i].subject.token === 'blank');
         if(result[i].predicate.value === 'http://microformats.org/profile/hcard#url') {
             test.ok(result[i].object.value === 'http://tantek.com/');
             test.ok(result[i].object.token === 'uri');
@@ -157,21 +159,21 @@ exports.testParsing5 = function(test) {
 
     var input = [
                   {
-                    "@": "http://purl.oreilly.com/works/45U8QJGZSQKDH8N",
-                    "a": "http://purl.org/vocab/frbr/core#Work",
+                    "@subject": "http://purl.oreilly.com/works/45U8QJGZSQKDH8N",
+                    "@type": "http://purl.org/vocab/frbr/core#Work",
                     "http://purl.org/dc/terms/title": "Just a Geek",
                     "http://purl.org/dc/terms/creator": "Whil Wheaton",
                     "http://purl.org/vocab/frbr/core#realization": 
                       ["http://purl.oreilly.com/products/9780596007683.BOOK", "http://purl.oreilly.com/products/9780596802189.EBOOK"]
                   },
                   {
-                    "@": "http://purl.oreilly.com/products/9780596007683.BOOK",
-                    "a": "http://purl.org/vocab/frbr/core#Expression",
+                    "@subject": "http://purl.oreilly.com/products/9780596007683.BOOK",
+                    "@type": "http://purl.org/vocab/frbr/core#Expression",
                     "http://purl.org/dc/terms/type": "http://purl.oreilly.com/product-types/BOOK"
                   },
                   {
-                    "@": "http://purl.oreilly.com/products/9780596802189.EBOOK",
-                    "a": "http://purl.org/vocab/frbr/core#Expression",
+                    "@subject": "http://purl.oreilly.com/products/9780596802189.EBOOK",
+                    "@type": "http://purl.org/vocab/frbr/core#Expression",
                     "http://purl.org/dc/terms/type": "http://purl.oreilly.com/product-types/EBOOK"
                   }
                 ];
@@ -212,7 +214,7 @@ exports.testParsing6 = function(test) {
     test.ok(result.length === 1);
     test.ok(result[0].object.value === 'http://manu.sporny.org');
 
-    input = { "@context": { "@coerce":  { "xsd:anyURI": "foaf:homepage" } },
+    input = { "@context": { "@coerce":  { "@iri": "foaf:homepage" } },
               "foaf:homepage": "http://manu.sporny.org" };
  
     result = JSONLDParser.parser.parse(input);

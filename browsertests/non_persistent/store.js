@@ -465,7 +465,7 @@ this.suite_store.testLoad1 = function(test) {
                     "xsd:anyURI": "homepage",
                  }
               },
-              "@": "ex:john_smith",
+              "@subject": "ex:john_smith",
               "name": "John Smith",
               "age": "41",
               "homepage": "http://example.org/home/"
