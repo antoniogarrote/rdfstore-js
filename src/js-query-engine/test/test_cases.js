@@ -3,7 +3,7 @@ var QuadBackend = require("./../../js-rdf-persistence/src/quad_backend").QuadBac
 var Lexicon = require("./../../js-rdf-persistence/src/lexicon").Lexicon;
 
 // basic
-/*
+
 exports.testBasePrefix1 = function(test) {
     new Lexicon.Lexicon(function(lexicon){
         new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
@@ -9328,7 +9328,7 @@ exports.testAggregatesAggSum1 = function(test) {
         });
     });
 };
-*/
+
 
 
 
