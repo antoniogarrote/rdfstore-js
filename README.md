@@ -38,7 +38,7 @@ Some other features included in the library are the following:
 - SPARQL 1.0 support
 - SPARQL 1.1/Update support
 - Partial SPARQL 1.1 query support
-- JSON-LD experimental parser
+- JSON-LD parser
 - Turtle/N3 parser
 - W3C RDF Interfaces API
 - RDF graph events API
@@ -48,7 +48,7 @@ Some other features included in the library are the following:
 ## SPARQL support
 
 rdfstore-js supports at the moment SPARQL 1.0 and most of SPARQL 1.1/Update.
-Only small parts of SPARQL 1.1 query has been implemented.
+Only some parts of SPARQL 1.1 query have been implemented yet.
 
 This is a list of the different kind of queries currently implemented:
   
@@ -69,9 +69,10 @@ This is a list of the different kind of queries currently implemented:
 - DELETE WHERE queries
 - WITH/DELETE/INSERT/WHERE queries
 - LOAD queries
-- CREATE GRAPH clasues
+- CREATE GRAPH clauses
 - DROP DEFAULT/NAMED/ALL/GRAPH clauses
 - CLEAR DEFAULT/NAMED/ALL/Graph clauses
+- FILTER EXISTS / NOT EXISTS operators
 
 ##Installation
 
