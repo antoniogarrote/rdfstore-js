@@ -104,23 +104,23 @@ QueryEngine.QueryEngine.prototype.applyLimitOffset = function(offset, limit, bin
 };
 
 
-QueryEngine.QueryEngine.prototype.applySingleOrderBy = function(orderFilters, modifiedBindings, outEnv) {
+QueryEngine.QueryEngine.prototype.applySingleOrderBy = function(orderFilters, modifiedBindings, dataset, outEnv) {
     var acum = [];
     for(var i=0; i<orderFilters.length; i++) {
         var orderFilter = orderFilters[i];
-        var results = QueryFilters.collect(orderFilter.expression, [modifiedBindings], outEnv, this);
+        var results = QueryFilters.collect(orderFilter.expression, [modifiedBindings], dataset, outEnv, this);
         acum.push(results[0].value);
     }
     return {binding:modifiedBindings, value:acum};
 };
 
-QueryEngine.QueryEngine.prototype.applyOrderBy = function(order, modifiedBindings, outEnv) {
+QueryEngine.QueryEngine.prototype.applyOrderBy = function(order, modifiedBindings, dataset, outEnv) {
     var that = this;
     var acum = [];
     if(order != null && order.length > 0) {
         for(var i=0; i<modifiedBindings.length; i++) {
             var bindings = modifiedBindings[i];
-            var results = that.applySingleOrderBy(order, bindings, outEnv);
+            var results = that.applySingleOrderBy(order, bindings, dataset, outEnv);
             acum.push(results);
         }
 
@@ -258,11 +258,11 @@ QueryEngine.QueryEngine.prototype.removeDefaultGraphBindings = function(bindings
 };
 
 
-QueryEngine.QueryEngine.prototype.aggregateBindings = function(projection, bindingsGroup, env) {
+QueryEngine.QueryEngine.prototype.aggregateBindings = function(projection, bindingsGroup, dataset, env) {
     var denormBindings = this.copyDenormalizedBindings(bindingsGroup, env.outCache);
     var aggregatedBindings = {};
     for(var i=0; i<projection.length; i++) {
-        var aggregatedValue = QueryFilters.runAggregator(projection[i], denormBindings, this, env);
+        var aggregatedValue = QueryFilters.runAggregator(projection[i], denormBindings, this, dataset, env);
         if(projection[i].alias) {
             aggregatedBindings[projection[i].alias.value] = aggregatedValue; 
         } else {
@@ -273,7 +273,7 @@ QueryEngine.QueryEngine.prototype.aggregateBindings = function(projection, bindi
 };
 
 
-QueryEngine.QueryEngine.prototype.projectBindings = function(projection, results) {
+QueryEngine.QueryEngine.prototype.projectBindings = function(projection, results, dataset) {
     if(projection[0].kind === '*') {
         return results;
     } else {
@@ -289,7 +289,7 @@ QueryEngine.QueryEngine.prototype.projectBindings = function(projection, results
                 if(projection[j].token == 'variable' && projection[j].kind != 'aliased') {
                     currentProjected[projection[j].value.value] = currentResult[projection[j].value.value];
                 } else if(projection[j].token == 'variable' && projection[j].kind == 'aliased') {
-                    var ebv = QueryFilters.runFilter(projection[j].expression, currentResult, this, {blanks:{}, outCache:{}});
+                    var ebv = QueryFilters.runFilter(projection[j].expression, currentResult, this, dataset, {blanks:{}, outCache:{}});
                     if(QueryFilters.isEbvError(ebv)) {
                         shouldAdd = false;
                         break;
@@ -680,13 +680,13 @@ QueryEngine.QueryEngine.prototype.executeSelect = function(unit, env, defaultDat
                 }
                 if(unit.group && unit.group != "") {
                     if(that.checkGroupSemantics(unit.group,projection)) {
-                        var groupedBindings = that.groupSolution(result, unit.group, env);
+                        var groupedBindings = that.groupSolution(result, unit.group, dataset, env);
                              
                         var aggregatedBindings = [];
                         var foundError = false;
                             
                         for(var i=0; i<groupedBindings.length; i++) {
-                            var resultingBindings = that.aggregateBindings(projection, groupedBindings[i], env)
+                            var resultingBindings = that.aggregateBindings(projection, groupedBindings[i], dataset, env)
                             aggregatedBindings.push(resultingBindings);
                         }
                         callback(true, {'bindings': aggregatedBindings, 'denorm':true});
@@ -694,8 +694,8 @@ QueryEngine.QueryEngine.prototype.executeSelect = function(unit, env, defaultDat
                         callback(false, "Incompatible Group and Projection variables");
                     }
                 } else {
-                    var orderedBindings = that.applyOrderBy(order, result, env)
-                    var projectedBindings = that.projectBindings(projection, orderedBindings);
+                    var orderedBindings = that.applyOrderBy(order, result, dataset, env)
+                    var projectedBindings = that.projectBindings(projection, orderedBindings, dataset);
                     modifiedBindings = that.applyModifier(modifier, projectedBindings);
                     var limitedBindings  = that.applyLimitOffset(offset, limit, modifiedBindings);
                     filteredBindings = that.removeDefaultGraphBindings(limitedBindings, dataset);
@@ -717,7 +717,7 @@ QueryEngine.QueryEngine.prototype.executeSelect = function(unit, env, defaultDat
 };
 
 
-QueryEngine.QueryEngine.prototype.groupSolution = function(bindings, group, queryEnv){
+QueryEngine.QueryEngine.prototype.groupSolution = function(bindings, group, dataset, queryEnv){
     var order = [];
     var filteredBindings = [];
     var initialized = false;
@@ -758,7 +758,7 @@ QueryEngine.QueryEngine.prototype.groupSolution = function(bindings, group, quer
                         currentBindings[currentOrderClause.alias.value] = currentBindings[currentOrderClause.expression.value.value];
                     } else {
                         var denormBindings = this.copyDenormalizedBindings([currentBindings], queryEnv.outCache);
-                        var filterResultEbv = QueryFilters.runFilter(currentOrderClause.expression, denormBindings[0], that, queryEnv);
+                        var filterResultEbv = QueryFilters.runFilter(currentOrderClause.expression, denormBindings[0], that, dataset, queryEnv);
                         if(!QueryFilters.isEbvError(filterResultEbv)) {
                             if(filterResultEbv.value != null) {
                                 filterResultEbv.value = ""+filterResultEbv.value;
@@ -851,7 +851,7 @@ QueryEngine.QueryEngine.prototype.executeSelectUnit = function(projection, datas
         // Some components may have the filter inside the unit
         var results = this.executeSelectUnit(projection, dataset, pattern.value, env);
         if(results != null) {
-            results = QueryFilters.checkFilters(pattern, results, false, env, this);
+            results = QueryFilters.checkFilters(pattern, results, false, dataset, env, this);
             return results;
         } else {
             return [];
@@ -888,7 +888,7 @@ QueryEngine.QueryEngine.prototype.executeUNION = function(projection, dataset, p
     }
 
     var result = QueryPlan.unionBindings(set1, set2);
-    result = QueryFilters.checkFilters(patterns, result, false, env, that);
+    result = QueryFilters.checkFilters(patterns, result, false, dataset, env, that);
     return result;
 };
 
@@ -896,7 +896,7 @@ QueryEngine.QueryEngine.prototype.executeAndBGP = function(projection, dataset, 
     var that = this;
     var result = QueryPlan.executeAndBGPs(patterns.value, dataset, this, env);
     if(result!=null) {
-        return QueryFilters.checkFilters(patterns, result, false, env, that);
+        return QueryFilters.checkFilters(patterns, result, false, dataset, env, that);
     } else {
         return null;
     }
@@ -930,7 +930,7 @@ QueryEngine.QueryEngine.prototype.executeLEFT_JOIN = function(projection, datase
     //console.log("---")
     //console.log(result);
 
-    var bindings = QueryFilters.checkFilters(patterns, result, true, env, that);
+    var bindings = QueryFilters.checkFilters(patterns, result, true, dataset, env, that);
     //console.log("---")
     //console.log(bindings)
     //console.log("\r\n")
@@ -1013,7 +1013,7 @@ QueryEngine.QueryEngine.prototype.executeJOIN = function(projection, dataset, pa
 
     var result = QueryPlan.joinBindings(set1, set2);
 
-    result = QueryFilters.checkFilters(patterns, result, false, env, that);
+    result = QueryFilters.checkFilters(patterns, result, false, dataset, env, that);
     return result;
 };
 

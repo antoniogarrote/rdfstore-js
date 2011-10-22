@@ -852,7 +852,7 @@ QueryEngine.QueryEngine.prototype.executeSelectUnit = function(projection, datas
         var that = this;
         this.executeSelectUnit(projection, dataset, pattern.value, env, function(success, results){
             if(success) {
-                results = QueryFilters.checkFilters(pattern, results, false, env, that);
+                results = QueryFilters.checkFilters(pattern, results, false, dataset, env, that);
                 callback(true, results);
             } else {
                 callback(false, results);
@@ -899,7 +899,7 @@ QueryEngine.QueryEngine.prototype.executeUNION = function(projection, dataset, p
         });
     })(function(){
         var result = QueryPlan.unionBindings(set1, set2);
-        result = QueryFilters.checkFilters(patterns, result, false, env, that);
+        result = QueryFilters.checkFilters(patterns, result, false, dataset, env, that);
         callback(true, result);
     });
 };
@@ -909,7 +909,7 @@ QueryEngine.QueryEngine.prototype.executeAndBGP = function(projection, dataset, 
 
     QueryPlan.executeAndBGPs(patterns.value, dataset, this, env, function(success,result){
         if(success) {
-            result = QueryFilters.checkFilters(patterns, result, false, env, that);
+            result = QueryFilters.checkFilters(patterns, result, false, dataset, env, that);
             callback(true, result);
         } else {
             callback(false, result);
@@ -953,7 +953,7 @@ QueryEngine.QueryEngine.prototype.executeLEFT_JOIN = function(projection, datase
         //console.log("---")
         //console.log(result);
 
-        var bindings = QueryFilters.checkFilters(patterns, result, true, env, that);
+        var bindings = QueryFilters.checkFilters(patterns, result, true, dataset, env, that);
         //console.log("---")
         //console.log(bindings)
         //console.log("\r\n")
@@ -1044,7 +1044,7 @@ QueryEngine.QueryEngine.prototype.executeJOIN = function(projection, dataset, pa
     })(function(){
         var result = QueryPlan.joinBindings(set1, set2);
 
-        result = QueryFilters.checkFilters(patterns, result, false, env, that);
+        result = QueryFilters.checkFilters(patterns, result, false, dataset, env, that);
         callback(true, result);
     });
 };

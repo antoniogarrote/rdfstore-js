@@ -189,3 +189,109 @@ AbstractQueryTree.AbstractQueryTree.prototype.collectBasicTriples = function(aqt
 
     return acum;
 };
+
+/**
+ * Replaces bindings in an AQT
+ */
+AbstractQueryTree.AbstractQueryTree.prototype.bind = function(aqt, bindings) {
+    if(aqt.graph != null && aqt.graph.token && aqt.graph.token === 'var' &&
+       bindings[aqt.graph.value] != null) {
+        aqt.graph = bindings[aqt.graph.value];
+    }
+    if(aqt.filter != null) {
+        var acum = [];
+        for(var i=0; i< aqt.filter.length; i++) {
+            aqt.filter[i].value = this._bindFilter(aqt.filter[i].value, bindings);
+            acum.push(aqt.filter[i]);
+        }
+        aqt.filter = acum;
+    }
+    if(aqt.kind === 'select') {
+        aqt.pattern = this.bind(aqt.pattern, bindings);
+        //acum = this.collectBasicTriples(aqt.pattern,acum);
+    } else if(aqt.kind === 'BGP') {
+        aqt.value = this._bindTripleContext(aqt.value, bindings);
+        //acum = acum.concat(aqt.value);
+    } else if(aqt.kind === 'UNION') {
+        aqt.value[0] = this.bind(aqt.value[0],bindings);
+        aqt.value[1] = this.bind(aqt.value[1],bindings);
+    } else if(aqt.kind === 'GRAPH') {
+        aqt.value = this.bind(aqt.value,bindings);
+    } else if(aqt.kind === 'LEFT_JOIN' || aqt.kind === 'JOIN') {
+        aqt.lvalue = this.bind(aqt.lvalue, bindings);
+        aqt.rvalue = this.bind(aqt.rvalue, bindings);
+    } else if(aqt.kind === 'FILTER') {
+        acum = this.collectBasicTriples(aqt.value, acum);
+    } else if(aqt.kind === 'EMPTY_PATTERN') {
+        // nothing
+    } else {
+        throw "Unknown pattern: "+aqt.kind;
+    }
+
+    return aqt;
+};
+
+AbstractQueryTree.AbstractQueryTree.prototype._bindTripleContext = function(triples, bindings) {
+    for(var i=0; i<triples.length; i++) {
+        delete triples[i]['graph'];
+        delete triples[i]['variables'];
+        for(var p in triples[i]) {
+            var comp = triples[i][p];
+            if(comp.token === 'var' && bindings[comp.value] != null) {
+                triples[i][p] = bindings[comp.value];
+            }
+        }
+    }
+
+    return triples;
+};
+
+
+AbstractQueryTree.AbstractQueryTree.prototype._bindFilter = function(filterExpr, bindings) {
+    if(filterExpr.expressionType != null) {
+        var expressionType = filterExpr.expressionType;
+        if(expressionType == 'relationalexpression') {
+            filterExpr.op1 = this._bindFilter(filterExpr.op1, bindings);
+            filterExpr.op2 = this._bindFilter(filterExpr.op2, bindings);
+        } else if(expressionType == 'conditionalor' || expressionType == 'conditionaland') {
+            for(var i=0; i< filterExpr.operands.length; i++) {
+                filterExpr.operands[i] = this._bindFilter(filterExpr.operands[i], bindings);
+            }
+        } else if(expressionType == 'additiveexpression') {
+            filterExpr.summand = this._bindFilter(filterExpr.summand, bindings);
+            for(var i=0; i<filterExpr.summands.length; i++) {
+                filterExpr.summands[i].expression = this._bindFilter(filterExpr.summands[i].expression, bindings);            
+            }
+        } else if(expressionType == 'builtincall') {
+            for(var i=0; i<filterExpr.args.length; i++) {
+                filterExpr.args[i] = this._bindFilter(filterExpr.args[i], bindings);
+            }
+        } else if(expressionType == 'multiplicativeexpression') {
+            filterExpr.factor = this._bindFilter(filterExpr.factor, bindings);
+            for(var i=0; i<filterExpr.factors.length; i++) {
+                filterExpr.factors[i].expression = this._bindFilter(filterExpr.factors[i].expression, bindings);            
+            }
+        } else if(expressionType == 'unaryexpression') {
+            filterExpr.expression = this._bindFilter(filterExpr.expression, bindings);
+        } else if(expressionType == 'irireforfunction') {
+            for(var i=0; i<filterExpr.factors.args; i++) {
+                filterExpr.args[i] = this._bindFilter(filterExpr.args[i], bindings);            
+            }
+        } else if(expressionType == 'atomic') {        
+            if(filterExpr.primaryexpression == 'var') {
+                // lookup the var in the bindings
+                if(bindings[filterExpr.value.value] != null) {
+                    var val = bindings[filterExpr.value.value];
+                    if(val.token === 'uri') {
+                        filterExpr.primaryexpression = 'iri';
+                    } else {
+                        filterExpr.primaryexpression = 'literal';
+                    }
+                    filterExpr.value = val;
+                }
+            }
+        }
+    }
+
+    return filterExpr;
+};

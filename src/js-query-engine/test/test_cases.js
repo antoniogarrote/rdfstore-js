@@ -3,7 +3,7 @@ var QuadBackend = require("./../../js-rdf-persistence/src/quad_backend").QuadBac
 var Lexicon = require("./../../js-rdf-persistence/src/lexicon").Lexicon;
 
 // basic
-
+/*
 exports.testBasePrefix1 = function(test) {
     new Lexicon.Lexicon(function(lexicon){
         new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
@@ -9327,5 +9327,82 @@ exports.testAggregatesAggSum1 = function(test) {
             });
         });
     });
+};
+*/
+
+
+
+// Negation
+
+exports.testsubsetByExcl01 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 15}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+
+            var query = 'PREFIX ex:  <http://www.w3.org/2009/sparql/docs/tests/data-sparql11/negation#> \
+                         INSERT DATA {ex:lifeForm1 a ex:Mammal, ex:Animal . ex:lifeForm2 a ex:Reptile, ex:Animal . ex:lifeForm3 a ex:Insect, ex:Animal .}';
+
+            engine.execute(query, function(success, result){
+                var query = 'PREFIX ex: <http://www.w3.org/2009/sparql/docs/tests/data-sparql11/negation#>\
+                             SELECT ?animal {  ?animal a ex:Animal  FILTER NOT EXISTS { ?animal a ex:Insect } }';
+
+                engine.execute(query, function(success, results){
+                    test.ok(success);
+                    test.ok(results.length === 2);
+                    test.ok(results[0].animal.value === 'http://www.w3.org/2009/sparql/docs/tests/data-sparql11/negation#lifeForm1');
+                    test.ok(results[1].animal.value === 'http://www.w3.org/2009/sparql/docs/tests/data-sparql11/negation#lifeForm2');
+                    test.done();
+                });
+            });
+        });
+    });
 }
+
+exports.testTemporalProximity01 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 15}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+
+            var query = 'PREFIX ex:  <http://www.w3.org/2009/sparql/docs/tests/data-sparql11/negation#> \
+                         PREFIX dc:  <http://purl.org/dc/elements/1.1/>\
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                         INSERT DATA {\
+                                  ex:examination1 a ex:PhysicalExamination;\
+                                           dc:date "2010-01-10"^^xsd:date ;\
+                                           ex:precedes ex:operation1 ;\
+                                           ex:follows ex:examination2  .\
+                                  ex:operation1   a ex:SurgicalProcedure;\
+                                                  dc:date "2010-01-15"^^xsd:date;\
+                                                  ex:follows ex:examination1, ex:examination2 .\
+                                  ex:examination2 a ex:PhysicalExamination;\
+                                                  dc:date "2010-01-02"^^xsd:date;\
+                                                  ex:precedes ex:operation1, ex:examination1 .}';
+
+            engine.execute(query, function(success, result){
+                var query = 'PREFIX ex:  <http://www.w3.org/2009/sparql/docs/tests/data-sparql11/negation#> \
+                             PREFIX dc:  <http://purl.org/dc/elements/1.1/>\
+                             SELECT ?exam ?date {\
+                                   ?exam a ex:PhysicalExamination;\
+                                         dc:date ?date;\
+                                         ex:precedes ex:operation1 .\
+                                   ?op a ex:SurgicalProcedure; dc:date ?opDT .\
+                                   FILTER NOT EXISTS {\
+                                     ?otherExam a ex:PhysicalExamination;\
+                                                ex:follows ?exam;\
+                                                ex:precedes ex:operation1\
+                                   }}';
+
+                engine.execute(query, function(success, results){
+                    test.ok(success);
+                    test.ok(results.length === 1);
+                    test.ok(results[0].exam.value === 'http://www.w3.org/2009/sparql/docs/tests/data-sparql11/negation#examination1');
+                    test.done();
+                });
+            });
+        });
+    });
+}
+
 

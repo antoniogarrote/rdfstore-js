@@ -249,7 +249,7 @@ SelectClause "[8] SelectClause"
 */
 ConstructQuery "[9] ConstructQuery"
     = WS* ('C'/'c')('O'/'o')('N'/'n')('S'/'s')('T'/'t')('R'/'r')('U'/'u')('C'/'c')('T'/'t') WS* t:ConstructTemplate WS* gs:DatasetClause* WS* w:WhereClause WS* sm:SolutionModifier {
-      var dataset = {named:[], default:[]};
+      var dataset = {'named':[], 'default':[]};
       for(var i=0; i<gs.length; i++) {
           var g = gs[i];
           if(g.kind === 'default') {
@@ -1977,6 +1977,8 @@ BuiltInCall "[106] BuiltInCall"
     return ex;
 }
 / RegexExpression
+/ ExistsFunc
+/ NotExistsFunc
 
 /*
   [107]  	RegexExpression	  ::=  	'REGEX' '(' Expression ',' Expression ( ',' Expression )? ')'
@@ -1997,13 +1999,29 @@ RegexExpression "[107] RegexExpression"
   [108]  	ExistsFunc	  ::=  	'EXISTS' GroupGraphPattern
 */
 ExistsFunc "[108] ExistsFunc"
-  = 'EXISTS' GroupGraphPattern
+  = ('E'/'e')('X'/'x')('I'/'i')('S'/'s')('T'/'t')('S'/'s') WS* ggp:GroupGraphPattern {
+    var ex = {};
+    ex.token = 'expression';
+    ex.expressionType = 'builtincall';
+    ex.builtincall = 'exists';
+    ex.args = [ggp];
+
+    return ex;
+}
 
 /*
   [109]  	NotExistsFunc	  ::=  	'NOT EXISTS' GroupGraphPattern
 */
 NotExistsFunc "[109] NotExistsFunc"
-  = 'NOT EXISTS' GroupGraphPattern
+  = ('N'/'n')('O'/'o')('T'/'t')WS*('E'/'e')('X'/'x')('I'/'i')('S'/'s')('T'/'t')('S'/'s') WS* ggp:GroupGraphPattern {
+    var ex = {};
+    ex.token = 'expression';
+    ex.expressionType = 'builtincall';
+    ex.builtincall = 'notexists';
+    ex.args = [ggp];
+
+    return ex;
+}
 
 /*
   @todo

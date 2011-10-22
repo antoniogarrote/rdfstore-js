@@ -5,7 +5,7 @@ var QueryFilters = exports.QueryFilters;
 // imports
 var Utils = require("./../../js-trees/src/utils").Utils;
 
-QueryFilters.checkFilters = function(pattern, bindings, nullifyErrors, queryEnv, queryEngine) {
+QueryFilters.checkFilters = function(pattern, bindings, nullifyErrors, dataset, queryEnv, queryEngine) {
 
     var filters = pattern.filter;
     var nullified = [];
@@ -16,7 +16,7 @@ QueryFilters.checkFilters = function(pattern, bindings, nullifyErrors, queryEnv,
     for(var i=0; i<filters.length; i++) {
         var filter = filters[i];
 
-        var filteredBindings = QueryFilters.run(filter.value, bindings, nullifyErrors, queryEnv, queryEngine);
+        var filteredBindings = QueryFilters.run(filter.value, bindings, nullifyErrors, dataset, queryEnv, queryEngine);
         var acum = [];
         for(var j=0; j<filteredBindings.length; j++) {
             if(filteredBindings[j]["__nullify__"]!=null) {
@@ -88,12 +88,12 @@ QueryFilters.boundVars = function(filterExpr) {
     }
 };
 
-QueryFilters.run = function(filterExpr, bindings, nullifyFilters, env, queryEngine) {    
+QueryFilters.run = function(filterExpr, bindings, nullifyFilters, dataset, env, queryEngine) {    
     var denormBindings = queryEngine.copyDenormalizedBindings(bindings, env.outCache);
     var filteredBindings = [];
     for(var i=0; i<bindings.length; i++) {
         var thisDenormBindings = denormBindings[i];
-        var ebv = QueryFilters.runFilter(filterExpr, thisDenormBindings, queryEngine, env);
+        var ebv = QueryFilters.runFilter(filterExpr, thisDenormBindings, queryEngine, dataset, env);
         // ebv can be directly a RDFTerm (e.g. atomic expression in filter)
         // this additional call to ebv will return -> true/false/error
         var ebv = QueryFilters.ebv(ebv);
@@ -121,12 +121,12 @@ QueryFilters.run = function(filterExpr, bindings, nullifyFilters, env, queryEngi
     return filteredBindings;
 };
 
-QueryFilters.collect = function(filterExpr, bindings, env, queryEngine, callback) {
+QueryFilters.collect = function(filterExpr, bindings, dataset, env, queryEngine, callback) {
     var denormBindings = queryEngine.copyDenormalizedBindings(bindings, env.outCache);
     var filteredBindings = [];
     for(var i=0; i<denormBindings.length; i++) {
         var thisDenormBindings = denormBindings[i];
-        var ebv = QueryFilters.runFilter(filterExpr, thisDenormBindings, queryEngine, env);
+        var ebv = QueryFilters.runFilter(filterExpr, thisDenormBindings, queryEngine, dataset, env);
         filteredBindings.push({binding:bindings[i], value:ebv});
     }
     return(filteredBindings);
@@ -136,7 +136,7 @@ QueryFilters.runDistinct = function(projectedBindings, projectionVariables) {
 };
 
 // @todo add more aggregation functions here
-QueryFilters.runAggregator = function(aggregator, bindingsGroup, queryEngine, env) {
+QueryFilters.runAggregator = function(aggregator, bindingsGroup, queryEngine, dataset, env) {
     if(bindingsGroup == null || bindingsGroup.length === 0) {
         return QueryFilters.ebvError();
     } else if(aggregator.token === 'variable' && aggregator.kind == 'var') {
@@ -149,7 +149,7 @@ QueryFilters.runAggregator = function(aggregator, bindingsGroup, queryEngine, en
                 var max = null;
                 for(var i=0; i< bindingsGroup.length; i++) {
                     var bindings = bindingsGroup[i];
-                    var ebv = QueryFilters.runFilter(aggregator.expression.expression, bindings, queryEngine, env);                    
+                    var ebv = QueryFilters.runFilter(aggregator.expression.expression, bindings, queryEngine, dataset, env);                    
                     if(!QueryFilters.isEbvError(ebv)) {
                         if(max === null) {
                             max = ebv;
@@ -170,7 +170,7 @@ QueryFilters.runAggregator = function(aggregator, bindingsGroup, queryEngine, en
                 var min = null;
                 for(var i=0; i< bindingsGroup.length; i++) {
                     var bindings = bindingsGroup[i];
-                    var ebv = QueryFilters.runFilter(aggregator.expression.expression, bindings, queryEngine, env);                    
+                    var ebv = QueryFilters.runFilter(aggregator.expression.expression, bindings, queryEngine, dataset, env);                    
                     if(!QueryFilters.isEbvError(ebv)) {
                         if(min === null) {
                             min = ebv;
@@ -206,7 +206,7 @@ QueryFilters.runAggregator = function(aggregator, bindingsGroup, queryEngine, en
                 } else {
                   for(var i=0; i< bindingsGroup.length; i++) {
                       var bindings = bindingsGroup[i];
-                      var ebv = QueryFilters.runFilter(aggregator.expression.expression, bindings, queryEngine, env);                    
+                      var ebv = QueryFilters.runFilter(aggregator.expression.expression, bindings, queryEngine, dataset, env);                    
                       if(!QueryFilters.isEbvError(ebv)) {
                           if(aggregator.expression.distinct != null && aggregator.expression.distinct != '') {
                               var key = Utils.hashTerm(ebv);
@@ -228,7 +228,7 @@ QueryFilters.runAggregator = function(aggregator, bindingsGroup, queryEngine, en
                 var count = 0;
                 for(var i=0; i< bindingsGroup.length; i++) {
                     var bindings = bindingsGroup[i];
-                    var ebv = QueryFilters.runFilter(aggregator.expression.expression, bindings, queryEngine, env);                    
+                    var ebv = QueryFilters.runFilter(aggregator.expression.expression, bindings, queryEngine, dataset, env);                    
                     if(!QueryFilters.isEbvError(ebv)) {
                         if(aggregator.expression.distinct != null && aggregator.expression.distinct != '') {
                             var key = Utils.hashTerm(ebv);
@@ -256,7 +256,7 @@ QueryFilters.runAggregator = function(aggregator, bindingsGroup, queryEngine, en
                 var aggregated = {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#integer", value:'0'};
                 for(var i=0; i< bindingsGroup.length; i++) {
                     var bindings = bindingsGroup[i];
-                    var ebv = QueryFilters.runFilter(aggregator.expression.expression, bindings, queryEngine, env);                    
+                    var ebv = QueryFilters.runFilter(aggregator.expression.expression, bindings, queryEngine, dataset, env);                    
                     if(!QueryFilters.isEbvError(ebv)) {
                         if(aggregator.expression.distinct != null && aggregator.expression.distinct != '') {
                             var key = Utils.hashTerm(ebv);
@@ -277,36 +277,36 @@ QueryFilters.runAggregator = function(aggregator, bindingsGroup, queryEngine, en
                 aggregated.value =''+aggregated.value;
                 return aggregated;
             } else {
-                var ebv = QueryFilters.runFilter(aggregate.expression, bindingsGroup[0], {blanks:{}, outCache:{}});
+                var ebv = QueryFilters.runFilter(aggregate.expression, bindingsGroup[0], dataset, {blanks:{}, outCache:{}});
                 return ebv;
             }
         }
     }
 };
 
-QueryFilters.runFilter = function(filterExpr, bindings, queryEngine, env) {
+QueryFilters.runFilter = function(filterExpr, bindings, queryEngine, dataset, env) {
     if(filterExpr.expressionType != null) {
         var expressionType = filterExpr.expressionType;
         if(expressionType == 'relationalexpression') {
-            var op1 = QueryFilters.runFilter(filterExpr.op1, bindings,queryEngine, env);
-            var op2 = QueryFilters.runFilter(filterExpr.op2, bindings,queryEngine, env);
-            return QueryFilters.runRelationalFilter(filterExpr, op1, op2, bindings, queryEngine, env);
+            var op1 = QueryFilters.runFilter(filterExpr.op1, bindings,queryEngine, dataset, env);
+            var op2 = QueryFilters.runFilter(filterExpr.op2, bindings,queryEngine, dataset, env);
+            return QueryFilters.runRelationalFilter(filterExpr, op1, op2, bindings, queryEngine, dataset, env);
         } else if(expressionType == 'conditionalor') {
-            return QueryFilters.runOrFunction(filterExpr, bindings, queryEngine, env);
+            return QueryFilters.runOrFunction(filterExpr, bindings, queryEngine, dataset, env);
         } else if (expressionType == 'conditionaland') {
-            return QueryFilters.runAndFunction(filterExpr, bindings, queryEngine, env);
+            return QueryFilters.runAndFunction(filterExpr, bindings, queryEngine, dataset, env);
         } else if(expressionType == 'additiveexpression') {
-            return QueryFilters.runAddition(filterExpr.summand, filterExpr.summands, bindings, queryEngine, env);
+            return QueryFilters.runAddition(filterExpr.summand, filterExpr.summands, bindings, queryEngine, dataset, env);
         } else if(expressionType == 'builtincall') {
-            return QueryFilters.runBuiltInCall(filterExpr.builtincall, filterExpr.args, bindings, queryEngine, env);
+            return QueryFilters.runBuiltInCall(filterExpr.builtincall, filterExpr.args, bindings, queryEngine, dataset, env);
         } else if(expressionType == 'multiplicativeexpression') {
-            return QueryFilters.runMultiplication(filterExpr.factor, filterExpr.factors, bindings, queryEngine, env);
+            return QueryFilters.runMultiplication(filterExpr.factor, filterExpr.factors, bindings, queryEngine, dataset, env);
         } else if(expressionType == 'unaryexpression') {
-            return QueryFilters.runUnaryExpression(filterExpr.unaryexpression, filterExpr.expression, bindings, queryEngine, env);
+            return QueryFilters.runUnaryExpression(filterExpr.unaryexpression, filterExpr.expression, bindings, queryEngine, dataset, env);
         } else if(expressionType == 'irireforfunction') {
-            return QueryFilters.runIriRefOrFunction(filterExpr.iriref, filterExpr.args, bindings, queryEngine, env);
+            return QueryFilters.runIriRefOrFunction(filterExpr.iriref, filterExpr.args, bindings, queryEngine, dataset, env);
         } else if(expressionType == 'regex') {
-            return QueryFilters.runRegex(filterExpr.text, filterExpr.pattern, filterExpr.flags, bindings, queryEngine, env)
+            return QueryFilters.runRegex(filterExpr.text, filterExpr.pattern, filterExpr.flags, bindings, queryEngine, dataset, env)
         } else if(expressionType == 'atomic') {        
             if(filterExpr.primaryexpression == 'var') {
                 // lookup the var in the bindings
@@ -616,12 +616,12 @@ QueryFilters.ebvBoolean = function(bool) {
 }
 
 
-QueryFilters.runRelationalFilter = function(filterExpr, op1, op2, bindings, queryEngine, env) {
+QueryFilters.runRelationalFilter = function(filterExpr, op1, op2, bindings, queryEngine, dataset, env) {
     var operator = filterExpr.operator;
     if(operator === '=') {
-        return QueryFilters.runEqualityFunction(op1, op2, bindings, queryEngine, env);
+        return QueryFilters.runEqualityFunction(op1, op2, bindings, queryEngine, dataset, env);
     } else if(operator === '!=') {
-        var res = QueryFilters.runEqualityFunction(op1, op2, bindings, queryEngine, env);
+        var res = QueryFilters.runEqualityFunction(op1, op2, bindings, queryEngine, dataset, env);
         if(QueryFilters.isEbvError(res)) {
             return res;
         } else {
@@ -790,12 +790,12 @@ QueryFilters.effectiveTypeValue = function(val){
   A logical-or that encounters an error on only one branch will return TRUE if the other branch is TRUE and an error if the other branch is FALSE.
   A logical-or or logical-and that encounters errors on both branches will produce either of the errors.
 */
-QueryFilters.runOrFunction = function(filterExpr, bindings, queryEngine, env) {
+QueryFilters.runOrFunction = function(filterExpr, bindings, queryEngine, dataset, env) {
 
     var acum = null;
 
     for(var i=0; i< filterExpr.operands.length; i++) {
-        var ebv = QueryFilters.runFilter(filterExpr.operands[i], bindings, queryEngine, env);
+        var ebv = QueryFilters.runFilter(filterExpr.operands[i], bindings, queryEngine, dataset, env);
         if(QueryFilters.isEbvError(ebv) == false) {
             ebv = QueryFilters.ebv(ebv);
         }
@@ -826,13 +826,13 @@ QueryFilters.runOrFunction = function(filterExpr, bindings, queryEngine, env) {
   A logical-and that encounters an error on only one branch will return an error if the other branch is TRUE and FALSE if the other branch is FALSE.
   A logical-or or logical-and that encounters errors on both branches will produce either of the errors.
 */
-QueryFilters.runAndFunction = function(filterExpr, bindings, queryEngine, env) {
+QueryFilters.runAndFunction = function(filterExpr, bindings, queryEngine, dataset, env) {
 
     var acum = null;
 
     for(var i=0; i< filterExpr.operands.length; i++) {
 
-        var ebv = QueryFilters.runFilter(filterExpr.operands[i], bindings, queryEngine, env);
+        var ebv = QueryFilters.runFilter(filterExpr.operands[i], bindings, queryEngine, dataset, env);
 
         if(QueryFilters.isEbvError(ebv) == false) {
             ebv = QueryFilters.ebv(ebv);
@@ -861,7 +861,7 @@ QueryFilters.runAndFunction = function(filterExpr, bindings, queryEngine, env) {
 };
 
 
-QueryFilters.runEqualityFunction = function(op1, op2, bindings, queryEngine, env) {
+QueryFilters.runEqualityFunction = function(op1, op2, bindings, queryEngine, dataset, env) {
     if(QueryFilters.isEbvError(op1) || QueryFilters.isEbvError(op2)) {
         return QueryFilters.ebvError();
     }
@@ -1086,8 +1086,8 @@ QueryFilters.runLtEqFunction = function(op1, op2, bindings) {
     }
 };
 
-QueryFilters.runAddition = function(summand, summands, bindings, queryEngine, env) {
-    var summandOp = QueryFilters.runFilter(summand,bindings,queryEngine, env);
+QueryFilters.runAddition = function(summand, summands, bindings, queryEngine, dataset, env) {
+    var summandOp = QueryFilters.runFilter(summand,bindings,queryEngine, dataset, env);
     if(QueryFilters.isEbvError(summandOp)) {
         return QueryFilters.ebvError();
     }
@@ -1095,7 +1095,7 @@ QueryFilters.runAddition = function(summand, summands, bindings, queryEngine, en
     var acum = summandOp;
     if(QueryFilters.isNumeric(summandOp)) {
         for(var i=0; i<summands.length; i++) {
-            var nextSummandOp = QueryFilters.runFilter(summands[i].expression, bindings,queryEngine, env);
+            var nextSummandOp = QueryFilters.runFilter(summands[i].expression, bindings,queryEngine, dataset, env);
             if(QueryFilters.isNumeric(nextSummandOp)) {
                 if(summands[i].operator === '+') {
                     acum = QueryFilters.runSumFunction(acum, nextSummandOp);
@@ -1146,8 +1146,8 @@ QueryFilters.runSubFunction = function(suma, sumb) {
     }
 };
 
-QueryFilters.runMultiplication = function(factor, factors, bindings, queryEngine, env) {
-    var factorOp = QueryFilters.runFilter(factor,bindings,queryEngine, env);
+QueryFilters.runMultiplication = function(factor, factors, bindings, queryEngine, dataset, env) {
+    var factorOp = QueryFilters.runFilter(factor,bindings,queryEngine, dataset, env);
     if(QueryFilters.isEbvError(factorOp)) {
         return factorOp;
     }
@@ -1155,7 +1155,7 @@ QueryFilters.runMultiplication = function(factor, factors, bindings, queryEngine
     var acum = factorOp;
     if(QueryFilters.isNumeric(factorOp)) {
         for(var i=0; i<factors.length; i++) {
-            var nextFactorOp = QueryFilters.runFilter(factors[i].expression, bindings,queryEngine, env);
+            var nextFactorOp = QueryFilters.runFilter(factors[i].expression, bindings,queryEngine, dataset, env);
             if(QueryFilters.isEbvError(nextFactorOp)) {
                 return factorOp;
             }
@@ -1209,113 +1209,134 @@ QueryFilters.runDivFunction = function(faca, facb) {
     }
 };
 
-QueryFilters.runBuiltInCall = function(builtincall, args, bindings, queryEngine, env) {
-    var ops = [];
-    for(var i=0; i<args.length; i++) {
-        if(args[i].token === 'var') {
-            ops.push(args[i]);
-        } else {
-          var op = QueryFilters.runFilter(args[i], bindings, queryEngine, env);
-          if(QueryFilters.isEbvError(op)) {
-              return op;
-          }
-        ops.push(op);
-        }
-    }
+QueryFilters.runBuiltInCall = function(builtincall, args, bindings, queryEngine, dataset, env) {
+    if(builtincall === 'notexists' || builtincall === 'exists') {
+        // Run the query in the filter applying bindings
 
-    if(builtincall === 'str') {
-        if(ops[0].token === 'literal') {
-            // lexical form literals
-            return {token: 'literal', type:null, value:""+ops[0].value}; // type null? or "http://www.w3.org/2001/XMLSchema#string"
-        } else if(ops[0].token === 'uri'){
-            // codepoint URIs
-            return {token: 'literal', type:null, value:ops[0].value}; // idem
+        var cloned = JSON.parse(JSON.stringify(args[0])); // @todo CHANGE THIS!!
+        var ast = queryEngine.abstractQueryTree.parseSelect({pattern:cloned}, bindings);
+        ast = queryEngine.abstractQueryTree.bind(ast.pattern, bindings);
+
+        var result = queryEngine.executeSelectUnit([ {kind:'*'} ], 
+                                                   dataset,
+                                                   ast,
+                                                   env);
+
+        if(builtincall === 'exists') {
+            return QueryFilters.ebvBoolean(result.length!==0);            
         } else {
-            return QueryFilters.ebvFalse();
+            return QueryFilters.ebvBoolean(result.length===0);            
         }
-    } else if(builtincall === 'lang') {
-        if(ops[0].token === 'literal'){
-            if(ops[0].lang != null) {
-                return {token: 'literal', value:""+ops[0].lang};
+
+    }  else {
+
+        var ops = [];
+        for(var i=0; i<args.length; i++) {
+            if(args[i].token === 'var') {
+                ops.push(args[i]);
             } else {
-                return {token: 'literal', value:""};
-            }
-        } else {
-            return QueryFilters.ebvError();
-        }
-    } else if(builtincall === 'datatype') {
-        if(ops[0].token === 'literal'){
-            var lit = ops[0];
-            if(lit.type != null) {
-                if(typeof(lit.type) === 'string') {
-                    return {token: 'uri', value:lit.type, prefix:null, suffix:null};
-                } else {
-                    return lit.type;
+                var op = QueryFilters.runFilter(args[i], bindings, queryEngine, dataset, env);
+                if(QueryFilters.isEbvError(op)) {
+                    return op;
                 }
-            } else if(lit.lang == null) {
-                return {token: 'uri', value:'http://www.w3.org/2001/XMLSchema#string', prefix:null, suffix:null};
+                ops.push(op);
+            }
+        }
+
+        if(builtincall === 'str') {
+            if(ops[0].token === 'literal') {
+                // lexical form literals
+                return {token: 'literal', type:null, value:""+ops[0].value}; // type null? or "http://www.w3.org/2001/XMLSchema#string"
+            } else if(ops[0].token === 'uri'){
+                // codepoint URIs
+                return {token: 'literal', type:null, value:ops[0].value}; // idem
+            } else {
+                return QueryFilters.ebvFalse();
+            }
+        } else if(builtincall === 'lang') {
+            if(ops[0].token === 'literal'){
+                if(ops[0].lang != null) {
+                    return {token: 'literal', value:""+ops[0].lang};
+                } else {
+                    return {token: 'literal', value:""};
+                }
             } else {
                 return QueryFilters.ebvError();
             }
-        } else {
-            return QueryFilters.ebvError();
-        }
-    } else if(builtincall === 'isliteral') {
-        if(ops[0].token === 'literal'){
-            return QueryFilters.ebvTrue();
-        } else {
-            return QueryFilters.ebvFalse();
-        }        
-    } else if(builtincall === 'isblank') {
-        if(ops[0].token === 'blank'){
-            return QueryFilters.ebvTrue();
-        } else {
-            return QueryFilters.ebvFalse();
-        }        
-    } else if(builtincall === 'isuri' || builtincall === 'isiri') {
-        if(ops[0].token === 'uri'){
-            return QueryFilters.ebvTrue();
-        } else {
-            return QueryFilters.ebvFalse();
-        }        
-    } else if(builtincall === 'sameterm') {
-        var op1 = ops[0];
-        var op2 = ops[1];
-        var res = QueryFilters.RDFTermEquality(op1, op2, queryEngine, env);
-        if(QueryFilters.isEbvError(res)) {
-            res = false;
-        }
-        return QueryFilters.ebvBoolean(res);
-    } else if(builtincall === 'langmatches') {
-        var lang = ops[0];
-        var langRange = ops[1];
-
-        if(lang.token === 'literal' && langRange.token === 'literal'){
-            if(langRange.value === '*' && lang.value != '') {
+        } else if(builtincall === 'datatype') {
+            if(ops[0].token === 'literal'){
+                var lit = ops[0];
+                if(lit.type != null) {
+                    if(typeof(lit.type) === 'string') {
+                        return {token: 'uri', value:lit.type, prefix:null, suffix:null};
+                    } else {
+                        return lit.type;
+                    }
+                } else if(lit.lang == null) {
+                    return {token: 'uri', value:'http://www.w3.org/2001/XMLSchema#string', prefix:null, suffix:null};
+                } else {
+                    return QueryFilters.ebvError();
+                }
+            } else {
+                return QueryFilters.ebvError();
+            }
+        } else if(builtincall === 'isliteral') {
+            if(ops[0].token === 'literal'){
                 return QueryFilters.ebvTrue();
             } else {
-                return QueryFilters.ebvBoolean(lang.value.toLowerCase().indexOf(langRange.value.toLowerCase()) === 0)
+                return QueryFilters.ebvFalse();
+            }        
+        } else if(builtincall === 'isblank') {
+            if(ops[0].token === 'blank'){
+                return QueryFilters.ebvTrue();
+            } else {
+                return QueryFilters.ebvFalse();
+            }        
+        } else if(builtincall === 'isuri' || builtincall === 'isiri') {
+            if(ops[0].token === 'uri'){
+                return QueryFilters.ebvTrue();
+            } else {
+                return QueryFilters.ebvFalse();
+            }        
+        } else if(builtincall === 'sameterm') {
+            var op1 = ops[0];
+            var op2 = ops[1];
+            var res = QueryFilters.RDFTermEquality(op1, op2, queryEngine, env);
+            if(QueryFilters.isEbvError(res)) {
+                res = false;
+            }
+            return QueryFilters.ebvBoolean(res);
+        } else if(builtincall === 'langmatches') {
+            var lang = ops[0];
+            var langRange = ops[1];
+
+            if(lang.token === 'literal' && langRange.token === 'literal'){
+                if(langRange.value === '*' && lang.value != '') {
+                    return QueryFilters.ebvTrue();
+                } else {
+                    return QueryFilters.ebvBoolean(lang.value.toLowerCase().indexOf(langRange.value.toLowerCase()) === 0)
+                }
+            } else {
+                return QueryFilters.ebvError();
+            }        
+        } else if(builtincall === 'bound') {
+            var boundVar = ops[0].value;
+            var acum = [];
+            if(boundVar == null) {
+                return QueryFilters.ebvError();
+            } else  if(bindings[boundVar] != null) {
+                return QueryFilters.ebvTrue();
+            } else {
+                return QueryFilters.ebvFalse();
             }
         } else {
-            return QueryFilters.ebvError();
-        }        
-    } else if(builtincall === 'bound') {
-        var boundVar = ops[0].value;
-        var acum = [];
-        if(boundVar == null) {
-            return QueryFilters.ebvError();
-        } else  if(bindings[boundVar] != null) {
-            return QueryFilters.ebvTrue();
-        } else {
-            return QueryFilters.ebvFalse();
+            throw ("Builtin call "+builtincall+" not implemented yet");
         }
-    } else {
-        throw ("Builtin call "+builtincall+" not implemented yet");
     }
 };
 
-QueryFilters.runUnaryExpression = function(unaryexpression, expression, bindings, queryEngine, env) {
-    var op = QueryFilters.runFilter(expression, bindings,queryEngine, env);
+QueryFilters.runUnaryExpression = function(unaryexpression, expression, bindings, queryEngine, dataset, env) {
+    var op = QueryFilters.runFilter(expression, bindings,queryEngine, dataset, env);
     if(QueryFilters.isEbvError(op)) {
         return op;
     }
@@ -1359,22 +1380,22 @@ QueryFilters.runUnaryExpression = function(unaryexpression, expression, bindings
     }
 };
 
-QueryFilters.runRegex = function(text, pattern, flags, bindings, queryEngine, env) {
+QueryFilters.runRegex = function(text, pattern, flags, bindings, queryEngine, dataset, env) {
 
     if(text != null) {
-        text = QueryFilters.runFilter(text, bindings, queryEngine, env);
+        text = QueryFilters.runFilter(text, bindings, queryEngine, dataset, env);
     } else {
         return QueryFilters.ebvError();
     }
 
     if(pattern != null) {
-        pattern = QueryFilters.runFilter(pattern, bindings, queryEngine, env);
+        pattern = QueryFilters.runFilter(pattern, bindings, queryEngine, dataset, env);
     } else {
         return QueryFilters.ebvError();
     }
 
     if(flags != null) {
-        flags = QueryFilters.runFilter(flags, bindings, queryEngine, env);
+        flags = QueryFilters.runFilter(flags, bindings, queryEngine, dataset, env);
     }
 
 
@@ -1424,13 +1445,13 @@ QueryFilters.normalizeLiteralDatatype = function(literal, queryEngine, env) {
     }
 };
 
-QueryFilters.runIriRefOrFunction = function(iriref, args, bindings,queryEngine, env) {
+QueryFilters.runIriRefOrFunction = function(iriref, args, bindings,queryEngine, dataset, env) {
     if(args == null) {
         return iriref;
     } else {
         var ops = [];
         for(var i=0; i<args.length; i++) {
-            ops.push(QueryFilters.runFilter(args[i], bindings, queryEngine, env))
+            ops.push(QueryFilters.runFilter(args[i], bindings, queryEngine, dataset, env))
         }
 
         var fun = Utils.lexicalFormBaseUri(iriref, env);
