@@ -1,3 +1,5 @@
+var Utils = require("./../../js-trees/src/utils").Utils;
+
 /**
  * Javascript implementation of JSON-LD.
  *
@@ -629,7 +631,10 @@ jsonld.toTriples = function(input, graph, callback)
       rval = [];
       callback = function(s, p, o)
       {
-         rval.push({'subject': s, 'predicate': p, 'object': o, 'graph':graph});
+         rval.push({'subject': Utils.lexicalFormTerm(s), 
+                    'predicate': Utils.lexicalFormTerm(p), 
+                    'object': Utils.lexicalFormTerm(o), 
+                    'graph': graph});
       };
    }
    
@@ -641,6 +646,7 @@ jsonld.toTriples = function(input, graph, callback)
       var s = {'token': 'uri', 'value': e['@subject']['@iri']};
        if(s['value'][0] === "_") {
            s['token'] = 'blank';
+           s['label'] = s['value'].split(":")[1]
        }
       for(var p in e)
       {
@@ -658,7 +664,7 @@ jsonld.toTriples = function(input, graph, callback)
                     obji2 = {'token': 'literal', 'value':obji2};
                 } else if(obji2['@iri'] != null) {
                     if(obji2['@iri'][0] == "_") {
-                        obji2 = {'token':'blank', 'value':obji2['@iri']}
+                        obji2 = {'token':'blank', 'label':obji2['@iri'].split(":")[1]}
                     } else {
                         obji2 = {'token':'uri', 'value':obji2['@iri']}
                     }
@@ -768,7 +774,7 @@ Processor.prototype.compact = function(ctx, property, value, usedCtx)
    {
       // get coerce type
       var coerce = this.getCoerceType(ctx, property, usedCtx);
-      
+
       // get type from value, to ensure coercion is valid
       var type = null;
       if(value.constructor === Object)

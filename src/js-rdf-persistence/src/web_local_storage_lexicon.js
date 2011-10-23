@@ -298,15 +298,15 @@ WebLocalStorageLexicon.Lexicon.prototype.retrieve = function(oid) {
                      defaultGraph: true });
         } else {
           var maybeUri = this.OIDToUri['u'+oid];
-          if(maybeUri) {
+          if(maybeUri!=null) {
               return(this.parseUri(maybeUri));
           } else {
               var maybeLiteral = this.OIDToLiteral['l'+oid];
-              if(maybeLiteral) {
+              if(maybeLiteral!=null) {
                   return(this.parseLiteral(maybeLiteral));
               } else {
                   var maybeBlank = this.OIDToBlank[""+oid];
-                  if(maybeBlank) {
+                  if(maybeBlank!=null) {
                       return({token:"blank", value:"_:"+oid});
                   } else {
                       // uri
