@@ -37948,7 +37948,7 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
                 maybeBlankOid = this.lexicon.registerBlank(quad.predicate.blank || quad.predicate.value)
                 blanks[(quad.predicate.blank || quad.predicate.value)] = maybeBlankOid;
             }
-            predicate = oid;
+            predicate = maybeBlankOid;
         }
 
         // object
@@ -37964,7 +37964,7 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
                 maybeBlankOid = this.lexicon.registerBlank(quad.object.blank || quad.object.value)
                 blanks[(quad.object.blank || quad.object.value)] = maybeBlankOid;
             }
-            object = oid;
+            object = maybeBlankOid;
         }
 
         // graph
@@ -37982,7 +37982,7 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
                 maybeBlankOid = this.lexicon.registerBlank(quad.graph.blank || quad.graph.value)
                 blanks[(quad.graph.blank || quad.graph.value)] = maybeBlankOid;
             }
-            graph = oid;
+            graph = maybeBlankOid;
         }
 
 
@@ -39171,7 +39171,7 @@ var Store = {};
 
 // imports
 
-Store.VERSION = "0.4.6";
+Store.VERSION = "0.4.7";
 
 /**
  * Tries to create a new RDFStore instance that will be
