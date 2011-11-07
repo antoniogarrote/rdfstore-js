@@ -40,7 +40,10 @@ RDFJSInterface.UrisMap = function() {
 RDFJSInterface.UrisMap.prototype.values = function() {
     var collected = {};
     for(var p in this) {
-        if(!Utils.include(this.interfaceProperties,p)) {
+        if(!RDFStoreUtils.include(this.interfaceProperties,p) && 
+           typeof(this[p])!=='function' &&
+           p!=='defaultNs' &&
+           p!=='interfaceProperties') {
             collected[p] = this[p];
         }
     }
@@ -186,7 +189,7 @@ RDFJSInterface.RDFEnvironment  = function(){
 Utils.extends(RDFJSInterface.Profile,RDFJSInterface.RDFEnvironment);
 
 RDFJSInterface.RDFEnvironment.prototype.createBlankNode = function() {
-     var bnode =  RDFJSInterface.BlankNode(this.blankNodeCounter);
+     var bnode =  new RDFJSInterface.BlankNode(this.blankNodeCounter);
     this.blankNodeCounter++;
     return bnode;
 };

@@ -34244,7 +34244,7 @@ RDFJSInterface.RDFEnvironment  = function(){
 Utils['extends'](RDFJSInterface.Profile,RDFJSInterface.RDFEnvironment);
 
 RDFJSInterface.RDFEnvironment.prototype.createBlankNode = function() {
-     var bnode =  RDFJSInterface.BlankNode(this.blankNodeCounter);
+     var bnode =  new RDFJSInterface.BlankNode(this.blankNodeCounter);
     this.blankNodeCounter++;
     return bnode;
 };
