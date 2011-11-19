@@ -58,6 +58,8 @@ if(!!Worker) {
                callbackData.fn === 'load' || callbackData.fn === 'startObservingQueryEndCb' || callbackData.fn === 'registeredGraphs') {
                 delete this.callbacks[event.callback];
                 callbackData.cb(event.success, event.result);
+            } else if(callbackData.fn === 'startObservingQuery') {
+                callbackData.cb(event.result);                
             } else if(callbackData.fn === 'startObservingNode') {
                 callbackData.cb(event.result);
             } else if(callbackData.fn === 'subscribe') {
@@ -254,6 +256,32 @@ if(!!Worker) {
         } else {
             throw("The optional graph and a callback must be provided");
         }
+    };
+
+
+    /**
+     * Boolean value determining if loading RDF must produce
+     * triple add events and fire callbacks.
+     * Default is false.
+     */
+    RDFStoreClient.RDFStoreClient.prototype.setBatchLoadEvents = function(mustFireEvents){
+        this.connection.postMessage({'fn':'setBatchLoadEvents', 'args':[mustFireEvents]});
+    };
+
+    /**
+     * Registers a namespace prefix that will be automatically declared
+     * in all the queries
+     */
+    RDFStoreClient.RDFStoreClient.prototype.registerDefaultNamespace = function(ns, prefix) {
+        this.connection.postMessage({'fn':'registerDefaultNamespace', 'args':[ns,prefix]});
+    };
+     
+    /**
+     * Registers the default namespaces declared in the RDF JS Interfaces
+     * specification in the default Profile.
+     */
+    RDFStoreClient.RDFStoreClient.prototype.registerDefaultProfileNamespaces = function() {
+        this.connection.postMessage({'fn':'registerDefaultProfileNamespaces', 'args':[]});
     };
 
     RDFStoreClient.RDFStoreClient.prototype.load = function(){

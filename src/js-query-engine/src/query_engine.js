@@ -16,6 +16,10 @@ QueryEngine.QueryEngine = function(params) {
     if(arguments.length != 0) {
         this.backend = params.backend;
         this.lexicon = params.lexicon;
+        // batch loads should generate events?
+        this.eventsOnBatchLoad = (params.eventsOnBatchLoad || false);
+        // list of namespaces that will be automatically added to every query
+        this.defaultPrefixes = {};
         this.abstractQueryTree = new AbstractQueryTree.AbstractQueryTree();
         this.rdfLoader = new RDFLoader.RDFLoader(params['communication']);
         this.callbacksBackend = new Callbacks.CallbacksBackend(this);
@@ -26,6 +30,12 @@ QueryEngine.QueryEngine = function(params) {
 QueryEngine.QueryEngine.prototype.registerNsInEnvironment = function(prologue, env) {
     var prefixes = prologue.prefixes;
     var toSave = {};
+
+    // adding default prefixes;
+    for(var p in this.defaultPrefixes) {
+        toSave[p] = this.defaultPrefixes[p];
+    }
+
     for(var i=0; i<prefixes.length; i++) {
         var prefix = prefixes[i];
         if(prefix.token === "prefix") {
@@ -1108,7 +1118,10 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
     var counter = 0;
     var success = true;
     var blanks = {};
-    var maybeBlankOid, oid, quad, key;
+    var maybeBlankOid, oid, quad, key, originalQuad;
+
+    if(this.eventsOnBatchLoad)
+        this.callbacksBackend.startGraphModification();
 
     for(var i=0; i<quads.length; i++) {
         quad = quads[i];
@@ -1180,11 +1193,15 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
         }
 
 
+
+        originalQuad = quad;
         quad = {subject: subject, predicate:predicate, object:object, graph: graph};
         key = new QuadIndexCommon.NodeKey(quad);
           
         var result = this.backend.index(key)
         if(result == true){
+            if(this.eventsOnBatchLoad)
+                this.callbacksBackend.nextGraphModification(Callbacks.added, [originalQuad,quad]);
             counter = counter + 1;
         } else {
             success = false;
@@ -1193,14 +1210,27 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
 
     }
 
-    if(success) {
-        if(callback)
-            callback(true, counter);
-        return counter;
-    } else {
-        if(callback)
-            callback(false, null);
+    var exitFn = function(){
+        if(success) {
+            if(callback)
+                callback(true, counter);
+        } else {
+            if(callback)
+                callback(false, null);
+        }
+    }
 
+    if(this.eventsOnBatchLoad) {
+        this.callbacksBackend.endGraphModification(function(){
+            exitFn();
+        });
+    } else {
+        exitFn();
+    }
+        
+    if(success) {
+        return counter
+    } else {
         return null;
     }
 };
@@ -1462,4 +1492,8 @@ QueryEngine.QueryEngine.prototype.checkGroupSemantics = function(groupVars, proj
     }
 
     return true;
+};
+
+QueryEngine.QueryEngine.prototype.registerDefaultNamespace = function(ns, prefix) {
+    this.defaultPrefixes[ns] = prefix;
 };

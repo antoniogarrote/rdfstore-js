@@ -315,6 +315,24 @@ This object can be used to access to the full RDF Interfaces 1.0 API.
 
     console.log("worked? "+(triples[0].object.valueOf() === 'Alice'));
 
+###Default Prefixes
+
+Default RDF name-spaces can be specified using the *registerDefaultNamespace*. These names will be included automatically in all queries. If the same name-space is specified by the client in the query string the new prefix will shadow the default one.
+A collection of common name-spaces like rdf, rdfs, foaf, etc. as suggested in the JSON-LD specification can be automatically registered using the *registerDefaultProfileNamespace* function.
+
+    new Store.Store({name:'test', overwrite:true}, function(store){
+        store.execute('INSERT DATA {  <http://example/person1> <http://xmlns.com/foaf/0.1/name> "Celia" }', function(result, msg){
+
+           store.registerDefaultProfileNamespaces();
+
+           store.execute('SELECT * { ?s foaf:name ?name }', function(success,results) {
+               test.ok(success === true);
+               test.ok(results.length === 1);
+               test.ok(results[0].name.value === "Celia");
+           });
+        });
+    });
+
 
 ###JSON-LD Support
 

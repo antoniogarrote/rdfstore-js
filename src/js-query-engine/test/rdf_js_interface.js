@@ -128,4 +128,11 @@ exports.testSerialization1 = function(test) {
     test.ok(parts[2]==='<http://www.w3.org/ns/earl#test> <http://www.w3.org/ns/earl#test> "alice" . ');
     test.ok(parts[3]==='');
     test.done();
-}
+};
+
+exports.testLiteralSerialization = function(test) {
+    var rdf = RDFJSInterface.rdf;    
+    var literal = rdf.createLiteral("alice", null, "http://www.w3.org/2001/XMLSchema#string");
+    test.ok(literal.toString()==="\"alice\"^^<http://www.w3.org/2001/XMLSchema#string>");
+    test.done();
+};

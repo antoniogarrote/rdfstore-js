@@ -123,6 +123,8 @@ RDFLoader.RDFLoader.prototype.tryToParse = function(parser, graph, input, callba
             callback(false, "parsing error");
         }
     } catch(e) {
+        console.log(e.message);
+        console.log(e.stack);
         callback(false, "parsing error with mime type : " + e);
     }
 };

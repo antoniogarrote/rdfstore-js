@@ -63,12 +63,7 @@ exports.testConnectionGraph1 = function(test) {
                          .\
                      }';
         connection.execute(query, function(success, results) {
-            //console.log("CONNECTION:");
-            //console.log(connection);
             connection.graph(function(success, graph){
-                //console.log("RESULTS");
-                //console.log(success);
-
                 var results = graph.filter( connection.rdf.filters.describes("http://example.org/people/alice") );
 
                 var resultsCount = results.toArray().length;
@@ -154,8 +149,6 @@ exports.testConnectionSubject1 = function(test) {
                      }';
         connection.execute(query, function(success, results) {
             connection.node("http://example.org/people/alice", function(succes, graph){
-                //console.log("HEY");
-                //console.log(graph);
                 test.ok(graph.toArray().length === 4);
                 test.done();
             });
@@ -492,7 +485,7 @@ exports.testConnectionLoad1 = function(test) {
     });
 };
 
-/*
+
 exports.testLoad2 = function(test) {
     new RDFStoreClient.RDFStoreClient("/Users/antonio/Development/Projects/js/rdfstore-js/src/js-connection/src/rdfstore_worker.js", {}, function(success, connection) {
         connection.load('remote', 'http://dbpedia.org/resource/Tim_Berners-Lee', function(success, result) {
@@ -505,7 +498,7 @@ exports.testLoad2 = function(test) {
         });
     });
 };
-*/
+
 
 exports.testEventsAPI1 = function(test){
     var counter = 0;
@@ -604,6 +597,35 @@ exports.testEventsAPI3 = function(test){
     });
 }
 
+exports.testEventsAPIBatchLoad = function(test){
+    var counter = 0;
+    new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", {}, function(success, connection) {
+        var callbackCounter = 0;
+        connection.startObservingQuery("select ?subject where { ?subject <http://test.com/named> ?o; <http://test.com/named2> ?o2 }",function(graph){
+            callbackCounter++;
+        },function(){
+
+            var jsonld = {
+                '@subject':"http://test.com/1",
+                'http://test.com/named': 'hello'
+            };
+            connection.load("application/json", jsonld, function(success, results){
+                connection.setBatchLoadEvents(true);
+
+                jsonld = {
+                    '@subject':"http://test.com/2",
+                    'http://test.com/named2': 'hello'
+                };
+                connection.load("application/json", jsonld, function(success, results){
+                    setTimeout(function(){
+                        test.ok(callbackCounter===2);
+                        test.done();
+                    }, 2000);
+                });
+            });
+        })
+    });;
+};
 
 exports.testRegisteredGraph = function(test) {
     new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", {}, function(success, connection) {
@@ -660,5 +682,21 @@ exports.testStoreConnection = function(test) {
         test.ok(success);
         test.ok(connection.isWebWorkerConnection === true);
         test.done();
+    });
+};
+
+
+exports.testDefaultPrefixes = function(test){
+    new RDFStoreClient.RDFStoreClient(__dirname+"/../src/rdfstore_worker.js", {}, function(success,connection) {
+        test.ok(success);
+        connection.execute('INSERT DATA {  <http://example/person1> <http://xmlns.com/foaf/0.1/name> "Celia" }', function(result, msg){
+            connection.registerDefaultProfileNamespaces()
+            connection.execute('SELECT * { ?s foaf:name ?name }', function(success,results) {
+                test.ok(success === true);
+                test.ok(results.length === 1);
+                test.ok(results[0].name.value === "Celia");
+                test.done();
+            });
+        });
     });
 };

@@ -697,3 +697,23 @@ exports.testExport1 = function(test) {
     });
 };
 
+
+exports.testDefaultPrefixes = function(test){
+    new Store.Store({name:'test', overwrite:true}, function(store){
+        store.execute('INSERT DATA {  <http://example/person1> <http://xmlns.com/foaf/0.1/name> "Celia" }', function(result, msg){
+            store.execute('SELECT * { ?s foaf:name ?name }', function(success,results) {
+                test.ok(success === true);
+                test.ok(results.length === 0);
+
+                store.registerDefaultProfileNamespaces();
+
+                store.execute('SELECT * { ?s foaf:name ?name }', function(success,results) {
+                    test.ok(success === true);
+                    test.ok(results.length === 1);
+                    test.ok(results[0].name.value === "Celia");
+                    test.done();
+                });
+            });
+        });
+    });
+};

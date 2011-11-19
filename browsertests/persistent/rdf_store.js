@@ -2458,7 +2458,7 @@ NetworkTransport.load = function(uri, accept, callback, redirect) {
 
     transport.ajax({
         url: uri,
-        headers: {"Accepts": accept},
+        headers: {"Accept": accept},
 
         success: function(data, status, xhr){
             if((""+xhr.status)[0] == '2') {

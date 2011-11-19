@@ -40,7 +40,7 @@ RDFJSInterface.UrisMap = function() {
 RDFJSInterface.UrisMap.prototype.values = function() {
     var collected = {};
     for(var p in this) {
-        if(!RDFStoreUtils.include(this.interfaceProperties,p) && 
+        if(!Utils.include(this.interfaceProperties,p) && 
            typeof(this[p])!=='function' &&
            p!=='defaultNs' &&
            p!=='interfaceProperties') {
@@ -341,8 +341,8 @@ RDFJSInterface.Literal.prototype.toString = function(){
     var tmp = "\""+this.nominalValue+"\"";
     if(this.language != null) {
         tmp = tmp + "@" + this.language;
-    } else if(this.type != null) {
-        tmp = tmp + "^^" + this.datatype;
+    } else if(this.datatype != null || this.type) {
+        tmp = tmp + "^^<" + (this.datatype||this.type) + ">";
     }
 
     return tmp;

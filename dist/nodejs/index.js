@@ -5008,6 +5008,8 @@ RDFLoader.RDFLoader.prototype.tryToParse = function(parser, graph, input, callba
             callback(false, "parsing error");
         }
     } catch(e) {
+        console.log(e.message);
+        console.log(e.stack);
         callback(false, "parsing error with mime type : " + e);
     }
 };
@@ -34098,7 +34100,10 @@ RDFJSInterface.UrisMap = function() {
 RDFJSInterface.UrisMap.prototype.values = function() {
     var collected = {};
     for(var p in this) {
-        if(!Utils.include(this.interfaceProperties,p)) {
+        if(!Utils.include(this.interfaceProperties,p) && 
+           typeof(this[p])!=='function' &&
+           p!=='defaultNs' &&
+           p!=='interfaceProperties') {
             collected[p] = this[p];
         }
     }
@@ -34396,8 +34401,8 @@ RDFJSInterface.Literal.prototype.toString = function(){
     var tmp = "\""+this.nominalValue+"\"";
     if(this.language != null) {
         tmp = tmp + "@" + this.language;
-    } else if(this.type != null) {
-        tmp = tmp + "^^" + this.datatype;
+    } else if(this.datatype != null || this.type) {
+        tmp = tmp + "^^<" + (this.datatype||this.type) + ">";
     }
 
     return tmp;
@@ -36635,14 +36640,16 @@ QueryPlan.buildBindingsFromRange = function(results, bgp) {
 
     var resultsBindings =[];
 
-    for(var i=0; i<results.length; i++) {
-        var binding = {};
-        var result  = results[i];
-        for(var comp in bindings) {
-            var value = result[comp];
-            binding[bindings[comp]] = value;
-        }
-        resultsBindings.push(binding);
+    if(results!=null) {
+      for(var i=0; i<results.length; i++) {
+          var binding = {};
+          var result  = results[i];
+          for(var comp in bindings) {
+              var value = result[comp];
+              binding[bindings[comp]] = value;
+          }
+          resultsBindings.push(binding);
+      }
     }
 
     return resultsBindings;
@@ -36822,6 +36829,10 @@ QueryEngine.QueryEngine = function(params) {
     if(arguments.length != 0) {
         this.backend = params.backend;
         this.lexicon = params.lexicon;
+        // batch loads should generate events?
+        this.eventsOnBatchLoad = (params.eventsOnBatchLoad || false);
+        // list of namespaces that will be automatically added to every query
+        this.defaultPrefixes = {};
         this.abstractQueryTree = new AbstractQueryTree.AbstractQueryTree();
         this.rdfLoader = new RDFLoader.RDFLoader(params['communication']);
         this.callbacksBackend = new Callbacks.CallbacksBackend(this);
@@ -36832,6 +36843,12 @@ QueryEngine.QueryEngine = function(params) {
 QueryEngine.QueryEngine.prototype.registerNsInEnvironment = function(prologue, env) {
     var prefixes = prologue.prefixes;
     var toSave = {};
+
+    // adding default prefixes;
+    for(var p in this.defaultPrefixes) {
+        toSave[p] = this.defaultPrefixes[p];
+    }
+
     for(var i=0; i<prefixes.length; i++) {
         var prefix = prefixes[i];
         if(prefix.token === "prefix") {
@@ -37914,7 +37931,10 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
     var counter = 0;
     var success = true;
     var blanks = {};
-    var maybeBlankOid, oid, quad, key;
+    var maybeBlankOid, oid, quad, key, originalQuad;
+
+    if(this.eventsOnBatchLoad)
+        this.callbacksBackend.startGraphModification();
 
     for(var i=0; i<quads.length; i++) {
         quad = quads[i];
@@ -37986,11 +38006,15 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
         }
 
 
+
+        originalQuad = quad;
         quad = {subject: subject, predicate:predicate, object:object, graph: graph};
         key = new QuadIndexCommon.NodeKey(quad);
           
         var result = this.backend.index(key)
         if(result == true){
+            if(this.eventsOnBatchLoad)
+                this.callbacksBackend.nextGraphModification(Callbacks.added, [originalQuad,quad]);
             counter = counter + 1;
         } else {
             success = false;
@@ -37999,14 +38023,27 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
 
     }
 
-    if(success) {
-        if(callback)
-            callback(true, counter);
-        return counter;
-    } else {
-        if(callback)
-            callback(false, null);
+    var exitFn = function(){
+        if(success) {
+            if(callback)
+                callback(true, counter);
+        } else {
+            if(callback)
+                callback(false, null);
+        }
+    }
 
+    if(this.eventsOnBatchLoad) {
+        this.callbacksBackend.endGraphModification(function(){
+            exitFn();
+        });
+    } else {
+        exitFn();
+    }
+        
+    if(success) {
+        return counter
+    } else {
         return null;
     }
 };
@@ -38268,6 +38305,10 @@ QueryEngine.QueryEngine.prototype.checkGroupSemantics = function(groupVars, proj
     }
 
     return true;
+};
+
+QueryEngine.QueryEngine.prototype.registerDefaultNamespace = function(ns, prefix) {
+    this.defaultPrefixes[ns] = prefix;
 };
 
 // end of ./src/js-query-engine/src/query_engine.js 
@@ -38643,8 +38684,8 @@ Callbacks.CallbacksBackend.prototype.observeQuery = function(query, callback, en
         indexOrder = that.componentOrders[indexKey];
         index = that.queriesIndexMap[indexKey];
 
-        for(var i=0; i<indexOrder.length; i++) {
-            var component = indexOrder[i];
+        for(var j=0; j<indexOrder.length; j++) {
+            var component = indexOrder[j];
             var quadValue = normalized[component];
             if(typeof(quadValue) === 'string') {
                 if(index['_'] == null) {
@@ -38653,7 +38694,7 @@ Callbacks.CallbacksBackend.prototype.observeQuery = function(query, callback, en
                 index['_'].push(counter);
                 break;
             } else {
-                if(i===indexOrder.length-1) {
+                if(j===indexOrder.length-1) {
                     index[quadValue] = index[quadValue] || {'_':[]};
                     index[quadValue]['_'].push(counter);
                 } else {
@@ -38801,6 +38842,8 @@ if(!!Worker) {
                callbackData.fn === 'load' || callbackData.fn === 'startObservingQueryEndCb' || callbackData.fn === 'registeredGraphs') {
                 delete this.callbacks[event.callback];
                 callbackData.cb(event.success, event.result);
+            } else if(callbackData.fn === 'startObservingQuery') {
+                callbackData.cb(event.result);                
             } else if(callbackData.fn === 'startObservingNode') {
                 callbackData.cb(event.result);
             } else if(callbackData.fn === 'subscribe') {
@@ -38999,6 +39042,32 @@ if(!!Worker) {
         }
     };
 
+
+    /**
+     * Boolean value determining if loading RDF must produce
+     * triple add events and fire callbacks.
+     * Default is false.
+     */
+    RDFStoreClient.RDFStoreClient.prototype.setBatchLoadEvents = function(mustFireEvents){
+        this.connection.postMessage({'fn':'setBatchLoadEvents', 'args':[mustFireEvents]});
+    };
+
+    /**
+     * Registers a namespace prefix that will be automatically declared
+     * in all the queries
+     */
+    RDFStoreClient.RDFStoreClient.prototype.registerDefaultNamespace = function(ns, prefix) {
+        this.connection.postMessage({'fn':'registerDefaultNamespace', 'args':[ns,prefix]});
+    };
+     
+    /**
+     * Registers the default namespaces declared in the RDF JS Interfaces
+     * specification in the default Profile.
+     */
+    RDFStoreClient.RDFStoreClient.prototype.registerDefaultProfileNamespaces = function() {
+        this.connection.postMessage({'fn':'registerDefaultProfileNamespaces', 'args':[]});
+    };
+
     RDFStoreClient.RDFStoreClient.prototype.load = function(){
         var mediaType;
         var data;
@@ -39173,7 +39242,7 @@ Store = {};
 // imports
 var Worker = require('webworker');
 
-Store.VERSION = "0.4.7";
+Store.VERSION = "0.4.9";
 
 /**
  * Tries to create a new RDFStore instance that will be
@@ -39523,6 +39592,11 @@ Store.Store.prototype._nodeToQuery = function(term) {
     } else if(term.interfaceName === '') {
         return term.toString();
     } else {
+        if(term.lang != null) {
+            return "\""+term.valueOf()+"\"@"+term.lang;
+        } else if(term.datatype != null) {
+            return "\""+term.valueOf()+"\"^^<"+term.datatype+">";
+        }
         return term.toString();
     }
 };
@@ -39579,6 +39653,33 @@ Store.Store.prototype.clear = function() {
     this.engine.execute(query, callback);
 };
 
+/**
+ * Boolean value determining if loading RDF must produce
+ * triple add events and fire callbacks.
+ * Default is false.
+ */
+Store.Store.prototype.setBatchLoadEvents = function(mustFireEvents){
+    this.engine.eventsOnBatchLoad = mustFireEvents;
+};
+
+/**
+ * Registers a namespace prefix that will be automatically declared
+ * in all the queries
+ */
+Store.Store.prototype.registerDefaultNamespace = function(ns, prefix) {
+    this.engine.registerDefaultNamespace(ns,prefix);
+};
+
+/**
+ * Registers the default namespaces declared in the RDF JS Interfaces
+ * specification in the default Profile.
+ */
+Store.Store.prototype.registerDefaultProfileNamespaces = function() {
+    var defaultNsMap = this.rdf.prefixes.values();
+    for (var p in defaultNsMap) {
+        this.registerDefaultNamespace(p,defaultNsMap[p]);
+    }
+};
 
 Store.Store.prototype.load = function(){
     var mediaType;
@@ -39711,6 +39812,12 @@ Store.Store.prototype.setNetworkTransport = function(networkTransportImpl) {
         if(msg.fn === 'create' && msg.args !=null) {
             //console.log("handling create");
             RDFStoreWorker.handleCreate(msg.args, msg.callback);
+        } else if(msg.fn === 'setBatchLoadEvents') {
+            RDFStoreWorker.store[msg.fn].apply(RDFStoreWorker.store, msg.args);
+        } else if(msg.fn === 'registerDefaultNamespace') {
+            RDFStoreWorker.store[msg.fn].apply(RDFStoreWorker.store, msg.args);
+        } else if(msg.fn === 'registerDefaultProfileNamespaces') {
+            RDFStoreWorker.store[msg.fn].apply(RDFStoreWorker.store, msg.args);
         } else if((msg.fn === 'execute' ||
                    msg.fn === 'executeWithEnvironment' ||
                    msg.fn === 'graph'||
@@ -39765,7 +39872,6 @@ Store.Store.prototype.setNetworkTransport = function(networkTransportImpl) {
         } else if(msg.fn === 'startObservingQuery' && msg.args != null) {
             // regular callback
             var cb = function(success, result){
-                //console.log("CALLBACK OBSERVING QUERY!");
                 postMessage({'callback':msg.callback[0], 'result':result, 'success':success});
             };
 

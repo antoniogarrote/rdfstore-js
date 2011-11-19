@@ -27,6 +27,12 @@ var Store = require(__dirname+"/./../../js-store/src/store").Store;
         if(msg.fn === 'create' && msg.args !=null) {
             //console.log("handling create");
             RDFStoreWorker.handleCreate(msg.args, msg.callback);
+        } else if(msg.fn === 'setBatchLoadEvents') {
+            RDFStoreWorker.store[msg.fn].apply(RDFStoreWorker.store, msg.args);
+        } else if(msg.fn === 'registerDefaultNamespace') {
+            RDFStoreWorker.store[msg.fn].apply(RDFStoreWorker.store, msg.args);
+        } else if(msg.fn === 'registerDefaultProfileNamespaces') {
+            RDFStoreWorker.store[msg.fn].apply(RDFStoreWorker.store, msg.args);
         } else if((msg.fn === 'execute' ||
                    msg.fn === 'executeWithEnvironment' ||
                    msg.fn === 'graph'||
@@ -81,7 +87,6 @@ var Store = require(__dirname+"/./../../js-store/src/store").Store;
         } else if(msg.fn === 'startObservingQuery' && msg.args != null) {
             // regular callback
             var cb = function(success, result){
-                //console.log("CALLBACK OBSERVING QUERY!");
                 postMessage({'callback':msg.callback[0], 'result':result, 'success':success});
             };
 

@@ -10,7 +10,7 @@ var RDFJSInterface = require("./../../js-query-engine/src/rdf_js_interface").RDF
 var RDFStoreClient = require("./../../js-connection/src/rdfstore_client").RDFStoreClient;
 var Worker = require('webworker');
 
-Store.VERSION = "0.4.8";
+Store.VERSION = "0.4.9";
 
 /**
  * Tries to create a new RDFStore instance that will be
@@ -360,6 +360,11 @@ Store.Store.prototype._nodeToQuery = function(term) {
     } else if(term.interfaceName === '') {
         return term.toString();
     } else {
+        if(term.lang != null) {
+            return "\""+term.valueOf()+"\"@"+term.lang;
+        } else if(term.datatype != null) {
+            return "\""+term.valueOf()+"\"^^<"+term.datatype+">";
+        }
         return term.toString();
     }
 };
@@ -416,6 +421,33 @@ Store.Store.prototype.clear = function() {
     this.engine.execute(query, callback);
 };
 
+/**
+ * Boolean value determining if loading RDF must produce
+ * triple add events and fire callbacks.
+ * Default is false.
+ */
+Store.Store.prototype.setBatchLoadEvents = function(mustFireEvents){
+    this.engine.eventsOnBatchLoad = mustFireEvents;
+};
+
+/**
+ * Registers a namespace prefix that will be automatically declared
+ * in all the queries
+ */
+Store.Store.prototype.registerDefaultNamespace = function(ns, prefix) {
+    this.engine.registerDefaultNamespace(ns,prefix);
+};
+
+/**
+ * Registers the default namespaces declared in the RDF JS Interfaces
+ * specification in the default Profile.
+ */
+Store.Store.prototype.registerDefaultProfileNamespaces = function() {
+    var defaultNsMap = this.rdf.prefixes.values();
+    for (var p in defaultNsMap) {
+        this.registerDefaultNamespace(p,defaultNsMap[p]);
+    }
+};
 
 Store.Store.prototype.load = function(){
     var mediaType;

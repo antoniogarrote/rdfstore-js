@@ -1608,4 +1608,3 @@ exports.testGroupSum2 = function(test) {
         });
     });
 };
-

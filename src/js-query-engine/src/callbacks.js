@@ -375,8 +375,8 @@ Callbacks.CallbacksBackend.prototype.observeQuery = function(query, callback, en
         indexOrder = that.componentOrders[indexKey];
         index = that.queriesIndexMap[indexKey];
 
-        for(var i=0; i<indexOrder.length; i++) {
-            var component = indexOrder[i];
+        for(var j=0; j<indexOrder.length; j++) {
+            var component = indexOrder[j];
             var quadValue = normalized[component];
             if(typeof(quadValue) === 'string') {
                 if(index['_'] == null) {
@@ -385,7 +385,7 @@ Callbacks.CallbacksBackend.prototype.observeQuery = function(query, callback, en
                 index['_'].push(counter);
                 break;
             } else {
-                if(i===indexOrder.length-1) {
+                if(j===indexOrder.length-1) {
                     index[quadValue] = index[quadValue] || {'_':[]};
                     index[quadValue]['_'].push(counter);
                 } else {
