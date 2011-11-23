@@ -10,7 +10,7 @@ var RDFJSInterface = require("./../../js-query-engine/src/rdf_js_interface").RDF
 var RDFStoreClient = require("./../../js-connection/src/rdfstore_client").RDFStoreClient;
 var Worker = require('webworker');
 
-Store.VERSION = "0.4.9";
+Store.VERSION = "0.4.10";
 
 /**
  * Tries to create a new RDFStore instance that will be
@@ -435,6 +435,7 @@ Store.Store.prototype.setBatchLoadEvents = function(mustFireEvents){
  * in all the queries
  */
 Store.Store.prototype.registerDefaultNamespace = function(ns, prefix) {
+    this.rdf.prefixes.set(ns,prefix);
     this.engine.registerDefaultNamespace(ns,prefix);
 };
 

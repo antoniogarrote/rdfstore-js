@@ -4,10 +4,9 @@
 try {
   console = console || {};
 } catch(e) {
-  console = console || {};
+  console = {};
   console.log = function(e){};
 }
-
 var Utils = {};
 
 
@@ -1950,17 +1949,8 @@ var _setMembers = function(self, obj)
    }
 };
 
-// define jsonld
-if(typeof(window) !== 'undefined')
-{
-   var jsonld = window.jsonld = window.jsonld || {};
-   Exception = function(obj)
-   {
-      _setMembers(this, obj);
-   }
-}
 // define node.js module
-else if(typeof(module) !== 'undefined' && module.exports)
+if(typeof(module) !== 'undefined' && module.exports)
 {
    var jsonld = {};
    Exception = function(obj)
@@ -1968,6 +1958,25 @@ else if(typeof(module) !== 'undefined' && module.exports)
       _setMembers(this, obj);
       this.stack = new Error().stack;
    };
+}
+// define jsonld
+else if(typeof(window) !== 'undefined')
+{
+   var jsonld = window.jsonld = window.jsonld || {};
+   Exception = function(obj)
+   {
+      _setMembers(this, obj);
+   }
+}
+// Web worker running in the browser
+else 
+{
+    window = {};
+    var jsonld = window.jsonld = {};
+   Exception = function(obj)
+   {
+      _setMembers(this, obj);
+   }
 }
 
 jsonldParser = jsonld;
@@ -2048,7 +2057,7 @@ var _clone = function(value)
    if(value.constructor === Object)
    {
       rval = {};
-      var keys = Object.keys(value).sort();
+      var keys = Utils.keys(value).sort();
       for(var i in keys)
       {
          var key = keys[i];
@@ -2338,7 +2347,7 @@ jsonld.compact = function(ctx, input)
          var out = new Processor().compact(_clone(ctx), null, tmp[i], ctxOut);
          
          // add context if used
-         if(Object.keys(ctxOut).length > 0)
+         if(Utils.keys(ctxOut).length > 0)
          {
             out['@context'] = ctxOut;
          }
@@ -3017,7 +3026,7 @@ Processor.prototype.normalize = function(input)
       {
          var s = subjects[key];
          var sorted = {};
-         var keys = Object.keys(s).sort();
+         var keys = Utils.keys(s).sort();
          for(var i in keys)
          {
             var k = keys[i];
@@ -3748,7 +3757,7 @@ Processor.prototype.canonicalizeBlankNodes = function(input)
          }
          
          // sort keys by value to name them in order
-         var keys = Object.keys(mapping);
+         var keys = Utils.keys(mapping);
          keys.sort(function(a, b)
          {
             return _compare(mapping[a], mapping[b]);
@@ -4106,7 +4115,7 @@ Processor.prototype.serializeCombos = function(
    // no more adjacent bnodes to map, update serialization
    else
    {
-      var keys = Object.keys(mapped).sort();
+      var keys = Utils.keys(mapped).sort();
       mb.adj[siri] = { i: iri, k: keys, m: mapped };
       mb.serialize(this.subjects, this.edges);
       
@@ -4278,7 +4287,7 @@ Processor.prototype.deepCompareBlankNodes = function(a, b)
                {
                   // keep same mapping and count from 'props' serialization
                   mb.mapping = _clone(sA['props'].m);
-                  mb.count = Object.keys(mb.mapping).length + 1;
+                  mb.count = Utils.keys(mb.mapping).length + 1;
                }
                this.serializeBlankNode(sA, iriA, mb, dir);
             }
@@ -4289,7 +4298,7 @@ Processor.prototype.deepCompareBlankNodes = function(a, b)
                {
                   // keep same mapping and count from 'props' serialization
                   mb.mapping = _clone(sB['props'].m);
-                  mb.count = Object.keys(mb.mapping).length + 1;
+                  mb.count = Utils.keys(mb.mapping).length + 1;
                }
                this.serializeBlankNode(sB, iriB, mb, dir);
             }
@@ -4328,8 +4337,8 @@ Processor.prototype.shallowCompareBlankNodes = function(a, b)
       5.2. The bnode with the alphabetically-first reference iri is first.
       5.3. The bnode with the alphabetically-first reference property is first.
     */
-   var pA = Object.keys(a);
-   var pB = Object.keys(b);
+   var pA = Utils.keys(a);
+   var pB = Utils.keys(b);
    
    // step #1
    rval = _compare(pA.length, pB.length);
@@ -4537,7 +4546,7 @@ var _isDuckType = function(input, frame)
    if(!(type in frame))
    {
       // get frame properties that must exist on input
-      var props = Object.keys(frame).filter(function(e)
+      var props = Utils.keys(frame).filter(function(e)
       {
          // filter non-keywords
          return e.indexOf('@') !== 0;
@@ -39240,7 +39249,7 @@ var Store = {};
 
 // imports
 
-Store.VERSION = "0.4.9";
+Store.VERSION = "0.4.10";
 
 /**
  * Tries to create a new RDFStore instance that will be
@@ -39665,6 +39674,7 @@ Store.Store.prototype.setBatchLoadEvents = function(mustFireEvents){
  * in all the queries
  */
 Store.Store.prototype.registerDefaultNamespace = function(ns, prefix) {
+    this.rdf.prefixes.set(ns,prefix);
     this.engine.registerDefaultNamespace(ns,prefix);
 };
 

@@ -47,6 +47,7 @@ def minimize_output_browser
   `mv ./dist/browser/rdf_store_min.js.bak ./dist/browser/rdf_store_min.js`
   `rm ./dist/browser/closure-compiler.jar`
   `cp ./dist/browser/rdf_store*.js ./browsertests/non_persistent/`
+  `cp ./dist/browser/rdf_store*.js ./browsertests/workers/resources/public/`
 end
 
 def minimize_output_browser_persistent
@@ -150,7 +151,7 @@ def process_file_for_nodejs(of, f)
   f.each_line do |line|
     if (line =~ /exports\.[a-zA-Z]+ *= *\{ *\};/) == 0
       puts " * modifying: #{line} -> #{line.split("exports.")[1]}"
-      of << line.split("exports.")[1]
+      of << ("var "+line.split("exports.")[1])
     elsif (line =~ /var *([a-zA-Z]+) *= *exports\.\1;/) == 0
       puts " * ignoring: #{line}"
     elsif (line =~ /var *([a-zA-Z]+) *= *require\(['\"]{1,1}[a-zA-Z_\.\/-]*['\"]{1,1}\)\.\1;/) == 0
@@ -230,10 +231,9 @@ def write_browser_preamble(of)
 try {
   console = console || {};
 } catch(e) {
-  console = console || {};
+  console = {};
   console.log = function(e){};
 }
-
 __END
   of << js_code
 end
