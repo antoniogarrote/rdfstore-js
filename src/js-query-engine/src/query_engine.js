@@ -1094,6 +1094,7 @@ QueryEngine.QueryEngine.prototype.executeUpdate = function(syntaxTree, callback)
                 if(success == false) {
                     console.log("Error loading graph");
                     console.log(result);
+                    callback(false, "error batch loading quads");
                 } else {
                     var result = that.batchLoad(result);
                     callback(result!=null, result||"error batch loading quads");

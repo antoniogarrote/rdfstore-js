@@ -1,12 +1,37 @@
 // imports
 var RDFJSInterface = require(__dirname+"/./../../js-query-engine/src/rdf_js_interface.js").RDFJSInterface;
 var Store = require(__dirname+"/./../../js-store/src/store").Store;
-
     RDFStoreWorker = {};
 
     RDFStoreWorker.observingCallbacks = {};
+    
+    RDFStoreWorker.workerCallbacksCounter = 0;
+    RDFStoreWorker.workerCallbacks = {};
+    RDFStoreWorker.registerCallback = function(cb) {
+        var nextId = ""+RDFStoreWorker.workerCallbacksCounter;
+        RDFStoreWorker.workerCallbacksCounter++;
+        RDFStoreWorker.workerCallbacks[nextId] = cb;
+        return nextId;
+    };
 
     RDFStoreWorker.handleCreate = function(argsObject, cb) {
+        // redefine NetworkTransport
+
+        if(typeof(NetworkTransport) != 'undefined'  && NetworkTransport != null) {
+            NetworkTransport = {
+                load: function(uri, graph, callback) {
+                    var cbId = RDFStoreWorker.registerCallback(function(results){
+                        callback.apply(callback,results);
+                    });
+                    postMessage({'fn':'workerRequest:NetworkTransport:load','callback':cbId, 'arguments':[uri,graph]});
+                },
+
+                loadFromFile: function(parser, graph, uri, callback) {
+
+                }
+            }
+        }
+
         args = [argsObject];
         //console.log("in handling create");
         args.push(function(result){
@@ -24,7 +49,14 @@ var Store = require(__dirname+"/./../../js-store/src/store").Store;
     RDFStoreWorker.receive = function(packet) {
         var msg = packet.data || packet;
         //console.log("RECEIVED...");
-        if(msg.fn === 'create' && msg.args !=null) {
+        if(msg.fn === 'workerRequestResponse') {
+            var cbId = msg.callback;
+            var callback = RDFStoreWorker.workerCallbacks[cbId];
+            if(callback != null) {
+                delete RDFStoreWorker.workerCallbacks[cbId];
+                callback(msg.results);
+            }
+        } else if(msg.fn === 'create' && msg.args !=null) {
             //console.log("handling create");
             RDFStoreWorker.handleCreate(msg.args, msg.callback);
         } else if(msg.fn === 'setBatchLoadEvents') {
@@ -174,4 +206,3 @@ var Store = require(__dirname+"/./../../js-store/src/store").Store;
     };
     // set the receiver message
     onmessage = RDFStoreWorker.receive;
-

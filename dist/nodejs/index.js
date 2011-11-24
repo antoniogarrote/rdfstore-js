@@ -1950,17 +1950,8 @@ var _setMembers = function(self, obj)
    }
 };
 
-// define jsonld
-if(typeof(window) !== 'undefined')
-{
-   var jsonld = window.jsonld = window.jsonld || {};
-   Exception = function(obj)
-   {
-      _setMembers(this, obj);
-   }
-}
 // define node.js module
-else if(typeof(module) !== 'undefined' && module.exports)
+if(typeof(module) !== 'undefined' && module.exports)
 {
    var jsonld = {};
    Exception = function(obj)
@@ -1968,6 +1959,25 @@ else if(typeof(module) !== 'undefined' && module.exports)
       _setMembers(this, obj);
       this.stack = new Error().stack;
    };
+}
+// define jsonld
+else if(typeof(window) !== 'undefined')
+{
+   var jsonld = window.jsonld = window.jsonld || {};
+   Exception = function(obj)
+   {
+      _setMembers(this, obj);
+   }
+}
+// Web worker running in the browser
+else 
+{
+    window = {};
+    var jsonld = window.jsonld = {};
+   Exception = function(obj)
+   {
+      _setMembers(this, obj);
+   }
 }
 
 jsonldParser = jsonld;
@@ -2048,7 +2058,7 @@ var _clone = function(value)
    if(value.constructor === Object)
    {
       rval = {};
-      var keys = Object.keys(value).sort();
+      var keys = Utils.keys(value).sort();
       for(var i in keys)
       {
          var key = keys[i];
@@ -2338,7 +2348,7 @@ jsonld.compact = function(ctx, input)
          var out = new Processor().compact(_clone(ctx), null, tmp[i], ctxOut);
          
          // add context if used
-         if(Object.keys(ctxOut).length > 0)
+         if(Utils.keys(ctxOut).length > 0)
          {
             out['@context'] = ctxOut;
          }
@@ -3017,7 +3027,7 @@ Processor.prototype.normalize = function(input)
       {
          var s = subjects[key];
          var sorted = {};
-         var keys = Object.keys(s).sort();
+         var keys = Utils.keys(s).sort();
          for(var i in keys)
          {
             var k = keys[i];
@@ -3748,7 +3758,7 @@ Processor.prototype.canonicalizeBlankNodes = function(input)
          }
          
          // sort keys by value to name them in order
-         var keys = Object.keys(mapping);
+         var keys = Utils.keys(mapping);
          keys.sort(function(a, b)
          {
             return _compare(mapping[a], mapping[b]);
@@ -4106,7 +4116,7 @@ Processor.prototype.serializeCombos = function(
    // no more adjacent bnodes to map, update serialization
    else
    {
-      var keys = Object.keys(mapped).sort();
+      var keys = Utils.keys(mapped).sort();
       mb.adj[siri] = { i: iri, k: keys, m: mapped };
       mb.serialize(this.subjects, this.edges);
       
@@ -4278,7 +4288,7 @@ Processor.prototype.deepCompareBlankNodes = function(a, b)
                {
                   // keep same mapping and count from 'props' serialization
                   mb.mapping = _clone(sA['props'].m);
-                  mb.count = Object.keys(mb.mapping).length + 1;
+                  mb.count = Utils.keys(mb.mapping).length + 1;
                }
                this.serializeBlankNode(sA, iriA, mb, dir);
             }
@@ -4289,7 +4299,7 @@ Processor.prototype.deepCompareBlankNodes = function(a, b)
                {
                   // keep same mapping and count from 'props' serialization
                   mb.mapping = _clone(sB['props'].m);
-                  mb.count = Object.keys(mb.mapping).length + 1;
+                  mb.count = Utils.keys(mb.mapping).length + 1;
                }
                this.serializeBlankNode(sB, iriB, mb, dir);
             }
@@ -4328,8 +4338,8 @@ Processor.prototype.shallowCompareBlankNodes = function(a, b)
       5.2. The bnode with the alphabetically-first reference iri is first.
       5.3. The bnode with the alphabetically-first reference property is first.
     */
-   var pA = Object.keys(a);
-   var pB = Object.keys(b);
+   var pA = Utils.keys(a);
+   var pB = Utils.keys(b);
    
    // step #1
    rval = _compare(pA.length, pB.length);
@@ -4537,7 +4547,7 @@ var _isDuckType = function(input, frame)
    if(!(type in frame))
    {
       // get frame properties that must exist on input
-      var props = Object.keys(frame).filter(function(e)
+      var props = Utils.keys(frame).filter(function(e)
       {
          // filter non-keywords
          return e.indexOf('@') !== 0;
@@ -37907,6 +37917,7 @@ QueryEngine.QueryEngine.prototype.executeUpdate = function(syntaxTree, callback)
                 if(success == false) {
                     console.log("Error loading graph");
                     console.log(result);
+                    callback(false, "error batch loading quads");
                 } else {
                     var result = that.batchLoad(result);
                     callback(result!=null, result||"error batch loading quads");
@@ -38790,6 +38801,7 @@ var Worker = require('webworker');
 // exports
 var RDFStoreClient = {};
 
+
 try {
     console.log("*** Checking if web workers are available");
     Worker;
@@ -38802,7 +38814,7 @@ try {
 if(!!Worker) {
 
     RDFStoreClient.RDFStoreClient = function(path_to_store_script, args, cb) {
-        //console.log("trying to load "+path_to_store_script);
+        console.log("trying to load "+path_to_store_script);
         if(Worker.Worker) {
             this.connection = new Worker.Worker(path_to_store_script);
         } else {
@@ -38820,7 +38832,8 @@ if(!!Worker) {
 
         this.rdf = RDFJSInterface.rdf;
 
-        //console.log("The worker");
+        console.log("The worker");
+        console.log(this.connection);
         var that = this;
         this.connection.onmessage = function(event){
             that.receive(event);
@@ -38833,21 +38846,30 @@ if(!!Worker) {
     RDFStoreClient.RDFStoreClient.prototype.receive = function(packet) {
         event = packet.data || packet;
         //console.log("RECEIVED SOMETHING");
-        var callbackData = this.callbacks[event.callback];
-        //console.log(packet);
-        //console.log(callbackData);
-        if(callbackData) {
-            if(callbackData.fn === 'create' || callbackData.fn === 'execute' || callbackData.fn === 'insert' || callbackData.fn == 'graph' ||
-               callbackData.fn === 'node' || callbackData.fn === 'insert' || callbackData.fn === 'delete' || callbackData.fn === 'clear' ||
-               callbackData.fn === 'load' || callbackData.fn === 'startObservingQueryEndCb' || callbackData.fn === 'registeredGraphs') {
-                delete this.callbacks[event.callback];
-                callbackData.cb(event.success, event.result);
-            } else if(callbackData.fn === 'startObservingQuery') {
-                callbackData.cb(event.result);                
-            } else if(callbackData.fn === 'startObservingNode') {
-                callbackData.cb(event.result);
-            } else if(callbackData.fn === 'subscribe') {
-                callbackData.cb(event.event, event.result);
+        if(event.fn === 'workerRequest:NetworkTransport:load') {
+            var that = this;
+            var workerCallback = event['callback'];
+            var args = event['arguments'].concat(function(success, results){
+                that.connection.postMessage({'fn':'workerRequestResponse', 'results':[success, results], 'callback':workerCallback});
+            });
+            NetworkTransport.load.apply(NetworkTransport,args);
+        } else {
+            var callbackData = this.callbacks[event.callback];
+            //console.log(packet);
+            //console.log(callbackData);
+            if(callbackData) {
+                if(callbackData.fn === 'create' || callbackData.fn === 'execute' || callbackData.fn === 'insert' || callbackData.fn == 'graph' ||
+                   callbackData.fn === 'node' || callbackData.fn === 'insert' || callbackData.fn === 'delete' || callbackData.fn === 'clear' ||
+                   callbackData.fn === 'load' || callbackData.fn === 'startObservingQueryEndCb' || callbackData.fn === 'registeredGraphs') {
+                    delete this.callbacks[event.callback];
+                    callbackData.cb(event.success, event.result);
+                } else if(callbackData.fn === 'startObservingQuery') {
+                    callbackData.cb(event.result);                
+                } else if(callbackData.fn === 'startObservingNode') {
+                    callbackData.cb(event.result);
+                } else if(callbackData.fn === 'subscribe') {
+                    callbackData.cb(event.event, event.result);
+                }
             }
         }
     };
@@ -39242,7 +39264,7 @@ var Store = {};
 // imports
 var Worker = require('webworker');
 
-Store.VERSION = "0.4.9";
+Store.VERSION = "0.4.10";
 
 /**
  * Tries to create a new RDFStore instance that will be
@@ -39787,12 +39809,37 @@ Store.Store.prototype.setNetworkTransport = function(networkTransportImpl) {
 
 // end of ./src/js-store/src/store.js 
 // imports
-
     RDFStoreWorker = {};
 
     RDFStoreWorker.observingCallbacks = {};
+    
+    RDFStoreWorker.workerCallbacksCounter = 0;
+    RDFStoreWorker.workerCallbacks = {};
+    RDFStoreWorker.registerCallback = function(cb) {
+        var nextId = ""+RDFStoreWorker.workerCallbacksCounter;
+        RDFStoreWorker.workerCallbacksCounter++;
+        RDFStoreWorker.workerCallbacks[nextId] = cb;
+        return nextId;
+    };
 
     RDFStoreWorker.handleCreate = function(argsObject, cb) {
+        // redefine NetworkTransport
+
+        if(typeof(NetworkTransport) != 'undefined'  && NetworkTransport != null) {
+            NetworkTransport = {
+                load: function(uri, graph, callback) {
+                    var cbId = RDFStoreWorker.registerCallback(function(results){
+                        callback.apply(callback,results);
+                    });
+                    postMessage({'fn':'workerRequest:NetworkTransport:load','callback':cbId, 'arguments':[uri,graph]});
+                },
+
+                loadFromFile: function(parser, graph, uri, callback) {
+
+                }
+            }
+        }
+
         args = [argsObject];
         //console.log("in handling create");
         args.push(function(result){
@@ -39810,7 +39857,14 @@ Store.Store.prototype.setNetworkTransport = function(networkTransportImpl) {
     RDFStoreWorker.receive = function(packet) {
         var msg = packet.data || packet;
         //console.log("RECEIVED...");
-        if(msg.fn === 'create' && msg.args !=null) {
+        if(msg.fn === 'workerRequestResponse') {
+            var cbId = msg.callback;
+            var callback = RDFStoreWorker.workerCallbacks[cbId];
+            if(callback != null) {
+                delete RDFStoreWorker.workerCallbacks[cbId];
+                callback(msg.results);
+            }
+        } else if(msg.fn === 'create' && msg.args !=null) {
             //console.log("handling create");
             RDFStoreWorker.handleCreate(msg.args, msg.callback);
         } else if(msg.fn === 'setBatchLoadEvents') {
@@ -39960,7 +40014,6 @@ Store.Store.prototype.setNetworkTransport = function(networkTransportImpl) {
     };
     // set the receiver message
     onmessage = RDFStoreWorker.receive;
-
 
 // end of ./src/js-connection/src/rdfstore_worker.js 
 // exports

@@ -1,9 +1,10 @@
 //imports
-var Worker = require('webworker');
 var RDFJSInterface = require("./../../js-query-engine/src/rdf_js_interface.js").RDFJSInterface;
+var Worker = require('webworker');
 
 // exports
 exports.RDFStoreClient = {};
+
 var RDFStoreClient = exports.RDFStoreClient;
 
 try {
@@ -18,7 +19,7 @@ try {
 if(!!Worker) {
 
     RDFStoreClient.RDFStoreClient = function(path_to_store_script, args, cb) {
-        //console.log("trying to load "+path_to_store_script);
+        console.log("trying to load "+path_to_store_script);
         if(Worker.Worker) {
             this.connection = new Worker.Worker(path_to_store_script);
         } else {
@@ -36,7 +37,8 @@ if(!!Worker) {
 
         this.rdf = RDFJSInterface.rdf;
 
-        //console.log("The worker");
+        console.log("The worker");
+        console.log(this.connection);
         var that = this;
         this.connection.onmessage = function(event){
             that.receive(event);
@@ -49,21 +51,30 @@ if(!!Worker) {
     RDFStoreClient.RDFStoreClient.prototype.receive = function(packet) {
         event = packet.data || packet;
         //console.log("RECEIVED SOMETHING");
-        var callbackData = this.callbacks[event.callback];
-        //console.log(packet);
-        //console.log(callbackData);
-        if(callbackData) {
-            if(callbackData.fn === 'create' || callbackData.fn === 'execute' || callbackData.fn === 'insert' || callbackData.fn == 'graph' ||
-               callbackData.fn === 'node' || callbackData.fn === 'insert' || callbackData.fn === 'delete' || callbackData.fn === 'clear' ||
-               callbackData.fn === 'load' || callbackData.fn === 'startObservingQueryEndCb' || callbackData.fn === 'registeredGraphs') {
-                delete this.callbacks[event.callback];
-                callbackData.cb(event.success, event.result);
-            } else if(callbackData.fn === 'startObservingQuery') {
-                callbackData.cb(event.result);                
-            } else if(callbackData.fn === 'startObservingNode') {
-                callbackData.cb(event.result);
-            } else if(callbackData.fn === 'subscribe') {
-                callbackData.cb(event.event, event.result);
+        if(event.fn === 'workerRequest:NetworkTransport:load') {
+            var that = this;
+            var workerCallback = event['callback'];
+            var args = event['arguments'].concat(function(success, results){
+                that.connection.postMessage({'fn':'workerRequestResponse', 'results':[success, results], 'callback':workerCallback});
+            });
+            NetworkTransport.load.apply(NetworkTransport,args);
+        } else {
+            var callbackData = this.callbacks[event.callback];
+            //console.log(packet);
+            //console.log(callbackData);
+            if(callbackData) {
+                if(callbackData.fn === 'create' || callbackData.fn === 'execute' || callbackData.fn === 'insert' || callbackData.fn == 'graph' ||
+                   callbackData.fn === 'node' || callbackData.fn === 'insert' || callbackData.fn === 'delete' || callbackData.fn === 'clear' ||
+                   callbackData.fn === 'load' || callbackData.fn === 'startObservingQueryEndCb' || callbackData.fn === 'registeredGraphs') {
+                    delete this.callbacks[event.callback];
+                    callbackData.cb(event.success, event.result);
+                } else if(callbackData.fn === 'startObservingQuery') {
+                    callbackData.cb(event.result);                
+                } else if(callbackData.fn === 'startObservingNode') {
+                    callbackData.cb(event.result);
+                } else if(callbackData.fn === 'subscribe') {
+                    callbackData.cb(event.event, event.result);
+                }
             }
         }
     };
@@ -216,7 +227,7 @@ if(!!Worker) {
     };
 
 
-    RDFStoreClient.RDFStoreClient.prototype.delete = function() {
+    RDFStoreClient.RDFStoreClient.prototype['delete'] = function() {
         var graph;
         var triples;
         var callback;

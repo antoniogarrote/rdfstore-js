@@ -4,6 +4,8 @@ require 'rubygems'
 require 'fileutils'
 require 'json'
 
+NODEUNIT = "/Users/antonio/Development/Projects/js/rdfstore-js/node_modules/nodeunit/bin/nodeunit"
+
 def load_configuration
   puts "*** loading configuration"
   require(File.dirname(__FILE__)+"/configuration")
@@ -394,7 +396,7 @@ def test_minimized
   process_files_for_nodejs
   process_files_for_test_min
   minimize_output_nodejs
-  puts `cd ./dist/nodejs && nodeunit ./test_min.js`
+  puts `cd ./dist/nodejs && #{NODEUNIT} ./test_min.js`
   puts "\r\n*** FINISHED";
 end
 
@@ -411,7 +413,7 @@ else
   elsif ARGV[0] == "test_min"
     test_minimized
   elsif ARGV[0] == "tests"
-    exec 'nodeunit ./src/js-trees/tests/* ./src/js-store/test/* ./src/js-sparql-parser/test/* ./src/js-rdf-persistence/test/* ./src/js-query-engine/test/* ./src/js-communication/test/* ./src/js-connection/tests/*'
+    exec "#{NODEUNIT} ./src/js-trees/tests/* ./src/js-store/test/* ./src/js-sparql-parser/test/* ./src/js-rdf-persistence/test/* ./src/js-query-engine/test/* ./src/js-communication/test/* ./src/js-connection/tests/*"
   else
     puts "Unknown configuration: #{ARGV[0]}"
     puts "USAGE make.rb [nodejs | browser | browser_persistent | tests | test_min]"

@@ -493,6 +493,20 @@ this.suite_store.testLoad1 = function(test) {
     });
 };
 
+this.suite_store.testLoad2 = function(test) {
+    rdfstore.connect('./rdf_store.js',{name:'test', overwrite:true}, function(success,store) {
+        test.ok(success);
+        store.load("remote", "/test-data", function(success, results){
+            test.ok(success);
+            store.execute("SELECT * { ?s ?p ?o }", function(success,results) {
+                test.ok(success);
+                test.ok(results.length>0);
+                test.done();
+            })
+        });
+    });
+};
+
 this.suite_store.testLoad3 = function(test) {
     rdfstore.connect('./rdf_store.js',{name:'test', overwrite:true}, function(success, store) {
         test.ok(success);
