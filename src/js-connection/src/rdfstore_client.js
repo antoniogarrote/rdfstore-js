@@ -9,7 +9,9 @@ var RDFStoreClient = exports.RDFStoreClient;
 
 try {
     console.log("*** Checking if web workers are available");
-    Worker;
+    if(typeof(Worker)=='undefined') {
+        Worker = null;
+    };
     console.log("*** Web workers available");
 } catch(e) {
     Worker = null;

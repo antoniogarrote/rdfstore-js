@@ -1785,8 +1785,6 @@ Lexicon.Lexicon.prototype.retrieve = function(oid) {
           }
         }
     } catch(e) {
-        console.log("error in lexicon retrieving OID:");
-        console.log(oid);
         if(e.message || e.stack) {
             if(e.message) {
                 console.log(e.message); 
@@ -38021,15 +38019,18 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
         originalQuad = quad;
         quad = {subject: subject, predicate:predicate, object:object, graph: graph};
         key = new QuadIndexCommon.NodeKey(quad);
-          
-        var result = this.backend.index(key)
-        if(result == true){
-            if(this.eventsOnBatchLoad)
-                this.callbacksBackend.nextGraphModification(Callbacks.added, [originalQuad,quad]);
-            counter = counter + 1;
-        } else {
-            success = false;
-            break;
+
+        var result = this.backend.search(key);
+        if(!result) {
+            result = this.backend.index(key)
+            if(result == true){
+                if(this.eventsOnBatchLoad)
+                    this.callbacksBackend.nextGraphModification(Callbacks.added, [originalQuad,quad]);
+                counter = counter + 1;
+            } else {
+                success = false;
+                break;
+            }
         }
 
     }
@@ -38804,7 +38805,9 @@ var RDFStoreClient = {};
 
 try {
     console.log("*** Checking if web workers are available");
-    Worker;
+    if(typeof(Worker)=='undefined') {
+        Worker = null;
+    };
     console.log("*** Web workers available");
 } catch(e) {
     Worker = null;
@@ -39264,7 +39267,7 @@ var Store = {};
 // imports
 var Worker = require('webworker');
 
-Store.VERSION = "0.4.10";
+Store.VERSION = "0.4.11";
 
 /**
  * Tries to create a new RDFStore instance that will be

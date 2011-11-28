@@ -1198,15 +1198,18 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
         originalQuad = quad;
         quad = {subject: subject, predicate:predicate, object:object, graph: graph};
         key = new QuadIndexCommon.NodeKey(quad);
-          
-        var result = this.backend.index(key)
-        if(result == true){
-            if(this.eventsOnBatchLoad)
-                this.callbacksBackend.nextGraphModification(Callbacks.added, [originalQuad,quad]);
-            counter = counter + 1;
-        } else {
-            success = false;
-            break;
+
+        var result = this.backend.search(key);
+        if(!result) {
+            result = this.backend.index(key)
+            if(result == true){
+                if(this.eventsOnBatchLoad)
+                    this.callbacksBackend.nextGraphModification(Callbacks.added, [originalQuad,quad]);
+                counter = counter + 1;
+            } else {
+                success = false;
+                break;
+            }
         }
 
     }

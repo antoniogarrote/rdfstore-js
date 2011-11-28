@@ -717,3 +717,38 @@ exports.testDefaultPrefixes = function(test){
         });
     });
 };
+
+exports.testDuplicatedInsert = function(test) {
+    new Store.Store({name:'test', overwrite:true}, function(store){
+        store.execute('INSERT DATA {  <http://example/book3> <http://example.com/vocab#title> <http://test.com/example> }', function(result, msg){
+            store.execute('INSERT DATA {  <http://example/book3> <http://example.com/vocab#title> <http://test.com/example> }', function(result, msg){
+                store.execute('SELECT * { ?s ?p ?o }', function(success,results) {
+                    test.ok(success === true);
+                    test.ok(results.length === 1);
+                    test.ok(results[0].s.value === "http://example/book3");
+                    test.ok(results[0].p.value === "http://example.com/vocab#title");
+                    test.ok(results[0].o.value === "http://test.com/example");
+                    
+                    test.done();
+                });
+            });
+        });
+    });
+};
+
+
+exports.testDuplicatedParsing = function(test) {
+    new Store.Store({name:'test', overwrite:true}, function(store){
+        var data = {'@subject': 'http://test.com/me', 'http://somproperty.org/prop': 'data'};
+        store.load('application/json',data, function(result, msg){
+            store.load('application/json',data, function(result, msg){
+                store.execute('SELECT * { ?s ?p ?o }', function(success,results) {
+                    test.ok(success === true);
+                    test.ok(results.length === 1);
+                    test.ok(results[0].s.value === 'http://test.com/me');
+                    test.done();
+                });
+            });
+        });
+    });
+};
