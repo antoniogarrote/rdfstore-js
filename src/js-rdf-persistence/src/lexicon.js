@@ -137,7 +137,7 @@ Lexicon.Lexicon.prototype.resolveLiteral = function(literal) {
 
 Lexicon.Lexicon.prototype.parseLiteral = function(literalString) {
     var parts = literalString.lastIndexOf("@");
-    if(parts!=-1 && literalString[parts-1]==='"') {
+    if(parts!=-1 && literalString[parts-1]==='"' && literalString.substring(parts, literalString.length).match(/^@[a-zA-Z\-]+$/g)!=null) {
         var value = literalString.substring(1,parts-1);
         var lang = literalString.substring(parts+1, literalString.length);
         return {token: "literal", value:value, lang:lang};
