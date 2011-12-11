@@ -181,6 +181,8 @@ AbstractQueryTree.AbstractQueryTree.prototype.collectBasicTriples = function(aqt
         acum = this.collectBasicTriples(aqt.rvalue, acum);
     } else if(aqt.kind === 'FILTER') {
         acum = this.collectBasicTriples(aqt.value, acum);
+    } else if(aqt.kind === 'construct') {
+        acum = this.collectBasicTriples(aqt.pattern,acum);
     } else if(aqt.kind === 'EMPTY_PATTERN') {
         // nothing
     } else {

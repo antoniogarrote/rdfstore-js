@@ -988,7 +988,7 @@ MinusGraphPattern "[57] MinusGraphPattern"
   [58]  	GroupOrUnionGraphPattern	  ::=  	GroupGraphPattern ( 'UNION' GroupGraphPattern )*
 */
 GroupOrUnionGraphPattern "[58] GroupOrUnionGraphPattern"
-  = a:GroupGraphPattern b:( WS* 'UNION' WS* GroupGraphPattern )* {
+  = a:GroupGraphPattern b:( WS* ('U'/'u')('N'/'n')('I'/'i')('O'/'o')('N'/'n') WS* GroupGraphPattern )* {
       if(b.length === 0) {
           return a;
       } else {
@@ -998,9 +998,9 @@ GroupOrUnionGraphPattern "[58] GroupOrUnionGraphPattern"
 
           for(var i=0; i<b.length; i++) {
               if(i==b.length-1) {
-                  lastToken.value.push(b[i][3]);
+                  lastToken.value.push(b[i][7]);
               } else {
-                  lastToken.value.push(b[i][3]);
+                  lastToken.value.push(b[i][7]);
                   var newToken = {token: 'graphunionpattern',
                                   value: [lastToken]}
 
