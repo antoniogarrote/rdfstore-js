@@ -136,3 +136,16 @@ exports.testLiteralSerialization = function(test) {
     test.ok(literal.toString()==="\"alice\"^^<http://www.w3.org/2001/XMLSchema#string>");
     test.done();
 };
+
+
+exports.testBlankDefaultNS = function(test) {
+    var rdf = RDFJSInterface.rdf; 
+    rdf.prefixes.defaultNs = undefined;
+    test.ok(rdf.prefixes.defaultNs==null);
+    test.ok(rdf.prefixes.resolve(":test")==null);
+    test.ok(rdf.prefixes.shrink("http://something.com/vocab/test")==="http://something.com/vocab/test");
+    rdf.prefixes.setDefault("http://something.com/vocab/");
+    test.ok(rdf.prefixes.shrink("http://something.com/vocab/test")==="http://something.com/vocab/test");
+    test.ok(rdf.prefixes.resolve(":test")==="http://something.com/vocab/test");
+    test.done();
+};

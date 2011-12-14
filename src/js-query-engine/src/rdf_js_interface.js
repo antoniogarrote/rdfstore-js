@@ -102,7 +102,11 @@ RDFJSInterface.UrisMap.prototype.resolve = function(curie) {
     var ns = parts[0];
     var suffix = parts[1];
     if(ns === '') {
-        return this.defaultNs + suffix;
+        if(this.defaultNs == null) {
+            return null;
+        } else {
+            return this.defaultNs + suffix;
+        }
     } else if(this[ns] != null) {
         return this[ns] + suffix;
     } else {
@@ -114,7 +118,7 @@ RDFJSInterface.UrisMap.prototype.shrink = function(iri) {
     for(var ns in this) {
         var prefix = this[ns];
         if(iri.indexOf(prefix) === 0) {
-            if(prefix !== '') {
+            if(prefix !== '' && ns != 'defaultNs') {
                 var suffix = iri.split(prefix)[1];
                 return ns + ":" + suffix;
             }
