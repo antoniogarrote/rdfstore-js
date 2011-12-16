@@ -347,13 +347,13 @@ rdfstore-js implements parsers for Turtle and JSON-LD. The specification of JSON
                  "age": "http://xmlns.com/foaf/0.1/age",
                  "homepage": "http://xmlns.com/foaf/0.1/homepage",
                  "ex": "http://example.org/people/",
-                 "@type":
+                 "@coerce":
                  {
                     "xsd:integer": "age",
                     "xsd:anyURI": "homepage",
                  }
               },
-              "@": "ex:john_smith",
+              "@subject": "ex:john_smith",
               "name": "John Smith",
               "age": "41",
               "homepage": "http://example.org/home/"
@@ -439,7 +439,7 @@ If the creation of the worker fails, because webworkers support is not enabled i
 The *connect* function can receive three arguments, the URL/Path where the script of the store is located, so the webworkers layer can load it, a hash with the aguments for the *Store.create* function that will be used in the actual creation of the store object and a callback that will be invoked with a success notification and the store implementation. In the Node.js version, it is not required to provide the path to the store script, the location of the store module will be provided by default.
 
 At the moment, the usability of this feature is limited to those browsers where the web workers framework is enabled. It has been tested with the current version of Chrome and Firefox Aurora 8.0a2. 
-Support in the Node.js version is provided by the webworkers module. This module only works for versions 0.4.X of node.js. Current work to port the workers functionality to the new cluster API introduced in version 0.6.X of node is currently being developed.
+Support in the Node.js version is provided by the webworkers module. Webworkers are simulated in the Node.js version as forked child processes being executed in the background. A version of node >= 0.6.1 is required.
 
 Web worker threads execute in the browser in a very restrictive environment due to security reasons. WebWorkers for example, cannot access the local storage API. As a consequence, workers cannot be used with the persistent version of the store. These restrictions are not present in the Node.js version.
 
