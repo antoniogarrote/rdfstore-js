@@ -3,7 +3,7 @@ BUILD_CONFIGURATION = {
     # should include jQuery?
     :load_jquery => false,
     
-    # list of mdoules to pack
+    # list of modules to pack
     :modules => [
                  "./src/js-trees/src/utils.js",
                  "./src/js-trees/src/in_memory_b_tree.js",
@@ -32,7 +32,7 @@ BUILD_CONFIGURATION = {
     # should include jQuery?
     :load_jquery => false,
     
-    # list of mdoules to pack
+    # list of modules to pack
     :modules => [
                  "./src/js-trees/src/utils.js",
                  "./src/js-trees/src/priority_queue.js",
@@ -59,7 +59,7 @@ BUILD_CONFIGURATION = {
   },
   
   :nodejs => {
-    # list of mdoules to pack
+    # list of modules to pack
     :modules => [
                  "./src/js-trees/src/utils.js",
                  "./src/js-trees/src/in_memory_b_tree.js",
@@ -78,20 +78,20 @@ BUILD_CONFIGURATION = {
                  "./src/js-query-engine/src/query_plan.js",
                  "./src/js-query-engine/src/query_engine.js",
                  "./src/js-query-engine/src/callbacks.js",
-                 "./src/js-connection/src/rdfstore_client.js",
+                 "./src/js-connection/src/rdfstore_child_client.js",
                  "./src/js-store/src/store.js",
-                 "./src/js-connection/src/rdfstore_worker.js"
+                 "./src/js-connection/src/rdfstore_child.js"
                 ],
     :package => {
       :name    => "rdfstore",
-      :version => "0.4.13",
+      :version => "0.4.14",
       :description => "RDF graph store supporting the SPARQL query language",
       :keywords => ["RDF", "SPARQL", "graph", "store"],
       :author  => {
         :name => "Antonio Garrote",
         :email => "<antoniogarrote@gmail.com>"
       },
-      :engines => {:node => ">=0.4.3"},
+      :engines => {:node => ">=0.6.1"},
       :repository =>  {:type => "git", :url => "https://github.com/antoniogarrote/rdfstore-js.git"},
       :licenses => [
                     { :type =>  "LGPL V3",
@@ -100,8 +100,7 @@ BUILD_CONFIGURATION = {
                    ],
       :dependencies => {
         "binary"    => ">=0.2.2",
-        "put"       => ">=0.0.5",
-        "webworker" => ">=0.8.4"
+        "put"       => ">=0.0.5"
       }
     }
   }

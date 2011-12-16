@@ -1,6 +1,11 @@
 var AbstractQueryTree = require("./../src/abstract_query_tree").AbstractQueryTree;
 var Lexicon = require("./../../js-rdf-persistence/src/lexicon").Lexicon;
-var sys = require("sys");
+var sys = null;
+try {
+    sys = require("util");
+} catch(e) {
+    sys = require("sys");
+}
 var aqt = new AbstractQueryTree.AbstractQueryTree();
 
 exports.example1 = function(test) {

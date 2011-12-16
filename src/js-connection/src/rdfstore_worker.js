@@ -204,5 +204,10 @@ var Store = require(__dirname+"/./../../js-store/src/store").Store;
             return new RDFJSInterface.NamedNode(node.nominalValue);
         }
     };
+
+    // @todo
+    // I'm setting a global var if this is not a worker
+    // FIXME!
+
     // set the receiver message
     onmessage = RDFStoreWorker.receive;

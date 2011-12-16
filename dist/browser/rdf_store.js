@@ -39562,7 +39562,7 @@ var Store = {};
 
 // imports
 
-Store.VERSION = "0.4.13";
+Store.VERSION = "0.4.14";
 
 /**
  * Tries to create a new RDFStore instance that will be
@@ -40310,6 +40310,11 @@ Store.Store.prototype.setNetworkTransport = function(networkTransportImpl) {
             return new RDFJSInterface.NamedNode(node.nominalValue);
         }
     };
+
+    // @todo
+    // I'm setting a global var if this is not a worker
+    // FIXME!
+
     // set the receiver message
     onmessage = RDFStoreWorker.receive;
 

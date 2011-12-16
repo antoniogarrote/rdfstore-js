@@ -10,7 +10,7 @@ var RDFJSInterface = require("./../../js-query-engine/src/rdf_js_interface").RDF
 var RDFStoreClient = require("./../../js-connection/src/rdfstore_client").RDFStoreClient;
 var Worker = require('webworker');
 
-Store.VERSION = "0.4.13";
+Store.VERSION = "0.4.14";
 
 /**
  * Tries to create a new RDFStore instance that will be

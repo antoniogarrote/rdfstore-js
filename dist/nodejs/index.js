@@ -39095,477 +39095,456 @@ Callbacks.CallbacksBackend.prototype.dispatchQueries = function(callback) {
 
 // end of ./src/js-query-engine/src/callbacks.js 
 //imports
-var Worker = require('webworker');
 
 // exports
-var RDFStoreClient = {};
+var RDFStoreChildClient = {};
 
+Worker = true;
 
-try {
-    console.log("*** Checking if web workers are available");
-    if(typeof(Worker)=='undefined') {
-        Worker = null;
-    };
-    console.log("*** Web workers available");
-} catch(e) {
-    Worker = null;
-}
+RDFStoreChildClient.RDFStoreClient = function(path_to_store_script, args, cb) {
+    this.connection = require('child_process').fork(path_to_store_script,["is_child"]);
 
-// Checks if this is a webworker
-if(!!Worker) {
-
-    RDFStoreClient.RDFStoreClient = function(path_to_store_script, args, cb) {
-        console.log("trying to load "+path_to_store_script);
-        if(Worker.Worker) {
-            this.connection = new Worker.Worker(path_to_store_script);
+    this.callbacksCounter = 1;
+    var that = this;
+    var creationCallback = function(success, result) {
+        if(success === true) {
+            cb(true, that);
         } else {
-            this.connection = new Worker(path_to_store_script);
+            cb(false, result);
         }
-        this.callbacksCounter = 1;
+    };
+
+    this.rdf = RDFJSInterface.rdf;
+    
+    this.connection.on('message',function(event){
+        that.receive(event);
+    });
+
+    this.observingCallbacks = {};
+    this.callbacks = {'0': {'cb':creationCallback, 'fn':'create'}};
+    this.connection.send({'fn':'create', 'args':args, 'callback':'0'});
+};
+
+RDFStoreChildClient.RDFStoreClient.prototype.receive = function(packet) {
+    event = packet.data || packet;
+    if(event.fn === 'workerRequest:NetworkTransport:load') {
         var that = this;
-        var creationCallback = function(success, result) {
-            if(success === true) {
-                cb(true, that);
-            } else {
-                cb(false, result);
-            }
-        };
-
-        this.rdf = RDFJSInterface.rdf;
-
-        console.log("The worker");
-        console.log(this.connection);
-        var that = this;
-        this.connection.onmessage = function(event){
-            that.receive(event);
-        };
-        this.observingCallbacks = {};
-        this.callbacks = {'0': {'cb':creationCallback, 'fn':'create'}};
-        this.connection.postMessage({'fn':'create', 'args':args, 'callback':'0'});
-    };
-
-    RDFStoreClient.RDFStoreClient.prototype.receive = function(packet) {
-        event = packet.data || packet;
-        //console.log("RECEIVED SOMETHING");
-        if(event.fn === 'workerRequest:NetworkTransport:load') {
-            var that = this;
-            var workerCallback = event['callback'];
-            var args = event['arguments'].concat(function(success, results){
-                that.connection.postMessage({'fn':'workerRequestResponse', 'results':[success, results], 'callback':workerCallback});
-            });
-            NetworkTransport.load.apply(NetworkTransport,args);
-        } else {
-            var callbackData = this.callbacks[event.callback];
-            //console.log(packet);
-            //console.log(callbackData);
-            if(callbackData) {
-                if(callbackData.fn === 'create' || callbackData.fn === 'execute' || callbackData.fn === 'insert' || callbackData.fn == 'graph' ||
-                   callbackData.fn === 'node' || callbackData.fn === 'insert' || callbackData.fn === 'delete' || callbackData.fn === 'clear' ||
-                   callbackData.fn === 'load' || callbackData.fn === 'startObservingQueryEndCb' || callbackData.fn === 'registeredGraphs') {
-                    delete this.callbacks[event.callback];
-                    callbackData.cb(event.success, event.result);
-                } else if(callbackData.fn === 'startObservingQuery') {
-                    callbackData.cb(event.result);                
-                } else if(callbackData.fn === 'startObservingNode') {
-                    callbackData.cb(event.result);
-                } else if(callbackData.fn === 'subscribe') {
-                    callbackData.cb(event.event, event.result);
-                }
+        var workerCallback = event['callback'];
+        var args = event['arguments'].concat(function(success, results){
+            that.connection.send({'fn':'workerRequestResponse', 'results':[success, results], 'callback':workerCallback});
+        });
+        NetworkTransport.load.apply(NetworkTransport,args);
+    } else {
+        var callbackData = this.callbacks[event.callback];
+        //console.log(packet);
+        //console.log(callbackData);
+        if(callbackData) {
+            if(callbackData.fn === 'create' || callbackData.fn === 'execute' || callbackData.fn === 'insert' || callbackData.fn == 'graph' ||
+               callbackData.fn === 'node' || callbackData.fn === 'insert' || callbackData.fn === 'delete' || callbackData.fn === 'clear' ||
+               callbackData.fn === 'load' || callbackData.fn === 'startObservingQueryEndCb' || callbackData.fn === 'registeredGraphs') {
+                delete this.callbacks[event.callback];
+                callbackData.cb(event.success, event.result);
+            } else if(callbackData.fn === 'startObservingQuery') {
+                callbackData.cb(event.result);                
+            } else if(callbackData.fn === 'startObservingNode') {
+                callbackData.cb(event.result);
+            } else if(callbackData.fn === 'subscribe') {
+                callbackData.cb(event.event, event.result);
             }
         }
-    };
+    }
+};
 
-    RDFStoreClient.RDFStoreClient.prototype.registerCallback = function(fn, callback) {
-        var id = ''+this.callbacksCounter;
-        this.callbacks[id] = {'fn':fn, 'cb':callback};
-        this.callbacksCounter++;
+RDFStoreChildClient.RDFStoreClient.prototype.registerCallback = function(fn, callback) {
+    var id = ''+this.callbacksCounter;
+    this.callbacks[id] = {'fn':fn, 'cb':callback};
+    this.callbacksCounter++;
 
-        return id;
-    };
+    return id;
+};
 
-    RDFStoreClient.RDFStoreClient.prototype.execute = function() {
-        if(arguments.length === 3) {
-            this.executeWithEnvironment(arguments[0],
-                                        arguments[1],
-                                        arguments[2]);
-        } else if(arguments.length === 4) {
-            this.executeWithEnvironment(arguments[0],
-                                        arguments[1],
-                                        arguments[2],
-                                        arguments[3]);
-        } else {
+RDFStoreChildClient.RDFStoreClient.prototype.execute = function() {
+    if(arguments.length === 3) {
+        this.executeWithEnvironment(arguments[0],
+                                    arguments[1],
+                                    arguments[2]);
+    } else if(arguments.length === 4) {
+        this.executeWithEnvironment(arguments[0],
+                                    arguments[1],
+                                    arguments[2],
+                                    arguments[3]);
+    } else {
 
-            var queryString,callback;
+        var queryString,callback;
 
-            if(arguments.length === 1) {
-                queryString = arguments[0];
-                callback = function(){};
-
-            } else if(arguments.length === 2) {
-                queryString = arguments[0];
-                callback = arguments [1];
-            }
-
-            var id = this.registerCallback('execute',callback);
-
-            this.connection.postMessage({'fn':'execute', 'args':[queryString], 'callback':id});
-        }
-
-    };
-
-    RDFStoreClient.RDFStoreClient.prototype.insert = function() {
-        var graph;
-        var triples;
-        var callback;
         if(arguments.length === 1) {
-            triples = arguments[0];
-            this.connection.postMessage({'fn':'insert', 'args':[triples]})
+            queryString = arguments[0];
+            callback = function(){};
+
         } else if(arguments.length === 2) {
-            triples = arguments[0];
-            callback= arguments[1] || function(){};
-            var id = this.registerCallback('insert', callback);
-            this.connection.postMessage({'fn':'insert', 'args':[triples], 'callback':id})
-        } else if(arguments.length === 3) {
-            triples = arguments[0];
-            graph = arguments[1];
-            callback= arguments[2] || function(){};
-            var id = this.registerCallback('insert', callback);
-            this.connection.postMessage({'fn':'insert', 'args':[triples,graph], 'callback':id})
+            queryString = arguments[0];
+            callback = arguments [1];
+        }
+
+        var id = this.registerCallback('execute',callback);
+
+        this.connection.send({'fn':'execute', 'args':[queryString], 'callback':id});
+    }
+
+};
+
+RDFStoreChildClient.RDFStoreClient.prototype.insert = function() {
+    var graph;
+    var triples;
+    var callback;
+    if(arguments.length === 1) {
+        triples = arguments[0];
+        this.connection.send({'fn':'insert', 'args':[triples]})
+    } else if(arguments.length === 2) {
+        triples = arguments[0];
+        callback= arguments[1] || function(){};
+        var id = this.registerCallback('insert', callback);
+        this.connection.send({'fn':'insert', 'args':[triples], 'callback':id})
+    } else if(arguments.length === 3) {
+        triples = arguments[0];
+        graph = arguments[1];
+        callback= arguments[2] || function(){};
+        var id = this.registerCallback('insert', callback);
+        this.connection.send({'fn':'insert', 'args':[triples,graph], 'callback':id})
+    } else {
+        throw("The triples to insert, an optional graph and callback must be provided");
+    }
+};
+
+RDFStoreChildClient.RDFStoreClient.prototype.graph = function() {
+    var graphUri = null;
+    var callback = null;
+    if(arguments.length === 1) {
+        callback = arguments[0] || function(){};
+    } else if(arguments.length === 2) {
+        callback = arguments[1] || function(){};
+        graphUri = arguments[0];
+    } else {
+        throw("An optional graph URI and a callback function must be provided");
+    }
+
+    var that = this;
+    var wrapperCallback = function(success, toWrap) {
+        //console.log("CALLBACK!\n\n");
+        if(success) {
+            var triple;
+            for(var i=0; i<toWrap.triples.length; i++) {
+                triple = toWrap.triples[i];
+                toWrap.triples[i] = new RDFJSInterface.Triple(that.adaptJSInterface(triple.subject),
+                                                              that.adaptJSInterface(triple.predicate),
+                                                              that.adaptJSInterface(triple.object));
+            }                
+            callback(success, that.rdf.createGraph(toWrap.triples));
         } else {
-            throw("The triples to insert, an optional graph and callback must be provided");
+            callback(success,toWrap);
         }
     };
+    var id = this.registerCallback('insert', wrapperCallback);
+    if(graphUri == null) {
+        this.connection.send({'fn':'graph', 'args':[], 'callback':id})
+    } else {
+        this.connection.send({'fn':'graph', 'args':[graphUri], 'callback':id})
+    }
+};
 
-    RDFStoreClient.RDFStoreClient.prototype.graph = function() {
-        var graphUri = null;
-        var callback = null;
-        if(arguments.length === 1) {
-            callback = arguments[0] || function(){};
-        } else if(arguments.length === 2) {
-            callback = arguments[1] || function(){};
-            graphUri = arguments[0];
+RDFStoreChildClient.RDFStoreClient.prototype.node = function() {
+    var graphUri = null;
+    var callback = null;
+    var nodeUri  = null;
+    if(arguments.length === 2) {
+        nodeUri = arguments[0];
+        callback = arguments[1] || function(){};
+    } else if(arguments.length === 3) {
+        nodeUri = arguments[0];
+        graphUri = arguments[1];
+        callback = arguments[2] || function(){};
+    } else {
+        throw("An optional graph URI and a callback function must be provided");
+    }
+
+    var that = this;
+    var wrapperCallback = function(success, toWrap) {
+        //console.log("CALLBACK!\n\n");
+        if(success) {
+            var triple;
+            for(var i=0; i<toWrap.triples.length; i++) {
+                triple = toWrap.triples[i];
+                toWrap.triples[i] = new RDFJSInterface.Triple(that.adaptJSInterface(triple.subject),
+                                                              that.adaptJSInterface(triple.predicate),
+                                                              that.adaptJSInterface(triple.object));
+            }                
+            callback(success, that.rdf.createGraph(toWrap.triples));
         } else {
-            throw("An optional graph URI and a callback function must be provided");
+            callback(success,toWrap);
         }
+    };
+    var id = this.registerCallback('insert', wrapperCallback);
+    if(graphUri == null) {
+        this.connection.send({'fn':'node', 'args':[nodeUri], 'callback':id})
+    } else {
+        this.connection.send({'fn':'node', 'args':[nodeUri, graphUri], 'callback':id})
+    }
+
+};
+
+RDFStoreChildClient.RDFStoreClient.prototype.setPrefix = function(prefix, uri) {
+    this.rdf.setPrefix(prefix, uri)
+    this.connection.send({'fn':'rdf/setPrefix', 'args':[prefix, uri], 'callback':null})
+};
+
+RDFStoreChildClient.RDFStoreClient.prototype.setDefaultPrefix = function(uri) {
+    this.rdf.setDefaultPrefix(uri)
+    this.connection.send({'fn':'rdf/setDefaultPrefix', 'args':[uri], 'callback':null})
+};
+
+
+RDFStoreChildClient.RDFStoreClient.prototype['delete'] = function() {
+    var graph;
+    var triples;
+    var callback;
+    if(arguments.length === 1) {
+        triples = arguments[0];
+        this.connection.send({'fn':'delete', 'args':[triples]})
+    } else if(arguments.length === 2) {
+        triples = arguments[0];
+        callback= arguments[1] || function(){};
+        var id = this.registerCallback('delete', callback);
+        this.connection.send({'fn':'delete', 'args':[triples], 'callback':id})
+    } else if(arguments.length === 3) {
+        triples = arguments[0];
+        graph = arguments[1];
+        callback= arguments[2] || function(){};
+        var id = this.registerCallback('delete', callback);
+        this.connection.send({'fn':'delete', 'args':[triples,graph], 'callback':id})
+    } else {
+        throw("The triples to delete, an optional graph and callback must be provided");
+    }
+};
+
+
+RDFStoreChildClient.RDFStoreClient.prototype.clear = function() {
+    var graph;
+    var callback;
+    
+    if(arguments.length === 1) {
+        callback= arguments[0] || function(){};
+        var id = this.registerCallback('clear', callback);
+        this.connection.send({'fn':'clear', 'args':[], 'callback':id})
+    } else if(arguments.length === 2) {
+        graph = arguments[0];
+        callback= arguments[1] || function(){};
+        var id = this.registerCallback('clear', callback);
+        this.connection.send({'fn':'clear', 'args':[graph], 'callback':id})
+    } else {
+        throw("The optional graph and a callback must be provided");
+    }
+};
+
+
+/**
+ * Boolean value determining if loading RDF must produce
+ * triple add events and fire callbacks.
+ * Default is false.
+ */
+RDFStoreChildClient.RDFStoreClient.prototype.setBatchLoadEvents = function(mustFireEvents){
+    this.connection.send({'fn':'setBatchLoadEvents', 'args':[mustFireEvents]});
+};
+
+/**
+ * Registers a namespace prefix that will be automatically declared
+ * in all the queries
+ */
+RDFStoreChildClient.RDFStoreClient.prototype.registerDefaultNamespace = function(ns, prefix) {
+    this.connection.send({'fn':'registerDefaultNamespace', 'args':[ns,prefix]});
+};
+
+/**
+ * Registers the default namespaces declared in the RDF JS Interfaces
+ * specification in the default Profile.
+ */
+RDFStoreChildClient.RDFStoreClient.prototype.registerDefaultProfileNamespaces = function() {
+    this.connection.send({'fn':'registerDefaultProfileNamespaces', 'args':[]});
+};
+
+RDFStoreChildClient.RDFStoreClient.prototype.load = function(){
+    var mediaType;
+    var data;
+    var graph;
+    var callback;
+    
+    if(arguments.length === 3) {
+        mediaType = arguments[0];
+        data = arguments[1];
+        callback= arguments[2] || function(){};
+        var id = this.registerCallback('load', callback);
+        this.connection.send({'fn':'load', 'args':[mediaType, data], 'callback':id})
+    } else if(arguments.length === 4) {
+        mediaType = arguments[0];
+        data = arguments[1];
+        graph = arguments[2];
+        callback= arguments[3] || function(){};
+        var id = this.registerCallback('load', callback);
+        this.connection.send({'fn':'load', 'args':[mediaType, data, graph], 'callback':id})
+    } else if(arguments.length === 2) {
+        throw("The mediaType of the parser, the data a callback and an optional graph must be provided");
+    }
+    
+};
+
+RDFStoreChildClient.RDFStoreClient.prototype.startObservingQuery = function() {
+    var query = arguments[0];
+    var callback = arguments[1];
+    var endCallback = arguments[2];
+    if(endCallback!=null) {
+        var id1 = this.registerCallback('startObservingQuery', callback);
+        this.observingCallbacks[query] = id1;
+        var id2 = this.registerCallback('startObservingQueryEndCb', endCallback);
+        this.connection.send({'fn':'startObservingQuery', 'args':[query], 'callback':[id1,id2]})
+    } else {
+        var id1 = this.registerCallback('startObservingQuery', callback);
+        this.observingCallbacks[query] = id1;
+        this.connection.send({'fn':'startObservingQuery', 'args':[query], 'callback':[id1]})
+    }
+};
+
+RDFStoreChildClient.RDFStoreClient.prototype.stopObservingQuery = function(query) {
+    var id = this.observingCallbacks[query];
+    delete this.observingCallbacks[query];
+    delete this.callbacks[id];
+    this.connection.send({'fn':'stopObservingQuery', 'args':[query], 'callback':[]})
+};
+
+RDFStoreChildClient.RDFStoreClient.prototype.startObservingNode = function() {
+    var uri, graphUri, callback;
+
+    if(arguments.length === 2) {
+        uri = arguments[0];
+        callback = arguments[1];
 
         var that = this;
-        var wrapperCallback = function(success, toWrap) {
-            //console.log("CALLBACK!\n\n");
-            if(success) {
-                var triple;
-                for(var i=0; i<toWrap.triples.length; i++) {
-                    triple = toWrap.triples[i];
-                    toWrap.triples[i] = new RDFJSInterface.Triple(that.adaptJSInterface(triple.subject),
-                                                                  that.adaptJSInterface(triple.predicate),
-                                                                  that.adaptJSInterface(triple.object));
-                }                
-                callback(success, that.rdf.createGraph(toWrap.triples));
-            } else {
-                callback(success,toWrap);
-            }
-        };
-        var id = this.registerCallback('insert', wrapperCallback);
-        if(graphUri == null) {
-            this.connection.postMessage({'fn':'graph', 'args':[], 'callback':id})
-        } else {
-            this.connection.postMessage({'fn':'graph', 'args':[graphUri], 'callback':id})
-        }
-    };
-
-    RDFStoreClient.RDFStoreClient.prototype.node = function() {
-        var graphUri = null;
-        var callback = null;
-        var nodeUri  = null;
-        if(arguments.length === 2) {
-            nodeUri = arguments[0];
-            callback = arguments[1] || function(){};
-        } else if(arguments.length === 3) {
-            nodeUri = arguments[0];
-            graphUri = arguments[1];
-            callback = arguments[2] || function(){};
-        } else {
-            throw("An optional graph URI and a callback function must be provided");
-        }
-
-        var that = this;
-        var wrapperCallback = function(success, toWrap) {
-            //console.log("CALLBACK!\n\n");
-            if(success) {
-                var triple;
-                for(var i=0; i<toWrap.triples.length; i++) {
-                    triple = toWrap.triples[i];
-                    toWrap.triples[i] = new RDFJSInterface.Triple(that.adaptJSInterface(triple.subject),
-                                                                  that.adaptJSInterface(triple.predicate),
-                                                                  that.adaptJSInterface(triple.object));
-                }                
-                callback(success, that.rdf.createGraph(toWrap.triples));
-            } else {
-                callback(success,toWrap);
-            }
-        };
-        var id = this.registerCallback('insert', wrapperCallback);
-        if(graphUri == null) {
-            this.connection.postMessage({'fn':'node', 'args':[nodeUri], 'callback':id})
-        } else {
-            this.connection.postMessage({'fn':'node', 'args':[nodeUri, graphUri], 'callback':id})
-        }
-
-    };
-
-    RDFStoreClient.RDFStoreClient.prototype.setPrefix = function(prefix, uri) {
-        this.rdf.setPrefix(prefix, uri)
-        this.connection.postMessage({'fn':'rdf/setPrefix', 'args':[prefix, uri], 'callback':null})
-    };
-
-    RDFStoreClient.RDFStoreClient.prototype.setDefaultPrefix = function(uri) {
-        this.rdf.setDefaultPrefix(uri)
-        this.connection.postMessage({'fn':'rdf/setDefaultPrefix', 'args':[uri], 'callback':null})
-    };
-
-
-    RDFStoreClient.RDFStoreClient.prototype['delete'] = function() {
-        var graph;
-        var triples;
-        var callback;
-        if(arguments.length === 1) {
-            triples = arguments[0];
-            this.connection.postMessage({'fn':'delete', 'args':[triples]})
-        } else if(arguments.length === 2) {
-            triples = arguments[0];
-            callback= arguments[1] || function(){};
-            var id = this.registerCallback('delete', callback);
-            this.connection.postMessage({'fn':'delete', 'args':[triples], 'callback':id})
-        } else if(arguments.length === 3) {
-            triples = arguments[0];
-            graph = arguments[1];
-            callback= arguments[2] || function(){};
-            var id = this.registerCallback('delete', callback);
-            this.connection.postMessage({'fn':'delete', 'args':[triples,graph], 'callback':id})
-        } else {
-            throw("The triples to delete, an optional graph and callback must be provided");
-        }
-    };
-
-
-    RDFStoreClient.RDFStoreClient.prototype.clear = function() {
-        var graph;
-        var callback;
-     
-        if(arguments.length === 1) {
-            callback= arguments[0] || function(){};
-            var id = this.registerCallback('clear', callback);
-            this.connection.postMessage({'fn':'clear', 'args':[], 'callback':id})
-        } else if(arguments.length === 2) {
-            graph = arguments[0];
-            callback= arguments[1] || function(){};
-            var id = this.registerCallback('clear', callback);
-            this.connection.postMessage({'fn':'clear', 'args':[graph], 'callback':id})
-        } else {
-            throw("The optional graph and a callback must be provided");
-        }
-    };
-
-
-    /**
-     * Boolean value determining if loading RDF must produce
-     * triple add events and fire callbacks.
-     * Default is false.
-     */
-    RDFStoreClient.RDFStoreClient.prototype.setBatchLoadEvents = function(mustFireEvents){
-        this.connection.postMessage({'fn':'setBatchLoadEvents', 'args':[mustFireEvents]});
-    };
-
-    /**
-     * Registers a namespace prefix that will be automatically declared
-     * in all the queries
-     */
-    RDFStoreClient.RDFStoreClient.prototype.registerDefaultNamespace = function(ns, prefix) {
-        this.connection.postMessage({'fn':'registerDefaultNamespace', 'args':[ns,prefix]});
-    };
-     
-    /**
-     * Registers the default namespaces declared in the RDF JS Interfaces
-     * specification in the default Profile.
-     */
-    RDFStoreClient.RDFStoreClient.prototype.registerDefaultProfileNamespaces = function() {
-        this.connection.postMessage({'fn':'registerDefaultProfileNamespaces', 'args':[]});
-    };
-
-    RDFStoreClient.RDFStoreClient.prototype.load = function(){
-        var mediaType;
-        var data;
-        var graph;
-        var callback;
-     
-        if(arguments.length === 3) {
-            mediaType = arguments[0];
-            data = arguments[1];
-            callback= arguments[2] || function(){};
-            var id = this.registerCallback('load', callback);
-            this.connection.postMessage({'fn':'load', 'args':[mediaType, data], 'callback':id})
-        } else if(arguments.length === 4) {
-            mediaType = arguments[0];
-            data = arguments[1];
-            graph = arguments[2];
-            callback= arguments[3] || function(){};
-            var id = this.registerCallback('load', callback);
-            this.connection.postMessage({'fn':'load', 'args':[mediaType, data, graph], 'callback':id})
-        } else if(arguments.length === 2) {
-            throw("The mediaType of the parser, the data a callback and an optional graph must be provided");
-        }
-     
-    };
-
-    RDFStoreClient.RDFStoreClient.prototype.startObservingQuery = function() {
-        var query = arguments[0];
-        var callback = arguments[1];
-        var endCallback = arguments[2];
-        if(endCallback!=null) {
-            var id1 = this.registerCallback('startObservingQuery', callback);
-            this.observingCallbacks[query] = id1;
-            var id2 = this.registerCallback('startObservingQueryEndCb', endCallback);
-            this.connection.postMessage({'fn':'startObservingQuery', 'args':[query], 'callback':[id1,id2]})
-        } else {
-            var id1 = this.registerCallback('startObservingQuery', callback);
-            this.observingCallbacks[query] = id1;
-            this.connection.postMessage({'fn':'startObservingQuery', 'args':[query], 'callback':[id1]})
-        }
-    };
-     
-    RDFStoreClient.RDFStoreClient.prototype.stopObservingQuery = function(query) {
-        var id = this.observingCallbacks[query];
-        delete this.observingCallbacks[query];
-        delete this.callbacks[id];
-        this.connection.postMessage({'fn':'stopObservingQuery', 'args':[query], 'callback':[]})
-    };
-
-    RDFStoreClient.RDFStoreClient.prototype.startObservingNode = function() {
-        var uri, graphUri, callback;
-
-        if(arguments.length === 2) {
-            uri = arguments[0];
-            callback = arguments[1];
-
-            var that = this;
-            var wrapperCallback = function(toWrap) {
-                //console.log("CALLBACK!\n\n");
-                var triple;
-                for(var i=0; i<toWrap.triples.length; i++) {
-                    triple = toWrap.triples[i];
-                    toWrap.triples[i] = new RDFJSInterface.Triple(that.adaptJSInterface(triple.subject),
-                                                                  that.adaptJSInterface(triple.predicate),
-                                                                  that.adaptJSInterface(triple.object));
-                }                
-                callback(that.rdf.createGraph(toWrap.triples));
-            };
-
-            var id = this.registerCallback('startObservingNode', wrapperCallback);
-            this.observingCallbacks[callback] = id;
-
-            this.connection.postMessage({'fn':'startObservingNode', 'args':[uri], 'callback':id})
-        } else if(arguments.length === 3) {
-            uri = arguments[0];
-            graphUri = arguments[1];
-            callback = arguments[2];
-
-            var that = this;
-            var wrapperCallback = function(toWrap) {
-                //console.log("CALLBACK!\n\n");
-                var triple;
-                for(var i=0; i<toWrap.triples.length; i++) {
-                    triple = toWrap.triples[i];
-                    toWrap.triples[i] = new RDFJSInterface.Triple(that.adaptJSInterface(triple.subject),
-                                                                  that.adaptJSInterface(triple.predicate),
-                                                                  that.adaptJSInterface(triple.object));
-                }                
-                callback(that.rdf.createGraph(toWrap.triples));
-            };
-
-            var id = this.registerCallback('startObservingNode', wrapperCallback);
-            this.observingCallbacks[callback] = id;
-
-            this.connection.postMessage({'fn':'startObservingNode', 'args':[uri,graphUri], 'callback':id})
-        }
-    };
-     
-    RDFStoreClient.RDFStoreClient.prototype.stopObservingNode = function(callback) {
-        var id = this.observingCallbacks[callback];
-        delete this.observingCallbacks[callback];
-        delete this.callbacks[id];
-        //console.log("STOP OBSERVING "+id);
-        this.connection.postMessage({'fn':'stopObservingNode', 'args':[id], 'callback':[]})
-    };
-
-    RDFStoreClient.RDFStoreClient.prototype.subscribe = function(s, p, o, g, callback) {
-        var that = this;
-        var wrapperCallback = function(event,triples) {
+        var wrapperCallback = function(toWrap) {
             //console.log("CALLBACK!\n\n");
             var triple;
-            for(var i=0; i<triples.length; i++) {
-                triple = triples[i];
-                triples[i] = new RDFJSInterface.Triple(that.adaptJSInterface(triple.subject),
-                                                       that.adaptJSInterface(triple.predicate),
-                                                       that.adaptJSInterface(triple.object));
+            for(var i=0; i<toWrap.triples.length; i++) {
+                triple = toWrap.triples[i];
+                toWrap.triples[i] = new RDFJSInterface.Triple(that.adaptJSInterface(triple.subject),
+                                                              that.adaptJSInterface(triple.predicate),
+                                                              that.adaptJSInterface(triple.object));
             }                
-            callback(event,triples);
+            callback(that.rdf.createGraph(toWrap.triples));
         };
-        var id = this.registerCallback('subscribe', wrapperCallback);
+
+        var id = this.registerCallback('startObservingNode', wrapperCallback);
         this.observingCallbacks[callback] = id;
 
-        this.connection.postMessage({'fn':'subscribe', 'args':[s,p,o,g], 'callback':id});
-    };
-     
-    RDFStoreClient.RDFStoreClient.prototype.unsubscribe = function(callback) {
-        var id = this.observingCallbacks[callback];
-        delete this.observingCallbacks[callback];
-        delete this.callbacks[id];
-        //console.log("STOP OBSERVING "+id);
-        this.connection.postMessage({'fn':'unsubscribe', 'args':[id], 'callback':[]})
-    };
-         
-    RDFStoreClient.RDFStoreClient.prototype.registeredGraphs = function(callback) {
+        this.connection.send({'fn':'startObservingNode', 'args':[uri], 'callback':id})
+    } else if(arguments.length === 3) {
+        uri = arguments[0];
+        graphUri = arguments[1];
+        callback = arguments[2];
+
         var that = this;
-        var wrapperCallback = function(success, graphs) {
+        var wrapperCallback = function(toWrap) {
             //console.log("CALLBACK!\n\n");
-            if(success) {
-                var triple;
-                for(var i=0; i<graphs.length; i++) {
-                    graph = graphs[i]
-                    graphs[i] = that.adaptJSInterface(graph);
-                }                
-                callback(success, graphs);
-            } else {
-                callback(success,graphs);
-            }
+            var triple;
+            for(var i=0; i<toWrap.triples.length; i++) {
+                triple = toWrap.triples[i];
+                toWrap.triples[i] = new RDFJSInterface.Triple(that.adaptJSInterface(triple.subject),
+                                                              that.adaptJSInterface(triple.predicate),
+                                                              that.adaptJSInterface(triple.object));
+            }                
+            callback(that.rdf.createGraph(toWrap.triples));
         };
 
-        var id = this.registerCallback('registeredGraphs', wrapperCallback);
-        this.connection.postMessage({'fn':'registeredGraphs', 'args':[], 'callback':id})
-    };
+        var id = this.registerCallback('startObservingNode', wrapperCallback);
+        this.observingCallbacks[callback] = id;
 
-    // helper functions
-    RDFStoreClient.RDFStoreClient.prototype.adaptJSInterface = function(node) {
-        if(node.interfaceName === 'BlankNode') {
-            return new RDFJSInterface.BlankNode(node.bnodeId);
-        } else if(node.interfaceName === 'Literal') {
-            return new RDFJSInterface.Literal(node.nominalValue, node.language, node.datatype);
-        } else if(node.interfaceName === 'NamedNode') {
-            return new RDFJSInterface.NamedNode(node.nominalValue);
+        this.connection.send({'fn':'startObservingNode', 'args':[uri,graphUri], 'callback':id})
+    }
+};
+
+RDFStoreChildClient.RDFStoreClient.prototype.stopObservingNode = function(callback) {
+    var id = this.observingCallbacks[callback];
+    delete this.observingCallbacks[callback];
+    delete this.callbacks[id];
+    //console.log("STOP OBSERVING "+id);
+    this.connection.send({'fn':'stopObservingNode', 'args':[id], 'callback':[]})
+};
+
+RDFStoreChildClient.RDFStoreClient.prototype.subscribe = function(s, p, o, g, callback) {
+    var that = this;
+    var wrapperCallback = function(event,triples) {
+        //console.log("CALLBACK!\n\n");
+        var triple;
+        for(var i=0; i<triples.length; i++) {
+            triple = triples[i];
+            triples[i] = new RDFJSInterface.Triple(that.adaptJSInterface(triple.subject),
+                                                   that.adaptJSInterface(triple.predicate),
+                                                   that.adaptJSInterface(triple.object));
+        }                
+        callback(event,triples);
+    };
+    var id = this.registerCallback('subscribe', wrapperCallback);
+    this.observingCallbacks[callback] = id;
+
+    this.connection.send({'fn':'subscribe', 'args':[s,p,o,g], 'callback':id});
+};
+
+RDFStoreChildClient.RDFStoreClient.prototype.unsubscribe = function(callback) {
+    var id = this.observingCallbacks[callback];
+    delete this.observingCallbacks[callback];
+    delete this.callbacks[id];
+    //console.log("STOP OBSERVING "+id);
+    this.connection.send({'fn':'unsubscribe', 'args':[id], 'callback':[]})
+};
+
+RDFStoreChildClient.RDFStoreClient.prototype.registeredGraphs = function(callback) {
+    var that = this;
+    var wrapperCallback = function(success, graphs) {
+        //console.log("CALLBACK!\n\n");
+        if(success) {
+            var triple;
+            for(var i=0; i<graphs.length; i++) {
+                graph = graphs[i]
+                graphs[i] = that.adaptJSInterface(graph);
+            }                
+            callback(success, graphs);
+        } else {
+            callback(success,graphs);
         }
     };
 
-    // make possible for clients to test if this i being executed inside a connection
-    RDFStoreClient.RDFStoreClient.prototype.isWebWorkerConnection = true;
-}
+    var id = this.registerCallback('registeredGraphs', wrapperCallback);
+    this.connection.send({'fn':'registeredGraphs', 'args':[], 'callback':id})
+};
 
-// end of ./src/js-connection/src/rdfstore_client.js 
+// helper functions
+RDFStoreChildClient.RDFStoreClient.prototype.adaptJSInterface = function(node) {
+    if(node.interfaceName === 'BlankNode') {
+        return new RDFJSInterface.BlankNode(node.bnodeId);
+    } else if(node.interfaceName === 'Literal') {
+        return new RDFJSInterface.Literal(node.nominalValue, node.language, node.datatype);
+    } else if(node.interfaceName === 'NamedNode') {
+        return new RDFJSInterface.NamedNode(node.nominalValue);
+    }
+};
+
+// make possible for clients to test if this is being executed inside a connection
+RDFStoreChildClient.RDFStoreClient.prototype.isWebWorkerConnection = true;
+
+
+// end of ./src/js-connection/src/rdfstore_child_client.js 
 // exports
 var Store = {};
 
 // imports
-var Worker = require('webworker');
-
-Store.VERSION = "0.4.13";
+var RDFStoreClient = RDFStoreChildClient;
+Store.VERSION = "0.4.14";
 
 /**
  * Tries to create a new RDFStore instance that will be
@@ -40110,213 +40089,219 @@ Store.Store.prototype.setNetworkTransport = function(networkTransportImpl) {
 
 // end of ./src/js-store/src/store.js 
 // imports
-    RDFStoreWorker = {};
+RDFStoreChild = {};
 
-    RDFStoreWorker.observingCallbacks = {};
-    
-    RDFStoreWorker.workerCallbacksCounter = 0;
-    RDFStoreWorker.workerCallbacks = {};
-    RDFStoreWorker.registerCallback = function(cb) {
-        var nextId = ""+RDFStoreWorker.workerCallbacksCounter;
-        RDFStoreWorker.workerCallbacksCounter++;
-        RDFStoreWorker.workerCallbacks[nextId] = cb;
-        return nextId;
-    };
+RDFStoreChild.observingCallbacks = {};
 
-    RDFStoreWorker.handleCreate = function(argsObject, cb) {
-        // redefine NetworkTransport
+RDFStoreChild.workerCallbacksCounter = 0;
+RDFStoreChild.workerCallbacks = {};
+RDFStoreChild.registerCallback = function(cb) {
+    var nextId = ""+RDFStoreChild.workerCallbacksCounter;
+    RDFStoreChild.workerCallbacksCounter++;
+    RDFStoreChild.workerCallbacks[nextId] = cb;
+    return nextId;
+};
 
-        if(typeof(NetworkTransport) != 'undefined'  && NetworkTransport != null) {
-            NetworkTransport = {
-                load: function(uri, graph, callback) {
-                    var cbId = RDFStoreWorker.registerCallback(function(results){
-                        callback.apply(callback,results);
-                    });
-                    postMessage({'fn':'workerRequest:NetworkTransport:load','callback':cbId, 'arguments':[uri,graph]});
-                },
+RDFStoreChild.handleCreate = function(argsObject, cb) {
+    // redefine NetworkTransport
 
-                loadFromFile: function(parser, graph, uri, callback) {
+    if(typeof(NetworkTransport) != 'undefined'  && NetworkTransport != null) {
+        NetworkTransport = {
+            load: function(uri, graph, callback) {
+                var cbId = RDFStoreChild.registerCallback(function(results){
+                    callback.apply(callback,results);
+                });
+                process.send({'fn':'workerRequest:NetworkTransport:load','callback':cbId, 'arguments':[uri,graph]});
+            },
 
-                }
+            loadFromFile: function(parser, graph, uri, callback) {
+
             }
         }
+    }
 
-        args = [argsObject];
-        //console.log("in handling create");
-        args.push(function(result){
-            //console.log("created!!!");
-            // Stores the store object in the worker
-            RDFStoreWorker.store = result;
-            //console.log("posting MESSAGE!");
+    args = [argsObject];
+    //console.log("in handling create");
+    args.push(function(result){
+        //console.log("created!!!");
+        // Stores the store object in the worker
+        RDFStoreChild.store = result;
+        //console.log("posting MESSAGE!");
 
-            postMessage({'callback':cb, 'result':'created', 'success':true});
-        });
-        //console.log("creating");
-        Store.create.apply(Store,args)
-    };
+        process.send({'callback':cb, 'result':'created', 'success':true});
+    });
+    //console.log("creating");
+    Store.create.apply(Store,args)
+};
 
-    RDFStoreWorker.receive = function(packet) {
-        var msg = packet.data || packet;
-        //console.log("RECEIVED...");
-        if(msg.fn === 'workerRequestResponse') {
-            var cbId = msg.callback;
-            var callback = RDFStoreWorker.workerCallbacks[cbId];
-            if(callback != null) {
-                delete RDFStoreWorker.workerCallbacks[cbId];
-                callback(msg.results);
+RDFStoreChild.receive = function(packet) {
+    var msg = packet.data || packet;
+    //console.log("RECEIVED...");
+    if(msg.fn === 'workerRequestResponse') {
+        var cbId = msg.callback;
+        var callback = RDFStoreChild.workerCallbacks[cbId];
+        if(callback != null) {
+            delete RDFStoreChild.workerCallbacks[cbId];
+            callback(msg.results);
+        }
+    } else if(msg.fn === 'create' && msg.args !=null) {
+        //console.log("handling create");
+        RDFStoreChild.handleCreate(msg.args, msg.callback);
+    } else if(msg.fn === 'setBatchLoadEvents') {
+        RDFStoreChild.store[msg.fn].apply(RDFStoreChild.store, msg.args);
+    } else if(msg.fn === 'registerDefaultNamespace') {
+        RDFStoreChild.store[msg.fn].apply(RDFStoreChild.store, msg.args);
+    } else if(msg.fn === 'registerDefaultProfileNamespaces') {
+        RDFStoreChild.store[msg.fn].apply(RDFStoreChild.store, msg.args);
+    } else if((msg.fn === 'execute' ||
+               msg.fn === 'executeWithEnvironment' ||
+               msg.fn === 'graph'||
+               msg.fn === 'node' ||
+               msg.fn === 'clear' ||
+               msg.fn === 'load') && msg.args != null) {
+        msg.args.push(function(success, result){
+            //console.log("CALLBACK!");
+            if(msg.callback!=null) {
+                process.send({'callback':msg.callback, 'result':result, 'success':success});
             }
-        } else if(msg.fn === 'create' && msg.args !=null) {
-            //console.log("handling create");
-            RDFStoreWorker.handleCreate(msg.args, msg.callback);
-        } else if(msg.fn === 'setBatchLoadEvents') {
-            RDFStoreWorker.store[msg.fn].apply(RDFStoreWorker.store, msg.args);
-        } else if(msg.fn === 'registerDefaultNamespace') {
-            RDFStoreWorker.store[msg.fn].apply(RDFStoreWorker.store, msg.args);
-        } else if(msg.fn === 'registerDefaultProfileNamespaces') {
-            RDFStoreWorker.store[msg.fn].apply(RDFStoreWorker.store, msg.args);
-        } else if((msg.fn === 'execute' ||
-                   msg.fn === 'executeWithEnvironment' ||
-                   msg.fn === 'graph'||
-                   msg.fn === 'node' ||
-                   msg.fn === 'clear' ||
-                   msg.fn === 'load') && msg.args != null) {
+        });
+        try {
+            RDFStoreChild.store[msg.fn].apply(RDFStoreChild.store,msg.args);
+        } catch(e) {
+            console.log("Error executing method through connection");
+            console.log(e);
+        }
+    } else if((msg.fn === 'insert'||
+               msg.fn === 'delete') && msg.args != null) {
+        try {
             msg.args.push(function(success, result){
                 //console.log("CALLBACK!");
                 if(msg.callback!=null) {
-                    postMessage({'callback':msg.callback, 'result':result, 'success':success});
+                    process.send({'callback':msg.callback, 'result':result, 'success':success});
                 }
             });
-            try {
-                RDFStoreWorker.store[msg.fn].apply(RDFStoreWorker.store,msg.args);
-            } catch(e) {
-                console.log("Error executing method through connection");
-                console.log(e);
+            var triple;
+            var toWrap = msg.args[0];
+            for(var i=0; i<toWrap.triples.length; i++) {
+                triple = toWrap.triples[i];
+                toWrap.triples[i] = new RDFJSInterface.Triple(RDFStoreChild.adaptJSInterface(triple.subject),
+                                                              RDFStoreChild.adaptJSInterface(triple.predicate),
+                                                              RDFStoreChild.adaptJSInterface(triple.object));
+            }                
+
+            if(msg.args[1].interfaceName != null) {
+                msg.args[1] = RDFStoreChild.adaptJSInterface(msg.args[1]);
             }
-        } else if((msg.fn === 'insert'||
-                   msg.fn === 'delete') && msg.args != null) {
-            try {
-                msg.args.push(function(success, result){
-                    //console.log("CALLBACK!");
-                    if(msg.callback!=null) {
-                        postMessage({'callback':msg.callback, 'result':result, 'success':success});
-                    }
-                });
-                var triple;
-                var toWrap = msg.args[0];
-                for(var i=0; i<toWrap.triples.length; i++) {
-                    triple = toWrap.triples[i];
-                    toWrap.triples[i] = new RDFJSInterface.Triple(RDFStoreWorker.adaptJSInterface(triple.subject),
-                                                                  RDFStoreWorker.adaptJSInterface(triple.predicate),
-                                                                  RDFStoreWorker.adaptJSInterface(triple.object));
-                }                
-
-                if(msg.args[1].interfaceName != null) {
-                    msg.args[1] = RDFStoreWorker.adaptJSInterface(msg.args[1]);
-                }
-                msg.args[0] = RDFStoreWorker.store.rdf.createGraph(toWrap.triples)
-                //console.log("ARGS...");
-                
-                RDFStoreWorker.store[msg.fn].apply(RDFStoreWorker.store,msg.args);
-            } catch(e) {
-                console.log("Error executing method through connection");
-                console.log(e);
-            }
-        } else if(msg.fn === 'rdf/setPrefix' && msg.args != null) {
-            RDFStoreWorker.store.rdf.setPrefix(msg.args[0], msg.args[1]);
-        } else if(msg.fn === 'rdf/setDefaultPrefix' && msg.args != null) {
-            RDFStoreWorker.store.rdf.setDefaultPrefix(msg.args[0]);
-        } else if(msg.fn === 'startObservingQuery' && msg.args != null) {
-            // regular callback
-            var cb = function(success, result){
-                postMessage({'callback':msg.callback[0], 'result':result, 'success':success});
-            };
-
-            RDFStoreWorker.observingCallbacks[msg.args[0]] = cb;
-            msg.args.push(cb);
-
-
-            // end register callback
-            msg.args.push(function(success, result) {
-                //console.log("CALLBACK END REGISTER OBSERVING QUERY!");
-                if(msg.callback && msg.callback[1] !=null) {
-                    postMessage({'callback':msg.callback[1], 'result':result, 'success':success});                    
-                }
-            });
-
-            RDFStoreWorker.store[msg.fn].apply(RDFStoreWorker.store,msg.args);
-
-        } else if(msg.fn === 'stopObservingQuery') {
-            var cb = RDFStoreWorker.observingCallbacks[msg.args[0]];
-            if(cb) {
-                RDFStoreWorker.store[msg.fn].apply(RDFStoreWorker.store,[cb]);
-            }
-
-            delete RDFStoreWorker.observingCallbacks[msg.args[0]];
-        } else if(msg.fn === 'startObservingNode' && msg.args != null) {
-            // regular callback
-            var cb = function(result){
-                //console.log("CALLBACK OBSERVING NODE!");
-                postMessage({'callback':msg.callback, 'result':result});
-            };
-
-            RDFStoreWorker.observingCallbacks[msg.callback] = cb;
-            msg.args.push(cb);
-
-            RDFStoreWorker.store[msg.fn].apply(RDFStoreWorker.store,msg.args);
-        } else if(msg.fn === 'stopObservingNode' && msg.args != null) {
-            var cb = RDFStoreWorker.observingCallbacks[msg.args[0]];
-            if(cb) {
-                //console.log("WORKER STOP OBSERVING");
-                //console.log(cb);
-                RDFStoreWorker.store[msg.fn].apply(RDFStoreWorker.store,[cb]);
-            }
-
-            delete RDFStoreWorker.observingCallbacks[msg.args[0]];
-        } else if(msg.fn === 'subscribe' && msg.args != null) {
-            // regular callback
-            var cb = function(event,result){
-                //console.log("CALLBACK OBSERVING NODE!");
-                postMessage({'callback':msg.callback, 'event':event, 'result':result});
-            };
-
-            RDFStoreWorker.observingCallbacks[msg.callback] = cb;
-            msg.args.push(cb);
-
-            RDFStoreWorker.store[msg.fn].apply(RDFStoreWorker.store,msg.args);
-        } else if(msg.fn === 'stopObservingNode' && msg.args != null) {
-            var cb = RDFStoreWorker.observingCallbacks[msg.args[0]];
-            if(cb) {
-                //console.log("WORKER UNSUBSCRIBE");
-                //console.log(cb);
-                RDFStoreWorker.store[msg.fn].apply(RDFStoreWorker.store,[cb]);
-            }
-
-            delete RDFStoreWorker.observingCallbacks[msg.args[0]];
-        } else if(msg.fn === 'registeredGraphs' && msg.args != null) {
-            var cb = function(success, result){
-                //console.log("CALLBACK!");
-                if(msg.callback!=null) {
-                    postMessage({'callback':msg.callback, 'result':result, 'success':success});
-                }
-            };
-            RDFStoreWorker.store[msg.fn].apply(RDFStoreWorker.store,[cb]);
+            msg.args[0] = RDFStoreChild.store.rdf.createGraph(toWrap.triples)
+            //console.log("ARGS...");
+            
+            RDFStoreChild.store[msg.fn].apply(RDFStoreChild.store,msg.args);
+        } catch(e) {
+            console.log("Error executing method through connection");
+            console.log(e);
         }
-    };
+    } else if(msg.fn === 'rdf/setPrefix' && msg.args != null) {
+        RDFStoreChild.store.rdf.setPrefix(msg.args[0], msg.args[1]);
+    } else if(msg.fn === 'rdf/setDefaultPrefix' && msg.args != null) {
+        RDFStoreChild.store.rdf.setDefaultPrefix(msg.args[0]);
+    } else if(msg.fn === 'startObservingQuery' && msg.args != null) {
+        // regular callback
+        var cb = function(success, result){
+            process.send({'callback':msg.callback[0], 'result':result, 'success':success});
+        };
 
-    // helper functions
-    RDFStoreWorker.adaptJSInterface = function(node) {
-        if(node.interfaceName === 'BlankNode') {
-            return new RDFJSInterface.BlankNode(node.bnodeId);
-        } else if(node.interfaceName === 'Literal') {
-            return new RDFJSInterface.Literal(node.nominalValue, node.language, node.datatype);
-        } else if(node.interfaceName === 'NamedNode') {
-            return new RDFJSInterface.NamedNode(node.nominalValue);
+        RDFStoreChild.observingCallbacks[msg.args[0]] = cb;
+        msg.args.push(cb);
+
+
+        // end register callback
+        msg.args.push(function(success, result) {
+            //console.log("CALLBACK END REGISTER OBSERVING QUERY!");
+            if(msg.callback && msg.callback[1] !=null) {
+                process.send({'callback':msg.callback[1], 'result':result, 'success':success});                    
+            }
+        });
+
+        RDFStoreChild.store[msg.fn].apply(RDFStoreChild.store,msg.args);
+
+    } else if(msg.fn === 'stopObservingQuery') {
+        var cb = RDFStoreChild.observingCallbacks[msg.args[0]];
+        if(cb) {
+            RDFStoreChild.store[msg.fn].apply(RDFStoreChild.store,[cb]);
         }
-    };
-    // set the receiver message
-    onmessage = RDFStoreWorker.receive;
 
-// end of ./src/js-connection/src/rdfstore_worker.js 
+        delete RDFStoreChild.observingCallbacks[msg.args[0]];
+    } else if(msg.fn === 'startObservingNode' && msg.args != null) {
+        // regular callback
+        var cb = function(result){
+            //console.log("CALLBACK OBSERVING NODE!");
+            process.send({'callback':msg.callback, 'result':result});
+        };
+
+        RDFStoreChild.observingCallbacks[msg.callback] = cb;
+        msg.args.push(cb);
+
+        RDFStoreChild.store[msg.fn].apply(RDFStoreChild.store,msg.args);
+    } else if(msg.fn === 'stopObservingNode' && msg.args != null) {
+        var cb = RDFStoreChild.observingCallbacks[msg.args[0]];
+        if(cb) {
+            //console.log("WORKER STOP OBSERVING");
+            //console.log(cb);
+            RDFStoreChild.store[msg.fn].apply(RDFStoreChild.store,[cb]);
+        }
+
+        delete RDFStoreChild.observingCallbacks[msg.args[0]];
+    } else if(msg.fn === 'subscribe' && msg.args != null) {
+        // regular callback
+        var cb = function(event,result){
+            //console.log("CALLBACK OBSERVING NODE!");
+            process.send({'callback':msg.callback, 'event':event, 'result':result});
+        };
+
+        RDFStoreChild.observingCallbacks[msg.callback] = cb;
+        msg.args.push(cb);
+
+        RDFStoreChild.store[msg.fn].apply(RDFStoreChild.store,msg.args);
+    } else if(msg.fn === 'stopObservingNode' && msg.args != null) {
+        var cb = RDFStoreChild.observingCallbacks[msg.args[0]];
+        if(cb) {
+            //console.log("WORKER UNSUBSCRIBE");
+            //console.log(cb);
+            RDFStoreChild.store[msg.fn].apply(RDFStoreChild.store,[cb]);
+        }
+
+        delete RDFStoreChild.observingCallbacks[msg.args[0]];
+    } else if(msg.fn === 'registeredGraphs' && msg.args != null) {
+        var cb = function(success, result){
+            //console.log("CALLBACK!");
+            if(msg.callback!=null) {
+                process.send({'callback':msg.callback, 'result':result, 'success':success});
+            }
+        };
+        RDFStoreChild.store[msg.fn].apply(RDFStoreChild.store,[cb]);
+    }
+};
+
+// helper functions
+RDFStoreChild.adaptJSInterface = function(node) {
+    if(node.interfaceName === 'BlankNode') {
+        return new RDFJSInterface.BlankNode(node.bnodeId);
+    } else if(node.interfaceName === 'Literal') {
+        return new RDFJSInterface.Literal(node.nominalValue, node.language, node.datatype);
+    } else if(node.interfaceName === 'NamedNode') {
+        return new RDFJSInterface.NamedNode(node.nominalValue);
+    }
+};
+
+if(process.argv[2] === 'is_child') {
+  // set the receiver message
+  process.on('message',function(msg) {
+      RDFStoreChild.receive(msg);
+  });
+}
+
+
+// end of ./src/js-connection/src/rdfstore_child.js 
 // exports
 var NetworkTransport = {};
 

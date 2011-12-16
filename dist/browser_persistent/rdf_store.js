@@ -4,10 +4,9 @@
 try {
   console = console || {};
 } catch(e) {
-  console = console || {};
+  console = {};
   console.log = function(e){};
 }
-
 var Utils = {};
 
 
@@ -2458,7 +2457,7 @@ NetworkTransport.load = function(uri, accept, callback, redirect) {
 
     transport.ajax({
         url: uri,
-        headers: {"Accepts": accept},
+        headers: {"Accept": accept},
 
         success: function(data, status, xhr){
             if((""+xhr.status)[0] == '2') {
@@ -2517,17 +2516,8 @@ var _setMembers = function(self, obj)
    }
 };
 
-// define jsonld
-if(typeof(window) !== 'undefined')
-{
-   var jsonld = window.jsonld = window.jsonld || {};
-   Exception = function(obj)
-   {
-      _setMembers(this, obj);
-   }
-}
 // define node.js module
-else if(typeof(module) !== 'undefined' && module.exports)
+if(typeof(module) !== 'undefined' && module.exports)
 {
    var jsonld = {};
    Exception = function(obj)
@@ -2535,6 +2525,25 @@ else if(typeof(module) !== 'undefined' && module.exports)
       _setMembers(this, obj);
       this.stack = new Error().stack;
    };
+}
+// define jsonld
+else if(typeof(window) !== 'undefined')
+{
+   var jsonld = window.jsonld = window.jsonld || {};
+   Exception = function(obj)
+   {
+      _setMembers(this, obj);
+   }
+}
+// Web worker running in the browser
+else 
+{
+    window = {};
+    var jsonld = window.jsonld = {};
+   Exception = function(obj)
+   {
+      _setMembers(this, obj);
+   }
 }
 
 jsonldParser = jsonld;
@@ -2615,7 +2624,7 @@ var _clone = function(value)
    if(value.constructor === Object)
    {
       rval = {};
-      var keys = Object.keys(value).sort();
+      var keys = Utils.keys(value).sort();
       for(var i in keys)
       {
          var key = keys[i];
@@ -2905,7 +2914,7 @@ jsonld.compact = function(ctx, input)
          var out = new Processor().compact(_clone(ctx), null, tmp[i], ctxOut);
          
          // add context if used
-         if(Object.keys(ctxOut).length > 0)
+         if(Utils.keys(ctxOut).length > 0)
          {
             out['@context'] = ctxOut;
          }
@@ -3584,7 +3593,7 @@ Processor.prototype.normalize = function(input)
       {
          var s = subjects[key];
          var sorted = {};
-         var keys = Object.keys(s).sort();
+         var keys = Utils.keys(s).sort();
          for(var i in keys)
          {
             var k = keys[i];
@@ -4315,7 +4324,7 @@ Processor.prototype.canonicalizeBlankNodes = function(input)
          }
          
          // sort keys by value to name them in order
-         var keys = Object.keys(mapping);
+         var keys = Utils.keys(mapping);
          keys.sort(function(a, b)
          {
             return _compare(mapping[a], mapping[b]);
@@ -4673,7 +4682,7 @@ Processor.prototype.serializeCombos = function(
    // no more adjacent bnodes to map, update serialization
    else
    {
-      var keys = Object.keys(mapped).sort();
+      var keys = Utils.keys(mapped).sort();
       mb.adj[siri] = { i: iri, k: keys, m: mapped };
       mb.serialize(this.subjects, this.edges);
       
@@ -4845,7 +4854,7 @@ Processor.prototype.deepCompareBlankNodes = function(a, b)
                {
                   // keep same mapping and count from 'props' serialization
                   mb.mapping = _clone(sA['props'].m);
-                  mb.count = Object.keys(mb.mapping).length + 1;
+                  mb.count = Utils.keys(mb.mapping).length + 1;
                }
                this.serializeBlankNode(sA, iriA, mb, dir);
             }
@@ -4856,7 +4865,7 @@ Processor.prototype.deepCompareBlankNodes = function(a, b)
                {
                   // keep same mapping and count from 'props' serialization
                   mb.mapping = _clone(sB['props'].m);
-                  mb.count = Object.keys(mb.mapping).length + 1;
+                  mb.count = Utils.keys(mb.mapping).length + 1;
                }
                this.serializeBlankNode(sB, iriB, mb, dir);
             }
@@ -4895,8 +4904,8 @@ Processor.prototype.shallowCompareBlankNodes = function(a, b)
       5.2. The bnode with the alphabetically-first reference iri is first.
       5.3. The bnode with the alphabetically-first reference property is first.
     */
-   var pA = Object.keys(a);
-   var pB = Object.keys(b);
+   var pA = Utils.keys(a);
+   var pB = Utils.keys(b);
    
    // step #1
    rval = _compare(pA.length, pB.length);
@@ -5104,7 +5113,7 @@ var _isDuckType = function(input, frame)
    if(!(type in frame))
    {
       // get frame properties that must exist on input
-      var props = Object.keys(frame).filter(function(e)
+      var props = Utils.keys(frame).filter(function(e)
       {
          // filter non-keywords
          return e.indexOf('@') !== 0;
@@ -5575,6 +5584,8 @@ RDFLoader.RDFLoader.prototype.tryToParse = function(parser, graph, input, callba
             callback(false, "parsing error");
         }
     } catch(e) {
+        console.log(e.message);
+        console.log(e.stack);
         callback(false, "parsing error with mime type : " + e);
     }
 };
@@ -5765,6 +5776,8 @@ AbstractQueryTree.AbstractQueryTree.prototype.collectBasicTriples = function(aqt
         acum = this.collectBasicTriples(aqt.rvalue, acum);
     } else if(aqt.kind === 'FILTER') {
         acum = this.collectBasicTriples(aqt.value, acum);
+    } else if(aqt.kind === 'construct') {
+        acum = this.collectBasicTriples(aqt.pattern,acum);
     } else if(aqt.kind === 'EMPTY_PATTERN') {
         // nothing
     } else {
@@ -9054,7 +9067,7 @@ SparqlParser.parser = (function(){
         }
         var result2 = result1 !== null
           ? (function(t, gs, w, sm) {
-                var dataset = {named:[], 'default':[]};
+                var dataset = {'named':[], 'default':[]};
                 for(var i=0; i<gs.length; i++) {
                     var g = gs[i];
                     if(g.kind === 'default') {
@@ -19166,32 +19179,178 @@ SparqlParser.parser = (function(){
           var result4 = [];
           var savedPos2 = pos;
           var result6 = [];
-          var result11 = parse_WS();
-          while (result11 !== null) {
-            result6.push(result11);
-            var result11 = parse_WS();
+          var result25 = parse_WS();
+          while (result25 !== null) {
+            result6.push(result25);
+            var result25 = parse_WS();
           }
           if (result6 !== null) {
-            if (input.substr(pos, 5) === "UNION") {
-              var result7 = "UNION";
-              pos += 5;
+            if (input.substr(pos, 1) === "U") {
+              var result24 = "U";
+              pos += 1;
             } else {
-              var result7 = null;
+              var result24 = null;
               if (reportMatchFailures) {
-                matchFailed("\"UNION\"");
+                matchFailed("\"U\"");
               }
             }
+            if (result24 !== null) {
+              var result7 = result24;
+            } else {
+              if (input.substr(pos, 1) === "u") {
+                var result23 = "u";
+                pos += 1;
+              } else {
+                var result23 = null;
+                if (reportMatchFailures) {
+                  matchFailed("\"u\"");
+                }
+              }
+              if (result23 !== null) {
+                var result7 = result23;
+              } else {
+                var result7 = null;;
+              };
+            }
             if (result7 !== null) {
-              var result8 = [];
-              var result10 = parse_WS();
-              while (result10 !== null) {
-                result8.push(result10);
-                var result10 = parse_WS();
+              if (input.substr(pos, 1) === "N") {
+                var result22 = "N";
+                pos += 1;
+              } else {
+                var result22 = null;
+                if (reportMatchFailures) {
+                  matchFailed("\"N\"");
+                }
+              }
+              if (result22 !== null) {
+                var result8 = result22;
+              } else {
+                if (input.substr(pos, 1) === "n") {
+                  var result21 = "n";
+                  pos += 1;
+                } else {
+                  var result21 = null;
+                  if (reportMatchFailures) {
+                    matchFailed("\"n\"");
+                  }
+                }
+                if (result21 !== null) {
+                  var result8 = result21;
+                } else {
+                  var result8 = null;;
+                };
               }
               if (result8 !== null) {
-                var result9 = parse_GroupGraphPattern();
+                if (input.substr(pos, 1) === "I") {
+                  var result20 = "I";
+                  pos += 1;
+                } else {
+                  var result20 = null;
+                  if (reportMatchFailures) {
+                    matchFailed("\"I\"");
+                  }
+                }
+                if (result20 !== null) {
+                  var result9 = result20;
+                } else {
+                  if (input.substr(pos, 1) === "i") {
+                    var result19 = "i";
+                    pos += 1;
+                  } else {
+                    var result19 = null;
+                    if (reportMatchFailures) {
+                      matchFailed("\"i\"");
+                    }
+                  }
+                  if (result19 !== null) {
+                    var result9 = result19;
+                  } else {
+                    var result9 = null;;
+                  };
+                }
                 if (result9 !== null) {
-                  var result5 = [result6, result7, result8, result9];
+                  if (input.substr(pos, 1) === "O") {
+                    var result18 = "O";
+                    pos += 1;
+                  } else {
+                    var result18 = null;
+                    if (reportMatchFailures) {
+                      matchFailed("\"O\"");
+                    }
+                  }
+                  if (result18 !== null) {
+                    var result10 = result18;
+                  } else {
+                    if (input.substr(pos, 1) === "o") {
+                      var result17 = "o";
+                      pos += 1;
+                    } else {
+                      var result17 = null;
+                      if (reportMatchFailures) {
+                        matchFailed("\"o\"");
+                      }
+                    }
+                    if (result17 !== null) {
+                      var result10 = result17;
+                    } else {
+                      var result10 = null;;
+                    };
+                  }
+                  if (result10 !== null) {
+                    if (input.substr(pos, 1) === "N") {
+                      var result16 = "N";
+                      pos += 1;
+                    } else {
+                      var result16 = null;
+                      if (reportMatchFailures) {
+                        matchFailed("\"N\"");
+                      }
+                    }
+                    if (result16 !== null) {
+                      var result11 = result16;
+                    } else {
+                      if (input.substr(pos, 1) === "n") {
+                        var result15 = "n";
+                        pos += 1;
+                      } else {
+                        var result15 = null;
+                        if (reportMatchFailures) {
+                          matchFailed("\"n\"");
+                        }
+                      }
+                      if (result15 !== null) {
+                        var result11 = result15;
+                      } else {
+                        var result11 = null;;
+                      };
+                    }
+                    if (result11 !== null) {
+                      var result12 = [];
+                      var result14 = parse_WS();
+                      while (result14 !== null) {
+                        result12.push(result14);
+                        var result14 = parse_WS();
+                      }
+                      if (result12 !== null) {
+                        var result13 = parse_GroupGraphPattern();
+                        if (result13 !== null) {
+                          var result5 = [result6, result7, result8, result9, result10, result11, result12, result13];
+                        } else {
+                          var result5 = null;
+                          pos = savedPos2;
+                        }
+                      } else {
+                        var result5 = null;
+                        pos = savedPos2;
+                      }
+                    } else {
+                      var result5 = null;
+                      pos = savedPos2;
+                    }
+                  } else {
+                    var result5 = null;
+                    pos = savedPos2;
+                  }
                 } else {
                   var result5 = null;
                   pos = savedPos2;
@@ -19212,32 +19371,178 @@ SparqlParser.parser = (function(){
             result4.push(result5);
             var savedPos2 = pos;
             var result6 = [];
-            var result11 = parse_WS();
-            while (result11 !== null) {
-              result6.push(result11);
-              var result11 = parse_WS();
+            var result25 = parse_WS();
+            while (result25 !== null) {
+              result6.push(result25);
+              var result25 = parse_WS();
             }
             if (result6 !== null) {
-              if (input.substr(pos, 5) === "UNION") {
-                var result7 = "UNION";
-                pos += 5;
+              if (input.substr(pos, 1) === "U") {
+                var result24 = "U";
+                pos += 1;
               } else {
-                var result7 = null;
+                var result24 = null;
                 if (reportMatchFailures) {
-                  matchFailed("\"UNION\"");
+                  matchFailed("\"U\"");
                 }
               }
+              if (result24 !== null) {
+                var result7 = result24;
+              } else {
+                if (input.substr(pos, 1) === "u") {
+                  var result23 = "u";
+                  pos += 1;
+                } else {
+                  var result23 = null;
+                  if (reportMatchFailures) {
+                    matchFailed("\"u\"");
+                  }
+                }
+                if (result23 !== null) {
+                  var result7 = result23;
+                } else {
+                  var result7 = null;;
+                };
+              }
               if (result7 !== null) {
-                var result8 = [];
-                var result10 = parse_WS();
-                while (result10 !== null) {
-                  result8.push(result10);
-                  var result10 = parse_WS();
+                if (input.substr(pos, 1) === "N") {
+                  var result22 = "N";
+                  pos += 1;
+                } else {
+                  var result22 = null;
+                  if (reportMatchFailures) {
+                    matchFailed("\"N\"");
+                  }
+                }
+                if (result22 !== null) {
+                  var result8 = result22;
+                } else {
+                  if (input.substr(pos, 1) === "n") {
+                    var result21 = "n";
+                    pos += 1;
+                  } else {
+                    var result21 = null;
+                    if (reportMatchFailures) {
+                      matchFailed("\"n\"");
+                    }
+                  }
+                  if (result21 !== null) {
+                    var result8 = result21;
+                  } else {
+                    var result8 = null;;
+                  };
                 }
                 if (result8 !== null) {
-                  var result9 = parse_GroupGraphPattern();
+                  if (input.substr(pos, 1) === "I") {
+                    var result20 = "I";
+                    pos += 1;
+                  } else {
+                    var result20 = null;
+                    if (reportMatchFailures) {
+                      matchFailed("\"I\"");
+                    }
+                  }
+                  if (result20 !== null) {
+                    var result9 = result20;
+                  } else {
+                    if (input.substr(pos, 1) === "i") {
+                      var result19 = "i";
+                      pos += 1;
+                    } else {
+                      var result19 = null;
+                      if (reportMatchFailures) {
+                        matchFailed("\"i\"");
+                      }
+                    }
+                    if (result19 !== null) {
+                      var result9 = result19;
+                    } else {
+                      var result9 = null;;
+                    };
+                  }
                   if (result9 !== null) {
-                    var result5 = [result6, result7, result8, result9];
+                    if (input.substr(pos, 1) === "O") {
+                      var result18 = "O";
+                      pos += 1;
+                    } else {
+                      var result18 = null;
+                      if (reportMatchFailures) {
+                        matchFailed("\"O\"");
+                      }
+                    }
+                    if (result18 !== null) {
+                      var result10 = result18;
+                    } else {
+                      if (input.substr(pos, 1) === "o") {
+                        var result17 = "o";
+                        pos += 1;
+                      } else {
+                        var result17 = null;
+                        if (reportMatchFailures) {
+                          matchFailed("\"o\"");
+                        }
+                      }
+                      if (result17 !== null) {
+                        var result10 = result17;
+                      } else {
+                        var result10 = null;;
+                      };
+                    }
+                    if (result10 !== null) {
+                      if (input.substr(pos, 1) === "N") {
+                        var result16 = "N";
+                        pos += 1;
+                      } else {
+                        var result16 = null;
+                        if (reportMatchFailures) {
+                          matchFailed("\"N\"");
+                        }
+                      }
+                      if (result16 !== null) {
+                        var result11 = result16;
+                      } else {
+                        if (input.substr(pos, 1) === "n") {
+                          var result15 = "n";
+                          pos += 1;
+                        } else {
+                          var result15 = null;
+                          if (reportMatchFailures) {
+                            matchFailed("\"n\"");
+                          }
+                        }
+                        if (result15 !== null) {
+                          var result11 = result15;
+                        } else {
+                          var result11 = null;;
+                        };
+                      }
+                      if (result11 !== null) {
+                        var result12 = [];
+                        var result14 = parse_WS();
+                        while (result14 !== null) {
+                          result12.push(result14);
+                          var result14 = parse_WS();
+                        }
+                        if (result12 !== null) {
+                          var result13 = parse_GroupGraphPattern();
+                          if (result13 !== null) {
+                            var result5 = [result6, result7, result8, result9, result10, result11, result12, result13];
+                          } else {
+                            var result5 = null;
+                            pos = savedPos2;
+                          }
+                        } else {
+                          var result5 = null;
+                          pos = savedPos2;
+                        }
+                      } else {
+                        var result5 = null;
+                        pos = savedPos2;
+                      }
+                    } else {
+                      var result5 = null;
+                      pos = savedPos2;
+                    }
                   } else {
                     var result5 = null;
                     pos = savedPos2;
@@ -19276,9 +19581,9 @@ SparqlParser.parser = (function(){
           
                     for(var i=0; i<b.length; i++) {
                         if(i==b.length-1) {
-                            lastToken.value.push(b[i][3]);
+                            lastToken.value.push(b[i][7]);
                         } else {
-                            lastToken.value.push(b[i][3]);
+                            lastToken.value.push(b[i][7]);
                             var newToken = {token: 'graphunionpattern',
                                             value: [lastToken]}
           
@@ -34575,7 +34880,6 @@ SparqlParser.parser = (function(){
   return result;
 })();
 
-
 // end of ./src/js-sparql-parser/src/sparql_parser.js 
 // exports
 var TurtleParser = {};
@@ -34665,7 +34969,7 @@ RDFJSInterface.UrisMap = function() {
 RDFJSInterface.UrisMap.prototype.values = function() {
     var collected = {};
     for(var p in this) {
-        if(!RDFStoreUtils.include(this.interfaceProperties,p) && 
+        if(!Utils.include(this.interfaceProperties,p) && 
            typeof(this[p])!=='function' &&
            p!=='defaultNs' &&
            p!=='interfaceProperties') {
@@ -34727,7 +35031,11 @@ RDFJSInterface.UrisMap.prototype.resolve = function(curie) {
     var ns = parts[0];
     var suffix = parts[1];
     if(ns === '') {
-        return this.defaultNs + suffix;
+        if(this.defaultNs == null) {
+            return null;
+        } else {
+            return this.defaultNs + suffix;
+        }
     } else if(this[ns] != null) {
         return this[ns] + suffix;
     } else {
@@ -34739,7 +35047,7 @@ RDFJSInterface.UrisMap.prototype.shrink = function(iri) {
     for(var ns in this) {
         var prefix = this[ns];
         if(iri.indexOf(prefix) === 0) {
-            if(prefix !== '') {
+            if(prefix !== '' && ns != 'defaultNs') {
                 var suffix = iri.split(prefix)[1];
                 return ns + ":" + suffix;
             }
@@ -34966,8 +35274,8 @@ RDFJSInterface.Literal.prototype.toString = function(){
     var tmp = "\""+this.nominalValue+"\"";
     if(this.language != null) {
         tmp = tmp + "@" + this.language;
-    } else if(this.type != null) {
-        tmp = tmp + "^^" + this.datatype;
+    } else if(this.datatype != null || this.type) {
+        tmp = tmp + "^^<" + (this.datatype||this.type) + ">";
     }
 
     return tmp;
@@ -37205,14 +37513,16 @@ QueryPlan.buildBindingsFromRange = function(results, bgp) {
 
     var resultsBindings =[];
 
-    for(var i=0; i<results.length; i++) {
-        var binding = {};
-        var result  = results[i];
-        for(var comp in bindings) {
-            var value = result[comp];
-            binding[bindings[comp]] = value;
-        }
-        resultsBindings.push(binding);
+    if(results!=null) {
+      for(var i=0; i<results.length; i++) {
+          var binding = {};
+          var result  = results[i];
+          for(var comp in bindings) {
+              var value = result[comp];
+              binding[bindings[comp]] = value;
+          }
+          resultsBindings.push(binding);
+      }
     }
 
     return resultsBindings;
@@ -37392,6 +37702,10 @@ QueryEngine.QueryEngine = function(params) {
     if(arguments.length != 0) {
         this.backend = params.backend;
         this.lexicon = params.lexicon;
+        // batch loads should generate events?
+        this.eventsOnBatchLoad = (params.eventsOnBatchLoad || false);
+        // list of namespaces that will be automatically added to every query
+        this.defaultPrefixes = {};
         this.abstractQueryTree = new AbstractQueryTree.AbstractQueryTree();
         this.rdfLoader = new RDFLoader.RDFLoader(params['communication']);
         this.callbacksBackend = new Callbacks.CallbacksBackend(this);
@@ -37402,6 +37716,12 @@ QueryEngine.QueryEngine = function(params) {
 QueryEngine.QueryEngine.prototype.registerNsInEnvironment = function(prologue, env) {
     var prefixes = prologue.prefixes;
     var toSave = {};
+
+    // adding default prefixes;
+    for(var p in this.defaultPrefixes) {
+        toSave[p] = this.defaultPrefixes[p];
+    }
+
     for(var i=0; i<prefixes.length; i++) {
         var prefix = prefixes[i];
         if(prefix.token === "prefix") {
@@ -38460,6 +38780,7 @@ QueryEngine.QueryEngine.prototype.executeUpdate = function(syntaxTree, callback)
                 if(success == false) {
                     console.log("Error loading graph");
                     console.log(result);
+                    callback(false, "error batch loading quads");
                 } else {
                     var result = that.batchLoad(result);
                     callback(result!=null, result||"error batch loading quads");
@@ -38484,7 +38805,10 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
     var counter = 0;
     var success = true;
     var blanks = {};
-    var maybeBlankOid, oid, quad, key;
+    var maybeBlankOid, oid, quad, key, originalQuad;
+
+    if(this.eventsOnBatchLoad)
+        this.callbacksBackend.startGraphModification();
 
     for(var i=0; i<quads.length; i++) {
         quad = quads[i];
@@ -38556,27 +38880,47 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
         }
 
 
+
+        originalQuad = quad;
         quad = {subject: subject, predicate:predicate, object:object, graph: graph};
         key = new QuadIndexCommon.NodeKey(quad);
-          
-        var result = this.backend.index(key)
-        if(result == true){
-            counter = counter + 1;
-        } else {
-            success = false;
-            break;
+
+        var result = this.backend.search(key);
+        if(!result) {
+            result = this.backend.index(key)
+            if(result == true){
+                if(this.eventsOnBatchLoad)
+                    this.callbacksBackend.nextGraphModification(Callbacks.added, [originalQuad,quad]);
+                counter = counter + 1;
+            } else {
+                success = false;
+                break;
+            }
         }
 
     }
 
-    if(success) {
-        if(callback)
-            callback(true, counter);
-        return counter;
-    } else {
-        if(callback)
-            callback(false, null);
+    var exitFn = function(){
+        if(success) {
+            if(callback)
+                callback(true, counter);
+        } else {
+            if(callback)
+                callback(false, null);
+        }
+    }
 
+    if(this.eventsOnBatchLoad) {
+        this.callbacksBackend.endGraphModification(function(){
+            exitFn();
+        });
+    } else {
+        exitFn();
+    }
+        
+    if(success) {
+        return counter
+    } else {
         return null;
     }
 };
@@ -38840,6 +39184,10 @@ QueryEngine.QueryEngine.prototype.checkGroupSemantics = function(groupVars, proj
     return true;
 };
 
+QueryEngine.QueryEngine.prototype.registerDefaultNamespace = function(ns, prefix) {
+    this.defaultPrefixes[ns] = prefix;
+};
+
 // end of ./src/js-query-engine/src/query_engine.js 
 // exports
 var Callbacks = {};
@@ -39067,7 +39415,6 @@ Callbacks.CallbacksBackend.prototype._tokenizeComponents = function(s, p, o, g) 
         pattern['subject'] = Callbacks.ANYTHING;
     } else {
         if(s.indexOf("_:") == 0) {
-            console.log("BLANK!!");
             pattern['subject'] = {'token': 'blank', 'value':s};
         } else {
             pattern['subject'] = {'token': 'uri', 'value':s};
@@ -39213,8 +39560,8 @@ Callbacks.CallbacksBackend.prototype.observeQuery = function(query, callback, en
         indexOrder = that.componentOrders[indexKey];
         index = that.queriesIndexMap[indexKey];
 
-        for(var i=0; i<indexOrder.length; i++) {
-            var component = indexOrder[i];
+        for(var j=0; j<indexOrder.length; j++) {
+            var component = indexOrder[j];
             var quadValue = normalized[component];
             if(typeof(quadValue) === 'string') {
                 if(index['_'] == null) {
@@ -39223,7 +39570,7 @@ Callbacks.CallbacksBackend.prototype.observeQuery = function(query, callback, en
                 index['_'].push(counter);
                 break;
             } else {
-                if(i===indexOrder.length-1) {
+                if(j===indexOrder.length-1) {
                     index[quadValue] = index[quadValue] || {'_':[]};
                     index[quadValue]['_'].push(counter);
                 } else {
@@ -39318,9 +39665,12 @@ Callbacks.CallbacksBackend.prototype.dispatchQueries = function(callback) {
 // exports
 var RDFStoreClient = {};
 
+
 try {
     console.log("*** Checking if web workers are available");
-    Worker;
+    if(typeof(Worker)=='undefined') {
+        Worker = null;
+    };
     console.log("*** Web workers available");
 } catch(e) {
     Worker = null;
@@ -39330,7 +39680,7 @@ try {
 if(!!Worker) {
 
     RDFStoreClient.RDFStoreClient = function(path_to_store_script, args, cb) {
-        //console.log("trying to load "+path_to_store_script);
+        console.log("trying to load "+path_to_store_script);
         if(Worker.Worker) {
             this.connection = new Worker.Worker(path_to_store_script);
         } else {
@@ -39348,7 +39698,8 @@ if(!!Worker) {
 
         this.rdf = RDFJSInterface.rdf;
 
-        //console.log("The worker");
+        console.log("The worker");
+        console.log(this.connection);
         var that = this;
         this.connection.onmessage = function(event){
             that.receive(event);
@@ -39361,19 +39712,30 @@ if(!!Worker) {
     RDFStoreClient.RDFStoreClient.prototype.receive = function(packet) {
         event = packet.data || packet;
         //console.log("RECEIVED SOMETHING");
-        var callbackData = this.callbacks[event.callback];
-        //console.log(packet);
-        //console.log(callbackData);
-        if(callbackData) {
-            if(callbackData.fn === 'create' || callbackData.fn === 'execute' || callbackData.fn === 'insert' || callbackData.fn == 'graph' ||
-               callbackData.fn === 'node' || callbackData.fn === 'insert' || callbackData.fn === 'delete' || callbackData.fn === 'clear' ||
-               callbackData.fn === 'load' || callbackData.fn === 'startObservingQueryEndCb' || callbackData.fn === 'registeredGraphs') {
-                delete this.callbacks[event.callback];
-                callbackData.cb(event.success, event.result);
-            } else if(callbackData.fn === 'startObservingNode') {
-                callbackData.cb(event.result);
-            } else if(callbackData.fn === 'subscribe') {
-                callbackData.cb(event.event, event.result);
+        if(event.fn === 'workerRequest:NetworkTransport:load') {
+            var that = this;
+            var workerCallback = event['callback'];
+            var args = event['arguments'].concat(function(success, results){
+                that.connection.postMessage({'fn':'workerRequestResponse', 'results':[success, results], 'callback':workerCallback});
+            });
+            NetworkTransport.load.apply(NetworkTransport,args);
+        } else {
+            var callbackData = this.callbacks[event.callback];
+            //console.log(packet);
+            //console.log(callbackData);
+            if(callbackData) {
+                if(callbackData.fn === 'create' || callbackData.fn === 'execute' || callbackData.fn === 'insert' || callbackData.fn == 'graph' ||
+                   callbackData.fn === 'node' || callbackData.fn === 'insert' || callbackData.fn === 'delete' || callbackData.fn === 'clear' ||
+                   callbackData.fn === 'load' || callbackData.fn === 'startObservingQueryEndCb' || callbackData.fn === 'registeredGraphs') {
+                    delete this.callbacks[event.callback];
+                    callbackData.cb(event.success, event.result);
+                } else if(callbackData.fn === 'startObservingQuery') {
+                    callbackData.cb(event.result);                
+                } else if(callbackData.fn === 'startObservingNode') {
+                    callbackData.cb(event.result);
+                } else if(callbackData.fn === 'subscribe') {
+                    callbackData.cb(event.event, event.result);
+                }
             }
         }
     };
@@ -39568,6 +39930,32 @@ if(!!Worker) {
         }
     };
 
+
+    /**
+     * Boolean value determining if loading RDF must produce
+     * triple add events and fire callbacks.
+     * Default is false.
+     */
+    RDFStoreClient.RDFStoreClient.prototype.setBatchLoadEvents = function(mustFireEvents){
+        this.connection.postMessage({'fn':'setBatchLoadEvents', 'args':[mustFireEvents]});
+    };
+
+    /**
+     * Registers a namespace prefix that will be automatically declared
+     * in all the queries
+     */
+    RDFStoreClient.RDFStoreClient.prototype.registerDefaultNamespace = function(ns, prefix) {
+        this.connection.postMessage({'fn':'registerDefaultNamespace', 'args':[ns,prefix]});
+    };
+     
+    /**
+     * Registers the default namespaces declared in the RDF JS Interfaces
+     * specification in the default Profile.
+     */
+    RDFStoreClient.RDFStoreClient.prototype.registerDefaultProfileNamespaces = function() {
+        this.connection.postMessage({'fn':'registerDefaultProfileNamespaces', 'args':[]});
+    };
+
     RDFStoreClient.RDFStoreClient.prototype.load = function(){
         var mediaType;
         var data;
@@ -39741,7 +40129,7 @@ var Store = {};
 
 // imports
 var Lexicon = WebLocalStorageLexicon;
-Store.VERSION = "0.4.8";
+Store.VERSION = "0.4.14";
 
 /**
  * Tries to create a new RDFStore instance that will be
@@ -40091,6 +40479,11 @@ Store.Store.prototype._nodeToQuery = function(term) {
     } else if(term.interfaceName === '') {
         return term.toString();
     } else {
+        if(term.lang != null) {
+            return "\""+term.valueOf()+"\"@"+term.lang;
+        } else if(term.datatype != null) {
+            return "\""+term.valueOf()+"\"^^<"+term.datatype+">";
+        }
         return term.toString();
     }
 };
@@ -40147,6 +40540,34 @@ Store.Store.prototype.clear = function() {
     this.engine.execute(query, callback);
 };
 
+/**
+ * Boolean value determining if loading RDF must produce
+ * triple add events and fire callbacks.
+ * Default is false.
+ */
+Store.Store.prototype.setBatchLoadEvents = function(mustFireEvents){
+    this.engine.eventsOnBatchLoad = mustFireEvents;
+};
+
+/**
+ * Registers a namespace prefix that will be automatically declared
+ * in all the queries
+ */
+Store.Store.prototype.registerDefaultNamespace = function(ns, prefix) {
+    this.rdf.prefixes.set(ns,prefix);
+    this.engine.registerDefaultNamespace(ns,prefix);
+};
+
+/**
+ * Registers the default namespaces declared in the RDF JS Interfaces
+ * specification in the default Profile.
+ */
+Store.Store.prototype.registerDefaultProfileNamespaces = function() {
+    var defaultNsMap = this.rdf.prefixes.values();
+    for (var p in defaultNsMap) {
+        this.registerDefaultNamespace(p,defaultNsMap[p]);
+    }
+};
 
 Store.Store.prototype.load = function(){
     var mediaType;
@@ -40253,12 +40674,37 @@ Store.Store.prototype.setNetworkTransport = function(networkTransportImpl) {
 
 // end of ./src/js-store/src/store.js 
 // imports
-
     RDFStoreWorker = {};
 
     RDFStoreWorker.observingCallbacks = {};
+    
+    RDFStoreWorker.workerCallbacksCounter = 0;
+    RDFStoreWorker.workerCallbacks = {};
+    RDFStoreWorker.registerCallback = function(cb) {
+        var nextId = ""+RDFStoreWorker.workerCallbacksCounter;
+        RDFStoreWorker.workerCallbacksCounter++;
+        RDFStoreWorker.workerCallbacks[nextId] = cb;
+        return nextId;
+    };
 
     RDFStoreWorker.handleCreate = function(argsObject, cb) {
+        // redefine NetworkTransport
+
+        if(typeof(NetworkTransport) != 'undefined'  && NetworkTransport != null) {
+            NetworkTransport = {
+                load: function(uri, graph, callback) {
+                    var cbId = RDFStoreWorker.registerCallback(function(results){
+                        callback.apply(callback,results);
+                    });
+                    postMessage({'fn':'workerRequest:NetworkTransport:load','callback':cbId, 'arguments':[uri,graph]});
+                },
+
+                loadFromFile: function(parser, graph, uri, callback) {
+
+                }
+            }
+        }
+
         args = [argsObject];
         //console.log("in handling create");
         args.push(function(result){
@@ -40276,9 +40722,22 @@ Store.Store.prototype.setNetworkTransport = function(networkTransportImpl) {
     RDFStoreWorker.receive = function(packet) {
         var msg = packet.data || packet;
         //console.log("RECEIVED...");
-        if(msg.fn === 'create' && msg.args !=null) {
+        if(msg.fn === 'workerRequestResponse') {
+            var cbId = msg.callback;
+            var callback = RDFStoreWorker.workerCallbacks[cbId];
+            if(callback != null) {
+                delete RDFStoreWorker.workerCallbacks[cbId];
+                callback(msg.results);
+            }
+        } else if(msg.fn === 'create' && msg.args !=null) {
             //console.log("handling create");
             RDFStoreWorker.handleCreate(msg.args, msg.callback);
+        } else if(msg.fn === 'setBatchLoadEvents') {
+            RDFStoreWorker.store[msg.fn].apply(RDFStoreWorker.store, msg.args);
+        } else if(msg.fn === 'registerDefaultNamespace') {
+            RDFStoreWorker.store[msg.fn].apply(RDFStoreWorker.store, msg.args);
+        } else if(msg.fn === 'registerDefaultProfileNamespaces') {
+            RDFStoreWorker.store[msg.fn].apply(RDFStoreWorker.store, msg.args);
         } else if((msg.fn === 'execute' ||
                    msg.fn === 'executeWithEnvironment' ||
                    msg.fn === 'graph'||
@@ -40333,7 +40792,6 @@ Store.Store.prototype.setNetworkTransport = function(networkTransportImpl) {
         } else if(msg.fn === 'startObservingQuery' && msg.args != null) {
             // regular callback
             var cb = function(success, result){
-                //console.log("CALLBACK OBSERVING QUERY!");
                 postMessage({'callback':msg.callback[0], 'result':result, 'success':success});
             };
 
@@ -40419,9 +40877,13 @@ Store.Store.prototype.setNetworkTransport = function(networkTransportImpl) {
             return new RDFJSInterface.NamedNode(node.nominalValue);
         }
     };
+
+    // @todo
+    // I'm setting a global var if this is not a worker
+    // FIXME!
+
     // set the receiver message
     onmessage = RDFStoreWorker.receive;
-
 
 // end of ./src/js-connection/src/rdfstore_worker.js 
 try {
