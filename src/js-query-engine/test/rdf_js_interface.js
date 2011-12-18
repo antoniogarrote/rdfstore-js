@@ -113,12 +113,12 @@ exports.testSerialization1 = function(test) {
                                       rdf.createNamedNode("http://test.com/MyClass") ));
 
     graph.add(rdf.createTriple( rdf.createNamedNode("earl:test"),
-                                      rdf.createNamedNode("rdf:type"),
-                                      rdf.createNamedNode("http://test.com/MyClass") ));
+                                rdf.createNamedNode("rdf:type"),
+                                rdf.createNamedNode("http://test.com/MyClass") ));
 
     graph.add(rdf.createTriple( rdf.createNamedNode("earl:test"),
-                                      rdf.createNamedNode(":test"),
-                                      rdf.createLiteral("alice") ));
+                                rdf.createNamedNode(":test"),
+                                rdf.createLiteral("alice") ));
 
 
     var parts = graph.toNT().split("\r\n");
