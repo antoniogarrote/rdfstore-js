@@ -45,6 +45,10 @@ Some other features included in the library are the following:
 - Parallel execution where WebWorkers are available
 - Persistent storage using HTML5 LocalStorage
 
+## Documentation
+
+Documentation for the store can be found [here](http://antoniogarrote.github.com/rdfstore-js/doc/index.html).
+
 ## SPARQL support
 
 rdfstore-js supports at the moment SPARQL 1.0 and most of SPARQL 1.1/Update.
@@ -117,6 +121,10 @@ You can also run the tests on the minimized version of the library with the comm
     $./make.rb test_min
 
 Additionally, there are some smoke tests for both browser versions that can be found ithe 'browsertests' directory.
+These tests are now also available online at these adresses:
+
+- [non persistent version](http://antoniogarrote.github.com/rdfstore-js/browsertests/non_persistent/index.html)
+- [persistent version](http://antoniogarrote.github.com/rdfstore-js/browsertests/persistent/index.html)
 
 ## API
 
