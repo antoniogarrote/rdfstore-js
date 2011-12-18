@@ -103,5 +103,31 @@ BUILD_CONFIGURATION = {
         "put"       => ">=0.0.5"
       }
     }
-  }
+  },
+
+  :rdf_js_interface => {
+    # list of modules to pack
+    :modules => [
+                 "./src/js-trees/src/utils.js",
+                 "./src/js-query-engine/src/rdf_js_interface.js",
+                 "./src/js-query-engine/src/query_filters.js",
+                ],
+    :package => {
+      :name    => "rdf_js_interface",
+      :version => "0.4.14",
+      :description => "Implementation of W3C's RDF Interfaces API",
+      :keywords => ["RDF"],
+      :author  => {
+        :name => "Antonio Garrote",
+        :email => "<antoniogarrote@gmail.com>"
+      },
+      :engines => {:node => ">=0.4.1"},
+      :repository =>  {:type => "git", :url => "https://github.com/antoniogarrote/rdfstore-js.git"},
+      :licenses => [
+                    { :type =>  "LGPL V3",
+                      :url  =>  "http://www.gnu.org/licenses/lgpl.html"
+                    }
+                   ]
+    }
+  }  
 }

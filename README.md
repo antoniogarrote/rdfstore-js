@@ -443,6 +443,39 @@ Support in the Node.js version is provided by the webworkers module. Webworkers 
 
 Web worker threads execute in the browser in a very restrictive environment due to security reasons. WebWorkers for example, cannot access the local storage API. As a consequence, workers cannot be used with the persistent version of the store. These restrictions are not present in the Node.js version.
 
+##Standalone RDF-JS Interface API
+
+Now it is also possible to use the [RDF JS Interface API](http://www.w3.org/TR/2011/WD-rdf-interfaces-20110510/) without the as a standolone module.
+
+The code is distributed for Node.js as the 'rdf_js_interface' module.
+It can be installed directly from NPM:
+
+    $npm install rdf_js_interface
+
+After installing the module it can be required in the code of a Node.js application:
+
+    var RDFJSInterface = require('rdf_js_interface');
+
+    var graph = new RDFJSInterface.Graph();
+
+    graph.add(rdf.createTriple( rdf.createBlankNode(),
+                                rdf.createNamedNode("rdf:type"),
+                                rdf.createNamedNode("http://test.com/MyClass") ));
+    ...
+
+The module has also been compiled for the browser. The original and minimised versions can be found here:
+
+- https://raw.github.com/antoniogarrote/rdfstore-js/master/dist/rdf_interface_api/browser/rdf_interface_api.js
+- https://raw.github.com/antoniogarrote/rdfstore-js/master/dist/rdf_interface_api/browser/rdf_interface_api_min.js
+
+The module declares a new property 'RDFJSInterface' in the 'window' object pointing to the API object:
+
+    var graph = new RDFJSInterface.Graph();
+
+    graph.add(rdf.createTriple( rdf.createBlankNode(),
+                                rdf.createNamedNode("rdf:type"),
+                                rdf.createNamedNode("http://test.com/MyClass") ));
+    ...
 
 ##Reusable modules. 
 

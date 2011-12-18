@@ -18,14 +18,17 @@ def build_distribution_directory(system);
     Dir.mkdir "./dist/browser"
     Dir.mkdir "./dist/browser_persistent"    
     Dir.mkdir "./dist/nodejs"
+    Dir.mkdir "./dist/rdf_interface_api"    
   rescue 
     puts "(!) dist directory already exits"
-    FileUtils.rm_r("./dist/browser/") if system == 'browser'
-    FileUtils.rm_r("./dist/browser_persistent/")  if system == 'browser_persistent'    
-    FileUtils.rm_r("./dist/nodejs/")  if system == 'nodejs'
+    FileUtils.rm_r("./dist/browser/") if system == 'browser' && File.exists?("./dist/browser")
+    FileUtils.rm_r("./dist/browser_persistent/")  if system == 'browser_persistent' && File.exists?("./dist/browser_persistent")        
+    FileUtils.rm_r("./dist/nodejs/")  if system == 'nodejs' && File.exists?("./dist/nodejs")
+    FileUtils.rm_r("./dist/rdf_interface_api/")  if system == 'rdf_interface_api' && File.exists?("./dist/rdf_interface_api")    
     Dir.mkdir "./dist/browser"            if system == 'browser'
-    Dir.mkdir "./dist/browser_persistent" if system == 'browser_persistent'    
+    Dir.mkdir "./dist/browser_persistent" if system == 'browser_persistent'
     Dir.mkdir "./dist/nodejs"             if system == 'nodejs'
+    Dir.mkdir "./dist/rdf_interface_api"             if system == 'rdf_interface_api'
   end
 end
 
@@ -37,6 +40,14 @@ def minimize_output_browser_yui
   `cd ./dist/browser && gzip -9 rdf_store_min.js`
   `mv ./dist/browser/rdf_store_min.js.bak ./dist/browser/rdf_store_min.js`
   `rm ./dist/browser/yuicompressor-2.4.6.jar`
+end
+
+def minimize_output_rdf_interface_api
+  puts "*** minimizing output"
+  `cp ./closure-compiler.jar ./dist/rdf_interface_api/`
+  `cd ./dist/rdf_interface_api && java -jar closure-compiler.jar --compilation_level=SIMPLE_OPTIMIZATIONS --js=index.js > rdf_interface_api_min.js`  
+  `cp ./dist/rdf_interface_api/index.js ./dist/rdf_interface_api/rdf_interface_api.js`
+  `rm ./dist/rdf_interface_api/closure-compiler.jar`
 end
 
 def minimize_output_browser
@@ -86,6 +97,91 @@ def write_nodejs_coda(of)
   js_code =<<__END
 try{
   module.exports = Store;
+}catch(e){}
+})();
+__END
+
+  of << js_code;
+end
+
+def write_rdf_interfaces_api_coda(of)
+  js_code =<<__END
+try{
+  if(typeof(module)==="undefined") {
+    window['RDFJSInterface'] = RDFJSInterface;
+
+    /* For ADVANCED optimisations */
+
+    //window['RDFJSInterface']['UrisMap'] = RDFJSInterface.UrisMap;
+    //window['RDFJSInterface']['UrisMap']['prototype']['get'] = RDFJSInterface.UrisMap.prototype.get;
+    //window['RDFJSInterface']['UrisMap']['prototype']['values'] = RDFJSInterface.UrisMap.prototype.values;
+    //window['RDFJSInterface']['UrisMap']['prototype']['remove'] = RDFJSInterface.UrisMap.prototype.remove;
+    //window['RDFJSInterface']['UrisMap']['prototype']['set'] = RDFJSInterface.UrisMap.prototype.set;
+    //window['RDFJSInterface']['UrisMap']['prototype']['setDefault'] = RDFJSInterface.UrisMap.prototype.setDefault;
+    //window['RDFJSInterface']['UrisMap']['prototype']['addAll'] = RDFJSInterface.UrisMap.prototype.addAll;
+    //window['RDFJSInterface']['UrisMap']['prototype']['resolve'] = RDFJSInterface.UrisMap.prototype.resolve;
+    //window['RDFJSInterface']['UrisMap']['prototype']['shrink'] = RDFJSInterface.UrisMap.prototype.shrink;
+    // 
+    //window['RDFJSInterface']['Profile'] = RDFJSInterface.Profile;
+    //window['RDFJSInterface']['Profile']['prototype']['importProfile'] = RDFJSInterface.Profile.prototype.importProfile;
+    //window['RDFJSInterface']['Profile']['prototype']['resolve'] = RDFJSInterface.Profile.prototype.resolve;
+    //window['RDFJSInterface']['Profile']['prototype']['setDefaultPrefix'] = RDFJSInterface.Profile.prototype.setDefaultPrefix;
+    //window['RDFJSInterface']['Profile']['prototype']['setDefaultVocabulary'] = RDFJSInterface.Profile.prototype.setDefaultVocabulary;
+    //window['RDFJSInterface']['Profile']['prototype']['setPrefix'] = RDFJSInterface.Profile.prototype.setPrefix;
+    //window['RDFJSInterface']['Profile']['prototype']['setTerm'] = RDFJSInterface.Profile.prototype.setTerm;
+    // 
+    //window['RDFJSInterface']['RDFEnvironment'] = RDFJSInterface.RDFEnvironment;
+    //window['RDFJSInterface']['RDFEnvironment']['prototype']['createBlankNode'] = RDFJSInterface.RDFEnvironment.prototype.createBlankNode;
+    //window['RDFJSInterface']['RDFEnvironment']['prototype']['createNamedNode'] = RDFJSInterface.RDFEnvironment.prototype.createNamedNode;
+    //window['RDFJSInterface']['RDFEnvironment']['prototype']['createLiteral'] = RDFJSInterface.RDFEnvironment.prototype.createLiteral;
+    //window['RDFJSInterface']['RDFEnvironment']['prototype']['createTriple'] = RDFJSInterface.RDFEnvironment.prototype.createTriple;
+    //window['RDFJSInterface']['RDFEnvironment']['prototype']['createGraph'] = RDFJSInterface.RDFEnvironment.prototype.createGraph;
+    //window['RDFJSInterface']['RDFEnvironment']['prototype']['createAction'] = RDFJSInterface.RDFEnvironment.prototype.createAction;
+    //window['RDFJSInterface']['RDFEnvironment']['prototype']['createProfile'] = RDFJSInterface.RDFEnvironment.prototype.createProfile;
+    //window['RDFJSInterface']['RDFEnvironment']['prototype']['createTermMap'] = RDFJSInterface.RDFEnvironment.prototype.createTermMap;
+    //window['RDFJSInterface']['RDFEnvironment']['prototype']['createPrefixMap'] = RDFJSInterface.RDFEnvironment.prototype.createPrefixMap;
+    // 
+    //window['RDFJSInterface']['RDFNode'] = RDFJSInterface.RDFNode;
+    //window['RDFJSInterface']['RDFNode']['prototype']['equals'] = RDFJSInterface.RDFNode.prototype.equals;
+    // 
+    //window['RDFJSInterface']['BlankNode'] = RDFJSInterface.BlankNode;
+    //window['RDFJSInterface']['BlankNode']['prototype']['toString'] = RDFJSInterface.BlankNode.prototype.toString;
+    //window['RDFJSInterface']['BlankNode']['prototype']['toNT'] = RDFJSInterface.BlankNode.prototype.toNT;
+    //window['RDFJSInterface']['BlankNode']['prototype']['valueOf'] = RDFJSInterface.BlankNode.prototype.valueOf;
+    // 
+    //window['RDFJSInterface']['Literal'] = RDFJSInterface.Literal;
+    //window['RDFJSInterface']['Literal']['prototype']['toString'] = RDFJSInterface.Literal.prototype.toString;
+    //window['RDFJSInterface']['Literal']['prototype']['toNT'] = RDFJSInterface.Literal.prototype.toNT;
+    //window['RDFJSInterface']['Literal']['prototype']['valueOf'] = RDFJSInterface.Literal.prototype.valueOf;
+    // 
+    //window['RDFJSInterface']['NamedNode'] = RDFJSInterface.NamedNode;
+    //window['RDFJSInterface']['NamedNode']['prototype']['toString'] = RDFJSInterface.NamedNode.prototype.toString;
+    //window['RDFJSInterface']['NamedNode']['prototype']['toNT'] = RDFJSInterface.NamedNode.prototype.toNT;
+    //window['RDFJSInterface']['NamedNode']['prototype']['valueOf'] = RDFJSInterface.NamedNode.prototype.valueOf;
+    // 
+    //window['RDFJSInterface']['Triple'] = RDFJSInterface.Triple;
+    //window['RDFJSInterface']['Triple']['prototype']['equals'] = RDFJSInterface.Triple.prototype.equals;
+    //window['RDFJSInterface']['Triple']['prototype']['toString'] = RDFJSInterface.Triple.prototype.toString;
+    // 
+    //window['RDFJSInterface']['Graph'] = RDFJSInterface.Graph;
+    //window['RDFJSInterface']['Graph']['prototype']['add'] = RDFJSInterface.Graph.prototype.add;
+    //window['RDFJSInterface']['Graph']['prototype']['addAction'] = RDFJSInterface.Graph.prototype.addAction;
+    //window['RDFJSInterface']['Graph']['prototype']['addAll'] = RDFJSInterface.Graph.prototype.addAll;
+    //window['RDFJSInterface']['Graph']['prototype']['remove'] = RDFJSInterface.Graph.prototype.remove;
+    //window['RDFJSInterface']['Graph']['prototype']['toArray'] = RDFJSInterface.Graph.prototype.toArray;
+    //window['RDFJSInterface']['Graph']['prototype']['some'] = RDFJSInterface.Graph.prototype.some;
+    //window['RDFJSInterface']['Graph']['prototype']['every'] = RDFJSInterface.Graph.prototype.every;
+    //window['RDFJSInterface']['Graph']['prototype']['filter'] = RDFJSInterface.Graph.prototype.filter;
+    //window['RDFJSInterface']['Graph']['prototype']['forEach'] = RDFJSInterface.Graph.prototype.forEach;
+    //window['RDFJSInterface']['Graph']['prototype']['merge'] = RDFJSInterface.Graph.prototype.merge;
+    //window['RDFJSInterface']['Graph']['prototype']['match'] = RDFJSInterface.Graph.prototype.match;
+    //window['RDFJSInterface']['Graph']['prototype']['removeMatches'] = RDFJSInterface.Graph.prototype.removeMatches;
+    //window['RDFJSInterface']['Graph']['prototype']['toNT'] = RDFJSInterface.Graph.prototype.toNT;
+    // 
+    //window['RDFJSInterface']['rdf'] = RDFJSInterface.rdf;
+  } else {
+    module.exports = RDFJSInterface;
+  }
 }catch(e){}
 })();
 __END
@@ -209,12 +305,43 @@ def process_files_for_nodejs
   end
 end
 
+def process_files_for_rdf_interface_api
+  File.open("./dist/rdf_interface_api/index.js", "w") do |of|
+    
+    write_nodejs_preamble(of)
+    
+    BUILD_CONFIGURATION[:rdf_js_interface][:modules].each do |module_file|
+      puts "*** processing #{module_file}"
+      File.open(module_file, "r") do |f|
+        process_file_for_nodejs(of, f)
+        of << "\r\n// end of #{module_file} \r\n"
+      end
+    end
+
+    write_rdf_interfaces_api_coda(of)
+  end
+end
+
 def make_package_json
   puts "*** generating package.json"
   package_config = BUILD_CONFIGURATION[:nodejs][:package].to_json
   File.open("./dist/nodejs/package.json", 'w') do |of|
     of << package_config
   end
+end
+
+def make_rdf_interface_api_package_json
+  puts "*** generating package.json"
+  package_config = BUILD_CONFIGURATION[:rdf_js_interface][:package].to_json
+  File.open("./dist/rdf_interface_api/package.json", 'w') do |of|
+    of << package_config
+  end
+  `mkdir ./dist/rdf_interface_api/nodejs`
+  `mv ./dist/rdf_interface_api/package.json ./dist/rdf_interface_api/nodejs/`
+  `mv ./dist/rdf_interface_api/index.js ./dist/rdf_interface_api/nodejs/`
+  `mkdir ./dist/rdf_interface_api/browser`
+  `mv ./dist/rdf_interface_api/rdf_interface_api*.js ./dist/rdf_interface_api/browser/`
+  `cp -f ./dist/rdf_interface_api/browser/* ./browsertests/rdf_interface_api/`    
 end
 
 def npm_linking
@@ -395,6 +522,16 @@ def make_browser_persistent
   puts "\r\n*** FINISHED";
 end
 
+def make_rdf_interface_api
+  puts "  RDF JS INTERFACE API CONFIGURATION"
+  load_configuration
+  build_distribution_directory 'rdf_interface_api'
+  process_files_for_rdf_interface_api
+  minimize_output_rdf_interface_api
+  make_rdf_interface_api_package_json
+  puts "\r\n*** FINISHED";
+end
+
 def test_minimized
   puts "  MINIMIZED NODEJS CONFIGURATION"
   load_configuration
@@ -416,12 +553,14 @@ else
     make_browser
   elsif ARGV[0] == "browser_persistent"
     make_browser_persistent
+  elsif ARGV[0] == "rdf_interface_api"
+    make_rdf_interface_api
   elsif ARGV[0] == "test_min"
     test_minimized
   elsif ARGV[0] == "tests"
     exec "#{NODEUNIT} ./src/js-trees/tests/* ./src/js-store/test/* ./src/js-sparql-parser/test/* ./src/js-rdf-persistence/test/* ./src/js-query-engine/test/* ./src/js-communication/test/* ./src/js-connection/tests/*"
   else
     puts "Unknown configuration: #{ARGV[0]}"
-    puts "USAGE make.rb [nodejs | browser | browser_persistent | tests | test_min]"
+    puts "USAGE make.rb [nodejs | browser | browser_persistent | rdf_interface_api | tests | test_min]"
   end
 end
