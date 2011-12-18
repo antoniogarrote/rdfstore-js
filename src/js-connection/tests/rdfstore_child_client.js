@@ -1,3 +1,5 @@
+if(process.version.indexOf('v0.6')===0) {
+
 var RDFStoreChildClient = require("./../src/rdfstore_child_client.js").RDFStoreChildClient;
 var Store = require("./../../js-store/src/store.js").Store;
 
@@ -701,3 +703,5 @@ exports.testDefaultPrefixes = function(test){
         });
     });
 };
+
+}

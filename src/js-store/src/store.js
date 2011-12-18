@@ -19,7 +19,7 @@ var Worker = require('webworker');
 /**
  * Version of the store
  */
-Store.VERSION = "0.4.14";
+Store.VERSION = "0.4.15";
 
 /**
  * Create a new RDFStore instance that will be
@@ -145,7 +145,6 @@ Store.Store = function(arg1, arg2) {
         params['treeOrder'] = 15;
     }
 
-    this.rdf = RDFJSInterface.rdf;
     this.functionMap = {};
 
     var that = this;
@@ -170,6 +169,12 @@ Store.Store = function(arg1, arg2) {
     params['name']);
 };
 
+
+/**
+ * An instance of RDF JS Interface <code>RDFEnvironment</code>
+ * associated to this graph instance.
+ */
+Store.Store.prototype.rdf = RDFJSInterface.rdf;
 
 /**
  * Executes a query in the store.<br/>
@@ -216,7 +221,7 @@ Store.Store.prototype.execute = function() {
      
         if(arguments.length === 1) {
             queryString = arguments[0];
-            callback = function(){};
+            var callback = function(){};
         } else if(arguments.length === 2) {
             queryString = arguments[0];
             callback = arguments [1];
@@ -238,19 +243,17 @@ Store.Store.prototype.execute = function() {
  * @param {Function} [callback]
  */
 Store.Store.prototype.executeWithEnvironment = function() {
-    var queryString;
-    var callback;
-    var defaultGraphs;
-    var namedGraphs;
+    var queryString, defaultGraphs, namedGraphs;
 
     if(arguments.length === 3) {
         queryString   = arguments[0];
-        callback      = function(){};
+        // JSDoc fails if this is pushed outside 
+        var callback  = function(){};
         defaultGraphs = arguments[1];
         namedGraphs   = arguments[2];
     } else if(arguments.length === 4) {
         queryString   = arguments[0];
-        callback      = arguments [3];
+        var callback      = arguments [3];
         defaultGraphs = arguments[1];
         namedGraphs   = arguments[2];
     }
@@ -658,7 +661,7 @@ Store.Store.prototype.clear = function() {
 
     if(arguments.length === 0) {
         graph = this.rdf.createNamedNode(this.engine.lexicon.defaultGraphUri);
-        callback= function(){};
+        var callback= function(){};
     } else if(arguments.length === 1) {
         graph = this.rdf.createNamedNode(this.engine.lexicon.defaultGraphUri);
         callback= arguments[0] || function(){};
