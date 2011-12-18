@@ -1,0 +1,12 @@
+A simple test server to run the Web Workers in browser tests. These tests cannot be run directly loading the file into the browser as it wil throw a security exception.
+To start this server you need to install leiningen (https://github.com/technomancy/leiningen). 
+After installing leiningen, you can run the server with the following command:
+
+$ lein run
+
+The server will be started in port 300.
+
+Leiningen will also take care of downloading the dependencies for the server using Maven.
+
+To run the test suite, point your browser to the following URL: http://localhost:3000/
+The tests will only pass if your browser supports WebWorkers.
