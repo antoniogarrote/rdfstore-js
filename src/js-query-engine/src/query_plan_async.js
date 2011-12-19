@@ -198,14 +198,15 @@ QueryPlan.executeBGPDatasets = function(bgp, dataset, queryEngine, queryEnv,call
                 duplicates[dataset.default[env._i].oid] = true;
                 env.acum = env.acum || [];
                 bgp.graph = dataset.default[env._i];//.oid
-                var results = queryEngine.rangeQuery(bgp, queryEnv);
-                if(results != null) {
-                    results = QueryPlan.buildBindingsFromRange(results, bgp);
-                    env.acum.push(results);
-                    k(floop, env);
-                } else {
-                    k(floop, env);              
-                }
+                queryEngine.rangeQuery(bgp, queryEnv, function(succes, results){
+                    if(results != null) {
+                        results = QueryPlan.buildBindingsFromRange(results, bgp);
+                        env.acum.push(results);
+                        k(floop, env);
+                    } else {
+                        k(floop, env);              
+                    }
+                });
             } else {
                 k(floop, env);
             }
@@ -224,18 +225,19 @@ QueryPlan.executeBGPDatasets = function(bgp, dataset, queryEngine, queryEnv,call
                 env.acum = env.acum || [];
                 bgp.graph = dataset.named[env._i];//.oid
                  
-                var results = queryEngine.rangeQuery(bgp, queryEnv);
-                if(results != null) {
-                    results = QueryPlan.buildBindingsFromRange(results, bgp);
-                    // add the graph bound variable to the result 
-                    for(var i=0; i< results.length; i++) {
-                        results[i][graphVar] = dataset.named[env._i].oid;
+                queryEngine.rangeQuery(bgp, queryEnv, function(success, results) {
+                    if(results != null) {
+                        results = QueryPlan.buildBindingsFromRange(results, bgp);
+                        // add the graph bound variable to the result 
+                        for(var i=0; i< results.length; i++) {
+                            results[i][graphVar] = dataset.named[env._i].oid;
+                        }
+                        env.acum.push(results);
+                        k(floop, env);
+                    } else {
+                        callback(false, results);
                     }
-                    env.acum.push(results);
-                    k(floop, env);
-                } else {
-                    callback(false, results);
-                }
+                });
             } else {
                 k(floop, env);
             }
@@ -247,13 +249,18 @@ QueryPlan.executeBGPDatasets = function(bgp, dataset, queryEngine, queryEnv,call
     } else {
         // graph already has an active value, just match.
         // Filtering the results will still be necessary
-        var results = queryEngine.rangeQuery(bgp, queryEnv);
-        if(results!=null) {
-            results = QueryPlan.buildBindingsFromRange(results, bgp);
-            callback(true,results);
-        } else {
-            callback(false, results);
-        }
+        queryEngine.rangeQuery(bgp, queryEnv,function(success,results){
+            if(success) {
+                if(results!=null) {
+                    results = QueryPlan.buildBindingsFromRange(results, bgp);
+                    callback(true,results);
+                } else {
+                    callback(false, results);
+                }
+            } else {
+                callback(false, results);
+            }
+        });
     }
 };
 
