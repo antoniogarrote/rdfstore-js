@@ -14,19 +14,21 @@ var mongodb = require('mongodb');
 
 QueryEngine.mongodb = true;
 
-QueryEngine.QueryEngine = function(params) {
+QueryEngine.QueryEngine = function(params,callback) {
     var params = params || {};
     var server = params['mongoDomain'] || '127.0.0.1';
     var port = params['mongoPort'] || 27017;
     var mongoOptions = params['mongoOptions'] || {};
+
+    this.lexicon = this;
+    this.backend = this;
 
     this.client = new mongodb.Db('rdfstore_js', new mongodb.Server(server,port,mongoOptions));
     this.defaultGraphOid = "u:https://github.com/antoniogarrote/rdfstore-js#default_graph";
     this.defaultGraphUri = "https://github.com/antoniogarrote/rdfstore-js#default_graph";
     this.defaultGraphUriTerm = {"token": "uri", "prefix": null, "suffix": null, "value": this.defaultGraphUri, "oid": this.defaultGraphOid};
 
-    // @todo this must be read from DB
-    this.blankCounter = 0;
+    this.configuration = null;
 
     // batch loads should generate events?
     this.eventsOnBatchLoad = (params.eventsOnBatchLoad || false);
@@ -35,7 +37,6 @@ QueryEngine.QueryEngine = function(params) {
     this.abstractQueryTree = new AbstractQueryTree.AbstractQueryTree();
     this.rdfLoader = new RDFLoader.RDFLoader(params['communication']);
     this.callbacksBackend = new Callbacks.CallbacksBackend(this);
-
 };
 
 // Utils
@@ -44,7 +45,6 @@ QueryEngine.QueryEngine.prototype.collection = function(collection, f) {
     var _collection = function() {
         that.client.collection(collection, f);
     };
-
     if(this.client.state === 'notConnected' || this.client.state === 'disconnected') {
         this.client.open(function(err, p_client) {
             _collection();
@@ -58,7 +58,15 @@ QueryEngine.QueryEngine.prototype.collection = function(collection, f) {
 QueryEngine.QueryEngine.prototype.clean = function(callback) {
     var that = this;
     this.collection('quads', function(err, coll) {
-        coll.drop(callback);
+        coll.drop(function(){
+            that.collection('store_configuration', function(err, coll) {
+                coll.drop(function(){
+                    that.readConfiguration(function(){
+                        callback();
+                    });
+                });
+            });
+        });
     });
 };
 
@@ -1195,7 +1203,6 @@ QueryEngine.QueryEngine.prototype.rangeQuery = function(quad, queryEnv, callback
     var key = that.normalizeQuad(quad, queryEnv, false)
     if(key != null) {
         //console.log("RANGE QUERY:")
-        //console.log(success);
         //console.log(key);
         //console.log(new QuadIndexCommon.Pattern(key));
         //console.log(key);
@@ -1310,15 +1317,18 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
 
             // subject
             if(quad.subject['uri'] || quad.subject.token === 'uri') {
-                oid = this.registerUri(quad.subject.uri || quad.subject.value);
+                oid = that.registerUri(quad.subject.uri || quad.subject.value);
                 subject = oid;
             } else if(quad.subject['literal'] || quad.subject.token === 'literal') {
-                oid = this.registerLiteral(quad.subject.literal || quad.subject.value);
+                oid = that.registerLiteral(quad.subject.literal || quad.subject.value);
                 subject = oid;                    
             } else {
                 maybeBlankOid = blanks[quad.subject.blank || quad.subject.value];
                 if(maybeBlankOid == null) {
-                    maybeBlankOid = this.registerBlank(quad.subject.blank || quad.subject.value)
+                    //maybeBlankOid = that.registerBlank(quad.subject.blank || quad.subject.value)
+                    maybeBlankOid = "b:"+that.blankCounter;
+                    that.blankCounter++;
+
                     blanks[(quad.subject.blank || quad.subject.value)] = maybeBlankOid;
                 }
                 subject = maybeBlankOid;
@@ -1326,15 +1336,18 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
 
             // predicate
             if(quad.predicate['uri'] || quad.predicate.token === 'uri') {
-                oid = this.registerUri(quad.predicate.uri || quad.predicate.value);
+                oid = that.registerUri(quad.predicate.uri || quad.predicate.value);
                 predicate = oid;
             } else if(quad.predicate['literal'] || quad.predicate.token === 'literal') {
-                oid = this.registerLiteral(quad.predicate.literal || quad.predicate.value);
+                oid = that.registerLiteral(quad.predicate.literal || quad.predicate.value);
                 predicate = oid;                    
             } else {
                 maybeBlankOid = blanks[quad.predicate.blank || quad.predicate.value];
                 if(maybeBlankOid == null) {
-                    maybeBlankOid = this.registerBlank(quad.predicate.blank || quad.predicate.value)
+                    //maybeBlankOid = that.registerBlank(quad.predicate.blank || quad.predicate.value)
+                    maybeBlankOid = "b:"+that.blankCounter;
+                    that.blankCounter++;
+
                     blanks[(quad.predicate.blank || quad.predicate.value)] = maybeBlankOid;
                 }
                 predicate = maybeBlankOid;
@@ -1342,15 +1355,18 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
 
             // object
             if(quad.object['uri'] || quad.object.token === 'uri') {
-                oid = this.registerUri(quad.object.uri || quad.object.value);
+                oid = that.registerUri(quad.object.uri || quad.object.value);
                 object = oid;
             } else if(quad.object['literal'] || quad.object.token === 'literal') {
-                oid = this.registerLiteral(quad.object.literal || quad.object.value);
+                oid = that.registerLiteral(quad.object.literal || quad.object.value);
                 object = oid;                    
             } else {
                 maybeBlankOid = blanks[quad.object.blank || quad.object.value];
                 if(maybeBlankOid == null) {
-                    maybeBlankOid = this.registerBlank(quad.object.blank || quad.object.value)
+                    //maybeBlankOid = that.registerBlank(quad.object.blank || quad.object.value)
+                    maybeBlankOid = "b:"+that.blankCounter;
+                    that.blankCounter++;
+
                     blanks[(quad.object.blank || quad.object.value)] = maybeBlankOid;
                 }
                 object = maybeBlankOid;
@@ -1358,17 +1374,20 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
 
             // graph
             if(quad.graph['uri'] || quad.graph.token === 'uri') {
-                oid = this.registerUri(quad.graph.uri || quad.graph.value);
-                //this.registerGraph(oid);
+                oid = that.registerUri(quad.graph.uri || quad.graph.value);
+                //that.registerGraph(oid);
                 graph = oid;
                 
             } else if(quad.graph['literal'] || quad.graph.token === 'literal') {
-                oid = this.registerLiteral(quad.graph.literal || quad.graph.value);
+                oid = that.registerLiteral(quad.graph.literal || quad.graph.value);
                 graph = oid;                    
             } else {
                 maybeBlankOid = blanks[quad.graph.blank || quad.graph.value];
                 if(maybeBlankOid == null) {
-                    maybeBlankOid = this.registerBlank(quad.graph.blank || quad.graph.value)
+                    //maybeBlankOid = that.registerBlank(quad.graph.blank || quad.graph.value)
+                    maybeBlankOid = "b:"+that.blankCounter;
+                    that.blankCounter++;
+
                     blanks[(quad.graph.blank || quad.graph.value)] = maybeBlankOid;
                 }
                 graph = maybeBlankOid;
@@ -1379,7 +1398,7 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
             originalQuad = quad;
             var quad = {subject: subject, predicate:predicate, object:object, graph: graph};
               
-            that.index(key, function(result, error){
+            that.index(quad, function(result, error){
                 if(result == true){
                     if(that.eventsOnBatchLoad)
                         that.callbacksBackend.nextGraphModification(Callbacks.added, [originalQuad,quad]);
@@ -1395,22 +1414,24 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
             kk(floop, env);
         }
     }, function(env){
-        var exitFn = function() {
-            Utils.stackCounterLimit = oldLimit;
-            if(env.success) {
-                callback(true, env.counter);
+        that.updateBlankCounter(function(){
+            var exitFn = function() {
+                Utils.stackCounterLimit = oldLimit;
+                if(env.success) {
+                    callback(true, env.counter);
+                } else {
+                    callback(false, "error loading quads");
+                }
+            };
+     
+            if(that.eventsOnBatchLoad) {
+                that.callbacksBackend.endGraphModification(function(){
+                    exitFn();
+                });
             } else {
-                callback(false, "error loading quads");
-            }
-        };
-
-        if(that.eventsOnBatchLoad) {
-            that.callbacksBackend.endGraphModification(function(){
                 exitFn();
-            });
-        } else {
-            exitFn();
-        }
+            }
+        });
     });
 };
 
@@ -1563,7 +1584,9 @@ QueryEngine.QueryEngine.prototype._executeQuadInsert = function(quad, queryEnv, 
                 that.index(normalized, function(result, error){
                     if(result == true){
                         that.callbacksBackend.nextGraphModification(Callbacks.added, [quad, normalized]);
-                        callback(true);
+                        that.updateBlankCounter(function(){
+                            callback(true);
+                        });
                     } else {
                         callback(false, error);
                     }
@@ -1709,7 +1732,7 @@ QueryEngine.QueryEngine.prototype.index = function(quad, callback) {
         if(err) {
             callback(false, 'Error retrieving MongoDB collection');
         } else {
-            coll.update(quad,quad,{safe:true, upsert:true}, function(err) {
+            coll.update(quad,quad,{safe:true, upsert:true}, function(err,res) {
                 if(err) {
                     callback(false);                
                 } else {
@@ -1771,6 +1794,32 @@ QueryEngine.QueryEngine.prototype.delete = function(quad, callback) {
     });
 };
 
+QueryEngine.QueryEngine.prototype.updateBlankCounter = function(callback) {
+    var that = this;
+    this.collection('store_configuration', function(err, coll) {
+        that.configuration.blankCounter = that.blankCounter;
+        coll.update({configuration:true}, that.configuration, {safe:true}, callback);
+    });
+};
+
+QueryEngine.QueryEngine.prototype.readConfiguration = function(callback) {
+    var that = this;
+    this.collection('store_configuration', function(err,coll) {
+        coll.find({configuration:true}).toArray(function(err, res) {
+            if(res==null || res.length === 0) {
+                coll.insert({blankCounter:0, configuration:true}, function(){
+                    that.blankCounter = 0;
+                    callback();
+                });
+            } else {
+                that.configuration = res[0];
+                that.blankCounter = that.configuration.blankCounter;
+                callback();
+            }
+        });
+    });
+};
+
 QueryEngine.QueryEngine.prototype.registerGraph = function(oid){
     //if(oid != this.defaultGraphOid) {
     //    this.knownGraphs[oid] = true;
@@ -1805,17 +1854,6 @@ QueryEngine.QueryEngine.prototype.registeredGraphs = function(shouldReturnUris, 
             });
         }
     });
-
-    //var acum = [];
-    // 
-    //for(var g in this.knownGraphs) {
-    //    if(shouldReturnUris === true) {
-    //        acum.push(g.split("u:")[1]);
-    //    } else {
-    //        acum.push(g);
-    //    }
-    //}
-    //return acum;
 };
 
 

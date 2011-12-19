@@ -9,6 +9,7 @@ exports.Store = {};
 var Store = exports.Store;
 
 // imports
+var MongoQueryEngine = require("./../../js-query-engine/src/mongodb_query_engine").QueryEngine;
 var QueryEngine = require("./../../js-query-engine/src/query_engine").QueryEngine;
 var QuadBackend = require("./../../js-rdf-persistence/src/quad_backend").QuadBackend;
 var Lexicon = require("./../../js-rdf-persistence/src/lexicon").Lexicon;
@@ -122,7 +123,9 @@ Store.create = function(){
  * <ul>
  *  <li> persistent:  should use persistence? </li>
  *  <li> name: if using persistence, the name for this store </li>
+ *  <li> overwrite: clears the persistent storage </li>
  *  <li> maxCacheSize: if using persistence, maximum size of the index cache </li>
+ *  <li> engine: the persistent storage to use, a value <code>mongodb</code> selects the MongoDB engine</li>
  * </ul>
  */
 Store.Store = function(arg1, arg2) {
@@ -148,25 +151,38 @@ Store.Store = function(arg1, arg2) {
     this.functionMap = {};
 
     var that = this;
-    new Lexicon.Lexicon(function(lexicon){
-        if(params['overwrite'] === true) {
-            // delete lexicon values
-            lexicon.clear();
-        }
-        new QuadBackend.QuadBackend(params, function(backend){
+    if(params['engine']==='mongodb') {
+        this.isMongodb = true;
+        this.engine = new MongoQueryEngine.QueryEngine();
+        this.engine.readConfiguration(function(){
             if(params['overwrite'] === true) {
-                // delete index values
-                backend.clear();
-            }
-            params.backend = backend;
-            params.lexicon =lexicon;
-            that.engine = new QueryEngine.QueryEngine(params);      
-            if(callback) {
+                that.engine.clean(function(){
+                    callback(that);
+                });
+            } else {
                 callback(that);
             }
         });
-    },
-    params['name']);
+    } else {
+        new Lexicon.Lexicon(function(lexicon){
+            if(params['overwrite'] === true) {
+                // delete lexicon values
+                lexicon.clear();
+            }
+            new QuadBackend.QuadBackend(params, function(backend){
+                if(params['overwrite'] === true) {
+                    // delete index values
+                    backend.clear();
+                }
+                params.backend = backend;
+                params.lexicon =lexicon;
+                that.engine = new QueryEngine.QueryEngine(params);      
+                if(callback) {
+                    callback(that);
+                }
+            });
+        },params['name']);
+    }
 };
 
 
@@ -829,15 +845,28 @@ Store.Store.prototype.registerParser = function(mediaType, parser) {
  * @param {Function} callback function that will receive a success notification and the array of graph URIs
  */
 Store.Store.prototype.registeredGraphs = function(callback) {
-    var graphs = this.engine.lexicon.registeredGraphs(true);
-    var acum = [];
-    for(var i=0; i<graphs.length; i++) {
-        var graph = graphs[i];
-        var uri = new RDFJSInterface.NamedNode(graph);
-        acum.push(uri);
+    if(this.isMongodb) {
+        this.engine.registeredGraphs(true, function(graphs){
+            var acum = [];
+            for(var i=0; i<graphs.length; i++) {
+                var graph = graphs[i];
+                var uri = new RDFJSInterface.NamedNode(graph);
+                acum.push(uri);
+            }
+            
+            return callback(true, acum);    
+        });
+    } else {
+        var graphs = this.engine.lexicon.registeredGraphs(true);
+        var acum = [];
+        for(var i=0; i<graphs.length; i++) {
+            var graph = graphs[i];
+            var uri = new RDFJSInterface.NamedNode(graph);
+            acum.push(uri);
+        }
+     
+        return callback(true, acum);    
     }
-
-    return callback(true, acum);    
 };
 
 /** @private */

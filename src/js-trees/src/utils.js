@@ -334,6 +334,8 @@ Utils.lexicalFormBaseUri = function(term, env) {
         var resolvedPrefix = env.namespaces[prefix];
         if(resolvedPrefix != null) {            
             uri = resolvedPrefix+suffix;
+        } else {
+            uri = prefix+":"+suffix;
         }
     } else {
         //console.log(" - URI is not prefixed");
