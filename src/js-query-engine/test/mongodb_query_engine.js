@@ -1,9 +1,9 @@
-var QueryEngine = require("./../src/mongodb_query_engine").QueryEngine;
+var MongodbQueryEngine = require("./../src/mongodb_query_engine").MongodbQueryEngine;
 
-if(QueryEngine.mongodb === true) {
+if(MongodbQueryEngine.mongodb === true) {
 
     exports.testInsertDataTrivialRecovery = function(test){
-        var engine = new QueryEngine.QueryEngine();
+        var engine = new MongodbQueryEngine.MongodbQueryEngine();
         engine.readConfiguration(function(){
             engine.clean(function() {
                 engine.execute('INSERT DATA {  <http://example/book3> <http://example.com/vocab#title> <http://test.com/example> }', function(result){
@@ -24,7 +24,7 @@ if(QueryEngine.mongodb === true) {
 
 
     exports.testInsertDataTrivialRecovery2 = function(test){
-        var engine = new QueryEngine.QueryEngine();      
+        var engine = new MongodbQueryEngine.MongodbQueryEngine();      
         engine.readConfiguration(function(){
         engine.clean(function() {
             engine.execute('INSERT DATA {  <http://example/book3> <http://example.com/vocab#title> <http://test.com/example>; <http://example.com/vocab#pages> 95 }', function(success,result){
@@ -33,14 +33,15 @@ if(QueryEngine.mongodb === true) {
                 engine.execute('SELECT * { ?s ?p ?o }', function(success, result){
                     test.ok(success === true );
                     test.ok(result.length === 2);
+
                     test.ok(result[0]['s'].value === 'http://example/book3');
                     test.ok(result[1]['s'].value === 'http://example/book3');
 
                     if(result[0]['p'].value === 'http://example.com/vocab#title') {
                         test.ok(result[0]['o'].value === 'http://test.com/example');
                     } else if(result[0]['p'].value === 'http://example.com/vocab#pages') {
-                        test.ok(result[1]['o'].value === "95");
-                        test.ok(result[1]['o'].type === "http://www.w3.org/2001/XMLSchema#integer");
+                        test.ok(result[0]['o'].value === "95");
+                        test.ok(result[0]['o'].type === "http://www.w3.org/2001/XMLSchema#integer");
                     } else {
                         test.ok(false);
                     }
@@ -63,7 +64,7 @@ if(QueryEngine.mongodb === true) {
 
 
     exports.testInsertDataTrivialRecovery3 = function(test){
-        var engine = new QueryEngine.QueryEngine();      
+        var engine = new MongodbQueryEngine.MongodbQueryEngine();      
         engine.readConfiguration(function(){
         engine.clean(function() {
             engine.execute('INSERT DATA {  <http://example/book3> <http://example.com/vocab#title> <http://test.com/example>; <http://example.com/vocab#pages> 95 }',function(success,result){
@@ -100,7 +101,7 @@ if(QueryEngine.mongodb === true) {
 
 
     exports.testSimpleJoin1 = function(test){
-        var engine = new QueryEngine.QueryEngine();      
+        var engine = new MongodbQueryEngine.MongodbQueryEngine();      
         engine.readConfiguration(function(){
         engine.clean(function() {
             engine.execute('INSERT DATA {  <http://example/book3> <http://example.com/vocab#title> <http://test.com/example>; <http://example.com/vocab#pages> 95 . <http://example/book4> <http://example.com/vocab#title> <http://test.com/example>; <http://example.com/vocab#pages> 96 . }', function(success,result){
@@ -120,7 +121,7 @@ if(QueryEngine.mongodb === true) {
 
 
     exports.testPrefixInsertion = function(test) {
-        var engine = new QueryEngine.QueryEngine();      
+        var engine = new MongodbQueryEngine.MongodbQueryEngine();      
         engine.readConfiguration(function(){
         engine.clean(function() {
             engine.execute('PREFIX ns: <http://example.org/ns#>  PREFIX x:  <http://example.org/x/> PREFIX z:  <http://example.org/x/#> INSERT DATA { x:x ns:p  "d:x ns:p" . x:x x:p   "x:x x:p" . z:x z:p   "z:x z:p" . }', function(success, result){
@@ -155,7 +156,7 @@ if(QueryEngine.mongodb === true) {
 
 
     exports.testUnionBasic1 = function(test) {
-        var engine = new QueryEngine.QueryEngine();      
+        var engine = new MongodbQueryEngine.MongodbQueryEngine();      
         engine.readConfiguration(function(){
         engine.clean(function() {
             engine.execute(" PREFIX dc10:  <http://purl.org/dc/elements/1.0/> PREFIX dc11:  <http://purl.org/dc/elements/1.1/> INSERT DATA { _:a  dc10:title     'SPARQL Query Language Tutorial' .\
@@ -190,7 +191,7 @@ if(QueryEngine.mongodb === true) {
 
 
     exports.testUnionBasic2 = function(test) {
-        var engine = new QueryEngine.QueryEngine();      
+        var engine = new MongodbQueryEngine.MongodbQueryEngine();      
         engine.readConfiguration(function(){        
         engine.clean(function(){
             engine.execute(" PREFIX dc10:  <http://purl.org/dc/elements/1.0/> PREFIX dc11:  <http://purl.org/dc/elements/1.1/> INSERT DATA { _:a  dc10:title     'SPARQL Query Language Tutorial' .\
@@ -234,7 +235,7 @@ if(QueryEngine.mongodb === true) {
 
 
     exports.testUnionBasic3 = function(test) {
-        var engine = new QueryEngine.QueryEngine();      
+        var engine = new MongodbQueryEngine.MongodbQueryEngine();      
         engine.readConfiguration(function(){
         engine.clean(function(){
             engine.execute(" PREFIX dc10:  <http://purl.org/dc/elements/1.0/> PREFIX dc11:  <http://purl.org/dc/elements/1.1/> INSERT DATA { _:a  dc10:title     'SPARQL Query Language Tutorial' .\
@@ -274,7 +275,7 @@ if(QueryEngine.mongodb === true) {
 
 
     exports.testUnionBasic4 = function(test) {
-        var engine = new QueryEngine.QueryEngine();
+        var engine = new MongodbQueryEngine.MongodbQueryEngine();
         engine.readConfiguration(function(){
         engine.clean(function(){
             engine.execute(" PREFIX dc10:  <http://purl.org/dc/elements/1.0/> PREFIX dc11:  <http://purl.org/dc/elements/1.1/> INSERT DATA { _:a  dc10:title     'SPARQL Query Language Tutorial' .\
@@ -301,7 +302,7 @@ if(QueryEngine.mongodb === true) {
 
 
     exports.testOptionalBasic1 = function(test) {
-        var engine = new QueryEngine.QueryEngine();
+        var engine = new MongodbQueryEngine.MongodbQueryEngine();
         engine.readConfiguration(function(){
         engine.clean(function() {
             engine.execute("PREFIX  foaf:  <http://xmlns.com/foaf/0.1/>\
@@ -345,7 +346,7 @@ if(QueryEngine.mongodb === true) {
 
 
     exports.testOptionalDistinct1 = function(test) {
-        var engine = new QueryEngine.QueryEngine();      
+        var engine = new MongodbQueryEngine.MongodbQueryEngine();      
         engine.readConfiguration(function(){
           engine.clean(function(){
             engine.execute("PREFIX  foaf:  <http://xmlns.com/foaf/0.1/>\
@@ -372,7 +373,7 @@ if(QueryEngine.mongodb === true) {
 
 
     exports.testLimit1 = function(test) {
-        var engine = new QueryEngine.QueryEngine();      
+        var engine = new MongodbQueryEngine.MongodbQueryEngine();      
         engine.readConfiguration(function(){
           engine.clean(function(){
             engine.execute("PREFIX  foaf:  <http://xmlns.com/foaf/0.1/>\
@@ -400,7 +401,7 @@ if(QueryEngine.mongodb === true) {
 
 
     exports.testOrderBy1 = function(test) {
-        var engine = new QueryEngine.QueryEngine();      
+        var engine = new MongodbQueryEngine.MongodbQueryEngine();      
         engine.readConfiguration(function(){
         engine.clean(function(){
             engine.execute("PREFIX  foaf:  <http://xmlns.com/foaf/0.1/>\
@@ -428,7 +429,7 @@ if(QueryEngine.mongodb === true) {
 
 
     exports.testOrderBy2 = function(test) {
-        var engine = new QueryEngine.QueryEngine();
+        var engine = new MongodbQueryEngine.MongodbQueryEngine();
         engine.readConfiguration(function(){
         engine.clean(function(){
             engine.execute("PREFIX  foaf:  <http://xmlns.com/foaf/0.1/>\
@@ -457,7 +458,7 @@ if(QueryEngine.mongodb === true) {
 
 
     exports.testOrderBy3 = function(test) {
-        var engine = new QueryEngine.QueryEngine();
+        var engine = new MongodbQueryEngine.MongodbQueryEngine();
         engine.readConfiguration(function(){
         engine.clean(function(){
             engine.execute("PREFIX  foaf:  <http://xmlns.com/foaf/0.1/>\
@@ -486,7 +487,7 @@ if(QueryEngine.mongodb === true) {
 
 
     exports.testOrderBy3 = function(test) {
-        var engine = new QueryEngine.QueryEngine();      
+        var engine = new MongodbQueryEngine.MongodbQueryEngine();      
         engine.readConfiguration(function(){
         engine.clean(function(){
             engine.execute("PREFIX  foaf:  <http://xmlns.com/foaf/0.1/>\
@@ -515,7 +516,7 @@ if(QueryEngine.mongodb === true) {
 
 
     exports.testInsertionDeletionTrivial1 = function(test){
-        var engine = new QueryEngine.QueryEngine();
+        var engine = new MongodbQueryEngine.MongodbQueryEngine();
         engine.readConfiguration(function(){
         engine.clean(function(){
             engine.execute('INSERT DATA {  <http://example/book3> <http://example.com/vocab#title> <http://test.com/example> }', function(result){
@@ -542,7 +543,7 @@ if(QueryEngine.mongodb === true) {
     };
 
     exports.testInsertionDeletion2 = function(test){
-        var engine = new QueryEngine.QueryEngine();
+        var engine = new MongodbQueryEngine.MongodbQueryEngine();
         engine.readConfiguration(function(){
         engine.clean(function(){
             engine.execute('INSERT DATA {  GRAPH <a> { <http://example/book3> <http://example.com/vocab#title> <http://test.com/example> } }', function(result){
@@ -595,7 +596,7 @@ if(QueryEngine.mongodb === true) {
 
 
     exports.testModify1 = function(test){
-        var engine = new QueryEngine.QueryEngine();
+        var engine = new MongodbQueryEngine.MongodbQueryEngine();
         engine.readConfiguration(function(){
         engine.clean(function(){
             engine.execute('PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
@@ -647,7 +648,7 @@ if(QueryEngine.mongodb === true) {
     };
 
     exports.testModifyDefaultGraph = function(test){
-        var engine = new QueryEngine.QueryEngine();
+        var engine = new MongodbQueryEngine.MongodbQueryEngine();
         engine.readConfiguration(function(){
         engine.clean(function() {
             engine.execute('PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
@@ -696,7 +697,7 @@ if(QueryEngine.mongodb === true) {
 
 
     exports.testModifyOnlyInsert = function(test){
-        var engine = new QueryEngine.QueryEngine();      
+        var engine = new MongodbQueryEngine.MongodbQueryEngine();      
         engine.readConfiguration(function(){
         engine.clean(function(){
             engine.execute('PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
@@ -742,7 +743,7 @@ if(QueryEngine.mongodb === true) {
 
 
     exports.testModifyOnlyDelete = function(test){
-        var engine = new QueryEngine.QueryEngine();
+        var engine = new MongodbQueryEngine.MongodbQueryEngine();
         engine.readConfiguration(function(){
         engine.clean(function(){
             engine.execute('PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
@@ -779,7 +780,7 @@ if(QueryEngine.mongodb === true) {
 
 
     exports.testAliasedVar = function(test) {
-        var engine = new QueryEngine.QueryEngine();
+        var engine = new MongodbQueryEngine.MongodbQueryEngine();
         engine.readConfiguration(function(){
         engine.clean(function() {
             var query = "PREFIX : <http://example/>\
@@ -803,7 +804,7 @@ if(QueryEngine.mongodb === true) {
 
 
     exports.testClearGraph1 = function(test){
-        var engine = new QueryEngine.QueryEngine();
+        var engine = new MongodbQueryEngine.MongodbQueryEngine();
         engine.readConfiguration(function(){
         engine.clean(function() {
             engine.execute('PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
@@ -844,7 +845,7 @@ if(QueryEngine.mongodb === true) {
 
 
     exports.testClearGraph2 = function(test){
-        var engine = new QueryEngine.QueryEngine();
+        var engine = new MongodbQueryEngine.MongodbQueryEngine();
         engine.readConfiguration(function(){
         engine.clean(function(){
             engine.execute('PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
@@ -897,7 +898,7 @@ if(QueryEngine.mongodb === true) {
 
 
     exports.testClearGraph3 = function(test){
-        var engine = new QueryEngine.QueryEngine();
+        var engine = new MongodbQueryEngine.MongodbQueryEngine();
         engine.readConfiguration(function(){
         engine.clean(function(){
             engine.execute('PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
@@ -951,7 +952,7 @@ if(QueryEngine.mongodb === true) {
 
 
     exports.testClearGraph4 = function(test){
-        var engine = new QueryEngine.QueryEngine();
+        var engine = new MongodbQueryEngine.MongodbQueryEngine();
         engine.readConfiguration(function(){
         engine.clean(function(){
             engine.execute('PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
@@ -1005,7 +1006,7 @@ if(QueryEngine.mongodb === true) {
 
 
     exports.testCreate = function(test){
-        var engine = new QueryEngine.QueryEngine();
+        var engine = new MongodbQueryEngine.MongodbQueryEngine();
         engine.readConfiguration(function(){
         engine.clean(function() {
             engine.execute('CREATE GRAPH <a>', function(result){
@@ -1019,7 +1020,7 @@ if(QueryEngine.mongodb === true) {
     };
 
     exports.testDrop1 = function(test){
-        var engine = new QueryEngine.QueryEngine();
+        var engine = new MongodbQueryEngine.MongodbQueryEngine();
         engine.readConfiguration(function(){
         engine.clean(function() {
             engine.execute('PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
@@ -1060,7 +1061,7 @@ if(QueryEngine.mongodb === true) {
 
 
     exports.testDrop2 = function(test){
-        var engine = new QueryEngine.QueryEngine();
+        var engine = new MongodbQueryEngine.MongodbQueryEngine();
         engine.readConfiguration(function(){
         engine.clean(function() {
             engine.execute('PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
@@ -1113,7 +1114,7 @@ if(QueryEngine.mongodb === true) {
 
 
     exports.testDrop3 = function(test){
-        var engine = new QueryEngine.QueryEngine();
+        var engine = new MongodbQueryEngine.MongodbQueryEngine();
         engine.readConfiguration(function(){
         engine.clean(function() {
             engine.execute('PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
@@ -1167,7 +1168,7 @@ if(QueryEngine.mongodb === true) {
 
 
     exports.testDrop4 = function(test){
-        var engine = new QueryEngine.QueryEngine();
+        var engine = new MongodbQueryEngine.MongodbQueryEngine();
         engine.readConfiguration(function(){     
           engine.clean(function() {
             engine.execute('PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
@@ -1224,7 +1225,7 @@ if(QueryEngine.mongodb === true) {
 
 
     exports.testDeleteWhere1 = function(test){
-        var engine = new QueryEngine.QueryEngine();
+        var engine = new MongodbQueryEngine.MongodbQueryEngine();
         engine.readConfiguration(function(){
         engine.clean(function() {
             engine.execute('PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
@@ -1255,7 +1256,7 @@ if(QueryEngine.mongodb === true) {
     };
 
     exports.testGroupMax1 = function(test) {
-        var engine = new QueryEngine.QueryEngine();      
+        var engine = new MongodbQueryEngine.MongodbQueryEngine();      
         engine.readConfiguration(function(){
         engine.clean(function() {
             var query = "PREFIX : <http://example/>\
@@ -1280,7 +1281,7 @@ if(QueryEngine.mongodb === true) {
 
 
     exports.testGroupMin1 = function(test) {
-        var engine = new QueryEngine.QueryEngine();
+        var engine = new MongodbQueryEngine.MongodbQueryEngine();
         engine.readConfiguration(function(){
         engine.clean(function() {
             var query = "PREFIX : <http://example/>\
@@ -1305,7 +1306,7 @@ if(QueryEngine.mongodb === true) {
 
 
     exports.testGroupCount1 = function(test) {
-        var engine = new QueryEngine.QueryEngine();      
+        var engine = new MongodbQueryEngine.MongodbQueryEngine();      
         engine.readConfiguration(function(){
         engine.clean(function() {
             var query = "PREFIX : <http://example/>\
@@ -1331,7 +1332,7 @@ if(QueryEngine.mongodb === true) {
     };
 
     exports.testGroupCountDistinct1 = function(test) {
-        var engine = new QueryEngine.QueryEngine();
+        var engine = new MongodbQueryEngine.MongodbQueryEngine();
         engine.readConfiguration(function(){
         engine.clean(function(){
             var query = "PREFIX : <http://example/>\
@@ -1357,7 +1358,7 @@ if(QueryEngine.mongodb === true) {
     };
 
     exports.testGroupAvg1 = function(test) {
-        var engine = new QueryEngine.QueryEngine();
+        var engine = new MongodbQueryEngine.MongodbQueryEngine();
         engine.readConfiguration(function(){
         engine.clean(function(){
             var query = "PREFIX : <http://example/>\
@@ -1383,7 +1384,7 @@ if(QueryEngine.mongodb === true) {
     };
 
     exports.testGroupAvg2 = function(test) {
-        var engine = new QueryEngine.QueryEngine();
+        var engine = new MongodbQueryEngine.MongodbQueryEngine();
         engine.readConfiguration(function(){
         engine.clean(function(){
             var query = "PREFIX : <http://example/>\
@@ -1408,7 +1409,7 @@ if(QueryEngine.mongodb === true) {
 
 
     exports.testGroupSum1 = function(test) {
-        var engine = new QueryEngine.QueryEngine();
+        var engine = new MongodbQueryEngine.MongodbQueryEngine();
         engine.readConfiguration(function(){
         engine.clean(function(){
             var query = "PREFIX : <http://example/>\
@@ -1434,7 +1435,7 @@ if(QueryEngine.mongodb === true) {
     };
 
     exports.testGroupSum2 = function(test) {
-        var engine = new QueryEngine.QueryEngine();
+        var engine = new MongodbQueryEngine.MongodbQueryEngine();
         engine.readConfiguration(function(){
         engine.clean(function(){
             var query = "PREFIX : <http://example/>\

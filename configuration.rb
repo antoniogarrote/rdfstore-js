@@ -76,7 +76,9 @@ BUILD_CONFIGURATION = {
                  "./src/js-query-engine/src/rdf_js_interface.js",
                  "./src/js-query-engine/src/query_filters.js",
                  "./src/js-query-engine/src/query_plan.js",
+                 "./src/js-query-engine/src/query_plan_async.js",
                  "./src/js-query-engine/src/query_engine.js",
+                 "./src/js-query-engine/src/mongodb_query_engine.js",
                  "./src/js-query-engine/src/callbacks.js",
                  "./src/js-connection/src/rdfstore_child_client.js",
                  "./src/js-store/src/store.js",
@@ -84,7 +86,7 @@ BUILD_CONFIGURATION = {
                 ],
     :package => {
       :name    => "rdfstore",
-      :version => "0.4.15",
+      :version => "0.5.0",
       :description => "RDF graph store supporting the SPARQL query language",
       :keywords => ["RDF", "SPARQL", "graph", "store"],
       :author  => {
@@ -99,8 +101,7 @@ BUILD_CONFIGURATION = {
                     }
                    ],
       :dependencies => {
-        "binary"    => ">=0.2.2",
-        "put"       => ">=0.0.5"
+        "mongodb"   => ">=0.9.7"
       }
     }
   },
@@ -114,7 +115,7 @@ BUILD_CONFIGURATION = {
                 ],
     :package => {
       :name    => "rdf_js_interface",
-      :version => "0.4.15",
+      :version => "0.5.0",
       :description => "Implementation of W3C's RDF Interfaces API",
       :keywords => ["RDF"],
       :author  => {

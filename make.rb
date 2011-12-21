@@ -121,7 +121,7 @@ try{
     //window['RDFJSInterface']['UrisMap']['prototype']['addAll'] = RDFJSInterface.UrisMap.prototype.addAll;
     //window['RDFJSInterface']['UrisMap']['prototype']['resolve'] = RDFJSInterface.UrisMap.prototype.resolve;
     //window['RDFJSInterface']['UrisMap']['prototype']['shrink'] = RDFJSInterface.UrisMap.prototype.shrink;
-    // 
+
     //window['RDFJSInterface']['Profile'] = RDFJSInterface.Profile;
     //window['RDFJSInterface']['Profile']['prototype']['importProfile'] = RDFJSInterface.Profile.prototype.importProfile;
     //window['RDFJSInterface']['Profile']['prototype']['resolve'] = RDFJSInterface.Profile.prototype.resolve;
@@ -129,7 +129,7 @@ try{
     //window['RDFJSInterface']['Profile']['prototype']['setDefaultVocabulary'] = RDFJSInterface.Profile.prototype.setDefaultVocabulary;
     //window['RDFJSInterface']['Profile']['prototype']['setPrefix'] = RDFJSInterface.Profile.prototype.setPrefix;
     //window['RDFJSInterface']['Profile']['prototype']['setTerm'] = RDFJSInterface.Profile.prototype.setTerm;
-    // 
+
     //window['RDFJSInterface']['RDFEnvironment'] = RDFJSInterface.RDFEnvironment;
     //window['RDFJSInterface']['RDFEnvironment']['prototype']['createBlankNode'] = RDFJSInterface.RDFEnvironment.prototype.createBlankNode;
     //window['RDFJSInterface']['RDFEnvironment']['prototype']['createNamedNode'] = RDFJSInterface.RDFEnvironment.prototype.createNamedNode;
@@ -140,29 +140,29 @@ try{
     //window['RDFJSInterface']['RDFEnvironment']['prototype']['createProfile'] = RDFJSInterface.RDFEnvironment.prototype.createProfile;
     //window['RDFJSInterface']['RDFEnvironment']['prototype']['createTermMap'] = RDFJSInterface.RDFEnvironment.prototype.createTermMap;
     //window['RDFJSInterface']['RDFEnvironment']['prototype']['createPrefixMap'] = RDFJSInterface.RDFEnvironment.prototype.createPrefixMap;
-    // 
+
     //window['RDFJSInterface']['RDFNode'] = RDFJSInterface.RDFNode;
     //window['RDFJSInterface']['RDFNode']['prototype']['equals'] = RDFJSInterface.RDFNode.prototype.equals;
-    // 
+
     //window['RDFJSInterface']['BlankNode'] = RDFJSInterface.BlankNode;
     //window['RDFJSInterface']['BlankNode']['prototype']['toString'] = RDFJSInterface.BlankNode.prototype.toString;
     //window['RDFJSInterface']['BlankNode']['prototype']['toNT'] = RDFJSInterface.BlankNode.prototype.toNT;
     //window['RDFJSInterface']['BlankNode']['prototype']['valueOf'] = RDFJSInterface.BlankNode.prototype.valueOf;
-    // 
+
     //window['RDFJSInterface']['Literal'] = RDFJSInterface.Literal;
     //window['RDFJSInterface']['Literal']['prototype']['toString'] = RDFJSInterface.Literal.prototype.toString;
     //window['RDFJSInterface']['Literal']['prototype']['toNT'] = RDFJSInterface.Literal.prototype.toNT;
     //window['RDFJSInterface']['Literal']['prototype']['valueOf'] = RDFJSInterface.Literal.prototype.valueOf;
-    // 
+
     //window['RDFJSInterface']['NamedNode'] = RDFJSInterface.NamedNode;
     //window['RDFJSInterface']['NamedNode']['prototype']['toString'] = RDFJSInterface.NamedNode.prototype.toString;
     //window['RDFJSInterface']['NamedNode']['prototype']['toNT'] = RDFJSInterface.NamedNode.prototype.toNT;
     //window['RDFJSInterface']['NamedNode']['prototype']['valueOf'] = RDFJSInterface.NamedNode.prototype.valueOf;
-    // 
+
     //window['RDFJSInterface']['Triple'] = RDFJSInterface.Triple;
     //window['RDFJSInterface']['Triple']['prototype']['equals'] = RDFJSInterface.Triple.prototype.equals;
     //window['RDFJSInterface']['Triple']['prototype']['toString'] = RDFJSInterface.Triple.prototype.toString;
-    // 
+
     //window['RDFJSInterface']['Graph'] = RDFJSInterface.Graph;
     //window['RDFJSInterface']['Graph']['prototype']['add'] = RDFJSInterface.Graph.prototype.add;
     //window['RDFJSInterface']['Graph']['prototype']['addAction'] = RDFJSInterface.Graph.prototype.addAction;
@@ -177,7 +177,7 @@ try{
     //window['RDFJSInterface']['Graph']['prototype']['match'] = RDFJSInterface.Graph.prototype.match;
     //window['RDFJSInterface']['Graph']['prototype']['removeMatches'] = RDFJSInterface.Graph.prototype.removeMatches;
     //window['RDFJSInterface']['Graph']['prototype']['toNT'] = RDFJSInterface.Graph.prototype.toNT;
-    // 
+
     //window['RDFJSInterface']['rdf'] = RDFJSInterface.rdf;
   } else {
     module.exports = RDFJSInterface;
@@ -378,6 +378,9 @@ def process_file_for_browser(of, f)
     if (line =~ /exports\.[a-zA-Z]+ *= *\{ *\};/) == 0
       puts " * modifying: #{line} -> var #{line.split("exports.")[1]}"
       of << "var #{line.split('exports.')[1]}"
+    elsif (line =~ /var QueryEngine = require/) == 0
+      # Replace the line we are ignoring
+      of << "var MongodbQueryEngine = { MongodbQueryEngine: function(){ throw 'MongoDB backend not supported in the browser version' } };\n"
     elsif (line =~ /var *([a-zA-Z]+) *= *exports\.\1;/) == 0
       puts " * ignoring: #{line}"
     elsif (line =~ /var *([a-zA-Z]+) *= *require\(['\"]{1,1}[a-zA-Z_\.\/-]*['\"]{1,1}\)\.\1;/) == 0
@@ -545,7 +548,7 @@ end
 
 
 if ARGV.length != 1
-  puts "USAGE make.rb [nodejs | browser | browser_persistent | tests | test_min]"
+  puts "USAGE make.rb [nodejs | browser | browser_persistent | rdf_interface_api | tests | test_min]"
 else
   if ARGV[0] == "nodejs"
     make_nodejs

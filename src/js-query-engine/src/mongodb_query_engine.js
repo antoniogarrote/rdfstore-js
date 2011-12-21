@@ -1,29 +1,30 @@
 // exports
-exports.QueryEngine = {};
-var QueryEngine = exports.QueryEngine;
+exports.MongodbQueryEngine = {};
+var MongodbQueryEngine = exports.MongodbQueryEngine;
 
 //imports
 var AbstractQueryTree = require("./../../js-sparql-parser/src/abstract_query_tree").AbstractQueryTree;
 var Utils = require("./../../js-trees/src/utils").Utils;
-var QueryPlan = require("./query_plan_async").QueryPlan;
+var QueryPlanAsync = require("./query_plan_async").QueryPlanAsync;
 var QueryFilters = require("./query_filters").QueryFilters;
 var RDFJSInterface = require("./rdf_js_interface").RDFJSInterface;
 var RDFLoader = require("../../js-communication/src/rdf_loader").RDFLoader;
 var Callbacks = require("./callbacks.js").Callbacks;
 var mongodb = require('mongodb');
 
-QueryEngine.mongodb = true;
+MongodbQueryEngine.mongodb = true;
 
-QueryEngine.QueryEngine = function(params,callback) {
+MongodbQueryEngine.MongodbQueryEngine = function(params) {
     var params = params || {};
     var server = params['mongoDomain'] || '127.0.0.1';
     var port = params['mongoPort'] || 27017;
     var mongoOptions = params['mongoOptions'] || {};
+    var mongoDBName = params['name'] || 'rdfstore_js';
 
     this.lexicon = this;
     this.backend = this;
 
-    this.client = new mongodb.Db('rdfstore_js', new mongodb.Server(server,port,mongoOptions));
+    this.client = new mongodb.Db(mongoDBName, new mongodb.Server(server,port,mongoOptions));
     this.defaultGraphOid = "u:https://github.com/antoniogarrote/rdfstore-js#default_graph";
     this.defaultGraphUri = "https://github.com/antoniogarrote/rdfstore-js#default_graph";
     this.defaultGraphUriTerm = {"token": "uri", "prefix": null, "suffix": null, "value": this.defaultGraphUri, "oid": this.defaultGraphOid};
@@ -40,7 +41,7 @@ QueryEngine.QueryEngine = function(params,callback) {
 };
 
 // Utils
-QueryEngine.QueryEngine.prototype.collection = function(collection, f) {
+MongodbQueryEngine.MongodbQueryEngine.prototype.collection = function(collection, f) {
     var that = this;
     var _collection = function() {
         that.client.collection(collection, f);
@@ -55,7 +56,7 @@ QueryEngine.QueryEngine.prototype.collection = function(collection, f) {
 
 };
 
-QueryEngine.QueryEngine.prototype.clean = function(callback) {
+MongodbQueryEngine.MongodbQueryEngine.prototype.clean = function(callback) {
     var that = this;
     this.collection('quads', function(err, coll) {
         coll.drop(function(){
@@ -70,7 +71,7 @@ QueryEngine.QueryEngine.prototype.clean = function(callback) {
     });
 };
 
-QueryEngine.QueryEngine.prototype.registerNsInEnvironment = function(prologue, env) {
+MongodbQueryEngine.MongodbQueryEngine.prototype.registerNsInEnvironment = function(prologue, env) {
     var prefixes = prologue.prefixes;
     var toSave = {};
 
@@ -94,7 +95,7 @@ QueryEngine.QueryEngine.prototype.registerNsInEnvironment = function(prologue, e
     }
 };
 
-QueryEngine.QueryEngine.prototype.applyModifier = function(modifier, projectedBindings) {
+MongodbQueryEngine.MongodbQueryEngine.prototype.applyModifier = function(modifier, projectedBindings) {
     if(modifier == "DISTINCT") {
         var map = {};
         var result = [];
@@ -138,7 +139,7 @@ QueryEngine.QueryEngine.prototype.applyModifier = function(modifier, projectedBi
     }
 };
 
-QueryEngine.QueryEngine.prototype.applyLimitOffset = function(offset, limit, bindings) {
+MongodbQueryEngine.MongodbQueryEngine.prototype.applyLimitOffset = function(offset, limit, bindings) {
     if(limit == null && offset == null) {
         return bindings;
     }
@@ -157,7 +158,7 @@ QueryEngine.QueryEngine.prototype.applyLimitOffset = function(offset, limit, bin
 };
 
 
-QueryEngine.QueryEngine.prototype.applySingleOrderBy = function(orderFilters, modifiedBindings, dataset, outEnv) {
+MongodbQueryEngine.MongodbQueryEngine.prototype.applySingleOrderBy = function(orderFilters, modifiedBindings, dataset, outEnv) {
     var acum = [];
     for(var i=0; i<orderFilters.length; i++) {
         var orderFilter = orderFilters[i];
@@ -167,7 +168,7 @@ QueryEngine.QueryEngine.prototype.applySingleOrderBy = function(orderFilters, mo
     return {binding:modifiedBindings, value:acum};
 };
 
-QueryEngine.QueryEngine.prototype.applyOrderBy = function(order, modifiedBindings, dataset, outEnv) {
+MongodbQueryEngine.MongodbQueryEngine.prototype.applyOrderBy = function(order, modifiedBindings, dataset, outEnv) {
     var that = this;
     var acum = [];
     if(order != null && order.length > 0) {
@@ -192,7 +193,7 @@ QueryEngine.QueryEngine.prototype.applyOrderBy = function(order, modifiedBinding
     }
 };
 
-QueryEngine.QueryEngine.prototype.compareFilteredBindings = function(a, b, order, env) {
+MongodbQueryEngine.MongodbQueryEngine.prototype.compareFilteredBindings = function(a, b, order, env) {
     var found = false;
     var i = 0;
     while(!found) {
@@ -276,7 +277,7 @@ QueryEngine.QueryEngine.prototype.compareFilteredBindings = function(a, b, order
     }
 };
 
-QueryEngine.QueryEngine.prototype.removeDefaultGraphBindings = function(bindingsList, dataset) {
+MongodbQueryEngine.MongodbQueryEngine.prototype.removeDefaultGraphBindings = function(bindingsList, dataset) {
     var onlyDefaultDatasets = [];
     var namedDatasetsMap = {};
     for(var i=0; i<dataset.named.length; i++) {
@@ -311,7 +312,7 @@ QueryEngine.QueryEngine.prototype.removeDefaultGraphBindings = function(bindings
 };
 
 
-QueryEngine.QueryEngine.prototype.aggregateBindings = function(projection, bindingsGroup, dataset, env) {
+MongodbQueryEngine.MongodbQueryEngine.prototype.aggregateBindings = function(projection, bindingsGroup, dataset, env) {
     var denormBindings = this.copyDenormalizedBindings(bindingsGroup, env.outCache);
     var aggregatedBindings = {};
     for(var i=0; i<projection.length; i++) {
@@ -326,7 +327,7 @@ QueryEngine.QueryEngine.prototype.aggregateBindings = function(projection, bindi
 };
 
 
-QueryEngine.QueryEngine.prototype.projectBindings = function(projection, results, dataset) {
+MongodbQueryEngine.MongodbQueryEngine.prototype.projectBindings = function(projection, results, dataset) {
     if(projection[0].kind === '*'){
         return results;
     } else {
@@ -362,21 +363,21 @@ QueryEngine.QueryEngine.prototype.projectBindings = function(projection, results
     }
 };
 
-QueryEngine.QueryEngine.prototype.resolveNsInEnvironment = function(prefix, env) {
+MongodbQueryEngine.MongodbQueryEngine.prototype.resolveNsInEnvironment = function(prefix, env) {
     var namespaces = env.namespaces;
     return namespaces[prefix];
 };
 
 
-QueryEngine.QueryEngine.prototype.registerUri = function(uri) {
+MongodbQueryEngine.MongodbQueryEngine.prototype.registerUri = function(uri) {
     return "u:"+uri;
 };
 
-QueryEngine.QueryEngine.prototype.registerLiteral = function(literal) {
+MongodbQueryEngine.MongodbQueryEngine.prototype.registerLiteral = function(literal) {
     return "l:"+literal;
 };
 
-QueryEngine.QueryEngine.prototype.normalizeTerm = function(term, env, shouldIndex) {
+MongodbQueryEngine.MongodbQueryEngine.prototype.normalizeTerm = function(term, env, shouldIndex) {
     if(term.token === 'uri') {
         var uri = Utils.lexicalFormBaseUri(term, env);
         if(uri == null) {
@@ -431,7 +432,7 @@ QueryEngine.QueryEngine.prototype.normalizeTerm = function(term, env, shouldInde
     }
 };
 
-QueryEngine.QueryEngine.prototype.normalizeDatasets = function(datasets, outerEnv, callback) {
+MongodbQueryEngine.MongodbQueryEngine.prototype.normalizeDatasets = function(datasets, outerEnv, callback) {
     var that = this;
     for(var i=0; i<datasets.length; i++) {
         var dataset = datasets[i];
@@ -450,7 +451,7 @@ QueryEngine.QueryEngine.prototype.normalizeDatasets = function(datasets, outerEn
     return true
 };
 
-QueryEngine.QueryEngine.prototype.normalizeQuad = function(quad, queryEnv, shouldIndex) {
+MongodbQueryEngine.MongodbQueryEngine.prototype.normalizeQuad = function(quad, queryEnv, shouldIndex) {
     var subject    = null;
     var predicate  = null;
     var object     = null;
@@ -497,7 +498,7 @@ QueryEngine.QueryEngine.prototype.normalizeQuad = function(quad, queryEnv, shoul
             graph:graph});
 };
 
-QueryEngine.QueryEngine.prototype.denormalizeBindingsList = function(bindingsList, envOut) {
+MongodbQueryEngine.MongodbQueryEngine.prototype.denormalizeBindingsList = function(bindingsList, envOut) {
     var results = [];
 
     for(var i=0; i<bindingsList.length; i++) {
@@ -513,7 +514,7 @@ QueryEngine.QueryEngine.prototype.denormalizeBindingsList = function(bindingsLis
  *
  * This is required just to save lookups when final results are generated.
  */
-QueryEngine.QueryEngine.prototype.copyDenormalizedBindings = function(bindingsList, out, callback) {
+MongodbQueryEngine.MongodbQueryEngine.prototype.copyDenormalizedBindings = function(bindingsList, out, callback) {
     var denormList = [];
     for(var i=0; i<bindingsList.length; i++) {
         var denorm = {};
@@ -547,14 +548,14 @@ QueryEngine.QueryEngine.prototype.copyDenormalizedBindings = function(bindingsLi
 /**
  * Moved here from the Lexicon object
  */
-QueryEngine.QueryEngine.prototype.parseUri = function(uriString) {
+MongodbQueryEngine.MongodbQueryEngine.prototype.parseUri = function(uriString) {
     return {token: "uri", value:uriString};
 };
 
 /**
  * Moved here from the Lexicon object
  */
-QueryEngine.QueryEngine.prototype.parseLiteral = function(literalString) {
+MongodbQueryEngine.MongodbQueryEngine.prototype.parseLiteral = function(literalString) {
     var parts = literalString.lastIndexOf("@");
     if(parts!=-1 && literalString[parts-1]==='"' && literalString.substring(parts, literalString.length).match(/^@[a-zA-Z\-]+$/g)!=null) {
         var value = literalString.substring(1,parts-1);
@@ -577,7 +578,7 @@ QueryEngine.QueryEngine.prototype.parseLiteral = function(literalString) {
 /**
  * Moved here from the Lexicon object
  */
-QueryEngine.QueryEngine.prototype.retrieve = function(oid) {
+MongodbQueryEngine.MongodbQueryEngine.prototype.retrieve = function(oid) {
     try {
         if(oid === this.defaultGraphOid) {
             return({ token: "uri", 
@@ -619,7 +620,7 @@ QueryEngine.QueryEngine.prototype.retrieve = function(oid) {
     }
 };
 
-QueryEngine.QueryEngine.prototype.denormalizeBindings = function(bindings, envOut, callback) {
+MongodbQueryEngine.MongodbQueryEngine.prototype.denormalizeBindings = function(bindings, envOut, callback) {
     var variables = Utils.keys(bindings);
 
     for(var i=0; i<variables.length; i++) {
@@ -641,7 +642,7 @@ QueryEngine.QueryEngine.prototype.denormalizeBindings = function(bindings, envOu
 
 // Queries execution
 
-QueryEngine.QueryEngine.prototype.execute = function(queryString, callback, defaultDataset, namedDataset){
+MongodbQueryEngine.MongodbQueryEngine.prototype.execute = function(queryString, callback, defaultDataset, namedDataset){
 //    try{
         queryString = Utils.normalizeUnicodeLiterals(queryString);
 
@@ -677,7 +678,7 @@ QueryEngine.QueryEngine.prototype.execute = function(queryString, callback, defa
 
 // Retrieval queries
 
-QueryEngine.QueryEngine.prototype.executeQuery = function(syntaxTree, callback, defaultDataset, namedDataset) {
+MongodbQueryEngine.MongodbQueryEngine.prototype.executeQuery = function(syntaxTree, callback, defaultDataset, namedDataset) {
     var prologue = syntaxTree.prologue;
     var units = syntaxTree.units;
     var that = this;
@@ -788,7 +789,7 @@ QueryEngine.QueryEngine.prototype.executeQuery = function(syntaxTree, callback, 
 
 // Select queries
 
-QueryEngine.QueryEngine.prototype.executeSelect = function(unit, env, defaultDataset, namedDataset, callback) {
+MongodbQueryEngine.MongodbQueryEngine.prototype.executeSelect = function(unit, env, defaultDataset, namedDataset, callback) {
     if(unit.kind === "select" || unit.kind === "ask" || unit.kind === "construct" || unit.kind === "modify") {
         var projection = unit.projection;
         var dataset    = unit.dataset;
@@ -862,7 +863,7 @@ QueryEngine.QueryEngine.prototype.executeSelect = function(unit, env, defaultDat
 };
 
 
-QueryEngine.QueryEngine.prototype.groupSolution = function(bindings, group, queryEnv){
+MongodbQueryEngine.MongodbQueryEngine.prototype.groupSolution = function(bindings, group, queryEnv){
     var order = [];
     var filteredBindings = [];
     var initialized = false;
@@ -983,7 +984,7 @@ QueryEngine.QueryEngine.prototype.groupSolution = function(bindings, group, quer
 /**
  * Here, all the constructions of the SPARQL algebra are handled
  */
-QueryEngine.QueryEngine.prototype.executeSelectUnit = function(projection, dataset, pattern, env, callback) {
+MongodbQueryEngine.MongodbQueryEngine.prototype.executeSelectUnit = function(projection, dataset, pattern, env, callback) {
     if(pattern.kind === "BGP") {
         this.executeAndBGP(projection, dataset, pattern, env, callback);
     } else if(pattern.kind === "UNION") {
@@ -1011,7 +1012,7 @@ QueryEngine.QueryEngine.prototype.executeSelectUnit = function(projection, datas
     }
 };
 
-QueryEngine.QueryEngine.prototype.executeUNION = function(projection, dataset, patterns, env, callback) {
+MongodbQueryEngine.MongodbQueryEngine.prototype.executeUNION = function(projection, dataset, patterns, env, callback) {
     var setQuery1 = patterns[0];
     var setQuery2 = patterns[1];
     var set1 = null;
@@ -1043,16 +1044,17 @@ QueryEngine.QueryEngine.prototype.executeUNION = function(projection, dataset, p
             }
         });
     })(function(){
-        var result = QueryPlan.unionBindings(set1, set2);
+        var result = QueryPlanAsync.unionBindings(set1, set2);
         result = QueryFilters.checkFilters(patterns, result, false, dataset, env, that);
         callback(true, result);
     });
 };
 
-QueryEngine.QueryEngine.prototype.executeAndBGP = function(projection, dataset, patterns, env, callback) {
+MongodbQueryEngine.MongodbQueryEngine.prototype.executeAndBGP = function(projection, dataset, patterns, env, callback) {
     var that = this;
 
-    QueryPlan.executeAndBGPs(patterns.value, dataset, this, env, function(success,result){
+    // @modified qp
+    QueryPlanAsync.executeAndBGPsDPSize(patterns.value, dataset, this, env, function(success,result){
         if(success) {
             result = QueryFilters.checkFilters(patterns, result, false, dataset, env, that);
             callback(true, result);
@@ -1062,7 +1064,7 @@ QueryEngine.QueryEngine.prototype.executeAndBGP = function(projection, dataset, 
     });
 };
 
-QueryEngine.QueryEngine.prototype.executeLEFT_JOIN = function(projection, dataset, patterns, env, callback) {
+MongodbQueryEngine.MongodbQueryEngine.prototype.executeLEFT_JOIN = function(projection, dataset, patterns, env, callback) {
     var setQuery1 = patterns.lvalue;
     var setQuery2 = patterns.rvalue;
 
@@ -1091,7 +1093,7 @@ QueryEngine.QueryEngine.prototype.executeLEFT_JOIN = function(projection, datase
             }
         });
     })(function(){
-        var result = QueryPlan.leftOuterJoinBindings(set1, set2);
+        var result = QueryPlanAsync.leftOuterJoinBindings(set1, set2);
         //console.log("SETS:")
         //console.log(set1)
         //console.log(set2)
@@ -1159,7 +1161,7 @@ QueryEngine.QueryEngine.prototype.executeLEFT_JOIN = function(projection, datase
     });
 };
 
-QueryEngine.QueryEngine.prototype.executeJOIN = function(projection, dataset, patterns, env, callback) {
+MongodbQueryEngine.MongodbQueryEngine.prototype.executeJOIN = function(projection, dataset, patterns, env, callback) {
     var setQuery1 = patterns.lvalue;
     var setQuery2 = patterns.rvalue;
     var set1 = null;
@@ -1187,15 +1189,30 @@ QueryEngine.QueryEngine.prototype.executeJOIN = function(projection, dataset, pa
             }
         });
     })(function(){
-        var result = QueryPlan.joinBindings(set1, set2);
+        var result = QueryPlanAsync.joinBindings(set1, set2);
 
         result = QueryFilters.checkFilters(patterns, result, false, dataset, env, that);
         callback(true, result);
     });
 };
 
+// @modified qp
+MongodbQueryEngine.MongodbQueryEngine.prototype.computeCosts = function(quads, queryEnv, callback) {
+    var that = this;
+    Utils.repeat(0, quads.length, function(k,env) {
+        var quad = quads[env._i];
+        var key = that.normalizeQuad(quad, queryEnv, false);
+        var floop = arguments.callee;
+        that.count(new MongodbQueryEngine.Pattern(key), function(count) {            
+            quads[env._i]['_cost'] = (count==null) ? 1 : count;
+            k(floop, env);
+        });
+    }, function(env) {
+        callback(quads);
+    });
+};
 
-QueryEngine.QueryEngine.prototype.rangeQuery = function(quad, queryEnv, callback) {
+MongodbQueryEngine.MongodbQueryEngine.prototype.rangeQuery = function(quad, queryEnv, callback) {
     var that = this;
     //console.log("BEFORE:");
     //console.log("QUAD:");
@@ -1206,7 +1223,7 @@ QueryEngine.QueryEngine.prototype.rangeQuery = function(quad, queryEnv, callback
         //console.log(key);
         //console.log(new QuadIndexCommon.Pattern(key));
         //console.log(key);
-        that.range(new QueryEngine.Pattern(key),function(quads){
+        that.range(new MongodbQueryEngine.Pattern(key),function(quads){
             //console.log("retrieved");
             //console.log(quads)
             if(quads == null || quads.length == 0) {
@@ -1222,7 +1239,7 @@ QueryEngine.QueryEngine.prototype.rangeQuery = function(quad, queryEnv, callback
 
 // Update queries
 
-QueryEngine.QueryEngine.prototype.executeUpdate = function(syntaxTree, callback) {
+MongodbQueryEngine.MongodbQueryEngine.prototype.executeUpdate = function(syntaxTree, callback) {
     var prologue = syntaxTree.prologue;
     var units = syntaxTree.units;
     var that = this;
@@ -1289,7 +1306,7 @@ QueryEngine.QueryEngine.prototype.executeUpdate = function(syntaxTree, callback)
     }
 };
 
-QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
+MongodbQueryEngine.MongodbQueryEngine.prototype.batchLoad = function(quads, callback) {
     var that = this;
     var subject    = null;
     var predicate  = null;
@@ -1437,7 +1454,7 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
 
 // Low level operations for update queries
 
-QueryEngine.QueryEngine.prototype._executeModifyQuery = function(aqt, queryEnv, callback) {
+MongodbQueryEngine.MongodbQueryEngine.prototype._executeModifyQuery = function(aqt, queryEnv, callback) {
     var that = this;
     var querySuccess = true;
     var error = null;
@@ -1573,7 +1590,7 @@ QueryEngine.QueryEngine.prototype._executeModifyQuery = function(aqt, queryEnv, 
     });
 };
 
-QueryEngine.QueryEngine.prototype._executeQuadInsert = function(quad, queryEnv, callback) {
+MongodbQueryEngine.MongodbQueryEngine.prototype._executeQuadInsert = function(quad, queryEnv, callback) {
     var that = this;
     var normalized = this.normalizeQuad(quad, queryEnv, true)
     if(normalized != null) {
@@ -1598,7 +1615,7 @@ QueryEngine.QueryEngine.prototype._executeQuadInsert = function(quad, queryEnv, 
     }
 };
 
-QueryEngine.QueryEngine.prototype._executeQuadDelete = function(quad, queryEnv, callback) {
+MongodbQueryEngine.MongodbQueryEngine.prototype._executeQuadDelete = function(quad, queryEnv, callback) {
     var that = this;
     var normalized = this.normalizeQuad(quad, queryEnv, false);
     if(normalized != null) {
@@ -1611,7 +1628,7 @@ QueryEngine.QueryEngine.prototype._executeQuadDelete = function(quad, queryEnv, 
     }
 };
 
-QueryEngine.QueryEngine.prototype._executeClearGraph = function(destinyGraph, queryEnv, callback) {
+MongodbQueryEngine.MongodbQueryEngine.prototype._executeClearGraph = function(destinyGraph, queryEnv, callback) {
     if(destinyGraph === 'default') {
         this.execute("DELETE { ?s ?p ?o } WHERE { ?s ?p ?o }", callback);
     } else if(destinyGraph === 'named') {
@@ -1661,7 +1678,7 @@ QueryEngine.QueryEngine.prototype._executeClearGraph = function(destinyGraph, qu
     }
 };
 
-QueryEngine.QueryEngine.prototype.checkGroupSemantics = function(groupVars, projectionVars) {
+MongodbQueryEngine.MongodbQueryEngine.prototype.checkGroupSemantics = function(groupVars, projectionVars) {
     if(groupVars === 'singleGroup') {
         return true;        
     }
@@ -1695,12 +1712,12 @@ QueryEngine.QueryEngine.prototype.checkGroupSemantics = function(groupVars, proj
     return true;
 };
 
-QueryEngine.QueryEngine.prototype.registerDefaultNamespace = function(ns, prefix) {
+MongodbQueryEngine.MongodbQueryEngine.prototype.registerDefaultNamespace = function(ns, prefix) {
     this.defaultPrefixes[ns] = prefix;
 };
 
 // Moved here from quadbackend
-QueryEngine.QueryEngine.prototype.range = function(pattern, callback)  {
+MongodbQueryEngine.MongodbQueryEngine.prototype.range = function(pattern, callback)  {
     var doc = {};
     
     if(pattern.subject != null) {
@@ -1727,12 +1744,40 @@ QueryEngine.QueryEngine.prototype.range = function(pattern, callback)  {
     });
 };
 
-QueryEngine.QueryEngine.prototype.index = function(quad, callback) {
+// @modified qp
+MongodbQueryEngine.MongodbQueryEngine.prototype.count = function(pattern, callback)  {
+    var doc = {};
+    
+    if(pattern.subject != null) {
+        doc['subject'] = pattern.subject;
+    }
+    if(pattern.predicate != null) {
+        doc['predicate'] = pattern.predicate;
+    }
+    if(pattern.object != null) {
+        doc['object'] = pattern.object;
+    }
+    if(pattern.graph != null) {
+        doc['graph'] = pattern.graph;
+    }
+    
+    this.collection('quads', function(err,coll) {
+        coll.find(doc).count(function(err,count){
+            if(err) {
+                callback(null);
+            } else {
+                callback(count);
+            }
+        });
+    });
+};
+
+MongodbQueryEngine.MongodbQueryEngine.prototype.index = function(quad, callback) {
     this.collection('quads', function(err,coll) {
         if(err) {
             callback(false, 'Error retrieving MongoDB collection');
         } else {
-            coll.update(quad,quad,{safe:true, upsert:true}, function(err,res) {
+            coll.insert(quad, function(err,res) {
                 if(err) {
                     callback(false);                
                 } else {
@@ -1743,7 +1788,7 @@ QueryEngine.QueryEngine.prototype.index = function(quad, callback) {
     });
 };
 
-QueryEngine.QueryEngine.prototype.search = function(pattern, callback)  {
+MongodbQueryEngine.MongodbQueryEngine.prototype.search = function(pattern, callback)  {
     var doc = {};
     
     if(pattern.subject != null) {
@@ -1770,7 +1815,7 @@ QueryEngine.QueryEngine.prototype.search = function(pattern, callback)  {
     });
 };
 
-QueryEngine.QueryEngine.prototype.delete = function(quad, callback) {
+MongodbQueryEngine.MongodbQueryEngine.prototype.delete = function(quad, callback) {
     var doc = {};
     
     if(quad.subject != null) {
@@ -1794,7 +1839,7 @@ QueryEngine.QueryEngine.prototype.delete = function(quad, callback) {
     });
 };
 
-QueryEngine.QueryEngine.prototype.updateBlankCounter = function(callback) {
+MongodbQueryEngine.MongodbQueryEngine.prototype.updateBlankCounter = function(callback) {
     var that = this;
     this.collection('store_configuration', function(err, coll) {
         that.configuration.blankCounter = that.blankCounter;
@@ -1802,32 +1847,46 @@ QueryEngine.QueryEngine.prototype.updateBlankCounter = function(callback) {
     });
 };
 
-QueryEngine.QueryEngine.prototype.readConfiguration = function(callback) {
+MongodbQueryEngine.MongodbQueryEngine.prototype.readConfiguration = function(callback) {
     var that = this;
-    this.collection('store_configuration', function(err,coll) {
-        coll.find({configuration:true}).toArray(function(err, res) {
-            if(res==null || res.length === 0) {
-                coll.insert({blankCounter:0, configuration:true}, function(){
-                    that.blankCounter = 0;
-                    callback();
+    this.collection('quads',function(err,coll) {
+        coll.ensureIndex({subject:1, predicate:1, object:1, graph:1},{unique:1},function(){
+            coll.ensureIndex({graph:1, predicate:1},function(){
+                coll.ensureIndex({object:1,graph:1,subject:1},function(){
+                    coll.ensureIndex({predicate:1,object:1,graph:1},function(){
+                        coll.ensureIndex({graph:1,subject:1,predicate:1},function(){
+                            coll.ensureIndex({object:1,subject:1},function(){
+                                that.collection('store_configuration', function(err,coll) {
+                                    coll.find({configuration:true}).toArray(function(err, res) {
+                                        if(res==null || res.length === 0) {
+                                            coll.insert({blankCounter:0, configuration:true}, function(){
+                                                that.blankCounter = 0;
+                                                callback();
+                                            });
+                                        } else {
+                                            that.configuration = res[0];
+                                            that.blankCounter = that.configuration.blankCounter;
+                                            callback();
+                                        }
+                                    });
+                                });
+                            });
+                        });
+                    });
                 });
-            } else {
-                that.configuration = res[0];
-                that.blankCounter = that.configuration.blankCounter;
-                callback();
-            }
+            });
         });
     });
 };
 
-QueryEngine.QueryEngine.prototype.registerGraph = function(oid){
+MongodbQueryEngine.MongodbQueryEngine.prototype.registerGraph = function(oid){
     //if(oid != this.defaultGraphOid) {
     //    this.knownGraphs[oid] = true;
     //}
     //return true
 };
 
-QueryEngine.QueryEngine.prototype.registeredGraphs = function(shouldReturnUris, callback) {
+MongodbQueryEngine.MongodbQueryEngine.prototype.registeredGraphs = function(shouldReturnUris, callback) {
     var that = this;
     this.collection('quads',function(err,coll) {
         if(err) {
@@ -1857,7 +1916,7 @@ QueryEngine.QueryEngine.prototype.registeredGraphs = function(shouldReturnUris, 
 };
 
 
-QueryEngine.Pattern = function(components) {
+MongodbQueryEngine.Pattern = function(components) {
     var properties = ['subject','predicate','object','graph'];
     var key = {};
 

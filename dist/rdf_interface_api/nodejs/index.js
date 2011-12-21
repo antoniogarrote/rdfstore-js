@@ -335,6 +335,8 @@ Utils.lexicalFormBaseUri = function(term, env) {
         var resolvedPrefix = env.namespaces[prefix];
         if(resolvedPrefix != null) {            
             uri = resolvedPrefix+suffix;
+        } else {
+            uri = prefix+":"+suffix;
         }
     } else {
         //console.log(" - URI is not prefixed");
@@ -2765,7 +2767,7 @@ try{
     //window['RDFJSInterface']['UrisMap']['prototype']['addAll'] = RDFJSInterface.UrisMap.prototype.addAll;
     //window['RDFJSInterface']['UrisMap']['prototype']['resolve'] = RDFJSInterface.UrisMap.prototype.resolve;
     //window['RDFJSInterface']['UrisMap']['prototype']['shrink'] = RDFJSInterface.UrisMap.prototype.shrink;
-    // 
+
     //window['RDFJSInterface']['Profile'] = RDFJSInterface.Profile;
     //window['RDFJSInterface']['Profile']['prototype']['importProfile'] = RDFJSInterface.Profile.prototype.importProfile;
     //window['RDFJSInterface']['Profile']['prototype']['resolve'] = RDFJSInterface.Profile.prototype.resolve;
@@ -2773,7 +2775,7 @@ try{
     //window['RDFJSInterface']['Profile']['prototype']['setDefaultVocabulary'] = RDFJSInterface.Profile.prototype.setDefaultVocabulary;
     //window['RDFJSInterface']['Profile']['prototype']['setPrefix'] = RDFJSInterface.Profile.prototype.setPrefix;
     //window['RDFJSInterface']['Profile']['prototype']['setTerm'] = RDFJSInterface.Profile.prototype.setTerm;
-    // 
+
     //window['RDFJSInterface']['RDFEnvironment'] = RDFJSInterface.RDFEnvironment;
     //window['RDFJSInterface']['RDFEnvironment']['prototype']['createBlankNode'] = RDFJSInterface.RDFEnvironment.prototype.createBlankNode;
     //window['RDFJSInterface']['RDFEnvironment']['prototype']['createNamedNode'] = RDFJSInterface.RDFEnvironment.prototype.createNamedNode;
@@ -2784,29 +2786,29 @@ try{
     //window['RDFJSInterface']['RDFEnvironment']['prototype']['createProfile'] = RDFJSInterface.RDFEnvironment.prototype.createProfile;
     //window['RDFJSInterface']['RDFEnvironment']['prototype']['createTermMap'] = RDFJSInterface.RDFEnvironment.prototype.createTermMap;
     //window['RDFJSInterface']['RDFEnvironment']['prototype']['createPrefixMap'] = RDFJSInterface.RDFEnvironment.prototype.createPrefixMap;
-    // 
+
     //window['RDFJSInterface']['RDFNode'] = RDFJSInterface.RDFNode;
     //window['RDFJSInterface']['RDFNode']['prototype']['equals'] = RDFJSInterface.RDFNode.prototype.equals;
-    // 
+
     //window['RDFJSInterface']['BlankNode'] = RDFJSInterface.BlankNode;
     //window['RDFJSInterface']['BlankNode']['prototype']['toString'] = RDFJSInterface.BlankNode.prototype.toString;
     //window['RDFJSInterface']['BlankNode']['prototype']['toNT'] = RDFJSInterface.BlankNode.prototype.toNT;
     //window['RDFJSInterface']['BlankNode']['prototype']['valueOf'] = RDFJSInterface.BlankNode.prototype.valueOf;
-    // 
+
     //window['RDFJSInterface']['Literal'] = RDFJSInterface.Literal;
     //window['RDFJSInterface']['Literal']['prototype']['toString'] = RDFJSInterface.Literal.prototype.toString;
     //window['RDFJSInterface']['Literal']['prototype']['toNT'] = RDFJSInterface.Literal.prototype.toNT;
     //window['RDFJSInterface']['Literal']['prototype']['valueOf'] = RDFJSInterface.Literal.prototype.valueOf;
-    // 
+
     //window['RDFJSInterface']['NamedNode'] = RDFJSInterface.NamedNode;
     //window['RDFJSInterface']['NamedNode']['prototype']['toString'] = RDFJSInterface.NamedNode.prototype.toString;
     //window['RDFJSInterface']['NamedNode']['prototype']['toNT'] = RDFJSInterface.NamedNode.prototype.toNT;
     //window['RDFJSInterface']['NamedNode']['prototype']['valueOf'] = RDFJSInterface.NamedNode.prototype.valueOf;
-    // 
+
     //window['RDFJSInterface']['Triple'] = RDFJSInterface.Triple;
     //window['RDFJSInterface']['Triple']['prototype']['equals'] = RDFJSInterface.Triple.prototype.equals;
     //window['RDFJSInterface']['Triple']['prototype']['toString'] = RDFJSInterface.Triple.prototype.toString;
-    // 
+
     //window['RDFJSInterface']['Graph'] = RDFJSInterface.Graph;
     //window['RDFJSInterface']['Graph']['prototype']['add'] = RDFJSInterface.Graph.prototype.add;
     //window['RDFJSInterface']['Graph']['prototype']['addAction'] = RDFJSInterface.Graph.prototype.addAction;
@@ -2821,7 +2823,7 @@ try{
     //window['RDFJSInterface']['Graph']['prototype']['match'] = RDFJSInterface.Graph.prototype.match;
     //window['RDFJSInterface']['Graph']['prototype']['removeMatches'] = RDFJSInterface.Graph.prototype.removeMatches;
     //window['RDFJSInterface']['Graph']['prototype']['toNT'] = RDFJSInterface.Graph.prototype.toNT;
-    // 
+
     //window['RDFJSInterface']['rdf'] = RDFJSInterface.rdf;
   } else {
     module.exports = RDFJSInterface;

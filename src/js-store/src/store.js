@@ -9,7 +9,7 @@ exports.Store = {};
 var Store = exports.Store;
 
 // imports
-var MongoQueryEngine = require("./../../js-query-engine/src/mongodb_query_engine").QueryEngine;
+var MongodbQueryEngine = require("./../../js-query-engine/src/mongodb_query_engine").MongodbQueryEngine;
 var QueryEngine = require("./../../js-query-engine/src/query_engine").QueryEngine;
 var QuadBackend = require("./../../js-rdf-persistence/src/quad_backend").QuadBackend;
 var Lexicon = require("./../../js-rdf-persistence/src/lexicon").Lexicon;
@@ -20,7 +20,7 @@ var Worker = require('webworker');
 /**
  * Version of the store
  */
-Store.VERSION = "0.4.15";
+Store.VERSION = "0.5.0";
 
 /**
  * Create a new RDFStore instance that will be
@@ -121,11 +121,15 @@ Store.create = function(){
  * @param {Function} [callback] Callback that will be invoked when the store has been created
  * @param {Object} [params]
  * <ul>
- *  <li> persistent:  should use persistence? </li>
- *  <li> name: if using persistence, the name for this store </li>
+ *  <li> persistent:  should the store use persistence? </li>
+ *  <li> treeOrder: in versions of the store backed by the native indexing system, the order of the BTree indices</li>
+ *  <li> name: when using persistence, the name for this store. In the MongoDB backed version, name of the DB used by the store. By default <code>'rdfstore_js'</code> is used</li>
  *  <li> overwrite: clears the persistent storage </li>
  *  <li> maxCacheSize: if using persistence, maximum size of the index cache </li>
  *  <li> engine: the persistent storage to use, a value <code>mongodb</code> selects the MongoDB engine</li>
+ *  <li> mongoDomain: when <code>engine=mongodb</code>, server domain name or IP address where the MongoDB server backing the store is running. By default <code>'127.0.0.1'</code> is used</li>
+ *  <li> mongoPort: when <code>engine=mongodb</code>, port where the MongoDB server is running. By default <code>27017</code> is used</li>
+ *  <li> mongoOptions: when <code>engine=mongodb</code>, additional options for the MongoDB driver. By default <code>{}</code> is used</li>
  * </ul>
  */
 Store.Store = function(arg1, arg2) {
@@ -153,7 +157,7 @@ Store.Store = function(arg1, arg2) {
     var that = this;
     if(params['engine']==='mongodb') {
         this.isMongodb = true;
-        this.engine = new MongoQueryEngine.QueryEngine();
+        this.engine = new MongodbQueryEngine.MongodbQueryEngine(params);
         this.engine.readConfiguration(function(){
             if(params['overwrite'] === true) {
                 that.engine.clean(function(){

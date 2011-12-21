@@ -7,7 +7,6 @@ try {
     sys = require("sys");
 }
 var aqt = new AbstractQueryTree.AbstractQueryTree();
-
 exports.example1 = function(test) {
     var query = "SELECT * { ?s ?p ?o }";
 

@@ -43,7 +43,8 @@ Some other features included in the library are the following:
 - W3C RDF Interfaces API
 - RDF graph events API
 - Parallel execution where WebWorkers are available
-- Persistent storage using HTML5 LocalStorage
+- Persistent storage using HTML5 LocalStorage in the browser version
+- Persistent storage using MongoDB in the Node.js version
 
 ## Documentation
 
@@ -83,6 +84,8 @@ This is a list of the different kind of queries currently implemented:
 To use the library in a node.js application, there is available a [package](http://search.npmjs.org/#/rdfstore) that can be installed using the NPM package manager:
 
     $npm install rdfstore
+
+The library can be used as a persistent RDF store using MongoDB as the backend. An instance of MongoDB must be running in order to use this version of the store.
 
 It is also possible to use rdfstore-js in a web application being executed in a browser. There is [minimized version](https://raw.github.com/antoniogarrote/rdfstore-js/master/dist/browser/rdf_store_min.js) of the library in a single Javascript file that can be linked from a HTML document. There is also a [minimized and gunzipped version](https://raw.github.com/antoniogarrote/rdfstore-js/master/dist/browser/rdf_store_min.js) available. Both versions have been compiled using Google's Closure Javascript compiler.
 The persistent versions can be found [here (min)](https://raw.github.com/antoniogarrote/rdfstore-js/master/dist/browser_persistent/rdf_store_min.js).
@@ -154,7 +157,7 @@ This is a small overview of the rdfstore-js API.
     // alt 4
     store = new rdfstore.Store();
 
-###Persistent store creation
+###Persistent store creation (Browser)
 
 In order to use persistent storage in the browser, an option named 'persitent' must be passed with value 'true' in the options for the store. An additional flag 'overwrite' indicates if the data for this store can be used to drop old data or read previously stored data. Optionally, a name for the store can also be passed as an argument. This name can be used to manipulate several persistent stores in the same browser.
 
@@ -163,6 +166,20 @@ At the moment, webworkers cannot be used with the persistent version of the stor
     new rdfstore.Store({persistent:true, name:'myappstore', overwrite:true}, function(store){
       // Passing overwrite:true to the options will make the store to drop all previous data.
       // Several stores can be used, providing different names for the stores
+    }
+
+###Persistent store creation (Node.js)
+
+The Node.js version of the library uses [MongoDB](http://www.mongodb.org/) as the persistent backend and [Node.js MongoDB driver](https://github.com/christkv/node-mongodb-native) to establish a connection between the store engine and the backend. The options 'persistent' and 'engine' with value 'mongodb' must be passed as parameters. The 'overwrite' parameter can also be used to clean the data stored in the persistent storage. Configuration of the MongoDB instance to be used can be passed using the parameters 'mongoDomain' and 'mongoPort'. Finally the parameter 'mongoOptions' can be used to pass configuration options to the Node.js MongoDB driver (check the driver documentation for more information).
+
+    new rdfstore.Store({persistent:true, 
+                        engine:'mongodb', 
+                        name:'myappstore', // quads in MongoDB will be stored in a DB named myappstore
+                        overwrite:true,    // delete all the data already present in the MongoDB server
+                        mongoDomain:'dbserver' // location of the MongoDB instance, localhost by default
+                        mongoPort:27017 // port where the MongoDB server is running, 27017 by default
+                       }, function(store){
+          ...
     }
 
 ###Query execution
