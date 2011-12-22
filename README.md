@@ -176,7 +176,7 @@ The Node.js version of the library uses [MongoDB](http://www.mongodb.org/) as th
                         engine:'mongodb', 
                         name:'myappstore', // quads in MongoDB will be stored in a DB named myappstore
                         overwrite:true,    // delete all the data already present in the MongoDB server
-                        mongoDomain:'dbserver' // location of the MongoDB instance, localhost by default
+                        mongoDomain:'dbserver', // location of the MongoDB instance, localhost by default
                         mongoPort:27017 // port where the MongoDB server is running, 27017 by default
                        }, function(store){
           ...
