@@ -37735,12 +37735,12 @@ QueryEngine.QueryEngine.prototype.executeQuery = function(syntaxTree, callback, 
                                 for(var p=0; p<components.length; p++) {
                                     var component = components[p];
                                     if(tripleTemplate[component].token === 'blank') {
-                                        if(blankMap[tripleTemplate[component].value] != null) {
-                                            tripleTemplate[component].value = blankMap[tripleTemplate[component].value];
+                                        if(blankMap[tripleTemplate[component].label] != null) {
+                                            tripleTemplate[component].value = blankMap[tripleTemplate[component].label];
                                         } else {
                                             var blankId = "_:b"+blankIdCounter;
                                             blankIdCounter++;
-                                            blankMap[tripleTemplate[component].value] = blankId;
+                                            blankMap[tripleTemplate[component].label] = blankId;
                                             tripleTemplate[component].value = blankId;
                                         }
                                     }
@@ -39102,11 +39102,9 @@ var RDFStoreClient = {};
 
 
 try {
-    console.log("*** Checking if web workers are available");
     if(typeof(Worker)=='undefined') {
         Worker = null;
     };
-    console.log("*** Web workers available");
 } catch(e) {
     Worker = null;
 }
@@ -39574,7 +39572,7 @@ var MongodbQueryEngine = { MongodbQueryEngine: function(){ throw 'MongoDB backen
 /**
  * Version of the store
  */
-Store.VERSION = "0.5.0";
+Store.VERSION = "0.5.1";
 
 /**
  * Create a new RDFStore instance that will be

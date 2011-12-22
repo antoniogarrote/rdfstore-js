@@ -518,11 +518,15 @@ This is a listing of the main modules that can be re-used:
 
 rdfstore-js is still at the beginning of its development. If you take a look at the library and find a way to improve it, please ping us. We'll be very greatful for any bug report or pull-request.
 
-## Authors
+## Author
 
 Antonio Garrote, email:antoniogarrote@gmail.com, twitter:@antoniogarrote.
 
 This code includes a modified version of the JSON-LD parser built by Digital Bazaar (see LICENSE file at https://github.com/digitalbazaar/jsonld.js/blob/master/LICENSE)
+
+## Contributors
+
+Christian Langanke
 
 ## License
 

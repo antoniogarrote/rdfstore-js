@@ -752,3 +752,56 @@ exports.testDuplicatedParsing = function(test) {
         });
     });
 };
+
+exports.testConstructBlankNodes = function(test) {
+    new Store.Store({name:'test', overwrite:true}, function(store){
+        var uriGraph   = 'http://www.example.com/data.ttl';
+        var triplesTTL = "@prefix foaf: <http://xmlns.com/foaf/0.1/> . <http://www.example.com/resource/12645> a foaf:Person . ";
+            
+        store.load( 'text/turtle', triplesTTL, uriGraph, function( success, results){
+
+            var query = "PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
+                         PREFIX test: <http://vocab.netlabs.org/test#>\
+                         CONSTRUCT {\
+                            ?s test:item [\
+                              a test:Item;\
+                              test:prop1 \"Value of property 1\";\
+                              test:prop2 \"Value of property 2\"\
+                            ] .\
+                         }\
+                         FROM <"+uriGraph+">\
+                         WHERE {\
+                           ?s a foaf:Person .\
+                         }";
+
+            store.execute(query, function(success, graph){
+                test.ok(success);
+                var numBlankSubjects = 0;
+                var distinctBlankSubjects = {};
+                var foundUris = false;
+                var triples = graph.toArray();
+                var triple;
+                test.ok(triples.length===4);
+                for(var i=0; i<triples.length; i++) {
+                    triple = triples[i];
+                    if(triple.subject.interfaceName === 'BlankNode') {
+                        numBlankSubjects++;
+                        distinctBlankSubjects[triple.subject.bnodeId] = true;
+                    } else {
+                        test.ok(triple.subject.valueOf() === 'http://www.example.com/resource/12645');
+                        test.ok(triple.object.interfaceName === 'BlankNode');
+                        distinctBlankSubjects[triple.object.bnodeId] = true;
+                    }
+                }
+
+                var numDistinctBlankSujects = 0;
+                for(var p in distinctBlankSubjects) {
+                    numDistinctBlankSujects++;
+                }
+
+                test.ok(numDistinctBlankSujects === 1);
+                test.done();
+            });
+        });
+    });
+};

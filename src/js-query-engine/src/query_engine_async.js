@@ -605,12 +605,12 @@ QueryEngine.QueryEngine.prototype.executeQuery = function(syntaxTree, callback, 
                                 for(var p=0; p<components.length; p++) {
                                     var component = components[p];
                                     if(tripleTemplate[component].token === 'blank') {
-                                        if(blankMap[tripleTemplate[component].value] != null) {
-                                            tripleTemplate[component].value = blankMap[tripleTemplate[component].value];
+                                        if(blankMap[tripleTemplate[component].label] != null) {
+                                            tripleTemplate[component].value = blankMap[tripleTemplate[component].label];
                                         } else {
                                             var blankId = "_:b"+blankIdCounter;
                                             blankIdCounter++;
-                                            blankMap[tripleTemplate[component].value] = blankId;
+                                            blankMap[tripleTemplate[component].label] = blankId;
                                             tripleTemplate[component].value = blankId;
                                         }
                                     }
