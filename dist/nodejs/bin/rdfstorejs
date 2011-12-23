@@ -1,0 +1,10 @@
+#!/usr/bin/env node
+
+var Server;
+try {
+    Server = require(__dirname + '/../server').Server;
+} catch(e) {
+    Server = require(__dirname + '/../src/js-store/src/server').Server;
+}
+
+Server.start();

@@ -20,7 +20,7 @@ var Worker = require('webworker');
 /**
  * Version of the store
  */
-Store.VERSION = "0.5.1";
+Store.VERSION = "0.5.2";
 
 /**
  * Create a new RDFStore instance that will be
@@ -277,7 +277,15 @@ Store.Store.prototype.executeWithEnvironment = function() {
         defaultGraphs = arguments[1];
         namedGraphs   = arguments[2];
     }
-    this.engine.execute(queryString, callback, defaultGraphs, namedGraphs);
+    var defaultGraphsNorm = [];
+    var namedGraphsNorm = [];
+    for(var i=0; i<defaultGraphs.length; i++) {
+        defaultGraphsNorm.push({'token':'uri','value':defaultGraphs[i]})
+    }
+    for(var i=0; i<namedGraphs.length; i++) {
+        namedGraphsNorm.push({'token':'uri','value':namedGraphs[i]})
+    }
+    this.engine.execute(queryString, callback, defaultGraphsNorm, namedGraphsNorm);
 };
 
 /**
@@ -756,8 +764,8 @@ Store.Store.prototype.registerDefaultProfileNamespaces = function() {
  *
  * @arguments
  * @param {String} mediaType Media type (application/json, text/n3...) of the data to be parsed or the value <code>'remote'</code> if a URI for the data is passed instead
- * @param {String} [graph] Graph where the parsed triples will be inserted. If it is not specified, triples will be loaded in the default graph
  * @param {String} data RDF data to be parsed and loaded or an URI where the data will be retrieved after performing content negotiation
+ * @param {String} [graph] Graph where the parsed triples will be inserted. If it is not specified, triples will be loaded in the default graph
  * @param {Function} callback that will be invoked with a success notification and the number of triples loaded.
  */
 Store.Store.prototype.load = function(){

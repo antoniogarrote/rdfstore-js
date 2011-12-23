@@ -714,12 +714,10 @@ QueryEngine.QueryEngine.prototype.executeSelect = function(unit, env, defaultDat
                 }
                 
             } else { // fail selectUnit
-                console.log("ERROR selectUnit");
                 callback(false, result);
             }
         } else { // fail  normalizaing datasets
-            console.log("ERROR normalizing");
-            callback(false,results);
+            callback(false,"Error normalizing datasets");
         }
     } else {
         callback(false,"Cannot execute " + unit.kind + " query as a select query");

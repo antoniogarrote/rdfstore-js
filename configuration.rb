@@ -86,7 +86,7 @@ BUILD_CONFIGURATION = {
                 ],
     :package => {
       :name    => "rdfstore",
-      :version => "0.5.1",
+      :version => "0.5.2",
       :description => "RDF graph store supporting the SPARQL query language",
       :keywords => ["RDF", "SPARQL", "graph", "store"],
       :author  => {
@@ -100,6 +100,7 @@ BUILD_CONFIGURATION = {
                       :url  =>  "http://www.gnu.org/licenses/lgpl.html"
                     }
                    ],
+      :bin => { "rdfstorejs" =>  "./bin/rdfstorejs" },
       :dependencies => {
         "mongodb"   => ">=0.9.7"
       }
@@ -115,7 +116,7 @@ BUILD_CONFIGURATION = {
                 ],
     :package => {
       :name    => "rdf_js_interface",
-      :version => "0.5.1",
+      :version => "0.5.2",
       :description => "Implementation of W3C's RDF Interfaces API",
       :keywords => ["RDF"],
       :author  => {

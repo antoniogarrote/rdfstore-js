@@ -643,7 +643,7 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.denormalizeBindings = function(b
 // Queries execution
 
 MongodbQueryEngine.MongodbQueryEngine.prototype.execute = function(queryString, callback, defaultDataset, namedDataset){
-//    try{
+    try{
         queryString = Utils.normalizeUnicodeLiterals(queryString);
 
         var syntaxTree = this.abstractQueryTree.parseQueryString(queryString);
@@ -667,13 +667,13 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.execute = function(queryString, 
                 this.executeQuery(syntaxTree, callback, defaultDataset, namedDataset);
             }
         }
-//    } catch(e) {
-//        if(e.name && e.name==='SyntaxError') {
-//            callback(false, "Syntax error: \nmessage:"+e.message+"\nline "+e.line+", column:"+e.column);
-//        } else {
-//            callback(false, "Query execution error");
-//        }
-//    }
+    } catch(e) {
+        if(e.name && e.name==='SyntaxError') {
+            callback(false, "Syntax error: \nmessage:"+e.message+"\nline "+e.line+", column:"+e.column);
+        } else {
+            callback(false, "Query execution error");
+        }
+    }
 };
 
 // Retrieval queries
@@ -855,7 +855,7 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.executeSelect = function(unit, e
                 }
             });
         } else { // fail  normalizaing datasets
-            callback(false,results);
+            callback(false,"Error normalizing datasets");
         }
     } else {
         callback(false,"Cannot execute " + unit.kind + " query as a select query");

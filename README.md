@@ -29,7 +29,7 @@ rdfstore-js is a pure Javascript implementation of a RDF graph store with suppor
       });
     })
 
-rdfstore-js can be executed in a web browser or can be included as a library in a node.js application.
+rdfstore-js can be executed in a web browser or can be included as a library in a node.js application. It can also be executed as a stand-alone SPARQL end-point accepting SPARQL RDF Protocol HTTP requests.
 
 The current implementation is far from complete but it already passes all the test cases for the SPARQL 1.0 query language and supports data manipulation operations from the SPARQL 1.1/Update version of the language.
 
@@ -45,6 +45,7 @@ Some other features included in the library are the following:
 - Parallel execution where WebWorkers are available
 - Persistent storage using HTML5 LocalStorage in the browser version
 - Persistent storage using MongoDB in the Node.js version
+- Node.js HTTP server implementating the [SPARQL Protocol for RDF](http://www.w3.org/TR/rdf-sparql-protocol/) recommendation
 
 ## Documentation
 
@@ -128,6 +129,87 @@ These tests are now also available online at these adresses:
 
 - [non persistent version](http://antoniogarrote.github.com/rdfstore-js/browsertests/non_persistent/index.html)
 - [persistent version](http://antoniogarrote.github.com/rdfstore-js/browsertests/persistent/index.html)
+
+## Stand-alone SPARQL end-point
+
+The Node.js version of the store can be used as a stand-alone SPARQL end-point. In the library distribution there is an executable script that can be used in UNIX platforms to invoke the store as an application.
+
+    $npm install rdfstore
+    $./node_modules/rdfstore/bin/rdfstorejs webserver --store-name test --store-engine mongodb
+
+The previous shell command starts the execution of an instance of the store that uses a persistent instance of MongoDB as the backend and can accept HTTP SPARQL protocol requests.
+
+The *rdfstorejs* script can also be used to some administrative tasks. For example it can be used to load RDF data into a graph in the store:
+
+    $./bin/rdfstorejs load http://dbpedia.org/resource/Tim_Berners-Lee http://test.com/graph1 --store-name test --store-engine mongodb
+
+When dealing with a remote resource, the store will perform automatically content negotiation. When loading data from a local file or standard input, the media type must be passed to the store with the *--media-type* flag.
+
+The previous command loads the graph for a DBPedia article in the store graph passed as second argument. This graph can be retrieved using a HTTP requests according to the SPARQL RDF Protocol:
+
+    $./node_modules/rdfstore/bin/rdfstorejs webserver --store-name test --store-engine mongodb &
+    $ curl -v -d "default-graph-uri=http://test.com/graph1" --data-urlencode "query=select * { ?s ?p ?o } limit 3" -H "Accept: application/rdf+xml" http://localhost:8080/sparql
+
+    * About to connect() to localhost port 8080 (#0)
+    *   Trying ::1... Connection refused
+    *   Trying fe80::1... Connection refused
+    *   Trying 127.0.0.1... connected
+    * Connected to localhost (127.0.0.1) port 8080 (#0)
+    > POST /sparql HTTP/1.1
+    > User-Agent: curl/7.19.7 (universal-apple-darwin10.0) libcurl/7.19.7 OpenSSL/0.9.8l zlib/1.2.3
+    > Host: localhost:8080
+    > Accept: application/rdf+xml
+    > Content-Length: 104
+    > Content-Type: application/x-www-form-urlencoded
+    > 
+    < HTTP/1.1 200 OK
+    < Content-Type: application/sparql-results+xml
+    < Access-Control-Allow-Origin: *
+    < Access-Control-Allow-Methods: POST, GET, OPTIONS
+    < Access-Control-Allow-Headers: Content-Type, Depth, User-Agent, X-File-Size, X-Requested-With, If-Modified-Since, X-File-Name, Cache-Control
+    < Connection: keep-alive
+    < Transfer-Encoding: chunked
+    < 
+    * Connection #0 to host localhost left intact
+    * Closing connection #0
+    <?xml version="1.0" encoding="UTF-8"?><sparql xmlns="http://www.w3.org/2005/sparql-results#"><head><variable name="s"/>...</sparql>
+
+The store supports these formats in the response of *CONSTRUCT* SPARQL queries: rdf/xml, turtle, json-ld. When responding to *SELECT* and *ASK* queries results can be retrieved in the normative rdf/xml serialization, but they can also be retrieved as JSON passing an application/json media type in the HTTP Accept header.
+
+Data can be removed from an instance of the store using a persistent backend with the *clear* command:
+
+    $./bin/rdfstorejs load --store-name test --store-engine mongodb
+
+Several aspects of the server execution can be configured passing arguments to the *rdfstorejs* script. A list of these flags, as well as a list of the available commands can be obtained invoking the script without arguments:
+
+    $./bin/rdfstorejs
+
+    Usage: rdfstorejs Command [Args] [Options]
+
+    Commands:
+    * webserver: starts the HTTP frontend for the store
+    * load URI|stdin [dstGraphURI]: load the graph pointed by the URI argument into the store. The graph will be loaded in the 'dstGraphURI' graph or the default graph if none specified
+    * clear: removes all data from the store
+     
+    Options:
+    -p: server port [8080]
+    --webserver-port: server port [8080]
+    -prot: protocol to use http | https [http]
+    --webserver-protocol: protocol to use http | https [http]
+    --webserver-path: Path where the SPARQL endpoint will be accessible [/sparql]
+    --webserver-ssl-key: Path to the SSL private key file [./ssl/privatekye.pem]
+    --webserver-ssl-cert: Path to the SSL certfiviate file [./ssl/certificate.pem]
+    -cors: Should the server accepts CORS requests [true]
+    --webserver-cors-enabled: Should the server accepts CORS requests [true]
+    --store-tree-order: BTree index tree order used in the in memory backend [15]
+    --store-engine: What backend should the store use: 'memory' and 'mongodb' are possible values [memory]
+    --store-name: Name to be used to store the quad data in the persistent backend [rdfstore_js]
+    --store-overwrite: If set to 'true' previous data in the persistent storage will be removed at startup [false]
+    --store-mongo-domain: If store-engine is set to 'mongodb', location of the MongoDB server [localhost]
+    --store-mongo-port: If store-engine is set to 'mongodb', port where the MongoDB server is running [27017]
+    -mime: When loading a local RDF file or loading from input stream, media type of the data to load [application/rdf+xml]
+    --media-type: When loading a local RDF file or loading from input stream, media type of the data to load [application/rdf+xml]
+
 
 ## API
 
@@ -470,7 +552,7 @@ Web worker threads execute in the browser in a very restrictive environment due 
 
 ##Standalone RDF-JS Interface API
 
-Now it is also possible to use the [RDF JS Interface API](http://www.w3.org/TR/2011/WD-rdf-interfaces-20110510/) without the as a standolone module.
+Now it is also possible to use the [RDF JS Interface API](http://www.w3.org/TR/2011/WD-rdf-interfaces-20110510/) without as a standolone module.
 
 The code is distributed for Node.js as the 'rdf_js_interface' module.
 It can be installed directly from NPM:

@@ -28,7 +28,8 @@ def build_distribution_directory(system);
     Dir.mkdir "./dist/browser"            if system == 'browser'
     Dir.mkdir "./dist/browser_persistent" if system == 'browser_persistent'
     Dir.mkdir "./dist/nodejs"             if system == 'nodejs'
-    Dir.mkdir "./dist/rdf_interface_api"             if system == 'rdf_interface_api'
+    Dir.mkdir "./dist/nodejs/bin"         if system == 'nodejs'
+    Dir.mkdir "./dist/rdf_interface_api"  if system == 'rdf_interface_api'
   end
 end
 
@@ -283,6 +284,8 @@ def process_file_for_nodejs(of, f)
 end
 
 def process_files_for_nodejs
+  `cp ./bin/rdfstorejs ./dist/nodejs/bin/`
+  `cp ./src/js-store/src/server.js ./dist/nodejs/server.js`
   File.open("./dist/nodejs/index.js", "w") do |of|
     
     write_nodejs_preamble(of)
