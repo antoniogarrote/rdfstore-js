@@ -178,7 +178,7 @@ The store supports these formats in the response of *CONSTRUCT* SPARQL queries: 
 
 Data can be removed from an instance of the store using a persistent backend with the *clear* command:
 
-    $./bin/rdfstorejs load --store-name test --store-engine mongodb
+    $./bin/rdfstorejs clear --store-name test --store-engine mongodb
 
 Several aspects of the server execution can be configured passing arguments to the *rdfstorejs* script. A list of these flags, as well as a list of the available commands can be obtained invoking the script without arguments:
 
