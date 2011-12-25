@@ -218,7 +218,7 @@ All the queries have been executed on a desktop system runnin OSX 10.4 with the 
 The amount of data loaded is 100545 triples, around 11MB of data. Times are measured in seconds.
 
 <table>
-<thead><tr><th>Chrome 16</th><th>Safari 5</th><th>Firefox Aurora 11</th><th>Internet Explorer 9</th></tr></thead>
+<thead><tr><th>&nbsp;</th><th>Chrome 16</th><th>Safari 5</th><th>Firefox Aurora 11</th><th>Internet Explorer 9</th></tr></thead>
 <tbody>
   <tr><td>query 0</td><td>0.552</td><td>1.176</td><td>0.834</td><td>0.771</td></tr> 
   <tr><td>query 1</td><td>0.005</td><td>0.033</td><td>0.043</td><td>0.016</td></tr> 
