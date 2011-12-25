@@ -213,7 +213,7 @@ Several aspects of the server execution can be configured passing arguments to t
 ## Benchmarking
 
 The following table shows the execution times obtained running the [LUBM benchmark](http://swat.cse.lehigh.edu/projects/lubm/) in different browsers. The data has been generated using the LUBM data generator for a single university. Text for some queries have been adapted, since the store does not support inference yet. The text of all the queries [can be found here](http://antoniogarrote.github.com/rdfstore-js/queries.txt).
-All the queries have been executed on a desktop system runnin OSX 10.4 with the exception of the Internet Explorer tests that have been execute in a virtualized image of Windows7.
+All the queries have been executed on a desktop system runnin OSX 10.6 with the exception of the Internet Explorer tests that have been execute in a virtualized image of Windows7.
 
 The amount of data loaded is 100545 triples, around 11MB of data. Times are measured in seconds.
 
