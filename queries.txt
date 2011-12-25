@@ -1,0 +1,260 @@
+** query 0:
+
+query0": "SELECT * { ?s ?p ?o }
+
+** query 1:
+
+PREFIX ub: <$ontology> 
+SELECT ?X { ?X a ub:GraduateStudent; ub:takesCourse <http://www.Department0.University0.edu/GraduateCourse0> }
+
+** query 2:
+
+PREFIX ub: <ontology>
+SELECT ?X ?Y { ?Y a ub:University. ?Z a ub:Department .
+?X a ub:GraduateStudent; ub:memberOf ?Z; ub:undergraduateDegreeFrom ?Y .
+?Z ub:subOrganizationOf ?Y }
+
+** query 3:
+
+PREFIX ub: <ontology>
+SELECT ?X { ?X a ub:Publication; ub:publicationAuthor <http://www.Department0.University0.edu/AssistantProfessor0> }
+
+** query 4:
+
+PREFIX ub: <ontology>
+SELECT ?x ?y1 ?y2 ?y3 WHERE {
+  {
+    ?x <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <ub:FullProfessor> .
+    ?x <ub:worksFor> <http://www.Department0.University0.edu> .
+    ?x <ub:name> ?y1 .
+    ?x <ub:emailAddress> ?y2 .
+    ?x <ub:telephone> ?y3
+  }
+  UNION
+  {
+    ?x <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <ub:AssociateProfessor> .
+    ?x <ub:worksFor> <http://www.Department0.University0.edu> .
+    ?x <ub:name> ?y1 .
+    ?x <ub:emailAddress> ?y2 .
+    ?x <ub:telephone> ?y3
+  }
+  UNION
+  {
+    ?x <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <ub:AssistantProfessor> .
+    ?x <ub:worksFor> <http://www.Department0.University0.edu> .
+    ?x <ub:name> ?y1 .
+    ?x <ub:emailAddress> ?y2 .
+    ?x <ub:telephone> ?y3
+  }
+}
+
+** query 5
+
+"PREFIX ub: <$ontology>
+select distinct * where 
+{
+  { ?x a ub:AssociateProfessor . ?x ub:memberOf <http://www.Department0.University0.edu> } UNION
+  { ?x a ub:FullProfessor . ?x ub:memberOf <http://www.Department0.University0.edu> } UNION
+  { ?x a ub:AssistantProfessor . ?x ub:memberOf <http://www.Department0.University0.edu> } UNION
+  { ?x a ub:Lecturer . ?x ub:memberOf <http://www.Department0.University0.edu> } UNION
+  { ?x a ub:UndergraduateStudent . ?x ub:memberOf <http://www.Department0.University0.edu> } UNION
+  { ?x a ub:GraduateStudent . ?x ub:memberOf <http://www.Department0.University0.edu> } UNION
+  { ?x a ub:TeachingAssistant . ?x ub:memberOf <http://www.Department0.University0.edu> } UNION
+  { ?x a ub:ResearchAssistant . ?x ub:memberOf <http://www.Department0.University0.edu> } UNION
+  { ?x a ub:AssociateProfessor . ?x ub:worksFor <http://www.Department0.University0.edu> } UNION
+  { ?x a ub:FullProfessor . ?x ub:worksFor <http://www.Department0.University0.edu> } UNION
+  { ?x a ub:AssistantProfessor . ?x ub:worksFor <http://www.Department0.University0.edu> } UNION
+  { ?x a ub:Lecturer . ?x ub:worksFor <http://www.Department0.University0.edu> } UNION
+  { ?x a ub:UndergraduateStudent . ?x ub:worksFor <http://www.Department0.University0.edu> } UNION
+  { ?x a ub:GraduateStudent . ?x ub:worksFor <http://www.Department0.University0.edu> } UNION
+  { ?x a ub:TeachingAssistant . ?x ub:worksFor <http://www.Department0.University0.edu> } UNION
+  { ?x a ub:ResearchAssistant . ?x ub:worksFor <http://www.Department0.University0.edu> } UNION
+  { ?x a ub:AssociateProfessor . ?x ub:headOf <http://www.Department0.University0.edu> } UNION
+  { ?x a ub:FullProfessor . ?x ub:headOf <http://www.Department0.University0.edu> } UNION
+  { ?x a ub:AssistantProfessor . ?x ub:headOf <http://www.Department0.University0.edu> } UNION
+  { ?x a ub:Lecturer . ?x ub:headOf <http://www.Department0.University0.edu> } UNION
+  { ?x a ub:UndergraduateStudent . ?x ub:headOf <http://www.Department0.University0.edu> } UNION
+  { ?x a ub:GraduateStudent . ?x ub:headOf <http://www.Department0.University0.edu> } UNION
+  { ?x a ub:TeachingAssistant . ?x ub:headOf <http://www.Department0.University0.edu> } UNION
+  { ?x a ub:ResearchAssistant . ?x ub:headOf <http://www.Department0.University0.edu> }
+}
+
+** query 6
+
+prefix ub: <$ontology>
+select distinct * where {
+  { ?x a ub:UndergraduateStudent . }
+UNION
+  { ?x a ub:ResearchAssistant . }
+UNION
+  { ?x a ub:GraduateStudent . }
+}
+
+** query 7
+
+prefix ub: <$ontology>
+select distinct * where
+{
+  {  ?x a ub:UndergraduateStudent . ?y a ub:Course . <http://www.Department0.University0.edu/AssociateProfessor0> ub:teacherOf ?y . ?x ub:takesCourse ?y . }
+  UNION
+  {  ?x a ub:UndergraduateStudent . ?y a ub:GraduateCourse . <http://www.Department0.University0.edu/AssociateProfessor0> ub:teacherOf ?y . ?x ub:takesCourse ?y . }
+  UNION
+  {  ?x a ub:ResearchAssistant . ?y a ub:Course . <http://www.Department0.University0.edu/AssociateProfessor0> ub:teacherOf ?y . ?x ub:takesCourse ?y . }
+  UNION
+  {  ?x a ub:ResearchAssistant . ?y a ub:GraduateCourse . <http://www.Department0.University0.edu/AssociateProfessor0> ub:teacherOf ?y . ?x ub:takesCourse ?y . }
+  UNION
+  {  ?x a ub:GraduateStudent . ?y a ub:Course . <http://www.Department0.University0.edu/AssociateProfessor0> ub:teacherOf ?y . ?x ub:takesCourse ?y . }
+  UNION
+  {  ?x a ub:GraduateStudent . ?y a ub:GraduateCourse . <http://www.Department0.University0.edu/AssociateProfessor0> ub:teacherOf ?y . ?x ub:takesCourse ?y . }
+}
+
+** query 8
+
+prefix ub: <$ontology>
+select distinct * where
+{
+  { ?x a ub:UndergraduateStudent . ?y a ub:Department . ?x ub:memberOf ?y . ?y ub:subOrganizationOf <http://www.University0.edu> . ?x ub:emailAddress ?z }
+  UNION
+  { ?x a ub:UndergraduateStudent . ?y a ub:Department . ?x ub:worksFor ?y . ?y ub:subOrganizationOf <http://www.University0.edu> . ?x ub:emailAddress ?z }
+  UNION
+  { ?x a ub:UndergraduateStudent . ?y a ub:Department . ?x ub:headOf ?y . ?y ub:subOrganizationOf <http://www.University0.edu> . ?x ub:emailAddress ?z }
+  UNION
+  { ?x a ub:ResearchAssistant . ?y a ub:Department . ?x ub:memberOf ?y . ?y ub:subOrganizationOf <http://www.University0.edu> . ?x ub:emailAddress ?z }
+  UNION
+  { ?x a ub:ResearchAssistant . ?y a ub:Department . ?x ub:worksFor ?y . ?y ub:subOrganizationOf <http://www.University0.edu> . ?x ub:emailAddress ?z }
+  UNION
+  { ?x a ub:ResearchAssistant . ?y a ub:Department . ?x ub:headOf ?y . ?y ub:subOrganizationOf <http://www.University0.edu> . ?x ub:emailAddress ?z }
+  UNION
+  { ?x a ub:GraduateStudent . ?y a ub:Department . ?x ub:memberOf ?y . ?y ub:subOrganizationOf <http://www.University0.edu> . ?x ub:emailAddress ?z }
+  UNION
+  { ?x a ub:GraduateStudent . ?y a ub:Department . ?x ub:worksFor ?y . ?y ub:subOrganizationOf <http://www.University0.edu> . ?x ub:emailAddress ?z }
+  UNION
+  { ?x a ub:GraduateStudent . ?y a ub:Department . ?x ub:headOf ?y . ?y ub:subOrganizationOf <http://www.University0.edu> . ?x ub:emailAddress ?z }
+}
+
+** query 9
+
+prefix ub: <"+ontology+">
+select distinct * where
+{
+  { ?x a ub:ResearchAssistant . ?y a ub:Lecturer . ?z a ub:Course . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION
+  { ?x a ub:ResearchAssistant . ?y a ub:PostDoc . ?z a ub:Course . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION
+  { ?x a ub:ResearchAssistant . ?y a ub:VisitingProfessor . ?z a ub:Course . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION
+  { ?x a ub:ResearchAssistant . ?y a ub:AssistantProfessor . ?z a ub:Course . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION
+  { ?x a ub:ResearchAssistant . ?y a ub:AssociateProfessor . ?z a ub:Course . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION
+  { ?x a ub:ResearchAssistant . ?y a ub:FullProfessor . ?z a ub:Course . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION
+  { ?x a ub:ResearchAssistant . ?y a ub:Lecturer . ?z a ub:GraduateCourse . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION
+  { ?x a ub:ResearchAssistant . ?y a ub:PostDoc . ?z a ub:GraduateCourse . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION
+  { ?x a ub:ResearchAssistant . ?y a ub:VisitingProfessor . ?z a ub:GraduateCourse . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION
+  { ?x a ub:ResearchAssistant . ?y a ub:AssistantProfessor . ?z a ub:GraduateCourse . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION
+  { ?x a ub:ResearchAssistant . ?y a ub:AssociateProfessor . ?z a ub:GraduateCourse . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION
+  { ?x a ub:ResearchAssistant . ?y a ub:FullProfessor . ?z a ub:GraduateCourse . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION
+  { ?x a ub:UndergraduateStudent . ?y a ub:Lecturer . ?z a ub:Course . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION
+  { ?x a ub:UndergraduateStudent . ?y a ub:PostDoc . ?z a ub:Course . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION
+  { ?x a ub:UndergraduateStudent . ?y a ub:VisitingProfessor . ?z a ub:Course . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION
+  { ?x a ub:UndergraduateStudent . ?y a ub:AssistantProfessor . ?z a ub:Course . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION
+  { ?x a ub:UndergraduateStudent . ?y a ub:AssociateProfessor . ?z a ub:Course . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION
+  { ?x a ub:UndergraduateStudent . ?y a ub:FullProfessor . ?z a ub:Course . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION
+  { ?x a ub:UndergraduateStudent . ?y a ub:Lecturer . ?z a ub:GraduateCourse . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION
+  { ?x a ub:UndergraduateStudent . ?y a ub:PostDoc . ?z a ub:GraduateCourse . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION
+  { ?x a ub:UndergraduateStudent . ?y a ub:VisitingProfessor . ?z a ub:GraduateCourse . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION
+  { ?x a ub:UndergraduateStudent . ?y a ub:AssistantProfessor . ?z a ub:GraduateCourse . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION
+  { ?x a ub:UndergraduateStudent . ?y a ub:AssociateProfessor . ?z a ub:GraduateCourse . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION
+  { ?x a ub:UndergraduateStudent . ?y a ub:FullProfessor . ?z a ub:GraduateCourse . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION
+  { ?x a ub:GraduateStudent . ?y a ub:Lecturer . ?z a ub:Course . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION
+  { ?x a ub:GraduateStudent . ?y a ub:PostDoc . ?z a ub:Course . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION
+  { ?x a ub:GraduateStudent . ?y a ub:VisitingProfessor . ?z a ub:Course . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION
+  { ?x a ub:GraduateStudent . ?y a ub:AssistantProfessor . ?z a ub:Course . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION
+  { ?x a ub:GraduateStudent . ?y a ub:AssociateProfessor . ?z a ub:Course . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION
+  { ?x a ub:GraduateStudent . ?y a ub:FullProfessor . ?z a ub:Course . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION
+  { ?x a ub:GraduateStudent . ?y a ub:Lecturer . ?z a ub:GraduateCourse . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION
+  { ?x a ub:GraduateStudent . ?y a ub:PostDoc . ?z a ub:GraduateCourse . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION
+  { ?x a ub:GraduateStudent . ?y a ub:VisitingProfessor . ?z a ub:GraduateCourse . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION
+  { ?x a ub:GraduateStudent . ?y a ub:AssistantProfessor . ?z a ub:GraduateCourse . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION
+  { ?x a ub:GraduateStudent . ?y a ub:AssociateProfessor . ?z a ub:GraduateCourse . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION
+  { ?x a ub:GraduateStudent . ?y a ub:FullProfessor . ?z a ub:GraduateCourse . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . }
+}
+
+** query 10
+
+prefix ub: <$ontology>
+select * where
+{
+  { ?x a ub:ResearchAssistant . ?x ub:takesCourse <http://www.Department0.University0.edu/GraduateCourse0> . }
+  UNION
+  { ?x a ub:UndergraduateStudent . ?x ub:takesCourse <http://www.Department0.University0.edu/GraduateCourse0> . }
+  UNION
+  { ?x a ub:GraduateStudent . ?x ub:takesCourse <http://www.Department0.University0.edu/GraduateCourse0> . }
+}
+
+** query 11
+
+prefix ub: <$ontology> select * where { ?x a ub:ResearchGroup . ?x ub:subOrganizationOf ?y . ?y ub:subOrganizationOf <http://www.University0.edu> . }
+
+** query 12
+
+prefix ub: <$ontology> select * where
+{
+  { ?x a ub:FullProfessor . ?y a ub:Department . ?x ub:headOf ?y . ?y ub:subOrganizationOf <http://www.University0.edu> . }
+  UNION
+  { ?x a ub:AssistantProfessor . ?y a ub:Department . ?x ub:headOf ?y . ?y ub:subOrganizationOf <http://www.University0.edu> . }
+  UNION
+  { ?x a ub:AssociateProfessor . ?y a ub:Department . ?x ub:headOf ?y . ?y ub:subOrganizationOf <http://www.University0.edu> . }
+}
+
+** query 13
+
+prefix ub: <$ontology> select * where
+{
+  { ?x a ub:AssociateProfessor . ?x ub:doctoralDegreeFrom <http://www.University0.edu> . }
+  UNION
+  { ?x a ub:FullProfessor . ?x ub:doctoralDegreeFrom <http://www.University0.edu> . }
+  UNION
+  { ?x a ub:AssistantProfessor . ?x ub:doctoralDegreeFrom <http://www.University0.edu> . }
+  UNION
+  { ?x a ub:Lecturer . ?x ub:doctoralDegreeFrom <http://www.University0.edu> . }
+  UNION
+  { ?x a ub:UndergraduateStudent . ?x ub:doctoralDegreeFrom <http://www.University0.edu> . }
+  UNION
+  { ?x a ub:GraduateStudent . ?x ub:doctoralDegreeFrom <http://www.University0.edu> . }
+  UNION
+  { ?x a ub:TeachingAssistant . ?x ub:doctoralDegreeFrom <http://www.University0.edu> . }
+  UNION
+  { ?x a ub:ResearchAssistant . ?x ub:doctoralDegreeFrom <http://www.University0.edu> . }
+  UNION
+  { ?x a ub:AssociateProfessor . ?x ub:mastersDegreeFrom <http://www.University0.edu> . }
+  UNION
+  { ?x a ub:FullProfessor . ?x ub:mastersDegreeFrom <http://www.University0.edu> . }
+  UNION
+  { ?x a ub:AssistantProfessor . ?x ub:mastersDegreeFrom <http://www.University0.edu> . }
+  UNION
+  { ?x a ub:Lecturer . ?x ub:mastersDegreeFrom <http://www.University0.edu> . }
+  UNION
+  { ?x a ub:UndergraduateStudent . ?x ub:mastersDegreeFrom <http://www.University0.edu> . }
+  UNION
+  { ?x a ub:GraduateStudent . ?x ub:mastersDegreeFrom <http://www.University0.edu> . }
+  UNION
+  { ?x a ub:TeachingAssistant . ?x ub:mastersDegreeFrom <http://www.University0.edu> . }
+  UNION
+  { ?x a ub:ResearchAssistant . ?x ub:mastersDegreeFrom <http://www.University0.edu> . }
+  UNION
+  { ?x a ub:AssociateProfessor . ?x ub:undergraduateDegreeFrom <http://www.University0.edu> . }
+  UNION
+  { ?x a ub:FullProfessor . ?x ub:undergraduateDegreeFrom <http://www.University0.edu> . }
+  UNION
+  { ?x a ub:AssistantProfessor . ?x ub:undergraduateDegreeFrom <http://www.University0.edu> . }
+  UNION
+  { ?x a ub:Lecturer . ?x ub:undergraduateDegreeFrom <http://www.University0.edu> . }
+  UNION
+  { ?x a ub:UndergraduateStudent . ?x ub:undergraduateDegreeFrom <http://www.University0.edu> . }
+  UNION
+  { ?x a ub:GraduateStudent . ?x ub:undergraduateDegreeFrom <http://www.University0.edu> . }
+  UNION
+  { ?x a ub:TeachingAssistant . ?x ub:undergraduateDegreeFrom <http://www.University0.edu> . }
+  UNION
+  { ?x a ub:ResearchAssistant . ?x ub:undergraduateDegreeFrom <http://www.University0.edu> . }
+}
+
+** query 14
+
+prefix ub: <$ontology> select * where { ?x a ub:UndergraduateStudent . }
