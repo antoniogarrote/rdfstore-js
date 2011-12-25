@@ -16447,7 +16447,7 @@ SparqlParser.parser = (function(){
           ? (function(pl) {
           
                 GlobalBlankNodeCounter++;
-                var subject = {token:'blank', label:''+GlobalBlankNodeCounter};
+                var subject = {token:'blank', label:'_:'+GlobalBlankNodeCounter};
                 var newTriples =  [];
           
                 for(var i=0; i< pl.pairs.length; i++) {
@@ -25839,7 +25839,7 @@ SparqlParser.parser = (function(){
           var savedPos0 = pos;
           var result2 = parse_ANON();
           var result3 = result2 !== null
-            ? (function() { GlobalBlankNodeCounter++; return {token:'blank', label:''+GlobalBlankNodeCounter} })()
+            ? (function() { GlobalBlankNodeCounter++; return {token:'blank', label:'_:'+GlobalBlankNodeCounter} })()
             : null;
           if (result3 !== null) {
             var result1 = result3;

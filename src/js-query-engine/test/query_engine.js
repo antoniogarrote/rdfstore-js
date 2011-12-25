@@ -192,7 +192,7 @@ if(QueryEngine.mongodb == null) {
            });
        });
    };
-    
+
    exports.testSimpleJoin1 = function(test){
        new Lexicon.Lexicon(function(lexicon){
            new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
@@ -212,7 +212,6 @@ if(QueryEngine.mongodb == null) {
            });
        });
    };
-    
     
    exports.testPrefixInsertion = function(test) {
        new Lexicon.Lexicon(function(lexicon){
@@ -1610,3 +1609,4 @@ if(QueryEngine.mongodb == null) {
    };
 
 }
+

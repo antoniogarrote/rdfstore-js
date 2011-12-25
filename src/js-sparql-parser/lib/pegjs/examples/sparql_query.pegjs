@@ -1459,7 +1459,7 @@ BlankNodePropertyList "[88] BlankNodePropertyList"
   = WS* '[' WS* pl:PropertyListNotEmpty WS* ']' WS* {
 
       GlobalBlankNodeCounter++;
-      var subject = {token:'blank', label:''+GlobalBlankNodeCounter};
+      var subject = {token:'blank', label:'_:'+GlobalBlankNodeCounter};
       var newTriples =  [];
 
       for(var i=0; i< pl.pairs.length; i++) {
@@ -2206,7 +2206,7 @@ PrefixedName "[120] PrefixedName"
 */
 BlankNode "[121] BlankNode"
   = l:BLANK_NODE_LABEL { return {token:'blank', label:l}}
-  / ANON { GlobalBlankNodeCounter++; return {token:'blank', label:''+GlobalBlankNodeCounter} }
+  / ANON { GlobalBlankNodeCounter++; return {token:'blank', label:'_:'+GlobalBlankNodeCounter} }
 
 /*
   [122]  	IRI_REF	  ::=  	'<' ([^<>"{}|^`\]-[#x00-#x20])* '>'

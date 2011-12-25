@@ -251,6 +251,9 @@ def process_file_for_nodejs(of, f)
     if (line =~ /exports\.[a-zA-Z]+ *= *\{ *\};/) == 0
       puts " * modifying: #{line} -> #{line.split("exports.")[1]}"
       of << ("var "+line.split("exports.")[1])
+    elsif (line =~/var QueryPlan = require/) == 0
+      puts " * modifying #{line} -> var QueryPlan = QueryPlanDPSize;"
+      of << "var QueryPlan = QueryPlanDPSize;";
     elsif (line =~ /var RDFStoreClient *= *require\(['\"]{1,1}[a-zA-Z_\.\/-]*['\"]{1,1}\)\./) == 0
       puts " * writing right RDFStoreClient"
       tree = line.split(".")[-1];
@@ -381,6 +384,8 @@ def process_file_for_browser(of, f)
     if (line =~ /exports\.[a-zA-Z]+ *= *\{ *\};/) == 0
       puts " * modifying: #{line} -> var #{line.split("exports.")[1]}"
       of << "var #{line.split('exports.')[1]}"
+    elsif (line =~/var QueryPlan = require/) == 0
+      of << "var QueryPlan = QueryPlanDPSize;"
     elsif (line =~ /var QueryEngine = require/) == 0
       # Replace the line we are ignoring
       of << "var MongodbQueryEngine = { MongodbQueryEngine: function(){ throw 'MongoDB backend not supported in the browser version' } };\n"
@@ -417,6 +422,11 @@ def process_file_for_browser_persistent(of, f)
     if (line =~ /exports\.[a-zA-Z]+ *= *\{ *\};/) == 0
       puts " * modifying: #{line} -> var #{line.split("exports.")[1]}"
       of << "var #{line.split('exports.')[1]}"
+    elsif (line =~/var QueryPlan = require/) == 0
+      of << "var QueryPlan = QueryPlanDPSize;"
+    elsif (line =~ /var QueryEngine = require/) == 0
+      # Replace the line we are ignoring
+      of << "var MongodbQueryEngine = { MongodbQueryEngine: function(){ throw 'MongoDB backend not supported in the browser version' } };\n"
     elsif (line =~ /var BaseTree *= *require\(['\"]{1,1}[a-zA-Z_\.\/-]*['\"]{1,1}\)\./) == 0
       puts " * writing Persistent Memory Tree"
       of << "var BaseTree = WebLocalStorageBTree;"

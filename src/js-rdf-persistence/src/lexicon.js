@@ -87,6 +87,19 @@ Lexicon.Lexicon.prototype.resolveUri = function(uri) {
     }
 };
 
+Lexicon.Lexicon.prototype.resolveUriCost = function(uri) {
+    if(uri === this.defaultGraphUri) {
+        return(this.defaultGraphOid);
+    } else {
+        var oidCounter = this.uriToOID[uri];
+        if(oidCounter != null) {
+            return(oidCounter[1]);
+        } else {
+            return(-1);
+        }
+    }
+};
+
 Lexicon.Lexicon.prototype.registerBlank = function(label) {
     var oid = this.oidCounter;
     this.oidCounter++;
@@ -105,6 +118,10 @@ Lexicon.Lexicon.prototype.resolveBlank = function(label) {
     var oid = this.oidCounter;
     this.oidCounter++
     return(""+oid);
+};
+
+Lexicon.Lexicon.prototype.resolveBlankCost = function(label) {
+    return 0;
 };
 
 Lexicon.Lexicon.prototype.registerLiteral = function(literal) {
@@ -134,6 +151,16 @@ Lexicon.Lexicon.prototype.resolveLiteral = function(literal) {
         return(-1); 
     }
 }
+
+Lexicon.Lexicon.prototype.resolveLiteralCost = function(literal) {
+    var oidCounter = this.literalToOID[literal];
+    if(oidCounter != null ) {
+        return(oidCounter[1]); 
+    } else {
+        return(0); 
+    }
+}
+
 
 Lexicon.Lexicon.prototype.parseLiteral = function(literalString) {
     var parts = literalString.lastIndexOf("@");

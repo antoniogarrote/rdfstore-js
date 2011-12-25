@@ -210,6 +210,39 @@ Several aspects of the server execution can be configured passing arguments to t
     -mime: When loading a local RDF file or loading from input stream, media type of the data to load [application/rdf+xml]
     --media-type: When loading a local RDF file or loading from input stream, media type of the data to load [application/rdf+xml]
 
+## Benchmarking
+
+The following table shows the execution times obtained running the [LUBM benchmark](http://swat.cse.lehigh.edu/projects/lubm/) in different browsers. The data has been generated using the LUBM data generator for a single university. Text for some queries have been adapted, since the store does not support inference yet. The text of all the queries [can be found here](http://antoniogarrote.github.com/rdfstore-js/queries.txt).
+All the queries have been executed on a desktop system runnin OSX 10.4 with the exception of the Internet Explorer tests that have been execute in a virtualized image of Windows7.
+
+The amount of data loaded is 100545 triples, around 11MB of data. Times are measured in seconds.
+
+<table>
+<thead><tr><th>Chrome 16</th><th>Safari 5</th><th>Firefox Aurora 11</th><th>Internet Explorer 9</th></tr></thead>
+<tbody>
+  <tr><td>query 0</td><td>0.552</td><td>1.176</td><td>0.834</td><td>0.771</td></tr> 
+  <tr><td>query 1</td><td>0.005</td><td>0.033</td><td>0.043</td><td>0.016</td></tr> 
+  <tr><td>query 2</td><td>0.018</td><td>0.149</td><td>0.046</td><td>0.111</td></tr> 
+  <tr><td>query 3</td><td>0.005</td><td>0.022</td><td>0.026</td><td>0.023</td></tr> 
+  <tr><td>query 4</td><td>0.155</td><td>0.502</td><td>0.311</td><td>0.603</td></tr> 
+  <tr><td>query 5</td><td>0.043</td><td>0.091</td><td>0.109</td><td>0.131</td></tr> 
+  <tr><td>query 6</td><td>0.023</td><td>0.039</td><td>0.045</td><td>0.057</td></tr> 
+  <tr><td>query 7</td><td>0.324</td><td>0.573</td><td>0.73</td><td>1.678</td></tr> 
+  <tr><td>query 8</td><td>0.828</td><td>1.581</td><td>1.789</td><td>2.548</td></tr> 
+  <tr><td>query 10</td><td>0.008</td><td>0.022</td><td>0.024</td><td>0.027</td></tr> 
+  <tr><td>query 11</td><td>0.001</td><td>0.003</td><td>0.006</td><td>0.003</td></tr> 
+  <tr><td>query 12</td><td>0.003</td><td>0.007</td><td>0.011</td><td>0.006</td></tr> 
+  <tr><td>query 13</td><td>0.042</td><td>0.103</td><td>0.098</td><td>0.119</td></tr> 
+  <tr><td>query 14</td><td>0.009</td><td>0.028</td><td>0.024</td><td>0.035</td></tr> 
+</tbody>
+</table>
+
+The following list shows the insertion time of the 100K triples into the store:
+
+- Chrome 16: 9.559 secs
+- Safari 5: 6.661 secs
+- Firefox Aurora 11: 16.523 secs
+- Internet Explorer 9: 17.042 secs.
 
 ## API
 

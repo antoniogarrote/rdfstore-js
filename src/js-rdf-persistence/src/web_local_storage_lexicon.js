@@ -195,6 +195,19 @@ WebLocalStorageLexicon.Lexicon.prototype.resolveUri = function(uri) {
     }
 };
 
+WebLocalStorageLexicon.Lexicon.prototype.resolveUriCost = function(uri) {
+    if(uri === this.defaultGraphUri) {
+        return(this.defaultGraphOid);
+    } else {
+        var oidCounter = this.uriToOID[uri];
+        if(oidCounter != null) {
+            return(oidCounter[1]);
+        } else {
+            return(-1);
+        }
+    }
+};
+
 WebLocalStorageLexicon.Lexicon.prototype.registerBlank = function(label) {
     var oid = this.oidCounter;
     this.oidCounter++;
@@ -209,6 +222,10 @@ WebLocalStorageLexicon.Lexicon.prototype.resolveBlank = function(label) {
     var oid = this.oidCounter;
     this.oidCounter++
     return(""+oid);
+};
+
+WebLocalStorageLexicon.Lexicon.prototype.resolveBlankCost = function(label) {
+    return 0;
 };
 
 WebLocalStorageLexicon.Lexicon.prototype.registerLiteral = function(literal) {
@@ -260,6 +277,15 @@ WebLocalStorageLexicon.Lexicon.prototype.resolveLiteral = function(literal) {
         } else {
             return(-1); 
         }
+    }
+}
+
+WebLocalStorageLexicon.Lexicon.prototype.resolveLiteralCost = function(literal) {
+    var oidCounter = this.literalToOID[literal];
+    if(oidCounter != null ) {
+        return(oidCounter[1]); 
+    } else {
+        return(0); 
     }
 }
 

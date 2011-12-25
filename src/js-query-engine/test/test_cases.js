@@ -155,7 +155,6 @@ exports.testList2 = function(test) {
     });
 }
 
-
 exports.testList3 = function(test) {
     new Lexicon.Lexicon(function(lexicon){
         new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
@@ -9405,5 +9404,3 @@ exports.testTemporalProximity01 = function(test) {
         });
     });
 }
-
-

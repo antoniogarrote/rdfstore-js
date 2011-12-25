@@ -5,12 +5,6 @@ var QueryPlanAsync = exports.QueryPlanAsync;
 // imports
 var Utils = require("./../../js-trees/src/utils").Utils;
 
-QueryPlanAsync.orderJoins = function(bgps) {
-    // @todo order joins somehow
-    return bgps;
-};
-
-
 QueryPlanAsync.variablesInBGP = function(bgp) {
     // may be cached in the pattern
     var variables = bgp.variables;
@@ -158,6 +152,8 @@ QueryPlanAsync.executeAndBGPsGroups = function(bgps) {
             if(comp != '_cost') {
                 if(bgp[comp].token === 'var') {
                     vars.push(bgp[comp].value)
+                } else if(bgp[comp].token === 'blank') {
+                    vars.push(bgp[comp].label);
                 }
             }
         }
@@ -218,13 +214,13 @@ QueryPlanAsync.executeBushyTree = function(treeNode, dataset, queryEngine, env, 
                     //console.log(success);
                     //console.log(resultsRight);
                     if(success) {
-                        var joinVars = QueryPlanAsync.variablesIntersectionBGP(treeNode.left,treeNode.right);
+                        //var joinVars = QueryPlanAsync.variablesIntersectionBGP(treeNode.left,treeNode.right);
                         //console.log("*** BACK executing right -> "+treeNode.i);
                         //console.log("**  left:");
                         //console.log(resultsLeft);
                         //console.log("**  right:");
                         //console.log(resultsRight);
-                        var bindings = QueryPlanAsync.joinBindings(resultsLeft, resultsRight);
+                        var bindings = QueryPlanAsync.joinBindings2(treeNode.join, resultsLeft, resultsRight);
                         callback(true, bindings);
                     } else {
                         callback(false, null);
@@ -277,6 +273,8 @@ QueryPlanAsync.executeAndBGPsDPSize = function(allBgps, dataset, queryEngine, en
                     if(comp != '_cost') {
                         if(bgps[i][comp].token === 'var') {
                             vars.push(bgps[i][comp].value)
+                        } else if(bgps[i][comp].token === 'blank') {
+                            vars.push(bgps[i][comp].label)
                         }
                     }
                 }
@@ -706,7 +704,7 @@ QueryPlanAsync.mergeBindings = function(bindingsa, bindingsb) {
 
 QueryPlanAsync.joinBindings = function(bindingsa, bindingsb) {
     var result = [];
-
+ 
     for(var i=0; i< bindingsa.length; i++) {
         var bindinga = bindingsa[i];
         for(var j=0; j<bindingsb.length; j++) {
@@ -716,9 +714,57 @@ QueryPlanAsync.joinBindings = function(bindingsa, bindingsb) {
             }
         }
     }
-
+ 
     return result;
 };
+
+QueryPlanAsync.joinBindings2 = function(bindingVars, bindingsa, bindingsb) {
+    var acum = {};
+    var bindings, variable, variableValue, values, tmp;
+    var joined = [];
+
+    for(var i=0; i<bindingsa.length; i++) {
+        bindings = bindingsa[i];
+        tmp = acum;
+        for(var j=0; j<bindingVars.length; j++) {
+            variable = bindingVars[j];
+            variableValue = bindings[variable];
+            if(j == bindingVars.length-1) {
+                values = tmp[variableValue] || [];
+                values.push(bindings);
+                tmp[variableValue] = values;
+            } else {
+                values = tmp[variableValue] || {};
+                tmp[variableValue] = values;
+                tmp = values;
+            }
+        }
+    }
+
+    for(var i=0; i<bindingsb.length; i++) {
+        bindings = bindingsb[i];
+        tmp = acum;
+        for(var j=0; j<bindingVars.length; j++) {
+            variable = bindingVars[j];
+            variableValue = bindings[variable];
+
+            if(tmp[variableValue] != null) {
+                if(j == bindingVars.length-1) {
+                    for(var k=0; k<tmp[variableValue].length; k++) {
+                        joined.push(QueryPlanAsync.mergeBindings(tmp[variableValue][k],bindings));
+                    }
+                } else {
+                    tmp = tmp[variableValue];
+                }
+            } else {
+                continue;
+            }
+        }
+    }
+
+    return joined;
+};
+
 
 QueryPlanAsync.augmentMissingBindings = function(bindinga, bindingb) {
     for(var pb in bindingb) {

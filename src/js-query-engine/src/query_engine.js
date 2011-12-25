@@ -6,7 +6,7 @@ var QueryEngine = exports.QueryEngine;
 var AbstractQueryTree = require("./../../js-sparql-parser/src/abstract_query_tree").AbstractQueryTree;
 var Utils = require("./../../js-trees/src/utils").Utils;
 var QuadIndexCommon = require("./../../js-rdf-persistence/src/quad_index_common").QuadIndexCommon;
-var QueryPlan = require("./query_plan").QueryPlan;
+var QueryPlan = require("./query_plan_sync_dpsize").QueryPlanDPSize;
 var QueryFilters = require("./query_filters").QueryFilters;
 var RDFJSInterface = require("./rdf_js_interface").RDFJSInterface;
 var RDFLoader = require("../../js-communication/src/rdf_loader").RDFLoader;
@@ -324,6 +324,28 @@ QueryEngine.QueryEngine.prototype.resolveNsInEnvironment = function(prefix, env)
     return namespaces[prefix];
 };
 
+QueryEngine.QueryEngine.prototype.termCost = function(term, env) {
+    if(term.token === 'uri') {
+        var uri = Utils.lexicalFormBaseUri(term, env);
+        if(uri == null) {
+            return(0);
+        } else {
+            return(this.lexicon.resolveUriCost(uri));
+        }
+
+    } else if(term.token === 'literal') {
+        var lexicalFormLiteral = Utils.lexicalFormLiteral(term, env);
+        return(this.lexicon.resolveLiteralCost(lexicalFormLiteral));
+    } else if(term.token === 'blank') {
+        var label = term.label;
+        return this.lexicon.resolveBlankCost(label);
+    } else if(term.token === 'var') {
+        return (this.lexicon.oidCounter/3)
+    } else {
+          return(null);
+    }
+    
+};
 
 QueryEngine.QueryEngine.prototype.normalizeTerm = function(term, env, shouldIndex) {
     if(term.token === 'uri') {
@@ -434,6 +456,26 @@ QueryEngine.QueryEngine.prototype.normalizeQuad = function(quad, queryEnv, shoul
             predicate:predicate, 
             object:object, 
             graph:graph});
+};
+
+QueryEngine.QueryEngine.prototype.quadCost = function(quad, queryEnv, shouldIndex) {
+    var subject    = null;
+    var predicate  = null;
+    var object     = null;
+    var graph      = null;
+    var oid;
+
+    if(quad.graph == null) {
+        graph = (this.lexicon.oidCounter/4)
+    } else {
+        graph = this.termCost(quad.graph, queryEnv)
+    }
+
+    subject = this.termCost(quad.subject, queryEnv);
+    predicate = this.termCost(quad.predicate, queryEnv);
+    object = this.termCost(quad.object, queryEnv);
+
+    return(graph+subject+predicate+object);
 };
 
 QueryEngine.QueryEngine.prototype.denormalizeBindingsList = function(bindingsList, envOut) {
@@ -902,7 +944,7 @@ QueryEngine.QueryEngine.prototype.executeUNION = function(projection, dataset, p
 
 QueryEngine.QueryEngine.prototype.executeAndBGP = function(projection, dataset, patterns, env) {
     var that = this;
-    var result = QueryPlan.executeAndBGPs(patterns.value, dataset, this, env);
+    var result = QueryPlan.executeAndBGPsDPSize(patterns.value, dataset, this, env);
     if(result!=null) {
         return QueryFilters.checkFilters(patterns, result, false, dataset, env, that);
     } else {
@@ -1020,7 +1062,6 @@ QueryEngine.QueryEngine.prototype.executeJOIN = function(projection, dataset, pa
     }
 
     var result = QueryPlan.joinBindings(set1, set2);
-
     result = QueryFilters.checkFilters(patterns, result, false, dataset, env, that);
     return result;
 };
@@ -1236,6 +1277,15 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
         return null;
     }
 };
+
+// @modified dp
+QueryEngine.QueryEngine.prototype.computeCosts = function(quads, env) {
+    for(var i=0; i<quads.length; i++) {
+        quads[i]['_cost'] = this.quadCost(quads[i],env);
+    }
+
+    return quads;
+}
 
 // Low level operations for update queries
 

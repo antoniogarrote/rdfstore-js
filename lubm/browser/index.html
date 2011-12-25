@@ -1,0 +1,349 @@
+<html>
+  <head>
+    <title>Example LUBM test</title>
+    <link rel="stylesheet" href="nodeunit.css" type="text/css" />
+    <script type='text/javascript' src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="rdf_store.js"></script>
+  </head>
+  <body>
+    <h1 id="nodeunit-header">RDFStore-JS LUBM benchmark</h1>
+    <script>
+    Utils = {};    
+
+    Utils.recur = function(c){
+        if(Utils.stackCounter === Utils.stackCounterLimit) {
+            Utils.stackCounter = 0;
+            setTimeout(c, 0);
+        } else {
+            Utils.stackCounter++;
+            c();
+        } 
+    };
+
+   Utils.repeat = function(c,max,floop,fend,env) {
+       if(arguments.length===4) { env = {}; }
+       if(c<max) {
+           env._i = c;
+           floop(function(floop,env){
+               // avoid stack overflow
+               // deadly hack
+               Utils.recur(function(){ Utils.repeat(c+1, max, floop, fend, env) });
+           },env);
+       } else {
+           fend(env);
+       }
+   };
+     
+    jQuery.ajax({
+        'url': 'data.json',
+        'accepts': 'application/json',
+        'type': 'GET',
+        'error': function(xhr, status, error) {
+            console.log("STATUS"+status);
+            alert("Error updating WebID:"+error);
+        },
+        'success': function(data, status, xhr) {
+            if(status === 'success') {
+                
+     
+                var grandTotal = 0;
+
+                
+                var ontology = "http://test.com/test#"
+                var queries = {
+                    "query0": "SELECT * { ?s ?p ?o }"
+                     
+                    "query1":
+                     "PREFIX ub: <"+ontology+">\
+                       SELECT ?X { ?X a ub:GraduateStudent; ub:takesCourse <http://www.Department0.University0.edu/GraduateCourse0> }"
+                                     
+                    "query2":
+                    "PREFIX ub: <"+ontology+">\
+                       SELECT ?X ?Y { ?Y a ub:University. ?Z a ub:Department .\
+                       ?X a ub:GraduateStudent; ub:memberOf ?Z; ub:undergraduateDegreeFrom ?Y .\
+                       ?Z ub:subOrganizationOf ?Y }",
+                                       
+                    "query3":
+                    "PREFIX ub: <"+ontology+">\
+                       SELECT ?X { ?X a ub:Publication; ub:publicationAuthor <http://www.Department0.University0.edu/AssistantProfessor0> }",
+                                       
+                    "query4":
+                    "SELECT ?x ?y1 ?y2 ?y3 WHERE {\
+                       {\
+                       ?x <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <"+ontology+"FullProfessor> .\
+                       ?x <"+ontology+"worksFor> <http://www.Department0.University0.edu> .\
+                       ?x <"+ontology+"name> ?y1 .\
+                       ?x <"+ontology+"emailAddress> ?y2 .\
+                       ?x <"+ontology+"telephone> ?y3\
+                       }\
+                       UNION\
+                       {\
+                       ?x <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <"+ontology+"AssociateProfessor> .\
+                       ?x <"+ontology+"worksFor> <http://www.Department0.University0.edu> .\
+                       ?x <"+ontology+"name> ?y1 .\
+                       ?x <"+ontology+"emailAddress> ?y2 .\
+                       ?x <"+ontology+"telephone> ?y3\
+                       }\
+                       UNION\
+                       {\
+                       ?x <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <"+ontology+"AssistantProfessor> .\
+                       ?x <"+ontology+"worksFor> <http://www.Department0.University0.edu> .\
+                       ?x <"+ontology+"name> ?y1 .\
+                       ?x <"+ontology+"emailAddress> ?y2 .\
+                       ?x <"+ontology+"telephone> ?y3\
+                       }\
+                       }",
+                      
+                    "query5":
+                     "PREFIX ub: <"+ontology+">\
+                     select distinct * where \
+                     {\
+                     { ?x a ub:AssociateProfessor . ?x ub:memberOf <http://www.Department0.University0.edu> } UNION\
+                     { ?x a ub:FullProfessor . ?x ub:memberOf <http://www.Department0.University0.edu> } UNION\
+                     { ?x a ub:AssistantProfessor . ?x ub:memberOf <http://www.Department0.University0.edu> } UNION\
+                     { ?x a ub:Lecturer . ?x ub:memberOf <http://www.Department0.University0.edu> } UNION\
+                     { ?x a ub:UndergraduateStudent . ?x ub:memberOf <http://www.Department0.University0.edu> } UNION\
+                     { ?x a ub:GraduateStudent . ?x ub:memberOf <http://www.Department0.University0.edu> } UNION\
+                     { ?x a ub:TeachingAssistant . ?x ub:memberOf <http://www.Department0.University0.edu> } UNION\
+                     { ?x a ub:ResearchAssistant . ?x ub:memberOf <http://www.Department0.University0.edu> } UNION\
+                     { ?x a ub:AssociateProfessor . ?x ub:worksFor <http://www.Department0.University0.edu> } UNION\
+                     { ?x a ub:FullProfessor . ?x ub:worksFor <http://www.Department0.University0.edu> } UNION\
+                     { ?x a ub:AssistantProfessor . ?x ub:worksFor <http://www.Department0.University0.edu> } UNION\
+                     { ?x a ub:Lecturer . ?x ub:worksFor <http://www.Department0.University0.edu> } UNION\
+                     { ?x a ub:UndergraduateStudent . ?x ub:worksFor <http://www.Department0.University0.edu> } UNION\
+                     { ?x a ub:GraduateStudent . ?x ub:worksFor <http://www.Department0.University0.edu> } UNION\
+                     { ?x a ub:TeachingAssistant . ?x ub:worksFor <http://www.Department0.University0.edu> } UNION\
+                     { ?x a ub:ResearchAssistant . ?x ub:worksFor <http://www.Department0.University0.edu> } UNION\
+                     { ?x a ub:AssociateProfessor . ?x ub:headOf <http://www.Department0.University0.edu> } UNION\
+                     { ?x a ub:FullProfessor . ?x ub:headOf <http://www.Department0.University0.edu> } UNION\
+                     { ?x a ub:AssistantProfessor . ?x ub:headOf <http://www.Department0.University0.edu> } UNION\
+                     { ?x a ub:Lecturer . ?x ub:headOf <http://www.Department0.University0.edu> } UNION\
+                     { ?x a ub:UndergraduateStudent . ?x ub:headOf <http://www.Department0.University0.edu> } UNION\
+                     { ?x a ub:GraduateStudent . ?x ub:headOf <http://www.Department0.University0.edu> } UNION\
+                     { ?x a ub:TeachingAssistant . ?x ub:headOf <http://www.Department0.University0.edu> } UNION\
+                     { ?x a ub:ResearchAssistant . ?x ub:headOf <http://www.Department0.University0.edu> }\
+                     }",
+                                     
+                    "query6":
+                    "prefix ub: <"+ontology+">\
+                     select distinct * where {\
+                     { ?x a ub:UndergraduateStudent . }\
+                     UNION\
+                     { ?x a ub:ResearchAssistant . }\
+                     UNION\
+                     { ?x a ub:GraduateStudent . }\
+                     }",
+                                     
+                    "query7":
+                    "prefix ub: <"+ontology+">\
+                     select distinct * where\
+                     {\
+                     {  ?x a ub:UndergraduateStudent . ?y a ub:Course . <http://www.Department0.University0.edu/AssociateProfessor0> ub:teacherOf ?y . ?x ub:takesCourse ?y . }\
+                     UNION\
+                     {  ?x a ub:UndergraduateStudent . ?y a ub:GraduateCourse . <http://www.Department0.University0.edu/AssociateProfessor0> ub:teacherOf ?y . ?x ub:takesCourse ?y . }\
+                     UNION\
+                     {  ?x a ub:ResearchAssistant . ?y a ub:Course . <http://www.Department0.University0.edu/AssociateProfessor0> ub:teacherOf ?y . ?x ub:takesCourse ?y . }\
+                     UNION\
+                     {  ?x a ub:ResearchAssistant . ?y a ub:GraduateCourse . <http://www.Department0.University0.edu/AssociateProfessor0> ub:teacherOf ?y . ?x ub:takesCourse ?y . }\
+                     UNION\
+                     {  ?x a ub:GraduateStudent . ?y a ub:Course . <http://www.Department0.University0.edu/AssociateProfessor0> ub:teacherOf ?y . ?x ub:takesCourse ?y . }\
+                     UNION\
+                     {  ?x a ub:GraduateStudent . ?y a ub:GraduateCourse . <http://www.Department0.University0.edu/AssociateProfessor0> ub:teacherOf ?y . ?x ub:takesCourse ?y . }\
+                     }",
+                     
+                     "query8":
+                     "prefix ub: <"+ontology+">\
+                      select distinct * where\
+                      {\
+                      { ?x a ub:UndergraduateStudent . ?y a ub:Department . ?x ub:memberOf ?y . ?y ub:subOrganizationOf <http://www.University0.edu> . ?x ub:emailAddress ?z }\
+                      UNION\
+                      { ?x a ub:UndergraduateStudent . ?y a ub:Department . ?x ub:worksFor ?y . ?y ub:subOrganizationOf <http://www.University0.edu> . ?x ub:emailAddress ?z }\
+                      UNION\
+                      { ?x a ub:UndergraduateStudent . ?y a ub:Department . ?x ub:headOf ?y . ?y ub:subOrganizationOf <http://www.University0.edu> . ?x ub:emailAddress ?z }\
+                      UNION\
+                      { ?x a ub:ResearchAssistant . ?y a ub:Department . ?x ub:memberOf ?y . ?y ub:subOrganizationOf <http://www.University0.edu> . ?x ub:emailAddress ?z }\
+                      UNION\
+                      { ?x a ub:ResearchAssistant . ?y a ub:Department . ?x ub:worksFor ?y . ?y ub:subOrganizationOf <http://www.University0.edu> . ?x ub:emailAddress ?z }\
+                      UNION\
+                      { ?x a ub:ResearchAssistant . ?y a ub:Department . ?x ub:headOf ?y . ?y ub:subOrganizationOf <http://www.University0.edu> . ?x ub:emailAddress ?z }\
+                      UNION\
+                      { ?x a ub:GraduateStudent . ?y a ub:Department . ?x ub:memberOf ?y . ?y ub:subOrganizationOf <http://www.University0.edu> . ?x ub:emailAddress ?z }\
+                      UNION\
+                      { ?x a ub:GraduateStudent . ?y a ub:Department . ?x ub:worksFor ?y . ?y ub:subOrganizationOf <http://www.University0.edu> . ?x ub:emailAddress ?z }\
+                      UNION\
+                      { ?x a ub:GraduateStudent . ?y a ub:Department . ?x ub:headOf ?y . ?y ub:subOrganizationOf <http://www.University0.edu> . ?x ub:emailAddress ?z }\
+                      }",
+                    
+                     //"query9":
+                     //"prefix ub: <"+ontology+">\
+                     //select distinct * where\
+                     //{\
+                     //{ ?x a ub:ResearchAssistant . ?y a ub:Lecturer . ?z a ub:Course . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION\
+                     //{ ?x a ub:ResearchAssistant . ?y a ub:PostDoc . ?z a ub:Course . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION\
+                     //{ ?x a ub:ResearchAssistant . ?y a ub:VisitingProfessor . ?z a ub:Course . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION\
+                     //{ ?x a ub:ResearchAssistant . ?y a ub:AssistantProfessor . ?z a ub:Course . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION\
+                     //{ ?x a ub:ResearchAssistant . ?y a ub:AssociateProfessor . ?z a ub:Course . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION\
+                     //{ ?x a ub:ResearchAssistant . ?y a ub:FullProfessor . ?z a ub:Course . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION\
+                     //{ ?x a ub:ResearchAssistant . ?y a ub:Lecturer . ?z a ub:GraduateCourse . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION\
+                     //{ ?x a ub:ResearchAssistant . ?y a ub:PostDoc . ?z a ub:GraduateCourse . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION\
+                     //{ ?x a ub:ResearchAssistant . ?y a ub:VisitingProfessor . ?z a ub:GraduateCourse . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION\
+                     //{ ?x a ub:ResearchAssistant . ?y a ub:AssistantProfessor . ?z a ub:GraduateCourse . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION\
+                     //{ ?x a ub:ResearchAssistant . ?y a ub:AssociateProfessor . ?z a ub:GraduateCourse . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION\
+                     //{ ?x a ub:ResearchAssistant . ?y a ub:FullProfessor . ?z a ub:GraduateCourse . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION\
+                     //{ ?x a ub:UndergraduateStudent . ?y a ub:Lecturer . ?z a ub:Course . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION\
+                     //{ ?x a ub:UndergraduateStudent . ?y a ub:PostDoc . ?z a ub:Course . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION\
+                     //{ ?x a ub:UndergraduateStudent . ?y a ub:VisitingProfessor . ?z a ub:Course . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION\
+                     //{ ?x a ub:UndergraduateStudent . ?y a ub:AssistantProfessor . ?z a ub:Course . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION\
+                     //{ ?x a ub:UndergraduateStudent . ?y a ub:AssociateProfessor . ?z a ub:Course . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION\
+                     //{ ?x a ub:UndergraduateStudent . ?y a ub:FullProfessor . ?z a ub:Course . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION\
+                     //{ ?x a ub:UndergraduateStudent . ?y a ub:Lecturer . ?z a ub:GraduateCourse . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION\
+                     //{ ?x a ub:UndergraduateStudent . ?y a ub:PostDoc . ?z a ub:GraduateCourse . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION\
+                     //{ ?x a ub:UndergraduateStudent . ?y a ub:VisitingProfessor . ?z a ub:GraduateCourse . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION\
+                     //{ ?x a ub:UndergraduateStudent . ?y a ub:AssistantProfessor . ?z a ub:GraduateCourse . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION\
+                     //{ ?x a ub:UndergraduateStudent . ?y a ub:AssociateProfessor . ?z a ub:GraduateCourse . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION\
+                     //{ ?x a ub:UndergraduateStudent . ?y a ub:FullProfessor . ?z a ub:GraduateCourse . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION\
+                     //{ ?x a ub:GraduateStudent . ?y a ub:Lecturer . ?z a ub:Course . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION\
+                     //{ ?x a ub:GraduateStudent . ?y a ub:PostDoc . ?z a ub:Course . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION\
+                     //{ ?x a ub:GraduateStudent . ?y a ub:VisitingProfessor . ?z a ub:Course . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION\
+                     //{ ?x a ub:GraduateStudent . ?y a ub:AssistantProfessor . ?z a ub:Course . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION\
+                     //{ ?x a ub:GraduateStudent . ?y a ub:AssociateProfessor . ?z a ub:Course . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION\
+                     //{ ?x a ub:GraduateStudent . ?y a ub:FullProfessor . ?z a ub:Course . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION\
+                     //{ ?x a ub:GraduateStudent . ?y a ub:Lecturer . ?z a ub:GraduateCourse . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION\
+                     //{ ?x a ub:GraduateStudent . ?y a ub:PostDoc . ?z a ub:GraduateCourse . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION\
+                     //{ ?x a ub:GraduateStudent . ?y a ub:VisitingProfessor . ?z a ub:GraduateCourse . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION\
+                     //{ ?x a ub:GraduateStudent . ?y a ub:AssistantProfessor . ?z a ub:GraduateCourse . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION\
+                     //{ ?x a ub:GraduateStudent . ?y a ub:AssociateProfessor . ?z a ub:GraduateCourse . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . } UNION\
+                     //{ ?x a ub:GraduateStudent . ?y a ub:FullProfessor . ?z a ub:GraduateCourse . ?x ub:advisor ?y . ?x ub:takesCourse ?z . ?y ub:teacherOf ?z . }\
+                     //}"
+                  
+                    "query10":
+                    "prefix ub: <"+ontology+">\
+                     select * where\
+                     {\
+                     { ?x a ub:ResearchAssistant . ?x ub:takesCourse <http://www.Department0.University0.edu/GraduateCourse0> . }\
+                     UNION\
+                     { ?x a ub:UndergraduateStudent . ?x ub:takesCourse <http://www.Department0.University0.edu/GraduateCourse0> . }\
+                     UNION\
+                     { ?x a ub:GraduateStudent . ?x ub:takesCourse <http://www.Department0.University0.edu/GraduateCourse0> . }\
+                     }",
+                     
+                    "query11":
+                    "prefix ub: <"+ontology+"> select * where { ?x a ub:ResearchGroup . ?x ub:subOrganizationOf ?y . ?y ub:subOrganizationOf <http://www.University0.edu> . }",
+                     
+                    "query12":
+                    "prefix ub: <"+ontology+"> select * where\
+                     {\
+                     { ?x a ub:FullProfessor . ?y a ub:Department . ?x ub:headOf ?y . ?y ub:subOrganizationOf <http://www.University0.edu> . }\
+                     UNION\
+                     { ?x a ub:AssistantProfessor . ?y a ub:Department . ?x ub:headOf ?y . ?y ub:subOrganizationOf <http://www.University0.edu> . }\
+                     UNION\
+                     { ?x a ub:AssociateProfessor . ?y a ub:Department . ?x ub:headOf ?y . ?y ub:subOrganizationOf <http://www.University0.edu> . }\
+                     }",
+                     
+                    "query13":
+                    "prefix ub: <"+ontology+"> select * where\
+                     {\
+                     { ?x a ub:AssociateProfessor . ?x ub:doctoralDegreeFrom <http://www.University0.edu> . }\
+                     UNION\
+                     { ?x a ub:FullProfessor . ?x ub:doctoralDegreeFrom <http://www.University0.edu> . }\
+                     UNION\
+                     { ?x a ub:AssistantProfessor . ?x ub:doctoralDegreeFrom <http://www.University0.edu> . }\
+                     UNION\
+                     { ?x a ub:Lecturer . ?x ub:doctoralDegreeFrom <http://www.University0.edu> . }\
+                     UNION\
+                     { ?x a ub:UndergraduateStudent . ?x ub:doctoralDegreeFrom <http://www.University0.edu> . }\
+                     UNION\
+                     { ?x a ub:GraduateStudent . ?x ub:doctoralDegreeFrom <http://www.University0.edu> . }\
+                     UNION\
+                     { ?x a ub:TeachingAssistant . ?x ub:doctoralDegreeFrom <http://www.University0.edu> . }\
+                     UNION\
+                     { ?x a ub:ResearchAssistant . ?x ub:doctoralDegreeFrom <http://www.University0.edu> . }\
+                     UNION\
+                     { ?x a ub:AssociateProfessor . ?x ub:mastersDegreeFrom <http://www.University0.edu> . }\
+                     UNION\
+                     { ?x a ub:FullProfessor . ?x ub:mastersDegreeFrom <http://www.University0.edu> . }\
+                     UNION\
+                     { ?x a ub:AssistantProfessor . ?x ub:mastersDegreeFrom <http://www.University0.edu> . }\
+                     UNION\
+                     { ?x a ub:Lecturer . ?x ub:mastersDegreeFrom <http://www.University0.edu> . }\
+                     UNION\
+                     { ?x a ub:UndergraduateStudent . ?x ub:mastersDegreeFrom <http://www.University0.edu> . }\
+                     UNION\
+                     { ?x a ub:GraduateStudent . ?x ub:mastersDegreeFrom <http://www.University0.edu> . }\
+                     UNION\
+                     { ?x a ub:TeachingAssistant . ?x ub:mastersDegreeFrom <http://www.University0.edu> . }\
+                     UNION\
+                     { ?x a ub:ResearchAssistant . ?x ub:mastersDegreeFrom <http://www.University0.edu> . }\
+                     UNION\
+                     { ?x a ub:AssociateProfessor . ?x ub:undergraduateDegreeFrom <http://www.University0.edu> . }\
+                     UNION\
+                     { ?x a ub:FullProfessor . ?x ub:undergraduateDegreeFrom <http://www.University0.edu> . }\
+                     UNION\
+                     { ?x a ub:AssistantProfessor . ?x ub:undergraduateDegreeFrom <http://www.University0.edu> . }\
+                     UNION\
+                     { ?x a ub:Lecturer . ?x ub:undergraduateDegreeFrom <http://www.University0.edu> . }\
+                     UNION\
+                     { ?x a ub:UndergraduateStudent . ?x ub:undergraduateDegreeFrom <http://www.University0.edu> . }\
+                     UNION\
+                     { ?x a ub:GraduateStudent . ?x ub:undergraduateDegreeFrom <http://www.University0.edu> . }\
+                     UNION\
+                     { ?x a ub:TeachingAssistant . ?x ub:undergraduateDegreeFrom <http://www.University0.edu> . }\
+                     UNION\
+                     { ?x a ub:ResearchAssistant . ?x ub:undergraduateDegreeFrom <http://www.University0.edu> . }\
+                     }",
+                     
+                    "query14":
+                    "prefix ub: <"+ontology+"> select * where { ?x a ub:UndergraduateStudent . }"
+                    
+                    
+                };
+                
+                rdfstore.create(function(store){
+                    var startLoad = new Date().getTime();                    
+                    store.load("application/json",data, function(succ, triples) {
+                        var endLoad = new Date().getTime();
+                        var ellapsedLoad = (endLoad - startLoad)/1000;
+
+                               jQuery("div#numTriples").append("<p>Loaded "+triples+" triples in "+ellapsedLoad+" ms.</p>");
+                               var queryNames = [];
+                               for(var query in queries) {
+                                   queryNames.push(query);
+                               }
+                                    
+                            
+                               Utils.repeat(0, queryNames.length, function(kq, envq) {
+                                   var qfloop = arguments.callee;
+                                   var queryName = queryNames[envq._i];
+                                         
+                                   console.log(queryName);
+                                         
+                                   var start = new Date().getTime();
+                                   store.execute(queries[queryName], function(succ, results) {
+                                       var end = new Date().getTime();
+                                       var ellapsed = (end - start)/1000;
+                                       
+                                       if(succ) {
+                                           jQuery("ul#results").append("<li> "+queryName+" --> ellapsed: "+ellapsed+"</li>");
+                                       } else {
+                                           console.log("ERROR!");
+                                       }
+                                             
+                                       kq(qfloop, envq);
+                                   });
+                               }, function() {
+                                   console.log("*** Finished");
+                               });
+                    });
+                });
+            } else {
+                console.log("STATUS:"+status);
+                alert('Error updating WebID:'+data);
+            }
+        }
+    });
+    </script>
+
+    <div id='numTriples'></div>
+    <ul id='results'><ul>
+  </body>
+</html>

@@ -5,12 +5,6 @@ var QueryPlan = exports.QueryPlan;
 // imports
 var Utils = require("./../../js-trees/src/utils").Utils;
 
-QueryPlan.orderJoins = function(bgps) {
-    // @todo order joins somehow
-    return bgps;
-};
-
-
 QueryPlan.variablesInBGP = function(bgp) {
     // may be cached in the pattern
     var variables = bgp.variables;
