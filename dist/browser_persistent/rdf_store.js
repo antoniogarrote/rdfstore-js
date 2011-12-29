@@ -31811,24 +31811,24 @@ SparqlParser.parser = (function(){
         }
         if (result3 !== null) {
           var result4 = [];
-          if (input.substr(pos).match(/^[^<>"{} | ^\\]/) !== null) {
+          if (input.substr(pos).match(/^[^<>"{}|^`\\]/) !== null) {
             var result6 = input.charAt(pos);
             pos++;
           } else {
             var result6 = null;
             if (reportMatchFailures) {
-              matchFailed("[^<>\"{} | ^\\\\]");
+              matchFailed("[^<>\"{}|^`\\\\]");
             }
           }
           while (result6 !== null) {
             result4.push(result6);
-            if (input.substr(pos).match(/^[^<>"{} | ^\\]/) !== null) {
+            if (input.substr(pos).match(/^[^<>"{}|^`\\]/) !== null) {
               var result6 = input.charAt(pos);
               pos++;
             } else {
               var result6 = null;
               if (reportMatchFailures) {
-                matchFailed("[^<>\"{} | ^\\\\]");
+                matchFailed("[^<>\"{}|^`\\\\]");
               }
             }
           }
@@ -34907,7 +34907,6 @@ SparqlParser.parser = (function(){
   
   return result;
 })();
-
 // end of ./src/js-sparql-parser/src/sparql_parser.js 
 // exports
 var TurtleParser = {};
@@ -37956,7 +37955,6 @@ QueryPlanDPSize.unionManyBindings = function(bindingLists) {
 var QueryEngine = {};
 
 //imports
-//var QueryPlan = require("./query_plan").QueryPlan;
 var QueryPlan = QueryPlanDPSize;
 QueryEngine.QueryEngine = function(params) {
     if(arguments.length != 0) {
@@ -40445,7 +40443,7 @@ var Lexicon = WebLocalStorageLexicon;
 /**
  * Version of the store
  */
-Store.VERSION = "0.5.3";
+Store.VERSION = "0.5.4";
 
 /**
  * Create a new RDFStore instance that will be

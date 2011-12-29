@@ -2214,7 +2214,7 @@ BlankNode "[121] BlankNode"
   @incomplete
 */
 IRI_REF "[122] IRI_REF"
-  = '<' iri_ref:[^<>\"\{\} | ^\\]* '>' { return iri_ref.join('') }
+    = '<' iri_ref:[^<>\"\{\}|^`\\]* '>' { return iri_ref.join('') }
 
 /*
   [123]  	PNAME_NS	  ::=  	PN_PREFIX? ':'

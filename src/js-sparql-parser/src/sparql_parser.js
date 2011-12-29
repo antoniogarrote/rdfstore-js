@@ -25888,24 +25888,24 @@ SparqlParser.parser = (function(){
         }
         if (result3 !== null) {
           var result4 = [];
-          if (input.substr(pos).match(/^[^<>"{} | ^\\]/) !== null) {
+          if (input.substr(pos).match(/^[^<>"{}|^`\\]/) !== null) {
             var result6 = input.charAt(pos);
             pos++;
           } else {
             var result6 = null;
             if (reportMatchFailures) {
-              matchFailed("[^<>\"{} | ^\\\\]");
+              matchFailed("[^<>\"{}|^`\\\\]");
             }
           }
           while (result6 !== null) {
             result4.push(result6);
-            if (input.substr(pos).match(/^[^<>"{} | ^\\]/) !== null) {
+            if (input.substr(pos).match(/^[^<>"{}|^`\\]/) !== null) {
               var result6 = input.charAt(pos);
               pos++;
             } else {
               var result6 = null;
               if (reportMatchFailures) {
-                matchFailed("[^<>\"{} | ^\\\\]");
+                matchFailed("[^<>\"{}|^`\\\\]");
               }
             }
           }

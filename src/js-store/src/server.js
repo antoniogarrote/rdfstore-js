@@ -405,7 +405,7 @@ Server.graphToJSONLD = function(graph, rdf) {
                     if(typeof(node[property]) === "object") {
                         node[property].push(object);
                     } else {
-                        var object = [ node[property], object];
+                        object = [ node[property], object];
                         node[property] = object;
                     }
                 } else {
@@ -416,14 +416,14 @@ Server.graphToJSONLD = function(graph, rdf) {
                         if(typeof(node[property]) === "object") {
                             node[property].push(object);
                         } else {
-                            var object = [ node[property], object ];
+                            object = [ node[property], object ];
                             node[property] = object;
                         }
                     }
 
                     if(typeof(object) === 'string' &&
                        (object.indexOf("http://") == 0 || object.indexOf("https://") == 0)) {
-                        Server.jsonldCoerce(node, property, "@iri")
+                        Server.jsonldCoerce(node, property, "@iri");
                     }
                 }
             } else {
@@ -431,7 +431,7 @@ Server.graphToJSONLD = function(graph, rdf) {
                 if(typeof(node[property]) === "object") {
                     node[property].push(object);
                 } else {
-                    var object = [ node[property], object];
+                    object = [ node[property], object];
                     node[property] = object;
                 }
             }
@@ -449,7 +449,7 @@ Server.graphToJSONLD = function(graph, rdf) {
 
                 if(typeof(object) === 'string' &&
                    (object.indexOf("http://") == 0 || object.indexOf("https://") == 0)) {
-                    Server.jsonldCoerce(node, property, "@iri")
+                    Server.jsonldCoerce(node, property, "@iri");
                 }
                 
             }
@@ -475,8 +475,8 @@ Server.routeRequest = function(options) {
     var CORSEnabled = options['cors-enabled'] === 'true';
     
     // Routes -> handlers mapping
-    var routes = {}
-    routes[options['path']] = "SPARQLProtocolHandler"
+    var routes = {};
+    routes[options['path']] = "SPARQLProtocolHandler";
     
     // routing logic
     return function(req,res) {
@@ -513,8 +513,8 @@ Server.routeRequest = function(options) {
                 if(handler != null) {
                     Server[handler](req, res, data);
                 } else {
-                    response.writeHead(404, {"Content-Type":"text/plain"});
-                    response.end();
+                    res.writeHead(404, {"Content-Type":"text/plain"});
+                    res.end();
                 }
             });
 
@@ -647,7 +647,7 @@ Server.buildResponseBindings = function(mediaTypes, bindings, res) {
         }
         res.end(new Buffer(JSON.stringify({'head':head,'results':bindings})), 'utf-8');
     } else {
-        var response = '<?xml version="1.0" encoding="UTF-8"?><sparql xmlns="http://www.w3.org/2005/sparql-results#">'
+        var response = '<?xml version="1.0" encoding="UTF-8"?><sparql xmlns="http://www.w3.org/2005/sparql-results#">';
         var results = '<results>';
 
         var varNames = {};
@@ -786,10 +786,10 @@ Server.buildResponseGraph = function(mediaTypes, graph, res) {
 
             if(triple.subject.interfaceName === 'BlankNode') {
                 tripleXML = '<rdf:Description rdf:nodeID="blank'+triple.subject.bnodeId;
-                tripleXML = tripleXML+'">'
+                tripleXML = tripleXML+'">';
             } else {
                 tripleXML = '<rdf:Description rdf:about="'+triple.subject.valueOf();
-                tripleXML = tripleXML+'">'
+                tripleXML = tripleXML+'">';
             }
 
             predicate = triple.predicate.valueOf();
@@ -827,11 +827,11 @@ Server.buildResponseGraph = function(mediaTypes, graph, res) {
                     tripleXML = tripleXML + '<'+xmlPredicate+' rdf:nodeID="blank'+triple.object.bnodeId+'"/>';
             }
 
-            tripleXML = tripleXML + "</rdf:Description>"
+            tripleXML = tripleXML + "</rdf:Description>";
             acum = acum + tripleXML;
         }
 
-        var xml = '<?xml version="1.0"  encoding="UTF-8"?>'
+        var xml = '<?xml version="1.0"  encoding="UTF-8"?>';
         xml = xml + '<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"';
         for(var prefix in ns) {
             var prefixNs = ns[prefix];

@@ -264,3 +264,25 @@ exports.bind2 = function(test) {
     test.ok(result.pattern.filter[0].value.operands[2].args[0].value.value === 'http://test.com/somevalue');    
     test.done();
 }
+
+exports.parsingBlankSpaceInURI = function(test) {
+    var query = "SELECT * { ?s :p1 ?v1 OPTIONAL {?s :p2 <http://prauw.cs.vu.nl/foaf/Jan Top.rdf> FILTER(?v1<3 && (?v1+?v1) < (5*?v1) && STR(?v1)) } }";
+
+    var query = aqt.parseQueryString(query);
+    var result = aqt.parseSelect(query.units[0]);
+
+    test.ok(result.pattern.kind === "LEFT_JOIN");
+    test.ok(result.pattern.filter.length === 1);
+    test.ok(result.pattern.filter[0].token === 'filter');
+    test.ok(result.pattern.lvalue.kind === "BGP");
+    test.ok(result.pattern.rvalue.kind === "BGP");
+
+    result = aqt.bind(result, { v1: { token: 'uri', value: 'http://test.com/somevalue' }});
+    //console.log(sys.inspect(result,true,20));
+    test.ok(result.pattern.filter[0].value.operands[0].op1.value.value === 'http://test.com/somevalue');    
+    test.ok(result.pattern.filter[0].value.operands[1].op1.summand.value.value === 'http://test.com/somevalue');    
+    test.ok(result.pattern.filter[0].value.operands[1].op1.summands[0].expression.value.value === 'http://test.com/somevalue');    
+    test.ok(result.pattern.filter[0].value.operands[1].op2.factors[0].expression.value.value === 'http://test.com/somevalue');    
+    test.ok(result.pattern.filter[0].value.operands[2].args[0].value.value === 'http://test.com/somevalue');    
+    test.done();
+}
