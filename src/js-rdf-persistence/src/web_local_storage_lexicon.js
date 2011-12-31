@@ -43,15 +43,11 @@ WebLocalStorageLexicon.Lexicon = function(callback,name){
     this.blankToOID = {};
     this.OIDToBlank = {};
 
-    if((this.defaultGraphOid=this.storage.getItem(this.pointer("oidCounter"))) == null) {
-        this.defaultGraphOid = 0;
-    } else {
-        this.defaultGraphOid = parseInt(this.defaultGraphOid);
-    }
+    this.defaultGraphOid = 0;
 
     this.defaultGraphUri = "https://github.com/antoniogarrote/rdfstore-js#default_graph";
     this.defaultGraphUriTerm = {"token": "uri", "prefix": null, "suffix": null, "value": this.defaultGraphUri, "oid": this.defaultGraphOid};
-    this.oidCounter = 1;
+    this.oidCounter = parseInt(this.storage.getItem(this.pointer("oidCounter"))) || 1;
 
     // create or restor the hash of known graphs
     if(this.storage.getItem(this.pointer("knownGraphs"))==null) {
@@ -64,6 +60,10 @@ WebLocalStorageLexicon.Lexicon = function(callback,name){
     if(callback != null) {
         callback(this);
     }
+};
+
+WebLocalStorageLexicon.Lexicon.prototype.updateAfterWrite = function() {
+    this.storage.setItem(this.pointer("oidCounter"),""+this.oidCounter);
 };
 
 WebLocalStorageLexicon.Lexicon.prototype.pointer = function(hashName,val){

@@ -559,6 +559,9 @@ QueryEngine.QueryEngine.prototype.execute = function(queryString, callback, defa
                 this.callbacksBackend.startGraphModification();
                 var that = this;
                 this.executeUpdate(syntaxTree, function(success, result){
+		    if(that.lexicon.updateAfterWrite)
+			that.lexicon.updateAfterWrite();
+
                     if(success) {
                         that.callbacksBackend.endGraphModification(function(){
                             callback(success, result);
@@ -1252,6 +1255,9 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
         }
 
     }
+
+    if(this.lexicon.updateAfterWrite != null)
+	this.lexicon.updateAfterWrite();
 
     var exitFn = function(){
         if(success) {

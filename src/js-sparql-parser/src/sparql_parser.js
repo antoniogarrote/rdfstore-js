@@ -14655,6 +14655,8 @@ SparqlParser.parser = (function(){
                   for(var i=0; i< pairs.pairs.length; i++) {
                       var pair = pairs.pairs[i];
                       var triple = null;
+          	    if(pair[1].length != null)
+          	      pair[1] = pair[1][0]
                       if(subject.token && subject.token==='triplesnodecollection') {
                           triple = {subject: subject.chainSubject[0], predicate: pair[0], object: pair[1]}
                           triplesContext.push(triple);
@@ -14728,6 +14730,9 @@ SparqlParser.parser = (function(){
                   if(pairs.pairs) {
                     for(var i=0; i< pairs.pairs.length; i++) {
                         var pair = pairs.pairs[i];
+                        if(pair[1].length != null)
+            	      pair[1] = pair[1][0]
+            
                         if(tn.token === "triplesnodecollection") {
                             for(var j=0; j<subject.length; j++) {
                                 var subj = subject[j];
@@ -16455,6 +16460,8 @@ SparqlParser.parser = (function(){
                     var triple = {}
                     triple.subject = subject;
                     triple.predicate = pair[0];
+                    if(pair[1].length != null)
+          	    pair[1] = pair[1][0]
                     triple.object = pair[1];
                     newTriples.push(triple);
                 }

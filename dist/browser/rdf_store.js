@@ -20012,6 +20012,8 @@ SparqlParser.parser = (function(){
                   for(var i=0; i< pairs.pairs.length; i++) {
                       var pair = pairs.pairs[i];
                       var triple = null;
+          	    if(pair[1].length != null)
+          	      pair[1] = pair[1][0]
                       if(subject.token && subject.token==='triplesnodecollection') {
                           triple = {subject: subject.chainSubject[0], predicate: pair[0], object: pair[1]}
                           triplesContext.push(triple);
@@ -20085,6 +20087,9 @@ SparqlParser.parser = (function(){
                   if(pairs.pairs) {
                     for(var i=0; i< pairs.pairs.length; i++) {
                         var pair = pairs.pairs[i];
+                        if(pair[1].length != null)
+            	      pair[1] = pair[1][0]
+            
                         if(tn.token === "triplesnodecollection") {
                             for(var j=0; j<subject.length; j++) {
                                 var subj = subject[j];
@@ -21812,6 +21817,8 @@ SparqlParser.parser = (function(){
                     var triple = {}
                     triple.subject = subject;
                     triple.predicate = pair[0];
+                    if(pair[1].length != null)
+          	    pair[1] = pair[1][0]
                     triple.object = pair[1];
                     newTriples.push(triple);
                 }
@@ -37937,6 +37944,9 @@ QueryEngine.QueryEngine.prototype.execute = function(queryString, callback, defa
                 this.callbacksBackend.startGraphModification();
                 var that = this;
                 this.executeUpdate(syntaxTree, function(success, result){
+		    if(that.lexicon.updateAfterWrite)
+			that.lexicon.updateAfterWrite();
+
                     if(success) {
                         that.callbacksBackend.endGraphModification(function(){
                             callback(success, result);
@@ -38630,6 +38640,9 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
         }
 
     }
+
+    if(this.lexicon.updateAfterWrite != null)
+	this.lexicon.updateAfterWrite();
 
     var exitFn = function(){
         if(success) {
@@ -39877,7 +39890,7 @@ var MongodbQueryEngine = { MongodbQueryEngine: function(){ throw 'MongoDB backen
 /**
  * Version of the store
  */
-Store.VERSION = "0.5.4";
+Store.VERSION = "0.5.5";
 
 /**
  * Create a new RDFStore instance that will be
