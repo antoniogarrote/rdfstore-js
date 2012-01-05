@@ -179,6 +179,7 @@ Callbacks.CallbacksBackend.prototype.unsubscribeEmpty = function(event, callback
 Callbacks.CallbacksBackend.prototype.subscribe = function(s,p,o,g,callback, doneCallback) {
     var quad = this._tokenizeComponents(s,p,o,g);
     var queryEnv = {blanks:{}, outCache:{}};
+    this.engine.registerNsInEnvironment(null, queryEnv);
     var that = this;
     var normalized = this.engine.normalizeQuad(quad, queryEnv, true);
     var pattern =  new QuadIndexCommon.Pattern(normalized);        
@@ -293,6 +294,7 @@ Callbacks.CallbacksBackend.prototype.observeNode = function() {
     var query = "CONSTRUCT { <" + uri + "> ?p ?o } WHERE { GRAPH <" + graphUri + "> { <" + uri + "> ?p ?o } }";
     var that = this;
     var queryEnv = {blanks:{}, outCache:{}};
+    this.engine.registerNsInEnvironment(null, queryEnv);
     var bindings = [];
     this.engine.execute(query,  function(success, graph){
         if(success) {
@@ -353,6 +355,7 @@ Callbacks.CallbacksBackend.prototype.observeQuery = function(query, callback, en
     var patterns = this.aqt.collectBasicTriples(parsedTree);
     var that = this;
     var queryEnv = {blanks:{}, outCache:{}};
+    this.engine.registerNsInEnvironment(null, queryEnv);
     var floop, pattern, quad, indexKey, indexOrder, index;
 
     var counter = this.queryCounter;

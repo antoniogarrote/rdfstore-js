@@ -6300,8 +6300,8 @@ exports.testConstructConstruct4 = function(test) {
                 engine.execute('PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
                                 PREFIX  foaf:       <http://xmlns.com/foaf/0.1/>\
                                 CONSTRUCT { _:a rdf:subject ?s ;\
-                                                rdf:predicate ?p ;\
-                                                rdf:object ?o  . }\
+                                            rdf:predicate ?p ;\
+                                            rdf:object ?o  . }\
                                 WHERE {\
                                   ?s ?p ?o .\
                                 }', function(success, results){
@@ -9357,8 +9357,8 @@ exports.testsubsetByExcl01 = function(test) {
             });
         });
     });
-}
-
+};
+   
 exports.testTemporalProximity01 = function(test) {
     new Lexicon.Lexicon(function(lexicon){
         new QuadBackend.QuadBackend({treeOrder: 15}, function(backend){
@@ -9403,4 +9403,4 @@ exports.testTemporalProximity01 = function(test) {
             });
         });
     });
-}
+};

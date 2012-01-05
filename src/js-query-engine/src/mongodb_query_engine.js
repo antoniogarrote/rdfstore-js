@@ -72,7 +72,10 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.clean = function(callback) {
 };
 
 MongodbQueryEngine.MongodbQueryEngine.prototype.registerNsInEnvironment = function(prologue, env) {
-    var prefixes = prologue.prefixes;
+    var prefixes = [];
+    if(prologue != null && prologue.prefixes != null) {
+	prefixes =prologue.prefixes;
+    }
     var toSave = {};
 
     // adding default prefixes;
@@ -88,7 +91,7 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.registerNsInEnvironment = functi
     }
 
     env.namespaces = toSave;
-    if(prologue.base && typeof(prologue.base) === 'object') {
+    if(prologue != null && prologue.base && typeof(prologue.base) === 'object') {
         env.base = prologue.base.value;
     } else {
         env.base = null;

@@ -28,7 +28,10 @@ QueryEngine.QueryEngine = function(params) {
 
 // Utils
 QueryEngine.QueryEngine.prototype.registerNsInEnvironment = function(prologue, env) {
-    var prefixes = prologue.prefixes;
+    var prefixes = [];
+    if(prologue != null && prologue.prefixes != null) {
+	prefixes =prologue.prefixes;
+    }
     var toSave = {};
 
     // adding default prefixes;
@@ -44,7 +47,7 @@ QueryEngine.QueryEngine.prototype.registerNsInEnvironment = function(prologue, e
     }
 
     env.namespaces = toSave;
-    if(prologue.base && typeof(prologue.base) === 'object') {
+    if(prologue!=null && prologue.base && typeof(prologue.base) === 'object') {
         env.base = prologue.base.value;
     } else {
         env.base = null;

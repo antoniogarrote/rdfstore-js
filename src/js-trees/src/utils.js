@@ -289,7 +289,6 @@ Utils.compareDateComponents = function(stra,strb) {
 };
 
 // RDF utils
-
 Utils.lexicalFormLiteral = function(term, env) {
     var value = term.value;
     var lang = term.lang;
@@ -299,23 +298,32 @@ Utils.lexicalFormLiteral = function(term, env) {
     if(value != null && type != null && typeof(type) != 'string') {
         var typeValue = type.value;
 
-        if(typeValue != null) {
-            indexedValue = '"' + term.value + '"^^<' + typeValue + '>';
-        } else {
+        if(typeValue == null) {
             var typePrefix = type.prefix;
             var typeSuffix = type.suffix;
 
             var resolvedPrefix = env.namespaces[typePrefix];
             term.type = resolvedPrefix+typeSuffix;
-            indexedValue = '"' + term.value + '"^^<' + resolvedPrefix + typeSuffix + '>';
+	    typeValue = resolvedPrefix+typeSuffix;
         }
+	// normalization
+	if(typeValue.indexOf('hexBinary') != -1) {
+            indexedValue = '"' + term.value.toLowerCase() + '"^^<' + typeValue + '>';
+	} else {
+            indexedValue = '"' + term.value + '"^^<' + typeValue + '>';
+	}
     } else {
         if(lang == null && type == null) {
             indexedValue = '"' + value + '"';
         } else if(type == null) {
             indexedValue = '"' + value + '"' + "@" + lang;        
         } else {
-            indexedValue = '"' + term.value + '"^^<'+type+'>';
+	    // normalization
+	    if(type.indexOf('hexBinary') != -1) {
+		indexedValue = '"' + term.value.toLowerCase() + '"^^<'+type+'>';
+	    } else {
+		indexedValue = '"' + term.value + '"^^<'+type+'>';
+	    }
         }
     }
     return indexedValue;
@@ -361,7 +369,7 @@ Utils.lexicalFormBaseUri = function(term, env) {
 
 Utils.lexicalFormTerm = function(term, ns) {
     if(term.token === 'uri') {
-        return {'uri': Utils.lexicalFormBaseUri(term, ns)}
+        return {'uri': Utils.lexicalFormBaseUri(term, ns)};
     } else if(term.token === 'literal') {
         return {'literal': Utils.lexicalFormLiteral(term, ns)};
     } else if(term.token === 'blank') {

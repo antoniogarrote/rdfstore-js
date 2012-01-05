@@ -297,7 +297,6 @@ Utils.compareDateComponents = function(stra,strb) {
 };
 
 // RDF utils
-
 Utils.lexicalFormLiteral = function(term, env) {
     var value = term.value;
     var lang = term.lang;
@@ -307,23 +306,32 @@ Utils.lexicalFormLiteral = function(term, env) {
     if(value != null && type != null && typeof(type) != 'string') {
         var typeValue = type.value;
 
-        if(typeValue != null) {
-            indexedValue = '"' + term.value + '"^^<' + typeValue + '>';
-        } else {
+        if(typeValue == null) {
             var typePrefix = type.prefix;
             var typeSuffix = type.suffix;
 
             var resolvedPrefix = env.namespaces[typePrefix];
             term.type = resolvedPrefix+typeSuffix;
-            indexedValue = '"' + term.value + '"^^<' + resolvedPrefix + typeSuffix + '>';
+	    typeValue = resolvedPrefix+typeSuffix;
         }
+	// normalization
+	if(typeValue.indexOf('hexBinary') != -1) {
+            indexedValue = '"' + term.value.toLowerCase() + '"^^<' + typeValue + '>';
+	} else {
+            indexedValue = '"' + term.value + '"^^<' + typeValue + '>';
+	}
     } else {
         if(lang == null && type == null) {
             indexedValue = '"' + value + '"';
         } else if(type == null) {
             indexedValue = '"' + value + '"' + "@" + lang;        
         } else {
-            indexedValue = '"' + term.value + '"^^<'+type+'>';
+	    // normalization
+	    if(type.indexOf('hexBinary') != -1) {
+		indexedValue = '"' + term.value.toLowerCase() + '"^^<'+type+'>';
+	    } else {
+		indexedValue = '"' + term.value + '"^^<'+type+'>';
+	    }
         }
     }
     return indexedValue;
@@ -369,7 +377,7 @@ Utils.lexicalFormBaseUri = function(term, env) {
 
 Utils.lexicalFormTerm = function(term, ns) {
     if(term.token === 'uri') {
-        return {'uri': Utils.lexicalFormBaseUri(term, ns)}
+        return {'uri': Utils.lexicalFormBaseUri(term, ns)};
     } else if(term.token === 'literal') {
         return {'literal': Utils.lexicalFormLiteral(term, ns)};
     } else if(term.token === 'blank') {
@@ -37413,7 +37421,10 @@ QueryEngine.QueryEngine = function(params) {
 
 // Utils
 QueryEngine.QueryEngine.prototype.registerNsInEnvironment = function(prologue, env) {
-    var prefixes = prologue.prefixes;
+    var prefixes = [];
+    if(prologue != null && prologue.prefixes != null) {
+	prefixes =prologue.prefixes;
+    }
     var toSave = {};
 
     // adding default prefixes;
@@ -37429,7 +37440,7 @@ QueryEngine.QueryEngine.prototype.registerNsInEnvironment = function(prologue, e
     }
 
     env.namespaces = toSave;
-    if(prologue.base && typeof(prologue.base) === 'object') {
+    if(prologue!=null && prologue.base && typeof(prologue.base) === 'object') {
         env.base = prologue.base.value;
     } else {
         env.base = null;
@@ -39118,6 +39129,7 @@ Callbacks.CallbacksBackend.prototype.unsubscribeEmpty = function(event, callback
 Callbacks.CallbacksBackend.prototype.subscribe = function(s,p,o,g,callback, doneCallback) {
     var quad = this._tokenizeComponents(s,p,o,g);
     var queryEnv = {blanks:{}, outCache:{}};
+    this.engine.registerNsInEnvironment(null, queryEnv);
     var that = this;
     var normalized = this.engine.normalizeQuad(quad, queryEnv, true);
     var pattern =  new QuadIndexCommon.Pattern(normalized);        
@@ -39232,6 +39244,7 @@ Callbacks.CallbacksBackend.prototype.observeNode = function() {
     var query = "CONSTRUCT { <" + uri + "> ?p ?o } WHERE { GRAPH <" + graphUri + "> { <" + uri + "> ?p ?o } }";
     var that = this;
     var queryEnv = {blanks:{}, outCache:{}};
+    this.engine.registerNsInEnvironment(null, queryEnv);
     var bindings = [];
     this.engine.execute(query,  function(success, graph){
         if(success) {
@@ -39292,6 +39305,7 @@ Callbacks.CallbacksBackend.prototype.observeQuery = function(query, callback, en
     var patterns = this.aqt.collectBasicTriples(parsedTree);
     var that = this;
     var queryEnv = {blanks:{}, outCache:{}};
+    this.engine.registerNsInEnvironment(null, queryEnv);
     var floop, pattern, quad, indexKey, indexOrder, index;
 
     var counter = this.queryCounter;
@@ -39890,7 +39904,7 @@ var MongodbQueryEngine = { MongodbQueryEngine: function(){ throw 'MongoDB backen
 /**
  * Version of the store
  */
-Store.VERSION = "0.5.5";
+Store.VERSION = "0.5.6";
 
 /**
  * Create a new RDFStore instance that will be

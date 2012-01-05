@@ -377,7 +377,7 @@ QueryEngine.QueryEngine.prototype.normalizeDatasets = function(datasets, outerEn
         }  
     }
 
-    return true
+    return true;
 };
 
 QueryEngine.QueryEngine.prototype.normalizeQuad = function(quad, queryEnv, shouldIndex) {
@@ -390,7 +390,7 @@ QueryEngine.QueryEngine.prototype.normalizeQuad = function(quad, queryEnv, shoul
     if(quad.graph == null) {
         graph = 0; // default graph
     } else {
-        oid = this.normalizeTerm(quad.graph, queryEnv, shouldIndex)
+        oid = this.normalizeTerm(quad.graph, queryEnv, shouldIndex);
         if(oid!=null) {
             graph = oid;
             if(shouldIndex === true)
