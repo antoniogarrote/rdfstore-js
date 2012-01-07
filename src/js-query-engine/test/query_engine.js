@@ -387,7 +387,7 @@ if(QueryEngine.mongodb == null) {
                                                        test.ok(results.length === 6);
                                                        for(var i=0; i<6; i++) {
                                                            test.ok(results[i].book.token == 'blank');
-                                                           test.ok(results[i].book.label != null);
+                                                           test.ok(results[i].book.value != null);
                                                        }
                                                        test.done();
                                                    });

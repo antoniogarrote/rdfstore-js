@@ -669,12 +669,12 @@ jsonld.toTriples = function(input, graph, callback)
             }
             for(var i2 in obj)
             {
-                var obji2 = obj[i2]
+                var obji2 = obj[i2];
                 if(typeof(obji2) === 'string') {
                     obji2 = {'token': 'literal', 'value':obji2};
                 } else if(obji2['@iri'] != null) {
                     if(obji2['@iri'][0] == "_") {
-                        obji2 = {'token':'blank', 'label':obji2['@iri'].split(":")[1]}
+                        obji2 = {'token':'blank', 'value':obji2['@iri'].split(":")[1]}
                     } else {
                         obji2 = {'token':'uri', 'value':obji2['@iri']}
                     }

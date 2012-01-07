@@ -528,7 +528,7 @@ AbstractQueryTree.AbstractQueryTree.prototype._replaceTripleContext = function(t
             var comp = triples[i][p];
 	    if(comp.token === 'var' && from.token === 'var' && comp.value === from.value) {
 		triples[i][p] = to;
-	    } else if(comp.token === 'blank' && from.token === 'blank' && comp.label === from.label) {
+	    } else if(comp.token === 'blank' && from.token === 'blank' && comp.value === from.value) {
 		triples[i][p] = to;
 	    } else {
 		if((comp.token === 'literal' || comp.token ==='uri') && 

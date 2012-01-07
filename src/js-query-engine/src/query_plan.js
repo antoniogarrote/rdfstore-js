@@ -18,7 +18,7 @@ QueryPlan.variablesInBGP = function(bgp) {
         if(components[comp] && components[comp].token === "var") {
             variables.push(components[comp].value);
         } else if(components[comp] && components[comp].token === "blank") {
-            variables.push("blank:"+components[comp].label);
+            variables.push("blank:"+components[comp].value);
         }
     }
     bgp.variables = variables;
@@ -234,7 +234,7 @@ QueryPlan.buildBindingsFromRange = function(results, bgp) {
         if(components[comp] && components[comp].token === "var") {
             bindings[comp] = components[comp].value;
         } else if(components[comp] && components[comp].token === "blank") {
-            bindings[comp] = "blank:"+components[comp].label;
+            bindings[comp] = "blank:"+components[comp].value;
         }
     }
 

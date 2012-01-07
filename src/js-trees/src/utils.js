@@ -377,7 +377,7 @@ Utils.lexicalFormTerm = function(term, ns) {
     } else if(term.token === 'literal') {
         return {'literal': Utils.lexicalFormLiteral(term, ns)};
     } else if(term.token === 'blank') {
-        var label = '_:'+term.label;
+        var label = '_:'+term.value;
         return {'blank': label};
     } else {
 	throw "Error, cannot get lexical form of unknown token: "+term.token;

@@ -407,7 +407,7 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.normalizeTerm = function(term, e
             return(oid);
         }
     } else if(term.token === 'blank') {
-        var label = term.label;
+        var label = term.value;
         var oid = env.blanks[label];
         if( oid != null) {
             return(oid);
@@ -600,7 +600,7 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.retrieve = function(oid) {
             } else if(tag === "l") {
                 return(this.parseLiteral(oid));
             } else if(tag === "b") {
-                return({token:"blank", label:"_:"+oid});
+                return({token:"blank", value:"_:"+oid});
             } else {
                 throw("Unknown OID tag "+tag);
             }
@@ -742,11 +742,26 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.executeQuery = function(syntaxTr
                         if(aqt.template == null) {
                             aqt.template = {triplesContext: aqt.pattern};
                         }
-
                         var blankIdCounter = 1;
+			var toDelete = [];
                         for(var i=0; i<result.length; i++) {
                             var bindings = result[i];
-                            var blankMap = {};
+
+			    // @doc
+			    // -----------------------------------------
+			    // valuetmp must be deleted to avoid producing
+			    // different construct templates with the same 
+			    // generated blankIDs. Blanks in the templates
+			    // must be different between results.
+			    // These blanks are different than the blank returned
+			    // by variables in the select query. These blanks will
+			    // be tha same across different generated templates.
+			    // To avoid collisions between the gen blanks in the templates
+			    // and the blanks in the result bindings, we add a _:b to the
+			    // generated blank IDs.
+			    for(var j=0; j<toDelete.length; j++)
+				delete toDelete[j].valuetmp;
+
                             for(var j=0; j<aqt.template.triplesContext.length; j++) {
                                 // fresh IDs for blank nodes in the construct template
                                 var components = ['subject', 'predicate', 'object'];
@@ -754,15 +769,14 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.executeQuery = function(syntaxTr
                                 for(var p=0; p<components.length; p++) {
                                     var component = components[p];
                                     if(tripleTemplate[component].token === 'blank') {
-                                        if(blankMap[tripleTemplate[component].label] != null) {
-                                            tripleTemplate[component].value = blankMap[tripleTemplate[component].label];
-                                        } else {
-                                            var blankId = "_:b"+blankIdCounter;
-                                            blankIdCounter++;
-                                            blankMap[tripleTemplate[component].label] = blankId;
-                                            tripleTemplate[component].value = blankId;
-                                        }
-                                    }
+					if(tripleTemplate[component].valuetmp && tripleTemplate[component].valuetmp != null) {
+					} else {
+					    var blankId = "_:b"+blankIdCounter;
+					    blankIdCounter++;
+					    tripleTemplate[component].valuetmp = blankId;
+					    toDelete.push(tripleTemplate[component]);
+					}
+				    }
                                 }
                                 var s = RDFJSInterface.buildRDFResource(tripleTemplate.subject,bindings,that,queryEnv);
                                 var p = RDFJSInterface.buildRDFResource(tripleTemplate.predicate,bindings,that,queryEnv);
@@ -775,6 +789,7 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.executeQuery = function(syntaxTr
                                 }
                             }
                         }
+
                         callback(true,graph);
                     } else {
                         callback(false, result);

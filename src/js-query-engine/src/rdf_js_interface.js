@@ -599,8 +599,8 @@ RDFJSInterface.buildRDFResource = function(value, bindings, engine, env) {
 };
 
 RDFJSInterface.buildBlankNode = function(value, bindings, engine, env) {
-    if(value.value == null && value.label) {
-        value.value = value.label;
+    if(value.valuetmp != null) {
+        value.value = value.valuetmp;
     }
     if(value.value.indexOf("_:") === 0) {
         value.value = value.value.split("_:")[1];

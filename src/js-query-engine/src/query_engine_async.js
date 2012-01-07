@@ -339,7 +339,7 @@ QueryEngine.QueryEngine.prototype.normalizeTerm = function(term, env, shouldInde
             return(oid);
         }
     } else if(term.token === 'blank') {
-        var label = term.label;
+        var label = term.value;
         var oid = env.blanks[label];
         if( oid != null) {
             return(oid);
@@ -605,12 +605,12 @@ QueryEngine.QueryEngine.prototype.executeQuery = function(syntaxTree, callback, 
                                 for(var p=0; p<components.length; p++) {
                                     var component = components[p];
                                     if(tripleTemplate[component].token === 'blank') {
-                                        if(blankMap[tripleTemplate[component].label] != null) {
-                                            tripleTemplate[component].value = blankMap[tripleTemplate[component].label];
+                                        if(blankMap[tripleTemplate[component].value] != null) {
+                                            tripleTemplate[component].value = blankMap[tripleTemplate[component].value];
                                         } else {
                                             var blankId = "_:b"+blankIdCounter;
                                             blankIdCounter++;
-                                            blankMap[tripleTemplate[component].label] = blankId;
+                                            blankMap[tripleTemplate[component].value] = blankId;
                                             tripleTemplate[component].value = blankId;
                                         }
                                     }

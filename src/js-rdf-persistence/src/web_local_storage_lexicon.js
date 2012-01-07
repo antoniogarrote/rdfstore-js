@@ -333,7 +333,7 @@ WebLocalStorageLexicon.Lexicon.prototype.retrieve = function(oid) {
               } else {
                   var maybeBlank = this.OIDToBlank[""+oid];
                   if(maybeBlank!=null) {
-                      return({token:"blank", label:"_:"+oid});
+                      return({token:"blank", value:"_:"+oid});
                   } else {
                       // uri
                       maybeUri = this.storage.getItem(this.pointer("OIDToUri","u"+oid));
@@ -360,7 +360,7 @@ WebLocalStorageLexicon.Lexicon.prototype.retrieve = function(oid) {
                               maybeBlank = this.storage.getItem(this.pointer("OIDToBlank",""+oid));
                               if(maybeBlank != null) {
                                   this.OIDToBlank[""+oid] = true;
-                                  return({token:"blank", label:"_:"+oid});
+                                  return({token:"blank", value:"_:"+oid});
                               } else {
                                   throw("Null value for OID");
                               }

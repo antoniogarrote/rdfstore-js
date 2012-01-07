@@ -18,7 +18,7 @@ QueryPlanAsync.variablesInBGP = function(bgp) {
         if(components[comp] && components[comp].token === "var") {
             variables.push(components[comp].value);
         } else if(components[comp] && components[comp].token === "blank") {
-            variables.push("blank:"+components[comp].label);
+            variables.push("blank:"+components[comp].value);
         }
     }
     bgp.variables = variables;
@@ -153,7 +153,7 @@ QueryPlanAsync.executeAndBGPsGroups = function(bgps) {
                 if(bgp[comp].token === 'var') {
                     vars.push(bgp[comp].value)
                 } else if(bgp[comp].token === 'blank') {
-                    vars.push(bgp[comp].label);
+                    vars.push(bgp[comp].value);
                 }
             }
         }
@@ -276,7 +276,7 @@ QueryPlanAsync.executeAndBGPsDPSize = function(allBgps, dataset, queryEngine, en
                         if(bgps[i][comp].token === 'var') {
                             vars.push(bgps[i][comp].value);
                         } else if(bgps[i][comp].token === 'blank') {
-                            vars.push(bgps[i][comp].label);
+                            vars.push(bgps[i][comp].value);
                         }
                     }
                 }
@@ -629,7 +629,7 @@ QueryPlanAsync.buildBindingsFromRange = function(results, bgp) {
         if(components[comp] && components[comp].token === "var") {
             bindings[comp] = components[comp].value;
         } else if(components[comp] && components[comp].token === "blank") {
-            bindings[comp] = "blank:"+components[comp].label;
+            bindings[comp] = "blank:"+components[comp].value;
         }
     }
 

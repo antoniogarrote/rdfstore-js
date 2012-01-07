@@ -16693,10 +16693,10 @@ SparqlParser.parser = (function(){
                 if(c.length == 1 && c[0].token && c[0].token === 'nil') {
                     GlobalBlankNodeCounter++;
                     return  {token: "triplesnodecollection", 
-                             triplesContext:[{subject: {token:'blank', label:("_:"+GlobalBlankNodeCounter)},
+                             triplesContext:[{subject: {token:'blank', value:("_:"+GlobalBlankNodeCounter)},
                                               predicate:{token:'uri', prefix:null, suffix:null, value:'http://www.w3.org/1999/02/22-rdf-syntax-ns#rest'},
-                                              object:  {token:'blank', label:("_:"+(GlobalBlankNodeCounter+1))}}], 
-                             chainSubject:{token:'blank', label:("_:"+GlobalBlankNodeCounter)}};
+                                              object:  {token:'blank', value:("_:"+(GlobalBlankNodeCounter+1))}}], 
+                             chainSubject:{token:'blank', value:("_:"+GlobalBlankNodeCounter)}};
           
                 }
                 */
@@ -16714,7 +16714,7 @@ SparqlParser.parser = (function(){
                         triplesContext = triplesContext.concat(nextSubject.triplesContext);
                     }
                     var currentSubject = null;
-                    triple = {subject: {token:'blank', label:("_:"+GlobalBlankNodeCounter)},
+                    triple = {subject: {token:'blank', value:("_:"+GlobalBlankNodeCounter)},
                               predicate:{token:'uri', prefix:null, suffix:null, value:'http://www.w3.org/1999/02/22-rdf-syntax-ns#first'},
                               object:nextObject };
           
@@ -16725,13 +16725,13 @@ SparqlParser.parser = (function(){
                     triplesContext.push(triple);
           
                     if(i===(c.length-1)) {
-                        triple = {subject: {token:'blank', label:("_:"+GlobalBlankNodeCounter)},
+                        triple = {subject: {token:'blank', value:("_:"+GlobalBlankNodeCounter)},
                                   predicate:{token:'uri', prefix:null, suffix:null, value:'http://www.w3.org/1999/02/22-rdf-syntax-ns#rest'},
                                   object:   {token:'uri', prefix:null, suffix:null, value:'http://www.w3.org/1999/02/22-rdf-syntax-ns#nil'}};
                     } else {
-                        triple = {subject: {token:'blank', label:("_:"+GlobalBlankNodeCounter)},
+                        triple = {subject: {token:'blank', value:("_:"+GlobalBlankNodeCounter)},
                                   predicate:{token:'uri', prefix:null, suffix:null, value:'http://www.w3.org/1999/02/22-rdf-syntax-ns#rest'},
-                                  object:  {token:'blank', label:("_:"+(GlobalBlankNodeCounter+1))} };
+                                  object:  {token:'blank', value:("_:"+(GlobalBlankNodeCounter+1))} };
                     }
           
                     triplesContext.push(triple);
@@ -16863,7 +16863,7 @@ SparqlParser.parser = (function(){
           ? (function(pl) {
           
                 GlobalBlankNodeCounter++;
-                var subject = {token:'blank', label:'_:'+GlobalBlankNodeCounter};
+                var subject = {token:'blank', value:'_:'+GlobalBlankNodeCounter};
                 var newTriples =  [];
           
                 for(var i=0; i< pl.pairs.length; i++) {
@@ -26243,7 +26243,7 @@ SparqlParser.parser = (function(){
         var savedPos1 = pos;
         var result5 = parse_BLANK_NODE_LABEL();
         var result6 = result5 !== null
-          ? (function(l) { return {token:'blank', label:l}})(result5)
+          ? (function(l) { return {token:'blank', value:l}})(result5)
           : null;
         if (result6 !== null) {
           var result4 = result6;
@@ -26257,7 +26257,7 @@ SparqlParser.parser = (function(){
           var savedPos0 = pos;
           var result2 = parse_ANON();
           var result3 = result2 !== null
-            ? (function() { GlobalBlankNodeCounter++; return {token:'blank', label:'_:'+GlobalBlankNodeCounter} })()
+            ? (function() { GlobalBlankNodeCounter++; return {token:'blank', value:'_:'+GlobalBlankNodeCounter} })()
             : null;
           if (result3 !== null) {
             var result1 = result3;

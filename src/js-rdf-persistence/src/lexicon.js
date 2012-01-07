@@ -116,7 +116,7 @@ Lexicon.Lexicon.prototype.resolveBlank = function(label) {
 //    callback(id);
 
     var oid = this.oidCounter;
-    this.oidCounter++
+    this.oidCounter++;
     return(""+oid);
 };
 
@@ -205,7 +205,7 @@ Lexicon.Lexicon.prototype.retrieve = function(oid) {
               } else {
                   var maybeBlank = this.OIDToBlank[""+oid];
                   if(maybeBlank != null) {
-                      return({token:"blank", label:"_:"+oid});
+                      return({token:"blank", value:"_:"+oid});
                   } else {
                       throw("Null value for OID");
                   }

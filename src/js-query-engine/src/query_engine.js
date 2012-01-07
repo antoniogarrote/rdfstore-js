@@ -340,7 +340,7 @@ QueryEngine.QueryEngine.prototype.termCost = function(term, env) {
         var lexicalFormLiteral = Utils.lexicalFormLiteral(term, env);
         return(this.lexicon.resolveLiteralCost(lexicalFormLiteral));
     } else if(term.token === 'blank') {
-        var label = term.label;
+        var label = term.value;
         return this.lexicon.resolveBlankCost(label);
     } else if(term.token === 'var') {
         return (this.lexicon.oidCounter/3)
@@ -373,7 +373,7 @@ QueryEngine.QueryEngine.prototype.normalizeTerm = function(term, env, shouldInde
             return(oid);
         }
     } else if(term.token === 'blank') {
-        var label = term.label;
+        var label = term.value;
         var oid = env.blanks[label];
         if( oid != null) {
             return(oid);
@@ -650,11 +650,13 @@ QueryEngine.QueryEngine.prototype.executeQuery = function(syntaxTree, callback, 
                         if(aqt.template == null) {
                             aqt.template = {triplesContext: aqt.pattern};
                         }
-
                         var blankIdCounter = 1;
+			var toClear = [];
                         for(var i=0; i<result.length; i++) {
                             var bindings = result[i];
-                            var blankMap = {};
+			    for(var j=0; j<toClear.length; j++)
+				delete toClear[j].valuetmp;
+
                             for(var j=0; j<aqt.template.triplesContext.length; j++) {
                                 // fresh IDs for blank nodes in the construct template
                                 var components = ['subject', 'predicate', 'object'];
@@ -662,15 +664,14 @@ QueryEngine.QueryEngine.prototype.executeQuery = function(syntaxTree, callback, 
                                 for(var p=0; p<components.length; p++) {
                                     var component = components[p];
                                     if(tripleTemplate[component].token === 'blank') {
-                                        if(blankMap[tripleTemplate[component].label] != null) {
-                                            tripleTemplate[component].value = blankMap[tripleTemplate[component].label];
-                                        } else {
-                                            var blankId = "_:b"+blankIdCounter;
-                                            blankIdCounter++;
-                                            blankMap[tripleTemplate[component].label] = blankId;
-                                            tripleTemplate[component].value = blankId;
-                                        }
-                                    }
+					if(tripleTemplate[component].valuetmp && tripleTemplate[component].valuetmp != null) {
+					} else {
+					    var blankId = "_:b"+blankIdCounter;
+					    blankIdCounter++;
+					    tripleTemplate[component].valuetmp = blankId;
+					    toClear.push(tripleTemplate[component]);
+					}
+				    }
                                 }
                                 var s = RDFJSInterface.buildRDFResource(tripleTemplate.subject,bindings,that,queryEnv);
                                 var p = RDFJSInterface.buildRDFResource(tripleTemplate.predicate,bindings,that,queryEnv);
