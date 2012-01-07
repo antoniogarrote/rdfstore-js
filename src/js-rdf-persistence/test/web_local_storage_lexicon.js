@@ -6,11 +6,11 @@ exports.testParsingLiterals = function(test){
             var parsed = lexicon.parseLiteral(literal1);
             test.ok(parsed.value==="this is a test");
             var literal2 = '"this is another test"@en';
-            var parsed = lexicon.parseLiteral(literal2);
+	    parsed = lexicon.parseLiteral(literal2);
             test.ok(parsed.value==="this is another test");
             test.ok(parsed.lang==="en");
             var literal3 = '"this is another test"^^<http://sometypehere.org>';
-            var parsed = lexicon.parseLiteral(literal3);
+            parsed = lexicon.parseLiteral(literal3);
             test.ok(parsed.value==="this is another test");
             test.ok(parsed.type==="http://sometypehere.org");
             test.done();

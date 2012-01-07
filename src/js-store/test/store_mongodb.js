@@ -509,7 +509,7 @@ exports.testLoad3 = function(test) {
                 var blankIds = {};
 
                 for(var i=0; i<results.length; i++) {
-                     var blankId = results[i].s.value;
+                     var blankId = results[i].s.label;
                     blankIds[blankId] = true;
                 }
                 var counter = 0;

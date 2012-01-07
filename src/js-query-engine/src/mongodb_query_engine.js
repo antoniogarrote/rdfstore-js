@@ -600,7 +600,7 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.retrieve = function(oid) {
             } else if(tag === "l") {
                 return(this.parseLiteral(oid));
             } else if(tag === "b") {
-                return({token:"blank", value:"_:"+oid});
+                return({token:"blank", label:"_:"+oid});
             } else {
                 throw("Unknown OID tag "+tag);
             }
@@ -1010,8 +1010,166 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.executeSelectUnit = function(pro
     } else if(pattern.kind === "EMPTY_PATTERN") {
         // as an example of this case  check DAWG test case: algebra/filter-nested-2
         callback(true, []);
+    } else if(pattern.kind === "ZERO_OR_MORE_PATH") {
+	this.executeZeroOrMorePath(pattern, dataset, env, callback);
     } else {
         callback(false, "Cannot execute query pattern " + pattern.kind + ". Not implemented yet.");
+    }
+};
+
+MongodbQueryEngine.MongodbQueryEngine.prototype.executeZeroOrMorePath = function(pattern, dataset, env, callback) {
+    //console.log("EXECUTING ZERO OR MORE PATH");
+    //console.log("X");
+    //console.log(pattern.x);
+    //console.log("Y");
+    //console.log(pattern.y);
+    var projection = [];
+    var starProjection = false;
+    if(pattern.x.token === 'var') {
+	projection.push({token: 'variable',
+			 kind: 'var',
+			 value: pattern.x.value});
+    }
+    if(pattern.y.token === 'var') {
+	projection.push({token: 'variable',
+			 kind: 'var',
+			 value: pattern.y.value});
+    }
+
+    if(projection.length === 0) {
+	projection.push({"token": "variable", "kind": "*"});
+	starProjection = true;
+    }
+
+    if(pattern.x.token === 'var' && pattern.y.token === 'var') {
+	var that = this;
+	this.executeAndBGP(projection, dataset, pattern.path, env, function(success, bindings) {
+	    //console.log("BINDINGS "+bindings.length);
+	    //console.log(bindings);
+	    var acum = {};
+	    var results = [];
+	    var vx, intermediate, nextBinding, vxDenorm;
+	    var origVXName = pattern.x.value;
+	    var last = pattern.x;
+	    var nextPath = pattern.path;
+	    //console.log("VAR - VAR PATTERN");
+	    //console.log(nextPath.value);
+	    Utils.repeat(0, bindings.length, function(k,e) {
+		var floop = arguments.callee;
+	        vx = bindings[e._i][origVXName];
+	        if(acum[vx] == null) {
+	     	    vxDenorm = that.retrieve(vx);
+	     	    pattern.x = vxDenorm;
+	     	    //console.log("REPLACING");
+	     	    //console.log(last);
+	     	    //console.log("BY");
+	     	    //console.log(vxDenorm);
+	     	    //console.log(nextPath.value);
+	     	    pattern.path = that.abstractQueryTree.replace(nextPath, last, vxDenorm, env);
+	     	    nextPath = Utils.clone(pattern.path);
+	     	    that.executeZeroOrMorePath(pattern, dataset, env, function(success, intermediate){
+			//console.log("BACK EXECUTE_ZER_OR_MORE");
+	     		for(var j=0; j<intermediate.length; j++) {
+	     		    nextBinding = intermediate[j];
+	     		    nextBinding[origVXName] = vx;
+	     		    results.push(nextBinding)
+	     		}
+	     		last = vxDenorm;
+			k(floop,e);
+		    });
+	        } else {
+		    k(floop,e);
+		}
+	    }, function(e) {
+		//console.log("RETURNING VAR - VAR");
+		//console.log(results);
+		callback(true, results);
+	    });
+	});
+    } else if(pattern.x.token !== 'var' && pattern.y.token === 'var') {
+	var that = this;
+	var data = {finished:false,
+		    acum: {},
+		    initial: true,
+		    pending: [],
+		    bindings: null,
+		    nextBinding: null,
+		    collected: [],
+		    origVx: pattern.x,
+		    last: null };
+
+	var continueFunction = function(bindings,floop,k,e) {
+	    //console.log("BINDINGS!");
+	    //console.log(bindings);
+
+	    for(var i=0; i<bindings.length; i++) {
+		//console.log(bindings[i][pattern.y.value])
+		var value = bindings[i][pattern.y.value];
+		//console.log("VALUE:"+value);
+		//console.log(e.acum);
+		if(e.acum[value] !== true) {
+		    e.nextBinding = {};
+		    e.nextBinding[pattern.y.value] = value;
+		    e.collected.push(e.nextBinding);
+		    e.acum[value] = true;
+		    //console.log("PUSHIN!!!");
+		    //console.log(value);
+		    //console.log("-----------");
+		    e.pending.push(value);
+		}
+	    }
+	    //console.log("MUST CONTINUE? --> "+(e.initial == true || e.pending.length !== 0));
+	    //console.log(e.initial);
+	    //console.log(e.pending);
+	    //console.log(e.pending.length);
+	    k((e.initial == true || e.pending.length !== 0),floop,e);
+	};
+
+	Utils.while((data.initial == true || data.pending.length !== 0),
+		    function(k,e) {
+			var floop = arguments.callee;
+			//console.log("-- Iteration");
+			//console.log(e.pending);
+			//console.log(pattern.path.value[0]);
+			if(e.initial === true) {
+			    //console.log("INITIAL");
+			    //console.log(pattern.path.value[0]);
+			    that.executeAndBGP(projection, dataset, pattern.path, env, function(success, bindings){
+				//console.log("BINDINGS");
+				//console.log(bindings);
+				//console.log("SAVING LAST");
+				//console.log(pattern.x);
+				e.last = pattern.x;
+				e.initial = false;
+				continueFunction(bindings,floop,k,e);
+			    });
+			} else {
+			    //console.log(e.pending.length);
+			    var nextOid = e.pending.pop();
+			    //console.log("POPPING:"+nextOid);
+			    var value = that.retrieve(nextOid);
+			    var path = pattern.path; //Utils.clone(pattern.path);
+			    //console.log(path.value[0]);
+			    //console.log("REPLACING");
+			    //console.log(last);
+			    //console.log("BY");
+			    //console.log(value);
+			    path = that.abstractQueryTree.replace(path, e.last, value, env);
+			    //console.log(path.value[0]);
+			    that.executeAndBGP(projection, dataset, path, env, function(success, bindings){
+				e.last = value;
+				continueFunction(bindings,floop,k,e);
+			    });
+			}
+		    },
+		    function(e) {
+			//console.log("RETURNING TERM - VAR");
+			//console.log(e.collected);
+			callback(true, e.collected);
+		    },
+ 		    data);
+    } else {
+     	throw "Kind of path not supported!";
     }
 };
 
@@ -1055,10 +1213,13 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.executeUNION = function(projecti
 
 MongodbQueryEngine.MongodbQueryEngine.prototype.executeAndBGP = function(projection, dataset, patterns, env, callback) {
     var that = this;
-
     // @modified qp
+    //console.log(" EXECUTE AND BGP");
+    //console.log(patterns.value);
     QueryPlanAsync.executeAndBGPsDPSize(patterns.value, dataset, this, env, function(success,result){
         if(success) {
+	    //console.log("-- RESULTS");
+	    //console.log(result);
             result = QueryFilters.checkFilters(patterns, result, false, dataset, env, that);
             callback(true, result);
         } else {
@@ -1225,7 +1386,6 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.rangeQuery = function(quad, quer
         //console.log("RANGE QUERY:")
         //console.log(key);
         //console.log(new QuadIndexCommon.Pattern(key));
-        //console.log(key);
         that.range(new MongodbQueryEngine.Pattern(key),function(quads){
             //console.log("retrieved");
             //console.log(quads)
@@ -1926,8 +2086,7 @@ MongodbQueryEngine.Pattern = function(components) {
     for(var i=0; i<properties.length; i++) {
         var component = components[properties[i]];
         if(component.indexOf("u:")===0 ||
-           component.indexOf("l:")===0 ||
-           component.indexOf("b:")===0) {
+           component.indexOf("l:")===0) {
             key[properties[i]] = component;
         } else {
             key[properties[i]] = null;

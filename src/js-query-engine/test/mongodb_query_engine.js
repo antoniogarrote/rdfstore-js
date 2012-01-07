@@ -291,7 +291,7 @@ if(MongodbQueryEngine.mongodb === true) {
                                                     test.ok(results.length === 6);
                                                     for(var i=0; i<6; i++) {
                                                         test.ok(results[i].book.token == 'blank');
-                                                        test.ok(results[i].book.value != null);
+                                                        test.ok(results[i].book.label != null);
                                                     }
                                                     test.done();
                                                 });
@@ -1457,4 +1457,184 @@ if(MongodbQueryEngine.mongodb === true) {
         });
         });
     };
+
+   exports.testPath1 = function(test) {
+       var engine = new MongodbQueryEngine.MongodbQueryEngine();
+       engine.readConfiguration(function(){
+	   engine.clean(function(){
+	       var query = "PREFIX : <http://example/>\
+			    INSERT DATA {\
+			    :s1 :first 1 .\
+			    :s1 :rest :s2 .\
+			    :s2 :first 2 .\
+			    :s2 :rest :s3 .\
+			    :s3 :first 3 .\
+			    :s3 :rest :s4 .\
+			    :s4 :first 4 .\
+			    :s4 :rest :nil }";
+    
+	       engine.execute(query, function(success, result){
+		   engine.execute('PREFIX : <http://example/> SELECT ?data {  :s1 :rest* ?data }', function(success, results){
+		       test.ok(results.length === 4);
+		       var acum =[];
+		       for(var i=0; i<results.length; i++) {
+			   test.ok(results[i].data.token === 'uri');
+			   acum.push(results[i].data.value);
+		       }
+ 
+		       acum.sort();
+		       test.ok(acum[0] === 'http://example/nil');
+		       test.ok(acum[1] === 'http://example/s2');
+		       test.ok(acum[2] === 'http://example/s3');
+		       test.ok(acum[3] === 'http://example/s4');
+		       test.done();
+		   });
+	       });
+	   });
+       });
+   };
+ 
+   exports.testPath2 = function(test) {
+       var engine = new MongodbQueryEngine.MongodbQueryEngine();
+       engine.readConfiguration(function(){
+	   engine.clean(function(){
+	       var query = "PREFIX : <http://example/>\
+			    INSERT DATA {\
+			    :s1 :first 1 .\
+			    :s1 :rest :s2 .\
+			    :s2 :first 2 .\
+			    :s2 :rest :s3 .\
+			    :s3 :first 3 .\
+			    :s3 :rest :s4 .\
+			    :s4 :first 4 .\
+			    :s4 :rest :nil }";
+    
+	       engine.execute(query, function(success, result){
+		   engine.execute('PREFIX : <http://example/> SELECT ?data {  :s1 :rest/:rest*/:first ?data }', function(success, results){
+		       test.ok(results.length === 3);
+		       var acum = [];
+		       for(var i=0; i<results.length; i++) {
+			   acum.push(results[i].data.value);
+			   test.ok(results[i].data.token === 'literal');
+			   test.ok(results[i].data.type === 'http://www.w3.org/2001/XMLSchema#integer');
+		       }
+    
+		       acum.sort();
+		       test.ok(acum[0] === '2')
+		       test.ok(acum[1] === '3')
+		       test.ok(acum[2] === '4')
+		       test.done();
+		   });
+	       });
+	   });
+       });
+   };
+    
+   exports.testPath3 = function(test) {
+       var engine = new MongodbQueryEngine.MongodbQueryEngine();
+       engine.readConfiguration(function(){
+	   engine.clean(function(){
+	       var query = "PREFIX : <http://example/>\
+			    INSERT DATA {\
+			    :s1 :first 1 .\
+			    :s1 :rest :s2 .\
+			    :s2 :first 2 .\
+			    :s2 :rest :s3 .\
+			    :s3 :first 3 .\
+			    :s3 :rest :s4 .\
+			    :s4 :first 4 .\
+			    :s4 :rest :nil }";
+    
+	       engine.execute(query, function(success, result){
+		   engine.execute('PREFIX : <http://example/> SELECT ?data {  :s1 :rest/:restNonExistent*/:first ?data }', function(success, results){
+		       test.ok(results.length === 1);
+		       test.ok(results[0].data.value === '2');
+		    test.done();
+		   });
+	       });
+	   });
+       });
+   };
+    
+   exports.testPath4 = function(test) {
+       var engine = new MongodbQueryEngine.MongodbQueryEngine();
+       engine.readConfiguration(function(){
+	   engine.clean(function(){
+	       var query = "PREFIX : <http://example/>\
+			    INSERT DATA {\
+			    :list :elems :s1 .\
+			    :s1 :first 1 .\
+			    :s1 :rest :s2 .\
+			    :s2 :first 2 .\
+			    :s2 :rest :s3 .\
+			    :s3 :first 3 .\
+			    :s3 :rest :s4 .\
+			    :s4 :first 4 .\
+			    :s4 :rest :nil }";
+    
+	       engine.execute(query, function(success, result){
+		   engine.execute('PREFIX : <http://example/> SELECT ?data {  :s1 :rest*/:first ?data }', function(success, results){
+		       test.ok(results.length === 4);
+		       test.done();
+		   });
+	       });
+	   });
+       });
+   };
+    
+   exports.testPath5 = function(test) {
+       var engine = new MongodbQueryEngine.MongodbQueryEngine();
+       engine.readConfiguration(function(){
+	   engine.clean(function(){
+	       var query = "PREFIX : <http://example/>\
+			    INSERT DATA {\
+			    :list :elems :s1 .\
+			    :s1 :first 1 .\
+			    :s1 :rest :s2 .\
+			    :s2 :first 2 .\
+			    :s2 :rest :s3 .\
+			    :s3 :first 3 .\
+			    :s3 :rest :s4 .\
+			    :s4 :first 4 .\
+			    :s4 :rest :nil }";
+    
+	       engine.execute(query, function(success, result){
+		   engine.execute('PREFIX : <http://example/> SELECT ?data {  :list :elems/:rest* ?data }', function(success, results){
+		       test.ok(results.length === 4);
+		       test.done();
+		   });
+	       });
+	   });
+       });
+   };
+    
+    
+   exports.testPathFinal = function(test) {
+       var engine = new MongodbQueryEngine.MongodbQueryEngine();
+       engine.readConfiguration(function(){
+	   engine.clean(function(){
+	       var query = "PREFIX : <http://example/>\
+			    INSERT DATA {\
+			    :s1 :data (\"1\" \"2\" \"3\" \"4\")	 }";
+    
+	       engine.execute(query, function(success, result){
+		   engine.execute('PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT ?elems {  <http://example/s1> <http://example/data>/rdf:rest*/rdf:first ?elems }', function(success, results){
+		       test.ok(results.length === 4);
+		       var acum = [];
+		       for(var i=0; i<results.length; i++) {
+			   acum.push(results[i].elems.value);
+		       }
+    
+		       acum.sort();
+		       
+		       for(var i=0; i<acum.length; i++) {
+			   test.ok(acum[i] === ''+(i+1));
+		       }
+		       test.done();
+		   });
+	       });
+	   });
+       });
+   };
+
 }

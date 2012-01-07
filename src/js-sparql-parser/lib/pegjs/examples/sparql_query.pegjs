@@ -1293,17 +1293,121 @@ Verb "[71] Verb"
   [72]  	TriplesSameSubjectPath	  ::=  	VarOrTerm PropertyListNotEmptyPath |	TriplesNode PropertyListPath
 */
 TriplesSameSubjectPath "[72] TriplesSameSubjectPath"
-  = TriplesSameSubject
-// Property paths not supported yet :(
-//  = VarOrTerm PropertyListNotEmptyPath
-//  / TriplesNode PropertyListPath
+// This was used when property paths not supported yet :(
+//  = TriplesSameSubject
+  = WS* s:VarOrTerm WS* pairs:PropertyListNotEmptyPath {
+      var triplesContext = pairs.triplesContext;
+      var subject = s;
+      if(pairs.pairs) {
+        for(var i=0; i< pairs.pairs.length; i++) {
+            var pair = pairs.pairs[i];
+            var triple = null;
+	    if(pair[1].length != null)
+	      pair[1] = pair[1][0]
+            if(subject.token && subject.token==='triplesnodecollection') {
+                triple = {subject: subject.chainSubject[0], predicate: pair[0], object: pair[1]}
+                triplesContext.push(triple);
+                triplesContext = triplesContext.concat(subject.triplesContext);
+            } else {
+                triple = {subject: subject, predicate: pair[0], object: pair[1]}
+                triplesContext.push(triple);
+            }
+        }
+      }
+
+      var token = {};
+      token.token = "triplessamesubject";
+      token.triplesContext = triplesContext;
+      token.chainSubject = subject;
+
+      return token;
+  }
+    / WS* tn:TriplesNode WS* pairs:PropertyListPath {
+      var triplesContext = tn.triplesContext;
+      var subject = tn.chainSubject;
+
+      if(pairs.pairs) {
+        for(var i=0; i< pairs.pairs.length; i++) {
+            var pair = pairs.pairs[i];
+            if(pair[1].length != null)
+	      pair[1] = pair[1][0]
+
+            if(tn.token === "triplesnodecollection") {
+                for(var j=0; j<subject.length; j++) {
+                    var subj = subject[j];
+                    if(subj.triplesContext != null) {
+                        var triple = {subject: subj.chainSubject, predicate: pair[0], object: pair[1]}
+                        triplesContext.concat(subj.triplesContext);
+                    } else {
+                        var triple = {subject: subject[j], predicate: pair[0], object: pair[1]}
+                        triplesContext.push(triple);
+                    }
+                }
+            } else {
+                var triple = {subject: subject, predicate: pair[0], object: pair[1]}
+                triplesContext.push(triple);
+            }
+        }
+      }
+
+      var token = {};
+      token.token = "triplessamesubject";
+      token.triplesContext = triplesContext;
+      token.chainSubject = subject;
+
+      return token;
+
+    }
 
 
 /*
   [73]  	PropertyListNotEmptyPath	  ::=  	( VerbPath | VerbSimple ) ObjectList ( ';' ( ( VerbPath | VerbSimple ) ObjectList )? )*
 */
 PropertyListNotEmptyPath "[73] PropertyListNotEmptyPath"
-  = ( VerbPath / VerbSimple ) ObjectList ( ';' ( ( VerbPath / VerbSimple ) ObjectList)? )*
+    = v:( VerbPath / VerbSimple ) WS* ol:ObjectList rest:( WS* ';' WS* ( ( VerbPath / VerbSimple ) ObjectList)? )* {
+      token = {}
+      token.token = 'propertylist';
+      var triplesContext = [];
+      var pairs = [];
+      var test = [];
+
+      for( var i=0; i<ol.length; i++) {
+
+         if(ol[i].triplesContext != null) {
+             triplesContext = triplesContext.concat(ol[i].triplesContext);
+             if(ol[i].token==='triplesnodecollection' && ol[i].chainSubject.length != null) {
+                 pairs.push([v, ol[i].chainSubject[0]]);
+             } else {
+                 pairs.push([v, ol[i].chainSubject]);
+             }
+
+          } else {
+              pairs.push([v, ol[i]])
+          }
+
+      }
+
+
+      for(var i=0; i<rest.length; i++) {
+          var tok = rest[i][3];
+          var newVerb  = tok[0];
+          var newObjsList = tok[1] || [];
+
+          for(var j=0; j<newObjsList.length; j++) {
+           if(newObjsList[j].triplesContext != null) {
+              triplesContext = triplesContext.concat(newObjsList[j].triplesContext);
+             pairs.push([newVerb, newObjsList[j].chainSubject]);
+            } else {
+              pairs.push([newVerb, newObjsList[j]])
+            }
+          }
+      }
+
+      token.pairs = pairs;
+      token.triplesContext = triplesContext;
+
+      return token;
+}
 
 /*
   [74]  	PropertyListPath	  ::=  	PropertyListNotEmpty?
@@ -1318,10 +1422,11 @@ VerbPath "[75]"
   = p:Path {
       var path = {};
       path.token = 'path';
+      path.kind = 'element';
       path.value = p;
 
       return p;
-}
+  }
 
 /*
   [76]  	VerbSimple	  ::=  	Var
@@ -1341,26 +1446,80 @@ Path "[77] Path"
   [78]  	PathAlternative	  ::=  	PathSequence ( '|' PathSequence )*
 */
 PathAlternative "[78] PathAlternative"
-  = PathSequence ( '|' PathSequence)*
+    = first:PathSequence rest:( '|' PathSequence)* {
+	if(rest == null || rest.length === 0) {
+	    return first;
+	} else {
+	    var acum = [];
+	    for(var i=0; i<rest.length; i++)
+		acum.push(rest[1]);
+
+	    var path = {};
+	    path.token = 'path';
+	    path.kind = 'alternative';
+	    path.value = acum;
+
+	    return path;
+	}
+    }
 
 /*
   [79]  	PathSequence	  ::=  	PathEltOrInverse ( '/' PathEltOrInverse )*
 */
 PathSequence "[79] PathSequence"
-    = PathEltOrInverse ( '/' PathEltOrInverse)*
+    = first:PathEltOrInverse rest:( '/' PathEltOrInverse)* {
+	if(rest == null || rest.length === 0) {
+	    return first;
+	} else {
+	    var acum = [first];
+
+	    for(var i=0; i<rest.length; i++) 
+		acum.push(rest[i][1]);
+
+	    var path = {};
+	    path.token = 'path';
+	    path.kind = 'sequence';
+	
+	    path.value = acum;
+		
+	    return path;
+	}
+    }
 
 /*
   [80]  	PathElt	  ::=  	PathPrimary PathMod?
 */
 PathElt "[88] PathElt"
-  = PathPrimary PathMod?
+    = p:PathPrimary mod:PathMod? {
+	if(p.token && p.token != 'path' && mod == '') {
+	    return p;
+	} else if(p.token && p.token != path && mod != '') {
+	    var path = {};
+	    path.token = 'path';
+	    path.kind = 'element';
+	    path.value = p;
+	    path.modifier = mod;
+	    return path;
+	} else {
+	    p.modifier = mod;
+	    return p;
+	}
+    }
 
 /*
   [81]  	PathEltOrInverse	  ::=  	PathElt | '^' PathElt
 */
 
 PathEltOrInverse "[81] PathEltOrInverse"
-  = PathElt / '^' PathElt
+  = PathElt 
+    / '^' elt:PathElt {
+	var path = {};
+	path.token = 'path';
+	path.kind = 'inversePath';
+	path.value = elt;
+
+	return path;
+    }
 
 /*
   [82]  	PathMod	  ::=  	( '*' | '?' | '+' | '{' ( Integer ( ',' ( '}' | Integer '}' ) | '}' ) | ',' Integer '}' ) )
@@ -1372,7 +1531,14 @@ PathMod "[82] PathMod"
  [83]  	PathPrimary	  ::=  	( IRIref | 'a' | '!' PathNegatedPropertySet | '(' Path ')' )
 */
 PathPrimary "[83] PathPrimary"
-  = ( IRIref / 'a' / '!' PathNegatedPropertySet / '(' Path ')' )
+  =  IRIref 
+    / 'a' {
+	return{token: 'uri', prefix:null, suffix:null, value:"http://www.w3.org/1999/02/22-rdf-syntax-ns#type"}
+    }
+    / '!' PathNegatedPropertySet 
+    / '(' p:Path ')' {
+	return p;
+    }
 
 /*
   [84]	PathNegatedPropertySet	  ::=	( PathOneInPropertySet | '(' ( PathOneInPropertySet ( '|' PathOneInPropertySet )* )? ')' )

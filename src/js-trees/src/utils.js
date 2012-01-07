@@ -21,6 +21,10 @@ Utils.recur = function(c){
     } 
 };
 
+Utils.clone = function(o) {
+    return JSON.parse(JSON.stringify(o));
+};
+
 Utils.shuffle = function(o){ //v1.0
     for(var j, x, i = o.length; i; j = parseInt(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x){};
     return o;
@@ -63,7 +67,7 @@ Utils.repeat = function(c,max,floop,fend,env) {
         floop(function(floop,env){
             // avoid stack overflow
             // deadly hack
-            Utils.recur(function(){ Utils.repeat(c+1, max, floop, fend, env) });
+            Utils.recur(function(){ Utils.repeat(c+1, max, floop, fend, env); });
         },env);
     } else {
         fend(env);
@@ -104,7 +108,7 @@ Utils.seq = function() {
         }, function(){
             callback();
         });
-    }
+    };
 };
 
 
@@ -215,12 +219,12 @@ Utils.parseISO8601Components = function (str) {
     minutes = Number(d[8]);
     seconds = Number(d[10]);
 
-    if(d[12]) { millisecs = Number("0." + d[12]) * 1000 }
+    if(d[12]) { millisecs = Number("0." + d[12]) * 1000; }
 
     if(d[13]==="Z") {
         timezone = 0;
     } else if (d[14]) {
-        var timezone = 0;
+        timezone = 0;
         if(d[17]) {
             timezone = Number(d[17]);
         }
@@ -347,7 +351,7 @@ Utils.lexicalFormBaseUri = function(term, env) {
         }
     } else {
         //console.log(" - URI is not prefixed");
-        uri = term.value
+        uri = term.value;
     }
 
     if(uri===null) {
@@ -376,7 +380,7 @@ Utils.lexicalFormTerm = function(term, ns) {
         var label = '_:'+term.label;
         return {'blank': label};
     } else {
-        callback(false, 'Token of kind '+term.token+' cannot transformed into its lexical form');
+	throw "Error, cannot get lexical form of unknown token: "+term.token;
     }
 };
 

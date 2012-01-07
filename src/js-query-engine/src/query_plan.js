@@ -290,6 +290,19 @@ QueryPlan.variablesIntersectionBindings = function(bindingsa, bindingsb) {
 };
 
 QueryPlan.areCompatibleBindings = function(bindingsa, bindingsb) {
+    var foundSome = false;
+    for(var variable in bindingsa) {
+        if(bindingsb[variable]!=null && (bindingsb[variable] != bindingsa[variable])) {
+            return false;
+        } else if(bindingsb[variable] == bindingsa[variable]){
+	    foundSome = true;
+	}
+    }
+
+    return foundSome;
+};
+
+QueryPlan.areCompatibleBindingsLeftOuterJoin = function(bindingsa, bindingsb) {
     for(var variable in bindingsa) {
         if(bindingsb[variable]!=null && (bindingsb[variable] != bindingsa[variable])) {
             return false;
@@ -298,7 +311,6 @@ QueryPlan.areCompatibleBindings = function(bindingsa, bindingsb) {
 
     return true;
 };
-
 
 QueryPlan.mergeBindings = function(bindingsa, bindingsb) {
     var merged = {};
@@ -333,7 +345,7 @@ QueryPlan.joinBindings = function(bindingsa, bindingsb) {
 QueryPlan.augmentMissingBindings = function(bindinga, bindingb) {
     for(var pb in bindingb) {
         if(bindinga[pb] == null) {
-            bindinga[pb] = null
+            bindinga[pb] = null;
         }
     }
     return bindinga;
@@ -373,7 +385,7 @@ QueryPlan.leftOuterJoinBindings = function(bindingsa, bindingsb) {
         var matched = false;
         for(var j=0; j<bindingsb.length; j++) {
             var bindingb = bindingsb[j];
-            if(QueryPlan.areCompatibleBindings(bindinga, bindingb)){
+            if(QueryPlan.areCompatibleBindingsLeftOuterJoin(bindinga, bindingb)){
                 matched = true;
                 result.push(QueryPlan.mergeBindings(bindinga, bindingb));
             }

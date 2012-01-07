@@ -13,7 +13,7 @@ QueryPlanAsync.variablesInBGP = function(bgp) {
     }
 
     var components =  bgp.value || bgp;
-    var variables  = [];
+    variables  = [];
     for(comp in components) {
         if(components[comp] && components[comp].token === "var") {
             variables.push(components[comp].value);
@@ -225,7 +225,7 @@ QueryPlanAsync.executeBushyTree = function(treeNode, dataset, queryEngine, env, 
                     } else {
                         callback(false, null);
                     }
-                })
+                });
             } else {
                 callback(false, null);
             }
@@ -269,12 +269,14 @@ QueryPlanAsync.executeAndBGPsDPSize = function(allBgps, dataset, queryEngine, en
             // Building plans of size 1
             for(var i=0; i<bgps.length; i++) {
                 var vars = [];
+		
+		delete bgps[i]['variables'];
                 for(var comp in bgps[i]) {
                     if(comp != '_cost') {
                         if(bgps[i][comp].token === 'var') {
-                            vars.push(bgps[i][comp].value)
+                            vars.push(bgps[i][comp].value);
                         } else if(bgps[i][comp].token === 'blank') {
-                            vars.push(bgps[i][comp].label)
+                            vars.push(bgps[i][comp].label);
                         }
                     }
                 }
@@ -378,12 +380,15 @@ QueryPlanAsync.executeAndBGPsDPSize = function(allBgps, dataset, queryEngine, en
         // now execute the Bushy trees and perform
         // cross products between groups
         var acum = null;
-
+	//console.log("GROUP RESULTS");
+	//console.log(groupResults);
         Utils.repeat(0, groupResults.length, function(k, kenv) {
 
             var tree = groupResults[kenv._i];
             var floop = arguments.callee;
-           
+
+	    //console.log("EXECUTING BUSHY TREE");
+	    //console.log(tree);
             QueryPlanAsync.executeBushyTree(tree, dataset, queryEngine, env, function(success, result) {
                 if(success) {
                     if(acum == null) {
@@ -681,7 +686,7 @@ QueryPlanAsync.areCompatibleBindings = function(bindingsa, bindingsb) {
     for(var variable in bindingsa) {
         if(bindingsb[variable]!=null && (bindingsb[variable] != bindingsa[variable])) {
             return false;
-        }
+	}
     }
 
     return true;

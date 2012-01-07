@@ -220,7 +220,7 @@ WebLocalStorageLexicon.Lexicon.prototype.registerBlank = function(label) {
 
 WebLocalStorageLexicon.Lexicon.prototype.resolveBlank = function(label) {
     var oid = this.oidCounter;
-    this.oidCounter++
+    this.oidCounter++;
     return(""+oid);
 };
 
@@ -333,7 +333,7 @@ WebLocalStorageLexicon.Lexicon.prototype.retrieve = function(oid) {
               } else {
                   var maybeBlank = this.OIDToBlank[""+oid];
                   if(maybeBlank!=null) {
-                      return({token:"blank", value:"_:"+oid});
+                      return({token:"blank", label:"_:"+oid});
                   } else {
                       // uri
                       maybeUri = this.storage.getItem(this.pointer("OIDToUri","u"+oid));
@@ -360,7 +360,7 @@ WebLocalStorageLexicon.Lexicon.prototype.retrieve = function(oid) {
                               maybeBlank = this.storage.getItem(this.pointer("OIDToBlank",""+oid));
                               if(maybeBlank != null) {
                                   this.OIDToBlank[""+oid] = true;
-                                  return({token:"blank", value:"_:"+oid});
+                                  return({token:"blank", label:"_:"+oid});
                               } else {
                                   throw("Null value for OID");
                               }

@@ -205,7 +205,7 @@ Lexicon.Lexicon.prototype.retrieve = function(oid) {
               } else {
                   var maybeBlank = this.OIDToBlank[""+oid];
                   if(maybeBlank != null) {
-                      return({token:"blank", value:"_:"+oid});
+                      return({token:"blank", label:"_:"+oid});
                   } else {
                       throw("Null value for OID");
                   }

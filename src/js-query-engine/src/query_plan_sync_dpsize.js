@@ -10,7 +10,7 @@ QueryPlanDPSize.variablesInBGP = function(bgp) {
     }
 
     var components =  bgp.value || bgp;
-    var variables  = [];
+    variables  = [];
     for(comp in components) {
         if(components[comp] && components[comp].token === "var") {
             variables.push(components[comp].value);
@@ -229,7 +229,7 @@ QueryPlanDPSize.executeAndBGPsDPSize = function(allBgps, dataset, queryEngine, e
         //console.log("NEW GROUP!!");
         //console.log(bgps);
         var costFactor = 1;
-        bgpas = queryEngine.computeCosts(bgps,env);
+	var bgpas = queryEngine.computeCosts(bgps,env);
 
         //console.log("COMPUTED COSTS:");
         //console.log(bgps);
@@ -251,9 +251,9 @@ QueryPlanDPSize.executeAndBGPsDPSize = function(allBgps, dataset, queryEngine, e
             for(var comp in bgps[i]) {
                 if(comp != '_cost') {
                     if(bgps[i][comp].token === 'var') {
-                        vars.push(bgps[i][comp].value)
+                        vars.push(bgps[i][comp].value);
                     } else if(bgps[i][comp].token === 'blank') {
-                        vars.push(bgps[i][comp].label)
+                        vars.push(bgps[i][comp].label);
                     }
                 }
             }
@@ -360,6 +360,8 @@ QueryPlanDPSize.executeAndBGPsDPSize = function(allBgps, dataset, queryEngine, e
 
     for(var g=0; g<groupResults.length; g++) {
         var tree = groupResults[g];
+	//console.log("\n\n\nEXECUTING:");
+	//console.log(tree);
         var result = QueryPlanDPSize.executeBushyTree(tree, dataset, queryEngine, env);
         if(acum == null) {
             acum = result;
@@ -481,6 +483,20 @@ QueryPlanDPSize.areCompatibleBindings = function(bindingsa, bindingsb) {
     return true;
 };
 
+//QueryPlanDPSize.areCompatibleBindingsStrict = function(bindingsa, bindingsb) {
+//    var foundSome = false;
+//    for(var variable in bindingsa) {
+// 	if(bindingsb[variable]!=null && (bindingsb[variable] != bindingsa[variable])) {
+// 	    return false;
+// 	} else if(bindingsb[variable] == bindingsa[variable]){
+// 	    foundSome = true;
+// 	}
+//    }
+//     
+//    return foundSome;
+//};
+
+
 
 // @used
 QueryPlanDPSize.mergeBindings = function(bindingsa, bindingsb) {
@@ -556,7 +572,6 @@ QueryPlanDPSize.joinBindings = function(bindingsa, bindingsb) {
             }
         }
     }
-
     return result;
 };
 
@@ -564,7 +579,7 @@ QueryPlanDPSize.joinBindings = function(bindingsa, bindingsb) {
 QueryPlanDPSize.augmentMissingBindings = function(bindinga, bindingb) {
     for(var pb in bindingb) {
         if(bindinga[pb] == null) {
-            bindinga[pb] = null
+            bindinga[pb] = null;
         }
     }
     return bindinga;
@@ -600,6 +615,10 @@ QueryPlanDPSize.augmentMissingBindings = function(bindinga, bindingb) {
 // @used
 QueryPlanDPSize.leftOuterJoinBindings = function(bindingsa, bindingsb) {
     var result = [];
+    // strict was being passes ad an argument
+    //var compatibleFunction = QueryPlanDPSize.areCompatibleBindings;
+    //if(strict === true)
+    // 	compatibleFunction = QueryPlanDPSize.areCompatibleBindingsStrict;
 
     for(var i=0; i< bindingsa.length; i++) {
         var bindinga = bindingsa[i];

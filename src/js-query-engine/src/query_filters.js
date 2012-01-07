@@ -64,7 +64,7 @@ QueryFilters.boundVars = function(filterExpr) {
         } else if(expressionType == 'additiveexpression') {
             var acum = QueryFilters.boundVars(filterExpr.summand);
             for(var i=0; i<filterExpr.summands.length; i++) {
-                acum = acum.concat(QueryFilters.boundVars(filterExpr.summands[i].expression))
+                acum = acum.concat(QueryFilters.boundVars(filterExpr.summands[i].expression));
             }
 
             return acum;
@@ -396,7 +396,7 @@ QueryFilters.RDFTermEquality = function(v1, v2, queryEngine, env) {
     } else if(v1.token === 'uri' && v2.token === 'uri') {
         return Utils.lexicalFormBaseUri(v1, env) == Utils.lexicalFormBaseUri(v2, env);
     } else if(v1.token === 'blank' && v2.token === 'blank') {
-        return v1.value == v2.value;
+        return v1.label == v2.label;
     } else {
         return false;
     }
@@ -963,7 +963,7 @@ QueryFilters.runTotalGtFunction = function(op1,op2) {
         // one of the literals must have type/lang and the othe may not have them
         return QueryFilters.ebvBoolean(""+op1.value+op1.type+op1.lang > ""+op2.value+op2.type+op2.lang);
     } else if(op1.token && op1.token === 'blank' && op2.token && op2.token === 'blank') {    
-        return QueryFilters.ebvBoolean(op1.value > op2.value);
+        return QueryFilters.ebvBoolean(op1.label > op2.label);
     } else if(op1.value && op2.value) {
         return QueryFilters.ebvBoolean(op1.value > op2.value);
     } else {

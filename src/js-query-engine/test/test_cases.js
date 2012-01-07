@@ -10,7 +10,7 @@ exports.testBasePrefix1 = function(test) {
             var engine = new QueryEngine.QueryEngine({backend: backend,
                                                       lexicon: lexicon});      
             engine.execute('PREFIX ns: <http://example.org/ns#>  PREFIX x:  <http://example.org/x/> PREFIX z:  <http://example.org/x/#> INSERT DATA { x:x ns:p  "d:x ns:p" . x:x x:p   "x:x x:p" . z:x z:p   "z:x z:p" . }', function(success, result){
-                console.log("\r\n\r\n")
+                console.log("\r\n\r\n");
                 engine.execute('BASE <http://example.org/x/> PREFIX : <> SELECT * WHERE { :x ?p ?v }', function(success, results){
                     test.ok(success === true);
                     test.ok(results.length === 2);
@@ -5471,10 +5471,10 @@ exports.testAlgebraOpt2 = function(test) {
                                         }
                                     });
                                     
-                                    test.ok(results[0].v.value === "1")
-                                    test.ok(results[0].w.value === "3")
-                                    test.ok(results[1].v.value === "1")
-                                    test.ok(results[1].w.value === "4")
+                                    test.ok(results[0].v.value === "1");	
+                                    test.ok(results[0].w.value === "3");	
+                                    test.ok(results[1].v.value === "1");	
+                                    test.ok(results[1].w.value === "4");	
                                     test.done();
                 });
             });
@@ -5854,6 +5854,7 @@ exports.testAlgebraFilterScope1 = function(test) {
         });
     });
 }
+
 
 exports.testAlgebraFilterScope2 = function(test) {
     new Lexicon.Lexicon(function(lexicon){

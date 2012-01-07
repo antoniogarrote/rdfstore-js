@@ -915,9 +915,135 @@ QueryEngine.QueryEngine.prototype.executeSelectUnit = function(projection, datas
     } else if(pattern.kind === "EMPTY_PATTERN") {
         // as an example of this case  check DAWG test case: algebra/filter-nested-2
         return [];
+    } else if(pattern.kind === "ZERO_OR_MORE_PATH") {
+	return this.executeZeroOrMorePath(pattern, dataset, env);
     } else {
         console.log("Cannot execute query pattern " + pattern.kind + ". Not implemented yet.");
         return null;
+    }
+};
+
+QueryEngine.QueryEngine.prototype.executeZeroOrMorePath = function(pattern, dataset, env) {
+    //console.log("EXECUTING ZERO OR MORE PATH");
+    //console.log("X");
+    //console.log(pattern.x);
+    //console.log("Y");
+    //console.log(pattern.y);
+    var projection = [];
+    var starProjection = false;
+    if(pattern.x.token === 'var') {
+	projection.push({token: 'variable',
+			 kind: 'var',
+			 value: pattern.x.value});
+    }
+    if(pattern.y.token === 'var') {
+	projection.push({token: 'variable',
+			 kind: 'var',
+			 value: pattern.y.value});
+    }
+
+    if(projection.length === 0) {
+	projection.push({"token": "variable", "kind": "*"});
+	starProjection = true;
+    }
+
+    //console.log("COMPUTED PROJECTION");
+    //console.log(projection);
+
+
+    if(pattern.x.token === 'var' && pattern.y.token === 'var') {
+	var bindings = this.executeAndBGP(projection, dataset, pattern.path, env);
+	//console.log("BINDINGS "+bindings.length);
+	//console.log(bindings);
+	var acum = {};
+	var results = [];
+	var vx, intermediate, nextBinding, vxDenorm;
+	var origVXName = pattern.x.value;
+	var last = pattern.x;
+	var nextPath = pattern.path;
+	//console.log("VAR - VAR PATTERN");
+	//console.log(nextPath.value);
+	for(var i=0; i<bindings.length; i++) {
+	    vx = bindings[i][origVXName];
+	    if(acum[vx] == null) {
+		vxDenorm = this.lexicon.retrieve(vx);
+		pattern.x = vxDenorm;
+		//console.log("REPLACING");
+		//console.log(last);
+		//console.log("BY");
+		//console.log(vxDenorm);
+		//console.log(nextPath.value);
+		pattern.path = this.abstractQueryTree.replace(nextPath, last, vxDenorm, env);
+		nextPath = Utils.clone(pattern.path);
+		intermediate = this.executeZeroOrMorePath(pattern, dataset, env);
+		for(var j=0; j<intermediate.length; j++) {
+		    nextBinding = intermediate[j];
+		    nextBinding[origVXName] = vx;
+		    results.push(nextBinding)
+		}
+		last = vxDenorm;
+	    }
+	}
+
+	//console.log("RETURNING VAR - VAR");
+	return results;
+    } else if(pattern.x.token !== 'var' && pattern.y.token === 'var') {
+	var finished;
+	var acum = {};
+	var initial = true;
+	var pending = [];
+	var bindings,nextBinding;
+	var collected = [];
+	var origVx = pattern.x;
+	var last;
+
+	while(initial == true || pending.length !== 0) {
+	    //console.log("-- Iteration");
+	    //console.log(pattern.path.value[0]);
+	    if(initial === true) {
+		bindings = this.executeAndBGP(projection, dataset, pattern.path, env);
+		//console.log("SAVING LAST");
+		//console.log(pattern.x);
+		last = pattern.x;
+		initial = false;
+	    } else {
+		var nextOid = pending.pop();
+		//console.log("POPPING:"+nextOid);
+		var value = this.lexicon.retrieve(nextOid);
+		var path = pattern.path; //Utils.clone(pattern.path);
+		//console.log(path.value[0]);
+		//console.log("REPLACING");
+		//console.log(last);
+		//console.log("BY");
+		//console.log(value);
+		path = this.abstractQueryTree.replace(path, last, value, env);
+		//console.log(path.value[0]);
+		bindings = this.executeAndBGP(projection, dataset, path, env);
+		last = value;
+	    }
+
+
+	    //console.log("BINDINGS!");
+	    //console.log(bindings);
+
+	    for(var i=0; i<bindings.length; i++) {
+		//console.log(bindings[i][pattern.y.value])
+		var value = bindings[i][pattern.y.value];
+		//console.log("VALUE:"+value);
+		if(acum[value] !== true) {
+		    nextBinding = {};
+		    nextBinding[pattern.y.value] = value;
+		    collected.push(nextBinding);
+		    acum[value] = true;
+		    pending.push(value);
+		}
+	    }
+	}
+	//console.log("RETURNING TERM - VAR");
+	//console.log(collected);
+	return collected;
+    } else {
+	throw "Kind of path not supported!";
     }
 };
 
@@ -968,21 +1094,25 @@ QueryEngine.QueryEngine.prototype.executeLEFT_JOIN = function(projection, datase
     var that = this;
     var sets = [];
 
+    //console.log("SET QUERY 1");
+    //console.log(setQuery1.value);
     set1 = that.executeSelectUnit(projection, dataset, setQuery1, env);
     if(set1==null) {
         return null;
     }
      
+    //console.log("SET QUERY 2");
+    //console.log(setQuery2);
     set2 = that.executeSelectUnit(projection, dataset, setQuery2, env);
     if(set2==null) {
         return null;
     }
 
-    
-    var result = QueryPlan.leftOuterJoinBindings(set1, set2);
-    //console.log("SETS:")
+
+    //console.log("\nLEFT JOIN SETS:")
     //console.log(set1)
     //console.log(set2)
+    var result = QueryPlan.leftOuterJoinBindings(set1, set2);
     //console.log("---")
     //console.log(result);
 
@@ -1040,7 +1170,7 @@ QueryEngine.QueryEngine.prototype.executeLEFT_JOIN = function(projection, datase
 
                 }
             }
-            
+
         return acum;
     } else {
         return bindings;
@@ -1067,6 +1197,10 @@ QueryEngine.QueryEngine.prototype.executeJOIN = function(projection, dataset, pa
         return null;
     }
 
+    //console.log("JOINING");
+    //console.log(set1);
+    //console.log("-----");
+    //console.log(set2);
     var result = QueryPlan.joinBindings(set1, set2);
     result = QueryFilters.checkFilters(patterns, result, false, dataset, env, that);
     return result;

@@ -91,7 +91,56 @@ var load = function(data, store, cb){
     parser.parseBuffer();
 };
 
-var ontology = "http://test.com/test#"
+var check = function(data, store, cb){
+    console.log("*** checking");
+    var parser = raptor.newParser("rdfxml");
+
+    parser.on('statement', function(statement) {
+        var query = " { ";
+        if(statement.subject.type === 'uri') {
+	    query = query + " <"+statement.subject.value+">";
+	} else {
+	    query = query + " "+statement.subject.value+" ";
+	}
+
+	query = query + "<"+statement.predicate.value+">";
+
+        if(statement.object.type === 'uri') {
+	    query = query + " <"+statement.object.value+">";
+	} else if(statement.object.type === 'literal') {
+	    query = query + " \""+statement.object.value+"\"";
+	} else {
+	    query = query + " "+statement.object.value;
+	}
+	
+	query = " select * "+query+" }";
+
+	store.execute(query, function(success, res) {
+	    if(success === false) {
+		console.log("QUERY FAILED");
+		console.log(query);
+	    } else {
+		if(res.length != 1) {
+		    console.log("FOUND "+res.length+" results for query '"+query+"'");
+		}else {
+		    //console.log(".");
+		}
+	    } 
+	});
+    });
+
+    parser.on('end', function(){
+	console.log("===================\nFINISHED!");
+	cb();
+    });
+
+    //parser.parseStart(webidUri);
+    parser.parseStart("http://test.com/something");
+    parser.parseBuffer(new Buffer(data));
+    parser.parseBuffer();
+};
+
+var ontology = "http://test.com/something#";
 var queries = {
     "query0": "SELECT * { ?s ?p ?o }",
 
@@ -340,32 +389,37 @@ var queries = {
 
 };
 
-rdfstore.create({engine:'mongodb', name:'test',overwrite:true},function(store){
+rdfstore.create({engine:'mongodb', name:'test',overwrite:false},function(store){
     var files = fs.readdirSync("./data/");
-    files = [files[0], files[1], files[2], files[3], files[4], files[5]];
+    files = [files[0], files[1], files[2], files[3]];
 
     Utils.repeat(0, files.length, function(k,env){
-        var floop = arguments.callee;
-        fs.readFile("./data/"+files[env._i],function(err,data){
-            if(err) 
-                throw new Exception("ERROR!!");
+	var floop = arguments.callee;
+	console.log("*** LOADING FILE "+env._i);
+	fs.readFile("./data/"+files[env._i],function(err,data){
+	    if(err) 
+		throw new Exception("ERROR!!");
      
-            load(data, store, function() { 
-                k(floop,env);
-            })
-        })
+	    load(data, store, function() { 
+		check(data,store, function() {
+		    k(floop,env);
+		});
+	    });
+	});
     },
     function() {
         console.log("TOTAL TRIPLES LOADED "+grandTotal);
         console.log("==========================");
 
-        fs.writeFile("./json/data.json", JSON.stringify(totalJSON));
+        //fs.writeFile("./json/data.json", JSON.stringify(totalJSON));
 
         var queryNames = [];
         for(var query in queries) {
             queryNames.push(query);
         }
+	//queryNames = ["query1", "query3", "query4"];
 
+	/*
         Utils.repeat(0, queryNames.length, function(kq, envq) {
             var qfloop = arguments.callee;
             var queryName = queryNames[envq._i];
@@ -373,6 +427,8 @@ rdfstore.create({engine:'mongodb', name:'test',overwrite:true},function(store){
             console.log(queryName);
 
             var start = new Date().getTime();
+            console.log("QUERY");
+            console.log(queries[queryName]);
             store.execute(queries[queryName], function(succ, results) {
                 var end = new Date().getTime();
                 var ellapsed = (end - start)/1000;
@@ -382,7 +438,7 @@ rdfstore.create({engine:'mongodb', name:'test',overwrite:true},function(store){
                     //    console.log(results[i]);
                     //}
                     //console.log("==========================");
-                    //console.log(results.length);
+                    console.log(results.length);
                     console.log("ellpased: "+ellapsed);
                 } else {
                     console.log("ERROR!");
@@ -393,5 +449,8 @@ rdfstore.create({engine:'mongodb', name:'test',overwrite:true},function(store){
         }, function() {
             console.log("*** Finished");
         });
+	*/
+
+	process.exit(0);
     });
 });

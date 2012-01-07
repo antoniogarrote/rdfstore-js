@@ -7,28 +7,31 @@ try {
     sys = require("sys");
 }
 var aqt = new AbstractQueryTree.AbstractQueryTree();
+
+
 exports.example1 = function(test) {
     var query = "SELECT * { ?s ?p ?o }";
 
-    var query = aqt.parseQueryString(query);
+    query = aqt.parseQueryString(query);
     var result = aqt.parseExecutableUnit(query.units[0]);
     test.ok(result.pattern.kind==='BGP');
     test.ok(result.pattern.value.length === 1);
 
     test.done();
-}
+};
 
 
 exports.example2 = function(test) {
     var query = "SELECT * { ?s :p1 ?v1 ; :p2 ?v2 }";
 
-    var query = aqt.parseQueryString(query);
+    query = aqt.parseQueryString(query);
     var result = aqt.parseSelect(query.units[0]);
+    //console.log(sys.inspect(result,true,20));
     test.ok(result.pattern.kind==='BGP');
     test.ok(result.pattern.value.length === 2);
 
     test.done();
-}
+};
 
 exports.example3 = function(test) {
     var query = "SELECT * { { ?s :p1 ?v1 } UNION {?s :p2 ?v2 } }";
@@ -43,7 +46,7 @@ exports.example3 = function(test) {
     test.ok(result.pattern.value[1].value.length === 1);
 
     test.done();
-}
+};
 
 exports.example4 = function(test) {
     var query = "SELECT * { { ?s :p1 ?v1 } UNION {?s :p2 ?v2 } UNION {?s :p3 ?v3 } }";
@@ -70,7 +73,7 @@ exports.example4 = function(test) {
     test.ok(result.pattern.value[0].value[1].value[0].object.value === 'v2');
 
     test.done();
-}
+};
 
 
 exports.example5 = function(test) {
@@ -87,7 +90,7 @@ exports.example5 = function(test) {
     test.ok(result.pattern.rvalue.kind === "BGP");
     test.ok(result.pattern.rvalue.value.length === 1);
     test.done();
-}
+};
 
 
 exports.example6 = function(test) {
@@ -102,7 +105,7 @@ exports.example6 = function(test) {
     test.ok(result.pattern.lvalue.rvalue.kind === "BGP");
     test.ok(result.pattern.rvalue.kind === "BGP");
     test.done();
-}
+};
 
 exports.example7 = function(test) {
     var query = "SELECT * { ?s :p1 ?v1 OPTIONAL {?s :p2 ?v2 FILTER(?v1<3) } }";
@@ -116,7 +119,7 @@ exports.example7 = function(test) {
     test.ok(result.pattern.rvalue.kind === "BGP");
 
     test.done();
-}
+};
 
 exports.example8 = function(test) {
     var query = "SELECT * { {?s :p1 ?v1} UNION {?s :p2 ?v2} OPTIONAL {?s :p3 ?v3} }";
@@ -129,7 +132,7 @@ exports.example8 = function(test) {
     test.ok(result.pattern.rvalue.kind === "BGP");
 
     test.done();
-}
+};
 
 exports.examples9 = function(test) {
     var query = "PREFIX foaf:    <http://xmlns.com/foaf/0.1/>\
@@ -147,7 +150,7 @@ exports.examples9 = function(test) {
     test.ok(result.pattern.rvalue.kind === "BGP");
 
     test.done();
-}
+};
 
 
 exports.exampleCollect1 = function(test) {
@@ -159,7 +162,7 @@ exports.exampleCollect1 = function(test) {
     
     test.ok(patterns.length === 1);
     test.done();
-}
+};
 
 
 exports.exampleCollect2 = function(test) {
@@ -173,7 +176,7 @@ exports.exampleCollect2 = function(test) {
     test.ok(patterns.length === 2);
 
     test.done();
-}
+};
 
 exports.exampleCollect9 = function(test) {
     var query = "PREFIX foaf:    <http://xmlns.com/foaf/0.1/>\
@@ -191,7 +194,7 @@ exports.exampleCollect9 = function(test) {
     test.ok(patterns.length === 4);    
 
     test.done();
-}
+};
 
 
 
@@ -207,7 +210,7 @@ exports.exampleCollectG1 = function(test) {
     test.ok(patterns[0].graph != null);    
 
     test.done();
-}
+};
 
 exports.exampleCollectG2 = function(test) {
     var query = "PREFIX : <http://example/>\
@@ -221,7 +224,7 @@ exports.exampleCollectG2 = function(test) {
     test.ok(patterns[0].graph.value === "http://test.com/graph1");    
 
     test.done();
-}
+};
 
 exports.bind1 = function(test) {
     var query = "SELECT * { ?s :p1 ?v1 OPTIONAL {?s :p2 ?v2 FILTER(?v1<3) } }";
@@ -240,7 +243,7 @@ exports.bind1 = function(test) {
     test.ok(result.pattern.filter[0].value.op1.value.value === 'http://test.com/somevalue');    
     test.ok(result.pattern.lvalue.value[0].object.value === 'http://test.com/somevalue');    
     test.done();
-}
+};
 
 
 exports.bind2 = function(test) {
@@ -263,7 +266,7 @@ exports.bind2 = function(test) {
     test.ok(result.pattern.filter[0].value.operands[1].op2.factors[0].expression.value.value === 'http://test.com/somevalue');    
     test.ok(result.pattern.filter[0].value.operands[2].args[0].value.value === 'http://test.com/somevalue');    
     test.done();
-}
+};
 
 exports.parsingBlankSpaceInURI = function(test) {
     var query = "SELECT * { ?s :p1 ?v1 OPTIONAL {?s :p2 <http://prauw.cs.vu.nl/foaf/Jan Top.rdf> FILTER(?v1<3 && (?v1+?v1) < (5*?v1) && STR(?v1)) } }";
@@ -285,4 +288,24 @@ exports.parsingBlankSpaceInURI = function(test) {
     test.ok(result.pattern.filter[0].value.operands[1].op2.factors[0].expression.value.value === 'http://test.com/somevalue');    
     test.ok(result.pattern.filter[0].value.operands[2].args[0].value.value === 'http://test.com/somevalue');    
     test.done();
-}
+};
+
+exports.simplePath1 = function(test) {
+    var query = "SELECT * { ?s :p1/:p2/:p3 ?v1 }";
+
+    var query = aqt.parseQueryString(query);
+    var result = aqt.parseSelect(query.units[0]);
+
+    test.ok(result.pattern.kind==='BGP');
+    test.ok(result.pattern.value.length === 3);
+    test.ok(result.pattern.value[0].subject.value === 's');
+    test.ok(result.pattern.value[0].object.value.indexOf("fresh:") === 0);
+    test.ok(result.pattern.value[0].predicate.suffix === 'p1');
+    test.ok(result.pattern.value[0].object.value === result.pattern.value[1].subject.value);
+    test.ok(result.pattern.value[1].object.value === result.pattern.value[2].subject.value);
+    test.ok(result.pattern.value[1].predicate.suffix === 'p2');
+    test.ok(result.pattern.value[2].object.value === 'v1');
+    test.ok(result.pattern.value[2].predicate.suffix === 'p3');
+
+    test.done();
+};
