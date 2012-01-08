@@ -916,7 +916,7 @@ QueryEngine.QueryEngine.prototype.executeSelectUnit = function(projection, datas
     } else if(pattern.kind === "EMPTY_PATTERN") {
         // as an example of this case  check DAWG test case: algebra/filter-nested-2
         return [];
-    } else if(pattern.kind === "ZERO_OR_MORE_PATH") {
+    } else if(pattern.kind === "ZERO_OR_MORE_PATH" || pattern.kind === 'ONE_OR_MORE_PATH') {
 	return this.executeZeroOrMorePath(pattern, dataset, env);
     } else {
         console.log("Cannot execute query pattern " + pattern.kind + ". Not implemented yet.");

@@ -22,6 +22,10 @@ Utils.recur = function(c){
     } 
 };
 
+Utils.clone = function(o) {
+    return JSON.parse(JSON.stringify(o));
+};
+
 Utils.shuffle = function(o){ //v1.0
     for(var j, x, i = o.length; i; j = parseInt(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x){};
     return o;
@@ -64,7 +68,7 @@ Utils.repeat = function(c,max,floop,fend,env) {
         floop(function(floop,env){
             // avoid stack overflow
             // deadly hack
-            Utils.recur(function(){ Utils.repeat(c+1, max, floop, fend, env) });
+            Utils.recur(function(){ Utils.repeat(c+1, max, floop, fend, env); });
         },env);
     } else {
         fend(env);
@@ -105,7 +109,7 @@ Utils.seq = function() {
         }, function(){
             callback();
         });
-    }
+    };
 };
 
 
@@ -216,12 +220,12 @@ Utils.parseISO8601Components = function (str) {
     minutes = Number(d[8]);
     seconds = Number(d[10]);
 
-    if(d[12]) { millisecs = Number("0." + d[12]) * 1000 }
+    if(d[12]) { millisecs = Number("0." + d[12]) * 1000; }
 
     if(d[13]==="Z") {
         timezone = 0;
     } else if (d[14]) {
-        var timezone = 0;
+        timezone = 0;
         if(d[17]) {
             timezone = Number(d[17]);
         }
@@ -290,7 +294,6 @@ Utils.compareDateComponents = function(stra,strb) {
 };
 
 // RDF utils
-
 Utils.lexicalFormLiteral = function(term, env) {
     var value = term.value;
     var lang = term.lang;
@@ -300,23 +303,32 @@ Utils.lexicalFormLiteral = function(term, env) {
     if(value != null && type != null && typeof(type) != 'string') {
         var typeValue = type.value;
 
-        if(typeValue != null) {
-            indexedValue = '"' + term.value + '"^^<' + typeValue + '>';
-        } else {
+        if(typeValue == null) {
             var typePrefix = type.prefix;
             var typeSuffix = type.suffix;
 
             var resolvedPrefix = env.namespaces[typePrefix];
             term.type = resolvedPrefix+typeSuffix;
-            indexedValue = '"' + term.value + '"^^<' + resolvedPrefix + typeSuffix + '>';
+	    typeValue = resolvedPrefix+typeSuffix;
         }
+	// normalization
+	if(typeValue.indexOf('hexBinary') != -1) {
+            indexedValue = '"' + term.value.toLowerCase() + '"^^<' + typeValue + '>';
+	} else {
+            indexedValue = '"' + term.value + '"^^<' + typeValue + '>';
+	}
     } else {
         if(lang == null && type == null) {
             indexedValue = '"' + value + '"';
         } else if(type == null) {
             indexedValue = '"' + value + '"' + "@" + lang;        
         } else {
-            indexedValue = '"' + term.value + '"^^<'+type+'>';
+	    // normalization
+	    if(type.indexOf('hexBinary') != -1) {
+		indexedValue = '"' + term.value.toLowerCase() + '"^^<'+type+'>';
+	    } else {
+		indexedValue = '"' + term.value + '"^^<'+type+'>';
+	    }
         }
     }
     return indexedValue;
@@ -340,7 +352,7 @@ Utils.lexicalFormBaseUri = function(term, env) {
         }
     } else {
         //console.log(" - URI is not prefixed");
-        uri = term.value
+        uri = term.value;
     }
 
     if(uri===null) {
@@ -362,14 +374,14 @@ Utils.lexicalFormBaseUri = function(term, env) {
 
 Utils.lexicalFormTerm = function(term, ns) {
     if(term.token === 'uri') {
-        return {'uri': Utils.lexicalFormBaseUri(term, ns)}
+        return {'uri': Utils.lexicalFormBaseUri(term, ns)};
     } else if(term.token === 'literal') {
         return {'literal': Utils.lexicalFormLiteral(term, ns)};
     } else if(term.token === 'blank') {
-        var label = '_:'+term.label;
+        var label = '_:'+term.value;
         return {'blank': label};
     } else {
-        callback(false, 'Token of kind '+term.token+' cannot transformed into its lexical form');
+	throw "Error, cannot get lexical form of unknown token: "+term.token;
     }
 };
 
@@ -1013,8 +1025,8 @@ RDFJSInterface.buildRDFResource = function(value, bindings, engine, env) {
 };
 
 RDFJSInterface.buildBlankNode = function(value, bindings, engine, env) {
-    if(value.value == null && value.label) {
-        value.value = value.label;
+    if(value.valuetmp != null) {
+        value.value = value.valuetmp;
     }
     if(value.value.indexOf("_:") === 0) {
         value.value = value.value.split("_:")[1];
@@ -1107,7 +1119,7 @@ QueryFilters.boundVars = function(filterExpr) {
         } else if(expressionType == 'additiveexpression') {
             var acum = QueryFilters.boundVars(filterExpr.summand);
             for(var i=0; i<filterExpr.summands.length; i++) {
-                acum = acum.concat(QueryFilters.boundVars(filterExpr.summands[i].expression))
+                acum = acum.concat(QueryFilters.boundVars(filterExpr.summands[i].expression));
             }
 
             return acum;

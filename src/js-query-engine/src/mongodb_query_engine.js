@@ -1025,7 +1025,7 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.executeSelectUnit = function(pro
     } else if(pattern.kind === "EMPTY_PATTERN") {
         // as an example of this case  check DAWG test case: algebra/filter-nested-2
         callback(true, []);
-    } else if(pattern.kind === "ZERO_OR_MORE_PATH") {
+    } else if(pattern.kind === "ZERO_OR_MORE_PATH" || pattern.kind === "ONE_OR_MORE_PATH") {
 	this.executeZeroOrMorePath(pattern, dataset, env, callback);
     } else {
         callback(false, "Cannot execute query pattern " + pattern.kind + ". Not implemented yet.");

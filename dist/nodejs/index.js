@@ -22,6 +22,10 @@ Utils.recur = function(c){
     } 
 };
 
+Utils.clone = function(o) {
+    return JSON.parse(JSON.stringify(o));
+};
+
 Utils.shuffle = function(o){ //v1.0
     for(var j, x, i = o.length; i; j = parseInt(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x){};
     return o;
@@ -64,7 +68,7 @@ Utils.repeat = function(c,max,floop,fend,env) {
         floop(function(floop,env){
             // avoid stack overflow
             // deadly hack
-            Utils.recur(function(){ Utils.repeat(c+1, max, floop, fend, env) });
+            Utils.recur(function(){ Utils.repeat(c+1, max, floop, fend, env); });
         },env);
     } else {
         fend(env);
@@ -105,7 +109,7 @@ Utils.seq = function() {
         }, function(){
             callback();
         });
-    }
+    };
 };
 
 
@@ -216,12 +220,12 @@ Utils.parseISO8601Components = function (str) {
     minutes = Number(d[8]);
     seconds = Number(d[10]);
 
-    if(d[12]) { millisecs = Number("0." + d[12]) * 1000 }
+    if(d[12]) { millisecs = Number("0." + d[12]) * 1000; }
 
     if(d[13]==="Z") {
         timezone = 0;
     } else if (d[14]) {
-        var timezone = 0;
+        timezone = 0;
         if(d[17]) {
             timezone = Number(d[17]);
         }
@@ -348,7 +352,7 @@ Utils.lexicalFormBaseUri = function(term, env) {
         }
     } else {
         //console.log(" - URI is not prefixed");
-        uri = term.value
+        uri = term.value;
     }
 
     if(uri===null) {
@@ -374,10 +378,10 @@ Utils.lexicalFormTerm = function(term, ns) {
     } else if(term.token === 'literal') {
         return {'literal': Utils.lexicalFormLiteral(term, ns)};
     } else if(term.token === 'blank') {
-        var label = '_:'+term.label;
+        var label = '_:'+term.value;
         return {'blank': label};
     } else {
-        callback(false, 'Token of kind '+term.token+' cannot transformed into its lexical form');
+	throw "Error, cannot get lexical form of unknown token: "+term.token;
     }
 };
 
@@ -1725,7 +1729,7 @@ Lexicon.Lexicon.prototype.resolveBlank = function(label) {
 //    callback(id);
 
     var oid = this.oidCounter;
-    this.oidCounter++
+    this.oidCounter++;
     return(""+oid);
 };
 
@@ -2634,12 +2638,12 @@ jsonld.toTriples = function(input, graph, callback)
             }
             for(var i2 in obj)
             {
-                var obji2 = obj[i2]
+                var obji2 = obj[i2];
                 if(typeof(obji2) === 'string') {
                     obji2 = {'token': 'literal', 'value':obji2};
                 } else if(obji2['@iri'] != null) {
                     if(obji2['@iri'][0] == "_") {
-                        obji2 = {'token':'blank', 'label':obji2['@iri'].split(":")[1]}
+                        obji2 = {'token':'blank', 'value':obji2['@iri'].split(":")[1]}
                     } else {
                         obji2 = {'token':'uri', 'value':obji2['@iri']}
                     }
@@ -5117,7 +5121,7 @@ AbstractQueryTree.AbstractQueryTree.prototype.parseSelect = function(syntaxTree)
         console.log("error parsing query");
         return null;
     } else {
-        var env = {};
+        var env = { freshCounter: 0 };
         syntaxTree.pattern = this.build(syntaxTree.pattern, env);
         return syntaxTree;
     }
@@ -5136,8 +5140,13 @@ AbstractQueryTree.AbstractQueryTree.prototype.build = function(node, env) {
     if(node.token === 'groupgraphpattern') {
         return this._buildGroupGraphPattern(node, env);
     } else if (node.token === 'basicgraphpattern') {
-        return { kind: 'BGP',
-                 value: node.triplesContext };
+        var bgp = { kind: 'BGP',
+                    value: node.triplesContext };
+	//console.log("pre1");
+	bgp = AbstractQueryTree.translatePathExpressionsInBGP(bgp, env);
+	//console.log("translation");
+	//console.log(sys.inspect(bgp,true,20));	
+	return bgp;
     } else if (node.token === 'graphunionpattern') {
         var a = this.build(node.value[0],env);
         var b = this.build(node.value[1],env);
@@ -5154,6 +5163,160 @@ AbstractQueryTree.AbstractQueryTree.prototype.build = function(node, env) {
     }
 };
 
+AbstractQueryTree.translatePathExpressionsInBGP = function(bgp, env) {
+    var pathExpression,nextTriple,beforeToLink;
+    var before = [];
+    for(var i=0; i<bgp.value.length; i++) {
+	if(bgp.value[i].predicate && bgp.value[i].predicate.token === 'path') {
+	    //console.log("FOUND A PATH");
+	    pathExpression = bgp.value[i];
+	    rest = bgp.value.slice(i+1);
+	    var bgpTransformed = AbstractQueryTree.translatePathExpression(pathExpression, env);
+	    var optionalPattern = null;
+	    //console.log("BACK FROM TRANSFORMED");
+	    if(bgpTransformed.kind === 'BGP') {
+		before = before.concat(bgpTransformed.value);
+	    } else if(bgpTransformed.kind === 'ZERO_OR_MORE_PATH' || bgpTransformed.kind === 'ONE_OR_MORE_PATH'){
+		//console.log("BEFORE");
+		//console.log(bgpTransformed);
+		    
+
+		if(before.length > 0) {
+		    bottomJoin =  {kind: 'JOIN',
+				   lvalue: {kind: 'BGP', value:before},
+				   rvalue: bgpTransformed};
+		} else {
+		    bottomJoin = bgpTransformed;
+		}
+
+		
+		if(bgpTransformed.kind === 'ZERO_OR_MORE_PATH') {
+		    if(bgpTransformed.y.token === 'var' && bgpTransformed.y.value.indexOf("fresh:")===0 &&
+		       bgpTransformed.x.token === 'var' && bgpTransformed.x.value.indexOf("fresh:")===0) {
+			//console.log("ADDING EXTRA PATTERN 1)");
+			for(var j=0; j<bgp.value.length; j++) {
+		   	    //console.log(bgp.value[j]);
+		   	    if(bgp.value[j].object && bgp.value[j].object.token === 'var' && bgp.value[j].object.value === bgpTransformed.x.value) {
+		   		//console.log(" YES 1)");
+		   		optionalPattern = Utils.clone(bgp.value[j]);
+		   		optionalPattern.object = bgpTransformed.y;
+		   	    }
+			}
+		    } else if(bgpTransformed.y.token === 'var' && bgpTransformed.y.value.indexOf("fresh:")===0) {
+			//console.log("ADDING EXTRA PATTERN 2)");
+			var from, to;
+			for(var j=0; j<bgp.value.length; j++) {
+		   	    //console.log(bgp.value[j]);
+		   	    if(bgp.value[j].subject && bgp.value[j].subject.token === 'var' && bgp.value[j].subject.value === bgpTransformed.y.value) {
+		   		//console.log(" YES 2)");
+		   		optionalPattern = Utils.clone(bgp.value[j]);
+		   		optionalPattern.subject = bgpTransformed.x;
+		   	    }
+			}
+		    }
+		}
+
+		if(rest.length >0) {
+		    //console.log("(2a)")
+		    var rvalueJoin = AbstractQueryTree.translatePathExpressionsInBGP({kind: 'BGP', value: rest}, env);
+		    //console.log("got rvalue");
+		    if(optionalPattern != null) {
+			var optionals = before.concat([optionalPattern]).concat(rest);
+			return { kind: 'UNION',
+				 value: [{ kind: 'JOIN',
+					   lvalue: bottomJoin,
+					   rvalue: rvalueJoin },
+					 {kind: 'BGP',
+					  value: optionals}] };
+		    } else {
+			return { kind: 'JOIN',
+				 lvalue: bottomJoin,
+				 rvalue: rvalueJoin };
+		    }
+		} else {
+		    //console.log("(2b)")
+		    return bottomJoin;
+		}
+
+	    } else {
+		// @todo ????
+		return bgpTransformed;
+	    }
+	} else {
+	    before.push(bgp.value[i]);
+	}
+    }
+
+    //console.log("returning");
+    bgp.value = before;
+    return bgp;
+};
+
+
+AbstractQueryTree.translatePathExpression  = function(pathExpression, env) {
+    // add support for different path patterns
+    if(pathExpression.predicate.kind === 'element') {
+	// simple paths, maybe modified
+	if(pathExpression.predicate.modifier === '+') {
+	    pathExpression.predicate.modifier = null;
+	    var expandedPath = AbstractQueryTree.translatePathExpression(pathExpression, env);
+	    return {kind: 'ONE_OR_MORE_PATH',
+		    path: expandedPath,
+		    x: pathExpression.subject,
+		    y: pathExpression.object};
+	} else if(pathExpression.predicate.modifier === '*') {
+	    pathExpression.predicate.modifier = null;
+	    var expandedPath = AbstractQueryTree.translatePathExpression(pathExpression, env);
+	    return {kind: 'ZERO_OR_MORE_PATH',
+	     	    path: expandedPath,
+                    x: pathExpression.subject,
+		    y: pathExpression.object};
+	} else {
+	    pathExpression.predicate = pathExpression.predicate.value;
+	    return {kind: 'BGP', value: [pathExpression]}
+	}
+    } else if(pathExpression.predicate.kind === 'sequence') {
+	var currentSubject = pathExpression.subject;
+	var lastObject = pathExpression.object;
+	var currentGraph = pathExpression.graph;
+	var nextObject, chain;
+	var restTriples = [];
+	for(var i=0; i< pathExpression.predicate.value.length; i++) {
+	    if(i!=pathExpression.predicate.value.length-1) {
+		nextObject = {
+		    token: "var",
+		    value: "fresh:"+env.freshCounter
+		};
+		env.freshCounter++;
+	    } else {
+		nextObject = lastObject;
+	    }
+
+	    // @todo
+	    // what if the predicate is a path with
+	    // '*'? same fresh va in subject and object??
+	    chain = {
+		subject: currentSubject,
+		predicate: pathExpression.predicate.value[i],
+		object: nextObject
+	    };
+	
+	    if(currentGraph != null)
+		chain.graph = Utils.clone(currentGraph);
+	    
+	    restTriples.push(chain);
+
+	    if(i!=pathExpression.predicate.value.length-1)
+		currentSubject = Utils.clone(nextObject);;
+	}
+	bgp = {kind: 'BGP', value: restTriples};
+	//console.log("BEFORE (1):");
+	//console.log(bgp);
+	//console.log("--------------");
+	return AbstractQueryTree.translatePathExpressionsInBGP(bgp, env);
+    }
+};
+
 AbstractQueryTree.AbstractQueryTree.prototype._buildGroupGraphPattern = function(node, env) {
     var f = (node.filters || []);
     var g = {kind: "EMPTY_PATTERN"};
@@ -5166,7 +5329,7 @@ AbstractQueryTree.AbstractQueryTree.prototype._buildGroupGraphPattern = function
                 g =  { kind:'LEFT_JOIN',
                        lvalue: g,
                        rvalue: parsedPattern.value,
-                       filter: parsedPattern.filter }
+                       filter: parsedPattern.filter };
             } else {
                 g = { kind:'LEFT_JOIN',
                       lvalue: g,
@@ -5237,6 +5400,8 @@ AbstractQueryTree.AbstractQueryTree.prototype.collectBasicTriples = function(aqt
         acum = this.collectBasicTriples(aqt.pattern,acum);
     } else if(aqt.kind === 'BGP') {
         acum = acum.concat(aqt.value);
+    } else if(aqt.kind === 'ZERO_OR_MORE_PATH') {
+	acum = this.collectBasicTriples(aqt.path);
     } else if(aqt.kind === 'UNION') {
         acum = this.collectBasicTriples(aqt.value[0],acum);
         acum = this.collectBasicTriples(aqt.value[1],acum);
@@ -5280,6 +5445,14 @@ AbstractQueryTree.AbstractQueryTree.prototype.bind = function(aqt, bindings) {
     } else if(aqt.kind === 'BGP') {
         aqt.value = this._bindTripleContext(aqt.value, bindings);
         //acum = acum.concat(aqt.value);
+    } else if(aqt.kind === 'ZERO_OR_MORE_PATH') {
+        aqt.path = this._bindTripleContext(aqt.path, bindings);
+	if(aqt.x && aqt.x.token === 'var' && bindings[aqt.x.value] != null) {
+	    aqt.x = bindings[aqt.x.value];
+	}
+	if(aqt.y && aqt.y.token === 'var' && bindings[aqt.y.value] != null) {
+	    aqt.y = bindings[aqt.y.value];
+	}
     } else if(aqt.kind === 'UNION') {
         aqt.value[0] = this.bind(aqt.value[0],bindings);
         aqt.value[1] = this.bind(aqt.value[1],bindings);
@@ -5289,7 +5462,7 @@ AbstractQueryTree.AbstractQueryTree.prototype.bind = function(aqt, bindings) {
         aqt.lvalue = this.bind(aqt.lvalue, bindings);
         aqt.rvalue = this.bind(aqt.rvalue, bindings);
     } else if(aqt.kind === 'FILTER') {
-        acum = this.collectBasicTriples(aqt.value, acum);
+	aqt.filter = this._bindFilter(aqt.filter[i].value, bindings);
     } else if(aqt.kind === 'EMPTY_PATTERN') {
         // nothing
     } else {
@@ -5358,6 +5531,128 @@ AbstractQueryTree.AbstractQueryTree.prototype._bindFilter = function(filterExpr,
                     filterExpr.value = val;
                 }
             }
+        }
+    }
+
+    return filterExpr;
+};
+
+/**
+ * Replaces terms in an AQT
+ */
+AbstractQueryTree.AbstractQueryTree.prototype.replace = function(aqt, from, to, ns) {
+    if(aqt.graph != null && aqt.graph.token && aqt.graph.token === from.token && 
+       aqt.graph.value == from.value) {
+        aqt.graph = Utils.clone(to);
+    }
+    if(aqt.filter != null) {
+        var acum = [];
+        for(var i=0; i< aqt.filter.length; i++) {
+            aqt.filter[i].value = this._replaceFilter(aqt.filter[i].value, from, to, ns);
+            acum.push(aqt.filter[i]);
+        }
+        aqt.filter = acum;
+    }
+    if(aqt.kind === 'select') {
+        aqt.pattern = this.replace(aqt.pattern, from, to, ns);
+    } else if(aqt.kind === 'BGP') {
+        aqt.value = this._replaceTripleContext(aqt.value, from, to, ns);
+    } else if(aqt.kind === 'ZERO_OR_MORE_PATH') {
+        aqt.path = this._replaceTripleContext(aqt.path, from,to, ns);
+	if(aqt.x && aqt.x.token === from.token && aqt.value === from.value) {
+	    aqt.x = Utils.clone(to);
+	}
+	if(aqt.y && aqt.y.token === from.token && aqt.value === from.value) {
+	    aqt.y = Utils.clone(to);
+	}
+    } else if(aqt.kind === 'UNION') {
+        aqt.value[0] = this.replace(aqt.value[0],from,to, ns);
+        aqt.value[1] = this.replace(aqt.value[1],from,to, ns);
+    } else if(aqt.kind === 'GRAPH') {
+        aqt.value = this.replace(aqt.value,from,to);
+    } else if(aqt.kind === 'LEFT_JOIN' || aqt.kind === 'JOIN') {
+        aqt.lvalue = this.replace(aqt.lvalue, from, to, ns);
+        aqt.rvalue = this.replace(aqt.rvalue, from, to, ns);
+    } else if(aqt.kind === 'FILTER') {
+        aqt.value = this._replaceFilter(aqt.value, from,to, ns);
+    } else if(aqt.kind === 'EMPTY_PATTERN') {
+        // nothing
+    } else {
+        throw "Unknown pattern: "+aqt.kind;
+    }
+
+    return aqt;
+};
+
+AbstractQueryTree.AbstractQueryTree.prototype._replaceTripleContext = function(triples, from, to, ns) {
+    for(var i=0; i<triples.length; i++) {
+        for(var p in triples[i]) {
+            var comp = triples[i][p];
+	    if(comp.token === 'var' && from.token === 'var' && comp.value === from.value) {
+		triples[i][p] = to;
+	    } else if(comp.token === 'blank' && from.token === 'blank' && comp.value === from.value) {
+		triples[i][p] = to;
+	    } else {
+		if((comp.token === 'literal' || comp.token ==='uri') && 
+		   (from.token === 'literal' || from.token ==='uri') && 
+		   comp.token === from.token && Utils.lexicalFormTerm(comp,ns)[comp.token] === Utils.lexicalFormTerm(from,ns)[comp.token]) {
+                    triples[i][p] = to;
+		}
+	    }
+        }
+    }
+
+    return triples;
+};
+
+
+AbstractQueryTree.AbstractQueryTree.prototype._replaceFilter = function(filterExpr, from, to, ns) {
+    if(filterExpr.expressionType != null) {
+        var expressionType = filterExpr.expressionType;
+        if(expressionType == 'relationalexpression') {
+            filterExpr.op1 = this._replaceFilter(filterExpr.op1, from, to, ns);
+            filterExpr.op2 = this._replaceFilter(filterExpr.op2, from, to, ns);
+        } else if(expressionType == 'conditionalor' || expressionType == 'conditionaland') {
+            for(var i=0; i< filterExpr.operands.length; i++) {
+                filterExpr.operands[i] = this._replaceFilter(filterExpr.operands[i], from, to, ns);
+            }
+        } else if(expressionType == 'additiveexpression') {
+            filterExpr.summand = this._replaceFilter(filterExpr.summand, from, to, ns);
+            for(var i=0; i<filterExpr.summands.length; i++) {
+                filterExpr.summands[i].expression = this._replaceFilter(filterExpr.summands[i].expression, from, to, ns);            
+            }
+        } else if(expressionType == 'builtincall') {
+            for(var i=0; i<filterExpr.args.length; i++) {
+                filterExpr.args[i] = this._replaceFilter(filterExpr.args[i], from, to, ns);
+            }
+        } else if(expressionType == 'multiplicativeexpression') {
+            filterExpr.factor = this._replaceFilter(filterExpr.factor, from, to, ns);
+            for(var i=0; i<filterExpr.factors.length; i++) {
+                filterExpr.factors[i].expression = this._replaceFilter(filterExpr.factors[i].expression, from, to, ns);
+            }
+        } else if(expressionType == 'unaryexpression') {
+            filterExpr.expression = this._replaceFilter(filterExpr.expression, from, to, ns);
+        } else if(expressionType == 'irireforfunction') {
+            for(var i=0; i<filterExpr.factors.args; i++) {
+                filterExpr.args[i] = this._replaceFilter(filterExpr.args[i], from, to, ns);
+            }
+        } else if(expressionType == 'atomic') {        
+	    var val = null;
+            if(filterExpr.primaryexpression == from.token && filterExpr.value == from.value) {
+                    val = to.value;                
+            } else if(filterExpr.primaryexpression == 'iri' && from.token == 'uri' && filterExpr.value == from.value) {
+                val = to.value;                
+	    }
+
+	
+	    if(val != null) {
+                if(to.token === 'uri') {
+                    filterExpr.primaryexpression = 'iri';
+                } else {
+                    filterExpr.primaryexpression = to.token;
+                }
+                filterExpr.value = val;
+	    }
         }
     }
 
@@ -5509,6 +5804,7 @@ SparqlParser.parser = (function(){
         "TriplesBlock": parse_TriplesBlock,
         "TriplesNode": parse_TriplesNode,
         "TriplesSameSubject": parse_TriplesSameSubject,
+        "TriplesSameSubjectPath": parse_TriplesSameSubjectPath,
         "TriplesTemplate": parse_TriplesTemplate,
         "UnaryExpression": parse_UnaryExpression,
         "Update": parse_Update,
@@ -18047,7 +18343,7 @@ SparqlParser.parser = (function(){
         reportMatchFailures = false;
         var savedPos0 = pos;
         var savedPos1 = pos;
-        var result3 = parse_TriplesSameSubject();
+        var result3 = parse_TriplesSameSubjectPath();
         if (result3 !== null) {
           var savedPos2 = pos;
           var result6 = [];
@@ -20615,6 +20911,190 @@ SparqlParser.parser = (function(){
         return result0;
       }
       
+      function parse_TriplesSameSubjectPath() {
+        var cacheKey = 'TriplesSameSubjectPath@' + pos;
+        var cachedResult = cache[cacheKey];
+        if (cachedResult) {
+          pos = cachedResult.nextPos;
+          return cachedResult.result;
+        }
+        
+        var savedReportMatchFailures = reportMatchFailures;
+        reportMatchFailures = false;
+        var savedPos2 = pos;
+        var savedPos3 = pos;
+        var result13 = [];
+        var result18 = parse_WS();
+        while (result18 !== null) {
+          result13.push(result18);
+          var result18 = parse_WS();
+        }
+        if (result13 !== null) {
+          var result14 = parse_VarOrTerm();
+          if (result14 !== null) {
+            var result15 = [];
+            var result17 = parse_WS();
+            while (result17 !== null) {
+              result15.push(result17);
+              var result17 = parse_WS();
+            }
+            if (result15 !== null) {
+              var result16 = parse_PropertyListNotEmptyPath();
+              if (result16 !== null) {
+                var result11 = [result13, result14, result15, result16];
+              } else {
+                var result11 = null;
+                pos = savedPos3;
+              }
+            } else {
+              var result11 = null;
+              pos = savedPos3;
+            }
+          } else {
+            var result11 = null;
+            pos = savedPos3;
+          }
+        } else {
+          var result11 = null;
+          pos = savedPos3;
+        }
+        var result12 = result11 !== null
+          ? (function(s, pairs) {
+                var triplesContext = pairs.triplesContext;
+                var subject = s;
+                if(pairs.pairs) {
+                  for(var i=0; i< pairs.pairs.length; i++) {
+                      var pair = pairs.pairs[i];
+                      var triple = null;
+          	    if(pair[1].length != null)
+          	      pair[1] = pair[1][0]
+                      if(subject.token && subject.token==='triplesnodecollection') {
+                          triple = {subject: subject.chainSubject[0], predicate: pair[0], object: pair[1]}
+                          triplesContext.push(triple);
+                          triplesContext = triplesContext.concat(subject.triplesContext);
+                      } else {
+                          triple = {subject: subject, predicate: pair[0], object: pair[1]}
+                          triplesContext.push(triple);
+                      }
+                  }
+                }
+          
+                var token = {};
+                token.token = "triplessamesubject";
+                token.triplesContext = triplesContext;
+                token.chainSubject = subject;
+          
+                return token;
+            })(result11[1], result11[3])
+          : null;
+        if (result12 !== null) {
+          var result10 = result12;
+        } else {
+          var result10 = null;
+          pos = savedPos2;
+        }
+        if (result10 !== null) {
+          var result0 = result10;
+        } else {
+          var savedPos0 = pos;
+          var savedPos1 = pos;
+          var result4 = [];
+          var result9 = parse_WS();
+          while (result9 !== null) {
+            result4.push(result9);
+            var result9 = parse_WS();
+          }
+          if (result4 !== null) {
+            var result5 = parse_TriplesNode();
+            if (result5 !== null) {
+              var result6 = [];
+              var result8 = parse_WS();
+              while (result8 !== null) {
+                result6.push(result8);
+                var result8 = parse_WS();
+              }
+              if (result6 !== null) {
+                var result7 = parse_PropertyListPath();
+                if (result7 !== null) {
+                  var result2 = [result4, result5, result6, result7];
+                } else {
+                  var result2 = null;
+                  pos = savedPos1;
+                }
+              } else {
+                var result2 = null;
+                pos = savedPos1;
+              }
+            } else {
+              var result2 = null;
+              pos = savedPos1;
+            }
+          } else {
+            var result2 = null;
+            pos = savedPos1;
+          }
+          var result3 = result2 !== null
+            ? (function(tn, pairs) {
+                  var triplesContext = tn.triplesContext;
+                  var subject = tn.chainSubject;
+            
+                  if(pairs.pairs) {
+                    for(var i=0; i< pairs.pairs.length; i++) {
+                        var pair = pairs.pairs[i];
+                        if(pair[1].length != null)
+            	      pair[1] = pair[1][0]
+            
+                        if(tn.token === "triplesnodecollection") {
+                            for(var j=0; j<subject.length; j++) {
+                                var subj = subject[j];
+                                if(subj.triplesContext != null) {
+                                    var triple = {subject: subj.chainSubject, predicate: pair[0], object: pair[1]}
+                                    triplesContext.concat(subj.triplesContext);
+                                } else {
+                                    var triple = {subject: subject[j], predicate: pair[0], object: pair[1]}
+                                    triplesContext.push(triple);
+                                }
+                            }
+                        } else {
+                            var triple = {subject: subject, predicate: pair[0], object: pair[1]}
+                            triplesContext.push(triple);
+                        }
+                    }
+                  }
+            
+                  var token = {};
+                  token.token = "triplessamesubject";
+                  token.triplesContext = triplesContext;
+                  token.chainSubject = subject;
+            
+                  return token;
+            
+                })(result2[1], result2[3])
+            : null;
+          if (result3 !== null) {
+            var result1 = result3;
+          } else {
+            var result1 = null;
+            pos = savedPos0;
+          }
+          if (result1 !== null) {
+            var result0 = result1;
+          } else {
+            var result0 = null;;
+          };
+        }
+        reportMatchFailures = savedReportMatchFailures;
+        if (reportMatchFailures && result0 === null) {
+          matchFailed("[72] TriplesSameSubjectPath");
+        }
+        
+        cache[cacheKey] = {
+          nextPos: pos,
+          result:  result0
+        };
+        return result0;
+      }
+      
       function parse_PropertyListNotEmptyPath() {
         var cacheKey = 'PropertyListNotEmptyPath@' + pos;
         var cachedResult = cache[cacheKey];
@@ -20626,96 +21106,85 @@ SparqlParser.parser = (function(){
         var savedReportMatchFailures = reportMatchFailures;
         reportMatchFailures = false;
         var savedPos0 = pos;
-        var result13 = parse_VerbPath();
-        if (result13 !== null) {
-          var result1 = result13;
+        var savedPos1 = pos;
+        var result21 = parse_VerbPath();
+        if (result21 !== null) {
+          var result3 = result21;
         } else {
-          var result12 = parse_Var();
-          if (result12 !== null) {
-            var result1 = result12;
+          var result20 = parse_Var();
+          if (result20 !== null) {
+            var result3 = result20;
           } else {
-            var result1 = null;;
+            var result3 = null;;
           };
         }
-        if (result1 !== null) {
-          var result2 = parse_ObjectList();
-          if (result2 !== null) {
-            var result3 = [];
-            var savedPos1 = pos;
-            if (input.substr(pos, 1) === ";") {
-              var result5 = ";";
-              pos += 1;
-            } else {
-              var result5 = null;
-              if (reportMatchFailures) {
-                matchFailed("\";\"");
-              }
-            }
+        if (result3 !== null) {
+          var result4 = [];
+          var result19 = parse_WS();
+          while (result19 !== null) {
+            result4.push(result19);
+            var result19 = parse_WS();
+          }
+          if (result4 !== null) {
+            var result5 = parse_ObjectList();
             if (result5 !== null) {
+              var result6 = [];
               var savedPos2 = pos;
-              var result11 = parse_VerbPath();
-              if (result11 !== null) {
-                var result8 = result11;
-              } else {
-                var result10 = parse_Var();
-                if (result10 !== null) {
-                  var result8 = result10;
-                } else {
-                  var result8 = null;;
-                };
+              var result8 = [];
+              var result18 = parse_WS();
+              while (result18 !== null) {
+                result8.push(result18);
+                var result18 = parse_WS();
               }
               if (result8 !== null) {
-                var result9 = parse_ObjectList();
+                if (input.substr(pos, 1) === ";") {
+                  var result9 = ";";
+                  pos += 1;
+                } else {
+                  var result9 = null;
+                  if (reportMatchFailures) {
+                    matchFailed("\";\"");
+                  }
+                }
                 if (result9 !== null) {
-                  var result7 = [result8, result9];
-                } else {
-                  var result7 = null;
-                  pos = savedPos2;
-                }
-              } else {
-                var result7 = null;
-                pos = savedPos2;
-              }
-              var result6 = result7 !== null ? result7 : '';
-              if (result6 !== null) {
-                var result4 = [result5, result6];
-              } else {
-                var result4 = null;
-                pos = savedPos1;
-              }
-            } else {
-              var result4 = null;
-              pos = savedPos1;
-            }
-            while (result4 !== null) {
-              result3.push(result4);
-              var savedPos1 = pos;
-              if (input.substr(pos, 1) === ";") {
-                var result5 = ";";
-                pos += 1;
-              } else {
-                var result5 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\";\"");
-                }
-              }
-              if (result5 !== null) {
-                var savedPos2 = pos;
-                var result11 = parse_VerbPath();
-                if (result11 !== null) {
-                  var result8 = result11;
-                } else {
-                  var result10 = parse_Var();
+                  var result10 = [];
+                  var result17 = parse_WS();
+                  while (result17 !== null) {
+                    result10.push(result17);
+                    var result17 = parse_WS();
+                  }
                   if (result10 !== null) {
-                    var result8 = result10;
-                  } else {
-                    var result8 = null;;
-                  };
-                }
-                if (result8 !== null) {
-                  var result9 = parse_ObjectList();
-                  if (result9 !== null) {
-                    var result7 = [result8, result9];
+                    var savedPos3 = pos;
+                    var result16 = parse_VerbPath();
+                    if (result16 !== null) {
+                      var result13 = result16;
+                    } else {
+                      var result15 = parse_Var();
+                      if (result15 !== null) {
+                        var result13 = result15;
+                      } else {
+                        var result13 = null;;
+                      };
+                    }
+                    if (result13 !== null) {
+                      var result14 = parse_ObjectList();
+                      if (result14 !== null) {
+                        var result12 = [result13, result14];
+                      } else {
+                        var result12 = null;
+                        pos = savedPos3;
+                      }
+                    } else {
+                      var result12 = null;
+                      pos = savedPos3;
+                    }
+                    var result11 = result12 !== null ? result12 : '';
+                    if (result11 !== null) {
+                      var result7 = [result8, result9, result10, result11];
+                    } else {
+                      var result7 = null;
+                      pos = savedPos2;
+                    }
                   } else {
                     var result7 = null;
                     pos = savedPos2;
@@ -20724,28 +21193,147 @@ SparqlParser.parser = (function(){
                   var result7 = null;
                   pos = savedPos2;
                 }
-                var result6 = result7 !== null ? result7 : '';
-                if (result6 !== null) {
-                  var result4 = [result5, result6];
-                } else {
-                  var result4 = null;
-                  pos = savedPos1;
-                }
               } else {
-                var result4 = null;
+                var result7 = null;
+                pos = savedPos2;
+              }
+              while (result7 !== null) {
+                result6.push(result7);
+                var savedPos2 = pos;
+                var result8 = [];
+                var result18 = parse_WS();
+                while (result18 !== null) {
+                  result8.push(result18);
+                  var result18 = parse_WS();
+                }
+                if (result8 !== null) {
+                  if (input.substr(pos, 1) === ";") {
+                    var result9 = ";";
+                    pos += 1;
+                  } else {
+                    var result9 = null;
+                    if (reportMatchFailures) {
+                      matchFailed("\";\"");
+                    }
+                  }
+                  if (result9 !== null) {
+                    var result10 = [];
+                    var result17 = parse_WS();
+                    while (result17 !== null) {
+                      result10.push(result17);
+                      var result17 = parse_WS();
+                    }
+                    if (result10 !== null) {
+                      var savedPos3 = pos;
+                      var result16 = parse_VerbPath();
+                      if (result16 !== null) {
+                        var result13 = result16;
+                      } else {
+                        var result15 = parse_Var();
+                        if (result15 !== null) {
+                          var result13 = result15;
+                        } else {
+                          var result13 = null;;
+                        };
+                      }
+                      if (result13 !== null) {
+                        var result14 = parse_ObjectList();
+                        if (result14 !== null) {
+                          var result12 = [result13, result14];
+                        } else {
+                          var result12 = null;
+                          pos = savedPos3;
+                        }
+                      } else {
+                        var result12 = null;
+                        pos = savedPos3;
+                      }
+                      var result11 = result12 !== null ? result12 : '';
+                      if (result11 !== null) {
+                        var result7 = [result8, result9, result10, result11];
+                      } else {
+                        var result7 = null;
+                        pos = savedPos2;
+                      }
+                    } else {
+                      var result7 = null;
+                      pos = savedPos2;
+                    }
+                  } else {
+                    var result7 = null;
+                    pos = savedPos2;
+                  }
+                } else {
+                  var result7 = null;
+                  pos = savedPos2;
+                }
+              }
+              if (result6 !== null) {
+                var result1 = [result3, result4, result5, result6];
+              } else {
+                var result1 = null;
                 pos = savedPos1;
               }
-            }
-            if (result3 !== null) {
-              var result0 = [result1, result2, result3];
             } else {
-              var result0 = null;
-              pos = savedPos0;
+              var result1 = null;
+              pos = savedPos1;
             }
           } else {
-            var result0 = null;
-            pos = savedPos0;
+            var result1 = null;
+            pos = savedPos1;
           }
+        } else {
+          var result1 = null;
+          pos = savedPos1;
+        }
+        var result2 = result1 !== null
+          ? (function(v, ol, rest) {
+                token = {}
+                token.token = 'propertylist';
+                var triplesContext = [];
+                var pairs = [];
+                var test = [];
+          
+                for( var i=0; i<ol.length; i++) {
+          
+                   if(ol[i].triplesContext != null) {
+                       triplesContext = triplesContext.concat(ol[i].triplesContext);
+                       if(ol[i].token==='triplesnodecollection' && ol[i].chainSubject.length != null) {
+                           pairs.push([v, ol[i].chainSubject[0]]);
+                       } else {
+                           pairs.push([v, ol[i].chainSubject]);
+                       }
+          
+                    } else {
+                        pairs.push([v, ol[i]])
+                    }
+          
+                }
+          
+          
+                for(var i=0; i<rest.length; i++) {
+                    var tok = rest[i][3];
+                    var newVerb  = tok[0];
+                    var newObjsList = tok[1] || [];
+          
+                    for(var j=0; j<newObjsList.length; j++) {
+                     if(newObjsList[j].triplesContext != null) {
+                        triplesContext = triplesContext.concat(newObjsList[j].triplesContext);
+                       pairs.push([newVerb, newObjsList[j].chainSubject]);
+                      } else {
+                        pairs.push([newVerb, newObjsList[j]])
+                      }
+                    }
+                }
+          
+                token.pairs = pairs;
+                token.triplesContext = triplesContext;
+          
+                return token;
+          })(result1[0], result1[2], result1[3])
+          : null;
+        if (result2 !== null) {
+          var result0 = result2;
         } else {
           var result0 = null;
           pos = savedPos0;
@@ -20802,10 +21390,11 @@ SparqlParser.parser = (function(){
           ? (function(p) {
                 var path = {};
                 path.token = 'path';
+                path.kind = 'element';
                 path.value = p;
           
                 return p;
-          })(result1)
+            })(result1)
           : null;
         if (result2 !== null) {
           var result0 = result2;
@@ -20836,62 +21425,87 @@ SparqlParser.parser = (function(){
         var savedReportMatchFailures = reportMatchFailures;
         reportMatchFailures = false;
         var savedPos0 = pos;
-        var result1 = parse_PathSequence();
-        if (result1 !== null) {
-          var result2 = [];
-          var savedPos1 = pos;
+        var savedPos1 = pos;
+        var result3 = parse_PathSequence();
+        if (result3 !== null) {
+          var result4 = [];
+          var savedPos2 = pos;
           if (input.substr(pos, 1) === "|") {
-            var result4 = "|";
+            var result6 = "|";
             pos += 1;
           } else {
-            var result4 = null;
+            var result6 = null;
             if (reportMatchFailures) {
               matchFailed("\"|\"");
             }
           }
-          if (result4 !== null) {
-            var result5 = parse_PathSequence();
-            if (result5 !== null) {
-              var result3 = [result4, result5];
+          if (result6 !== null) {
+            var result7 = parse_PathSequence();
+            if (result7 !== null) {
+              var result5 = [result6, result7];
             } else {
-              var result3 = null;
-              pos = savedPos1;
+              var result5 = null;
+              pos = savedPos2;
             }
           } else {
-            var result3 = null;
-            pos = savedPos1;
+            var result5 = null;
+            pos = savedPos2;
           }
-          while (result3 !== null) {
-            result2.push(result3);
-            var savedPos1 = pos;
+          while (result5 !== null) {
+            result4.push(result5);
+            var savedPos2 = pos;
             if (input.substr(pos, 1) === "|") {
-              var result4 = "|";
+              var result6 = "|";
               pos += 1;
             } else {
-              var result4 = null;
+              var result6 = null;
               if (reportMatchFailures) {
                 matchFailed("\"|\"");
               }
             }
-            if (result4 !== null) {
-              var result5 = parse_PathSequence();
-              if (result5 !== null) {
-                var result3 = [result4, result5];
+            if (result6 !== null) {
+              var result7 = parse_PathSequence();
+              if (result7 !== null) {
+                var result5 = [result6, result7];
               } else {
-                var result3 = null;
-                pos = savedPos1;
+                var result5 = null;
+                pos = savedPos2;
               }
             } else {
-              var result3 = null;
-              pos = savedPos1;
+              var result5 = null;
+              pos = savedPos2;
             }
           }
-          if (result2 !== null) {
-            var result0 = [result1, result2];
+          if (result4 !== null) {
+            var result1 = [result3, result4];
           } else {
-            var result0 = null;
-            pos = savedPos0;
+            var result1 = null;
+            pos = savedPos1;
           }
+        } else {
+          var result1 = null;
+          pos = savedPos1;
+        }
+        var result2 = result1 !== null
+          ? (function(first, rest) {
+          	if(rest == null || rest.length === 0) {
+          	    return first;
+          	} else {
+          	    var acum = [];
+          	    for(var i=0; i<rest.length; i++)
+          		acum.push(rest[1]);
+          
+          	    var path = {};
+          	    path.token = 'path';
+          	    path.kind = 'alternative';
+          	    path.value = acum;
+          
+          	    return path;
+          	}
+              })(result1[0], result1[1])
+          : null;
+        if (result2 !== null) {
+          var result0 = result2;
         } else {
           var result0 = null;
           pos = savedPos0;
@@ -20919,62 +21533,89 @@ SparqlParser.parser = (function(){
         var savedReportMatchFailures = reportMatchFailures;
         reportMatchFailures = false;
         var savedPos0 = pos;
-        var result1 = parse_PathEltOrInverse();
-        if (result1 !== null) {
-          var result2 = [];
-          var savedPos1 = pos;
+        var savedPos1 = pos;
+        var result3 = parse_PathEltOrInverse();
+        if (result3 !== null) {
+          var result4 = [];
+          var savedPos2 = pos;
           if (input.substr(pos, 1) === "/") {
-            var result4 = "/";
+            var result6 = "/";
             pos += 1;
           } else {
-            var result4 = null;
+            var result6 = null;
             if (reportMatchFailures) {
               matchFailed("\"/\"");
             }
           }
-          if (result4 !== null) {
-            var result5 = parse_PathEltOrInverse();
-            if (result5 !== null) {
-              var result3 = [result4, result5];
+          if (result6 !== null) {
+            var result7 = parse_PathEltOrInverse();
+            if (result7 !== null) {
+              var result5 = [result6, result7];
             } else {
-              var result3 = null;
-              pos = savedPos1;
+              var result5 = null;
+              pos = savedPos2;
             }
           } else {
-            var result3 = null;
-            pos = savedPos1;
+            var result5 = null;
+            pos = savedPos2;
           }
-          while (result3 !== null) {
-            result2.push(result3);
-            var savedPos1 = pos;
+          while (result5 !== null) {
+            result4.push(result5);
+            var savedPos2 = pos;
             if (input.substr(pos, 1) === "/") {
-              var result4 = "/";
+              var result6 = "/";
               pos += 1;
             } else {
-              var result4 = null;
+              var result6 = null;
               if (reportMatchFailures) {
                 matchFailed("\"/\"");
               }
             }
-            if (result4 !== null) {
-              var result5 = parse_PathEltOrInverse();
-              if (result5 !== null) {
-                var result3 = [result4, result5];
+            if (result6 !== null) {
+              var result7 = parse_PathEltOrInverse();
+              if (result7 !== null) {
+                var result5 = [result6, result7];
               } else {
-                var result3 = null;
-                pos = savedPos1;
+                var result5 = null;
+                pos = savedPos2;
               }
             } else {
-              var result3 = null;
-              pos = savedPos1;
+              var result5 = null;
+              pos = savedPos2;
             }
           }
-          if (result2 !== null) {
-            var result0 = [result1, result2];
+          if (result4 !== null) {
+            var result1 = [result3, result4];
           } else {
-            var result0 = null;
-            pos = savedPos0;
+            var result1 = null;
+            pos = savedPos1;
           }
+        } else {
+          var result1 = null;
+          pos = savedPos1;
+        }
+        var result2 = result1 !== null
+          ? (function(first, rest) {
+          	if(rest == null || rest.length === 0) {
+          	    return first;
+          	} else {
+          	    var acum = [first];
+          
+          	    for(var i=0; i<rest.length; i++) 
+          		acum.push(rest[i][1]);
+          
+          	    var path = {};
+          	    path.token = 'path';
+          	    path.kind = 'sequence';
+          	
+          	    path.value = acum;
+          		
+          	    return path;
+          	}
+              })(result1[0], result1[1])
+          : null;
+        if (result2 !== null) {
+          var result0 = result2;
         } else {
           var result0 = null;
           pos = savedPos0;
@@ -21002,16 +21643,40 @@ SparqlParser.parser = (function(){
         var savedReportMatchFailures = reportMatchFailures;
         reportMatchFailures = false;
         var savedPos0 = pos;
-        var result1 = parse_PathPrimary();
-        if (result1 !== null) {
-          var result3 = parse_PathMod();
-          var result2 = result3 !== null ? result3 : '';
-          if (result2 !== null) {
-            var result0 = [result1, result2];
+        var savedPos1 = pos;
+        var result3 = parse_PathPrimary();
+        if (result3 !== null) {
+          var result5 = parse_PathMod();
+          var result4 = result5 !== null ? result5 : '';
+          if (result4 !== null) {
+            var result1 = [result3, result4];
           } else {
-            var result0 = null;
-            pos = savedPos0;
+            var result1 = null;
+            pos = savedPos1;
           }
+        } else {
+          var result1 = null;
+          pos = savedPos1;
+        }
+        var result2 = result1 !== null
+          ? (function(p, mod) {
+          	if(p.token && p.token != 'path' && mod == '') {
+          	    return p;
+          	} else if(p.token && p.token != path && mod != '') {
+          	    var path = {};
+          	    path.token = 'path';
+          	    path.kind = 'element';
+          	    path.value = p;
+          	    path.modifier = mod;
+          	    return path;
+          	} else {
+          	    p.modifier = mod;
+          	    return p;
+          	}
+              })(result1[0], result1[1])
+          : null;
+        if (result2 !== null) {
+          var result0 = result2;
         } else {
           var result0 = null;
           pos = savedPos0;
@@ -21038,28 +21703,45 @@ SparqlParser.parser = (function(){
         
         var savedReportMatchFailures = reportMatchFailures;
         reportMatchFailures = false;
-        var result4 = parse_PathElt();
-        if (result4 !== null) {
-          var result0 = result4;
+        var result6 = parse_PathElt();
+        if (result6 !== null) {
+          var result0 = result6;
         } else {
           var savedPos0 = pos;
+          var savedPos1 = pos;
           if (input.substr(pos, 1) === "^") {
-            var result2 = "^";
+            var result4 = "^";
             pos += 1;
           } else {
-            var result2 = null;
+            var result4 = null;
             if (reportMatchFailures) {
               matchFailed("\"^\"");
             }
           }
-          if (result2 !== null) {
-            var result3 = parse_PathElt();
-            if (result3 !== null) {
-              var result1 = [result2, result3];
+          if (result4 !== null) {
+            var result5 = parse_PathElt();
+            if (result5 !== null) {
+              var result2 = [result4, result5];
             } else {
-              var result1 = null;
-              pos = savedPos0;
+              var result2 = null;
+              pos = savedPos1;
             }
+          } else {
+            var result2 = null;
+            pos = savedPos1;
+          }
+          var result3 = result2 !== null
+            ? (function(elt) {
+            	var path = {};
+            	path.token = 'path';
+            	path.kind = 'inversePath';
+            	path.value = elt;
+            
+            	return path;
+                })(result2[1])
+            : null;
+          if (result3 !== null) {
+            var result1 = result3;
           } else {
             var result1 = null;
             pos = savedPos0;
@@ -21316,79 +21998,103 @@ SparqlParser.parser = (function(){
         
         var savedReportMatchFailures = reportMatchFailures;
         reportMatchFailures = false;
-        var result9 = parse_IRIref();
-        if (result9 !== null) {
-          var result0 = result9;
+        var result13 = parse_IRIref();
+        if (result13 !== null) {
+          var result0 = result13;
         } else {
+          var savedPos3 = pos;
           if (input.substr(pos, 1) === "a") {
-            var result8 = "a";
+            var result11 = "a";
             pos += 1;
           } else {
-            var result8 = null;
+            var result11 = null;
             if (reportMatchFailures) {
               matchFailed("\"a\"");
             }
           }
-          if (result8 !== null) {
-            var result0 = result8;
+          var result12 = result11 !== null
+            ? (function() {
+            	return{token: 'uri', prefix:null, suffix:null, value:"http://www.w3.org/1999/02/22-rdf-syntax-ns#type"}
+                })()
+            : null;
+          if (result12 !== null) {
+            var result10 = result12;
           } else {
-            var savedPos1 = pos;
+            var result10 = null;
+            pos = savedPos3;
+          }
+          if (result10 !== null) {
+            var result0 = result10;
+          } else {
+            var savedPos2 = pos;
             if (input.substr(pos, 1) === "!") {
-              var result6 = "!";
+              var result8 = "!";
               pos += 1;
             } else {
-              var result6 = null;
+              var result8 = null;
               if (reportMatchFailures) {
                 matchFailed("\"!\"");
               }
             }
-            if (result6 !== null) {
-              var result7 = parse_PathNegatedPropertySet();
-              if (result7 !== null) {
-                var result5 = [result6, result7];
+            if (result8 !== null) {
+              var result9 = parse_PathNegatedPropertySet();
+              if (result9 !== null) {
+                var result7 = [result8, result9];
               } else {
-                var result5 = null;
-                pos = savedPos1;
+                var result7 = null;
+                pos = savedPos2;
               }
             } else {
-              var result5 = null;
-              pos = savedPos1;
+              var result7 = null;
+              pos = savedPos2;
             }
-            if (result5 !== null) {
-              var result0 = result5;
+            if (result7 !== null) {
+              var result0 = result7;
             } else {
               var savedPos0 = pos;
+              var savedPos1 = pos;
               if (input.substr(pos, 1) === "(") {
-                var result2 = "(";
+                var result4 = "(";
                 pos += 1;
               } else {
-                var result2 = null;
+                var result4 = null;
                 if (reportMatchFailures) {
                   matchFailed("\"(\"");
                 }
               }
-              if (result2 !== null) {
-                var result3 = parse_PathAlternative();
-                if (result3 !== null) {
+              if (result4 !== null) {
+                var result5 = parse_PathAlternative();
+                if (result5 !== null) {
                   if (input.substr(pos, 1) === ")") {
-                    var result4 = ")";
+                    var result6 = ")";
                     pos += 1;
                   } else {
-                    var result4 = null;
+                    var result6 = null;
                     if (reportMatchFailures) {
                       matchFailed("\")\"");
                     }
                   }
-                  if (result4 !== null) {
-                    var result1 = [result2, result3, result4];
+                  if (result6 !== null) {
+                    var result2 = [result4, result5, result6];
                   } else {
-                    var result1 = null;
-                    pos = savedPos0;
+                    var result2 = null;
+                    pos = savedPos1;
                   }
                 } else {
-                  var result1 = null;
-                  pos = savedPos0;
+                  var result2 = null;
+                  pos = savedPos1;
                 }
+              } else {
+                var result2 = null;
+                pos = savedPos1;
+              }
+              var result3 = result2 !== null
+                ? (function(p) {
+                	return p;
+                    })(result2[1])
+                : null;
+              if (result3 !== null) {
+                var result1 = result3;
               } else {
                 var result1 = null;
                 pos = savedPos0;
@@ -21648,10 +22354,10 @@ SparqlParser.parser = (function(){
                 if(c.length == 1 && c[0].token && c[0].token === 'nil') {
                     GlobalBlankNodeCounter++;
                     return  {token: "triplesnodecollection", 
-                             triplesContext:[{subject: {token:'blank', label:("_:"+GlobalBlankNodeCounter)},
+                             triplesContext:[{subject: {token:'blank', value:("_:"+GlobalBlankNodeCounter)},
                                               predicate:{token:'uri', prefix:null, suffix:null, value:'http://www.w3.org/1999/02/22-rdf-syntax-ns#rest'},
-                                              object:  {token:'blank', label:("_:"+(GlobalBlankNodeCounter+1))}}], 
-                             chainSubject:{token:'blank', label:("_:"+GlobalBlankNodeCounter)}};
+                                              object:  {token:'blank', value:("_:"+(GlobalBlankNodeCounter+1))}}], 
+                             chainSubject:{token:'blank', value:("_:"+GlobalBlankNodeCounter)}};
           
                 }
                 */
@@ -21669,7 +22375,7 @@ SparqlParser.parser = (function(){
                         triplesContext = triplesContext.concat(nextSubject.triplesContext);
                     }
                     var currentSubject = null;
-                    triple = {subject: {token:'blank', label:("_:"+GlobalBlankNodeCounter)},
+                    triple = {subject: {token:'blank', value:("_:"+GlobalBlankNodeCounter)},
                               predicate:{token:'uri', prefix:null, suffix:null, value:'http://www.w3.org/1999/02/22-rdf-syntax-ns#first'},
                               object:nextObject };
           
@@ -21680,13 +22386,13 @@ SparqlParser.parser = (function(){
                     triplesContext.push(triple);
           
                     if(i===(c.length-1)) {
-                        triple = {subject: {token:'blank', label:("_:"+GlobalBlankNodeCounter)},
+                        triple = {subject: {token:'blank', value:("_:"+GlobalBlankNodeCounter)},
                                   predicate:{token:'uri', prefix:null, suffix:null, value:'http://www.w3.org/1999/02/22-rdf-syntax-ns#rest'},
                                   object:   {token:'uri', prefix:null, suffix:null, value:'http://www.w3.org/1999/02/22-rdf-syntax-ns#nil'}};
                     } else {
-                        triple = {subject: {token:'blank', label:("_:"+GlobalBlankNodeCounter)},
+                        triple = {subject: {token:'blank', value:("_:"+GlobalBlankNodeCounter)},
                                   predicate:{token:'uri', prefix:null, suffix:null, value:'http://www.w3.org/1999/02/22-rdf-syntax-ns#rest'},
-                                  object:  {token:'blank', label:("_:"+(GlobalBlankNodeCounter+1))} };
+                                  object:  {token:'blank', value:("_:"+(GlobalBlankNodeCounter+1))} };
                     }
           
                     triplesContext.push(triple);
@@ -21818,7 +22524,7 @@ SparqlParser.parser = (function(){
           ? (function(pl) {
           
                 GlobalBlankNodeCounter++;
-                var subject = {token:'blank', label:'_:'+GlobalBlankNodeCounter};
+                var subject = {token:'blank', value:'_:'+GlobalBlankNodeCounter};
                 var newTriples =  [];
           
                 for(var i=0; i< pl.pairs.length; i++) {
@@ -31198,7 +31904,7 @@ SparqlParser.parser = (function(){
         var savedPos1 = pos;
         var result5 = parse_BLANK_NODE_LABEL();
         var result6 = result5 !== null
-          ? (function(l) { return {token:'blank', label:l}})(result5)
+          ? (function(l) { return {token:'blank', value:l}})(result5)
           : null;
         if (result6 !== null) {
           var result4 = result6;
@@ -31212,7 +31918,7 @@ SparqlParser.parser = (function(){
           var savedPos0 = pos;
           var result2 = parse_ANON();
           var result3 = result2 !== null
-            ? (function() { GlobalBlankNodeCounter++; return {token:'blank', label:'_:'+GlobalBlankNodeCounter} })()
+            ? (function() { GlobalBlankNodeCounter++; return {token:'blank', value:'_:'+GlobalBlankNodeCounter} })()
             : null;
           if (result3 !== null) {
             var result1 = result3;
@@ -35005,8 +35711,8 @@ RDFJSInterface.buildRDFResource = function(value, bindings, engine, env) {
 };
 
 RDFJSInterface.buildBlankNode = function(value, bindings, engine, env) {
-    if(value.value == null && value.label) {
-        value.value = value.label;
+    if(value.valuetmp != null) {
+        value.value = value.valuetmp;
     }
     if(value.value.indexOf("_:") === 0) {
         value.value = value.value.split("_:")[1];
@@ -35099,7 +35805,7 @@ QueryFilters.boundVars = function(filterExpr) {
         } else if(expressionType == 'additiveexpression') {
             var acum = QueryFilters.boundVars(filterExpr.summand);
             for(var i=0; i<filterExpr.summands.length; i++) {
-                acum = acum.concat(QueryFilters.boundVars(filterExpr.summands[i].expression))
+                acum = acum.concat(QueryFilters.boundVars(filterExpr.summands[i].expression));
             }
 
             return acum;
@@ -36755,12 +37461,12 @@ QueryPlanDPSize.variablesInBGP = function(bgp) {
     }
 
     var components =  bgp.value || bgp;
-    var variables  = [];
+    variables  = [];
     for(comp in components) {
         if(components[comp] && components[comp].token === "var") {
             variables.push(components[comp].value);
         } else if(components[comp] && components[comp].token === "blank") {
-            variables.push("blank:"+components[comp].label);
+            variables.push("blank:"+components[comp].value);
         }
     }
     bgp.variables = variables;
@@ -36820,7 +37526,7 @@ QueryPlanDPSize.executeAndBGPsGroups = function(bgps) {
                 if(bgp[comp].token === 'var') {
                     vars.push(bgp[comp].value)
                 } else if(bgp[comp].token === 'blank') {
-                    vars.push(bgp[comp].label);
+                    vars.push(bgp[comp].value);
                 }
             }
         }
@@ -36974,7 +37680,7 @@ QueryPlanDPSize.executeAndBGPsDPSize = function(allBgps, dataset, queryEngine, e
         //console.log("NEW GROUP!!");
         //console.log(bgps);
         var costFactor = 1;
-        bgpas = queryEngine.computeCosts(bgps,env);
+	var bgpas = queryEngine.computeCosts(bgps,env);
 
         //console.log("COMPUTED COSTS:");
         //console.log(bgps);
@@ -36996,9 +37702,9 @@ QueryPlanDPSize.executeAndBGPsDPSize = function(allBgps, dataset, queryEngine, e
             for(var comp in bgps[i]) {
                 if(comp != '_cost') {
                     if(bgps[i][comp].token === 'var') {
-                        vars.push(bgps[i][comp].value)
+                        vars.push(bgps[i][comp].value);
                     } else if(bgps[i][comp].token === 'blank') {
-                        vars.push(bgps[i][comp].label)
+                        vars.push(bgps[i][comp].value);
                     }
                 }
             }
@@ -37105,6 +37811,8 @@ QueryPlanDPSize.executeAndBGPsDPSize = function(allBgps, dataset, queryEngine, e
 
     for(var g=0; g<groupResults.length; g++) {
         var tree = groupResults[g];
+	//console.log("\n\n\nEXECUTING:");
+	//console.log(tree);
         var result = QueryPlanDPSize.executeBushyTree(tree, dataset, queryEngine, env);
         if(acum == null) {
             acum = result;
@@ -37193,7 +37901,7 @@ QueryPlanDPSize.buildBindingsFromRange = function(results, bgp) {
         if(components[comp] && components[comp].token === "var") {
             bindings[comp] = components[comp].value;
         } else if(components[comp] && components[comp].token === "blank") {
-            bindings[comp] = "blank:"+components[comp].label;
+            bindings[comp] = "blank:"+components[comp].value;
         }
     }
 
@@ -37225,6 +37933,20 @@ QueryPlanDPSize.areCompatibleBindings = function(bindingsa, bindingsb) {
 
     return true;
 };
+
+//QueryPlanDPSize.areCompatibleBindingsStrict = function(bindingsa, bindingsb) {
+//    var foundSome = false;
+//    for(var variable in bindingsa) {
+// 	if(bindingsb[variable]!=null && (bindingsb[variable] != bindingsa[variable])) {
+// 	    return false;
+// 	} else if(bindingsb[variable] == bindingsa[variable]){
+// 	    foundSome = true;
+// 	}
+//    }
+//     
+//    return foundSome;
+//};
+
 
 
 // @used
@@ -37301,7 +38023,6 @@ QueryPlanDPSize.joinBindings = function(bindingsa, bindingsb) {
             }
         }
     }
-
     return result;
 };
 
@@ -37309,7 +38030,7 @@ QueryPlanDPSize.joinBindings = function(bindingsa, bindingsb) {
 QueryPlanDPSize.augmentMissingBindings = function(bindinga, bindingb) {
     for(var pb in bindingb) {
         if(bindinga[pb] == null) {
-            bindinga[pb] = null
+            bindinga[pb] = null;
         }
     }
     return bindinga;
@@ -37345,6 +38066,10 @@ QueryPlanDPSize.augmentMissingBindings = function(bindinga, bindingb) {
 // @used
 QueryPlanDPSize.leftOuterJoinBindings = function(bindingsa, bindingsb) {
     var result = [];
+    // strict was being passes ad an argument
+    //var compatibleFunction = QueryPlanDPSize.areCompatibleBindings;
+    //if(strict === true)
+    // 	compatibleFunction = QueryPlanDPSize.areCompatibleBindingsStrict;
 
     for(var i=0; i< bindingsa.length; i++) {
         var bindinga = bindingsa[i];
@@ -37414,12 +38139,12 @@ QueryPlanAsync.variablesInBGP = function(bgp) {
     }
 
     var components =  bgp.value || bgp;
-    var variables  = [];
+    variables  = [];
     for(comp in components) {
         if(components[comp] && components[comp].token === "var") {
             variables.push(components[comp].value);
         } else if(components[comp] && components[comp].token === "blank") {
-            variables.push("blank:"+components[comp].label);
+            variables.push("blank:"+components[comp].value);
         }
     }
     bgp.variables = variables;
@@ -37554,7 +38279,7 @@ QueryPlanAsync.executeAndBGPsGroups = function(bgps) {
                 if(bgp[comp].token === 'var') {
                     vars.push(bgp[comp].value)
                 } else if(bgp[comp].token === 'blank') {
-                    vars.push(bgp[comp].label);
+                    vars.push(bgp[comp].value);
                 }
             }
         }
@@ -37626,7 +38351,7 @@ QueryPlanAsync.executeBushyTree = function(treeNode, dataset, queryEngine, env, 
                     } else {
                         callback(false, null);
                     }
-                })
+                });
             } else {
                 callback(false, null);
             }
@@ -37670,12 +38395,14 @@ QueryPlanAsync.executeAndBGPsDPSize = function(allBgps, dataset, queryEngine, en
             // Building plans of size 1
             for(var i=0; i<bgps.length; i++) {
                 var vars = [];
+		
+		delete bgps[i]['variables'];
                 for(var comp in bgps[i]) {
                     if(comp != '_cost') {
                         if(bgps[i][comp].token === 'var') {
-                            vars.push(bgps[i][comp].value)
+                            vars.push(bgps[i][comp].value);
                         } else if(bgps[i][comp].token === 'blank') {
-                            vars.push(bgps[i][comp].label)
+                            vars.push(bgps[i][comp].value);
                         }
                     }
                 }
@@ -37779,12 +38506,15 @@ QueryPlanAsync.executeAndBGPsDPSize = function(allBgps, dataset, queryEngine, en
         // now execute the Bushy trees and perform
         // cross products between groups
         var acum = null;
-
+	//console.log("GROUP RESULTS");
+	//console.log(groupResults);
         Utils.repeat(0, groupResults.length, function(k, kenv) {
 
             var tree = groupResults[kenv._i];
             var floop = arguments.callee;
-           
+
+	    //console.log("EXECUTING BUSHY TREE");
+	    //console.log(tree);
             QueryPlanAsync.executeBushyTree(tree, dataset, queryEngine, env, function(success, result) {
                 if(success) {
                     if(acum == null) {
@@ -38025,7 +38755,7 @@ QueryPlanAsync.buildBindingsFromRange = function(results, bgp) {
         if(components[comp] && components[comp].token === "var") {
             bindings[comp] = components[comp].value;
         } else if(components[comp] && components[comp].token === "blank") {
-            bindings[comp] = "blank:"+components[comp].label;
+            bindings[comp] = "blank:"+components[comp].value;
         }
     }
 
@@ -38082,7 +38812,7 @@ QueryPlanAsync.areCompatibleBindings = function(bindingsa, bindingsb) {
     for(var variable in bindingsa) {
         if(bindingsb[variable]!=null && (bindingsb[variable] != bindingsa[variable])) {
             return false;
-        }
+	}
     }
 
     return true;
@@ -38590,7 +39320,7 @@ QueryEngine.QueryEngine.prototype.termCost = function(term, env) {
         var lexicalFormLiteral = Utils.lexicalFormLiteral(term, env);
         return(this.lexicon.resolveLiteralCost(lexicalFormLiteral));
     } else if(term.token === 'blank') {
-        var label = term.label;
+        var label = term.value;
         return this.lexicon.resolveBlankCost(label);
     } else if(term.token === 'var') {
         return (this.lexicon.oidCounter/3)
@@ -38623,7 +39353,7 @@ QueryEngine.QueryEngine.prototype.normalizeTerm = function(term, env, shouldInde
             return(oid);
         }
     } else if(term.token === 'blank') {
-        var label = term.label;
+        var label = term.value;
         var oid = env.blanks[label];
         if( oid != null) {
             return(oid);
@@ -38900,11 +39630,13 @@ QueryEngine.QueryEngine.prototype.executeQuery = function(syntaxTree, callback, 
                         if(aqt.template == null) {
                             aqt.template = {triplesContext: aqt.pattern};
                         }
-
                         var blankIdCounter = 1;
+			var toClear = [];
                         for(var i=0; i<result.length; i++) {
                             var bindings = result[i];
-                            var blankMap = {};
+			    for(var j=0; j<toClear.length; j++)
+				delete toClear[j].valuetmp;
+
                             for(var j=0; j<aqt.template.triplesContext.length; j++) {
                                 // fresh IDs for blank nodes in the construct template
                                 var components = ['subject', 'predicate', 'object'];
@@ -38912,15 +39644,14 @@ QueryEngine.QueryEngine.prototype.executeQuery = function(syntaxTree, callback, 
                                 for(var p=0; p<components.length; p++) {
                                     var component = components[p];
                                     if(tripleTemplate[component].token === 'blank') {
-                                        if(blankMap[tripleTemplate[component].label] != null) {
-                                            tripleTemplate[component].value = blankMap[tripleTemplate[component].label];
-                                        } else {
-                                            var blankId = "_:b"+blankIdCounter;
-                                            blankIdCounter++;
-                                            blankMap[tripleTemplate[component].label] = blankId;
-                                            tripleTemplate[component].value = blankId;
-                                        }
-                                    }
+					if(tripleTemplate[component].valuetmp && tripleTemplate[component].valuetmp != null) {
+					} else {
+					    var blankId = "_:b"+blankIdCounter;
+					    blankIdCounter++;
+					    tripleTemplate[component].valuetmp = blankId;
+					    toClear.push(tripleTemplate[component]);
+					}
+				    }
                                 }
                                 var s = RDFJSInterface.buildRDFResource(tripleTemplate.subject,bindings,that,queryEnv);
                                 var p = RDFJSInterface.buildRDFResource(tripleTemplate.predicate,bindings,that,queryEnv);
@@ -39165,9 +39896,135 @@ QueryEngine.QueryEngine.prototype.executeSelectUnit = function(projection, datas
     } else if(pattern.kind === "EMPTY_PATTERN") {
         // as an example of this case  check DAWG test case: algebra/filter-nested-2
         return [];
+    } else if(pattern.kind === "ZERO_OR_MORE_PATH" || pattern.kind === 'ONE_OR_MORE_PATH') {
+	return this.executeZeroOrMorePath(pattern, dataset, env);
     } else {
         console.log("Cannot execute query pattern " + pattern.kind + ". Not implemented yet.");
         return null;
+    }
+};
+
+QueryEngine.QueryEngine.prototype.executeZeroOrMorePath = function(pattern, dataset, env) {
+    //console.log("EXECUTING ZERO OR MORE PATH");
+    //console.log("X");
+    //console.log(pattern.x);
+    //console.log("Y");
+    //console.log(pattern.y);
+    var projection = [];
+    var starProjection = false;
+    if(pattern.x.token === 'var') {
+	projection.push({token: 'variable',
+			 kind: 'var',
+			 value: pattern.x.value});
+    }
+    if(pattern.y.token === 'var') {
+	projection.push({token: 'variable',
+			 kind: 'var',
+			 value: pattern.y.value});
+    }
+
+    if(projection.length === 0) {
+	projection.push({"token": "variable", "kind": "*"});
+	starProjection = true;
+    }
+
+    //console.log("COMPUTED PROJECTION");
+    //console.log(projection);
+
+
+    if(pattern.x.token === 'var' && pattern.y.token === 'var') {
+	var bindings = this.executeAndBGP(projection, dataset, pattern.path, env);
+	//console.log("BINDINGS "+bindings.length);
+	//console.log(bindings);
+	var acum = {};
+	var results = [];
+	var vx, intermediate, nextBinding, vxDenorm;
+	var origVXName = pattern.x.value;
+	var last = pattern.x;
+	var nextPath = pattern.path;
+	//console.log("VAR - VAR PATTERN");
+	//console.log(nextPath.value);
+	for(var i=0; i<bindings.length; i++) {
+	    vx = bindings[i][origVXName];
+	    if(acum[vx] == null) {
+		vxDenorm = this.lexicon.retrieve(vx);
+		pattern.x = vxDenorm;
+		//console.log("REPLACING");
+		//console.log(last);
+		//console.log("BY");
+		//console.log(vxDenorm);
+		//console.log(nextPath.value);
+		pattern.path = this.abstractQueryTree.replace(nextPath, last, vxDenorm, env);
+		nextPath = Utils.clone(pattern.path);
+		intermediate = this.executeZeroOrMorePath(pattern, dataset, env);
+		for(var j=0; j<intermediate.length; j++) {
+		    nextBinding = intermediate[j];
+		    nextBinding[origVXName] = vx;
+		    results.push(nextBinding)
+		}
+		last = vxDenorm;
+	    }
+	}
+
+	//console.log("RETURNING VAR - VAR");
+	return results;
+    } else if(pattern.x.token !== 'var' && pattern.y.token === 'var') {
+	var finished;
+	var acum = {};
+	var initial = true;
+	var pending = [];
+	var bindings,nextBinding;
+	var collected = [];
+	var origVx = pattern.x;
+	var last;
+
+	while(initial == true || pending.length !== 0) {
+	    //console.log("-- Iteration");
+	    //console.log(pattern.path.value[0]);
+	    if(initial === true) {
+		bindings = this.executeAndBGP(projection, dataset, pattern.path, env);
+		//console.log("SAVING LAST");
+		//console.log(pattern.x);
+		last = pattern.x;
+		initial = false;
+	    } else {
+		var nextOid = pending.pop();
+		//console.log("POPPING:"+nextOid);
+		var value = this.lexicon.retrieve(nextOid);
+		var path = pattern.path; //Utils.clone(pattern.path);
+		//console.log(path.value[0]);
+		//console.log("REPLACING");
+		//console.log(last);
+		//console.log("BY");
+		//console.log(value);
+		path = this.abstractQueryTree.replace(path, last, value, env);
+		//console.log(path.value[0]);
+		bindings = this.executeAndBGP(projection, dataset, path, env);
+		last = value;
+	    }
+
+
+	    //console.log("BINDINGS!");
+	    //console.log(bindings);
+
+	    for(var i=0; i<bindings.length; i++) {
+		//console.log(bindings[i][pattern.y.value])
+		var value = bindings[i][pattern.y.value];
+		//console.log("VALUE:"+value);
+		if(acum[value] !== true) {
+		    nextBinding = {};
+		    nextBinding[pattern.y.value] = value;
+		    collected.push(nextBinding);
+		    acum[value] = true;
+		    pending.push(value);
+		}
+	    }
+	}
+	//console.log("RETURNING TERM - VAR");
+	//console.log(collected);
+	return collected;
+    } else {
+	throw "Kind of path not supported!";
     }
 };
 
@@ -39218,21 +40075,25 @@ QueryEngine.QueryEngine.prototype.executeLEFT_JOIN = function(projection, datase
     var that = this;
     var sets = [];
 
+    //console.log("SET QUERY 1");
+    //console.log(setQuery1.value);
     set1 = that.executeSelectUnit(projection, dataset, setQuery1, env);
     if(set1==null) {
         return null;
     }
      
+    //console.log("SET QUERY 2");
+    //console.log(setQuery2);
     set2 = that.executeSelectUnit(projection, dataset, setQuery2, env);
     if(set2==null) {
         return null;
     }
 
-    
-    var result = QueryPlan.leftOuterJoinBindings(set1, set2);
-    //console.log("SETS:")
+
+    //console.log("\nLEFT JOIN SETS:")
     //console.log(set1)
     //console.log(set2)
+    var result = QueryPlan.leftOuterJoinBindings(set1, set2);
     //console.log("---")
     //console.log(result);
 
@@ -39290,7 +40151,7 @@ QueryEngine.QueryEngine.prototype.executeLEFT_JOIN = function(projection, datase
 
                 }
             }
-            
+
         return acum;
     } else {
         return bindings;
@@ -39317,6 +40178,10 @@ QueryEngine.QueryEngine.prototype.executeJOIN = function(projection, dataset, pa
         return null;
     }
 
+    //console.log("JOINING");
+    //console.log(set1);
+    //console.log("-----");
+    //console.log(set2);
     var result = QueryPlan.joinBindings(set1, set2);
     result = QueryFilters.checkFilters(patterns, result, false, dataset, env, that);
     return result;
@@ -40211,7 +41076,7 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.normalizeTerm = function(term, e
             return(oid);
         }
     } else if(term.token === 'blank') {
-        var label = term.label;
+        var label = term.value;
         var oid = env.blanks[label];
         if( oid != null) {
             return(oid);
@@ -40546,11 +41411,26 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.executeQuery = function(syntaxTr
                         if(aqt.template == null) {
                             aqt.template = {triplesContext: aqt.pattern};
                         }
-
                         var blankIdCounter = 1;
+			var toDelete = [];
                         for(var i=0; i<result.length; i++) {
                             var bindings = result[i];
-                            var blankMap = {};
+
+			    // @doc
+			    // -----------------------------------------
+			    // valuetmp must be deleted to avoid producing
+			    // different construct templates with the same 
+			    // generated blankIDs. Blanks in the templates
+			    // must be different between results.
+			    // These blanks are different than the blank returned
+			    // by variables in the select query. These blanks will
+			    // be tha same across different generated templates.
+			    // To avoid collisions between the gen blanks in the templates
+			    // and the blanks in the result bindings, we add a _:b to the
+			    // generated blank IDs.
+			    for(var j=0; j<toDelete.length; j++)
+				delete toDelete[j].valuetmp;
+
                             for(var j=0; j<aqt.template.triplesContext.length; j++) {
                                 // fresh IDs for blank nodes in the construct template
                                 var components = ['subject', 'predicate', 'object'];
@@ -40558,15 +41438,14 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.executeQuery = function(syntaxTr
                                 for(var p=0; p<components.length; p++) {
                                     var component = components[p];
                                     if(tripleTemplate[component].token === 'blank') {
-                                        if(blankMap[tripleTemplate[component].label] != null) {
-                                            tripleTemplate[component].value = blankMap[tripleTemplate[component].label];
-                                        } else {
-                                            var blankId = "_:b"+blankIdCounter;
-                                            blankIdCounter++;
-                                            blankMap[tripleTemplate[component].label] = blankId;
-                                            tripleTemplate[component].value = blankId;
-                                        }
-                                    }
+					if(tripleTemplate[component].valuetmp && tripleTemplate[component].valuetmp != null) {
+					} else {
+					    var blankId = "_:b"+blankIdCounter;
+					    blankIdCounter++;
+					    tripleTemplate[component].valuetmp = blankId;
+					    toDelete.push(tripleTemplate[component]);
+					}
+				    }
                                 }
                                 var s = RDFJSInterface.buildRDFResource(tripleTemplate.subject,bindings,that,queryEnv);
                                 var p = RDFJSInterface.buildRDFResource(tripleTemplate.predicate,bindings,that,queryEnv);
@@ -40579,6 +41458,7 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.executeQuery = function(syntaxTr
                                 }
                             }
                         }
+
                         callback(true,graph);
                     } else {
                         callback(false, result);
@@ -40814,8 +41694,166 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.executeSelectUnit = function(pro
     } else if(pattern.kind === "EMPTY_PATTERN") {
         // as an example of this case  check DAWG test case: algebra/filter-nested-2
         callback(true, []);
+    } else if(pattern.kind === "ZERO_OR_MORE_PATH" || pattern.kind === "ONE_OR_MORE_PATH") {
+	this.executeZeroOrMorePath(pattern, dataset, env, callback);
     } else {
         callback(false, "Cannot execute query pattern " + pattern.kind + ". Not implemented yet.");
+    }
+};
+
+MongodbQueryEngine.MongodbQueryEngine.prototype.executeZeroOrMorePath = function(pattern, dataset, env, callback) {
+    //console.log("EXECUTING ZERO OR MORE PATH");
+    //console.log("X");
+    //console.log(pattern.x);
+    //console.log("Y");
+    //console.log(pattern.y);
+    var projection = [];
+    var starProjection = false;
+    if(pattern.x.token === 'var') {
+	projection.push({token: 'variable',
+			 kind: 'var',
+			 value: pattern.x.value});
+    }
+    if(pattern.y.token === 'var') {
+	projection.push({token: 'variable',
+			 kind: 'var',
+			 value: pattern.y.value});
+    }
+
+    if(projection.length === 0) {
+	projection.push({"token": "variable", "kind": "*"});
+	starProjection = true;
+    }
+
+    if(pattern.x.token === 'var' && pattern.y.token === 'var') {
+	var that = this;
+	this.executeAndBGP(projection, dataset, pattern.path, env, function(success, bindings) {
+	    //console.log("BINDINGS "+bindings.length);
+	    //console.log(bindings);
+	    var acum = {};
+	    var results = [];
+	    var vx, intermediate, nextBinding, vxDenorm;
+	    var origVXName = pattern.x.value;
+	    var last = pattern.x;
+	    var nextPath = pattern.path;
+	    //console.log("VAR - VAR PATTERN");
+	    //console.log(nextPath.value);
+	    Utils.repeat(0, bindings.length, function(k,e) {
+		var floop = arguments.callee;
+	        vx = bindings[e._i][origVXName];
+	        if(acum[vx] == null) {
+	     	    vxDenorm = that.retrieve(vx);
+	     	    pattern.x = vxDenorm;
+	     	    //console.log("REPLACING");
+	     	    //console.log(last);
+	     	    //console.log("BY");
+	     	    //console.log(vxDenorm);
+	     	    //console.log(nextPath.value);
+	     	    pattern.path = that.abstractQueryTree.replace(nextPath, last, vxDenorm, env);
+	     	    nextPath = Utils.clone(pattern.path);
+	     	    that.executeZeroOrMorePath(pattern, dataset, env, function(success, intermediate){
+			//console.log("BACK EXECUTE_ZER_OR_MORE");
+	     		for(var j=0; j<intermediate.length; j++) {
+	     		    nextBinding = intermediate[j];
+	     		    nextBinding[origVXName] = vx;
+	     		    results.push(nextBinding)
+	     		}
+	     		last = vxDenorm;
+			k(floop,e);
+		    });
+	        } else {
+		    k(floop,e);
+		}
+	    }, function(e) {
+		//console.log("RETURNING VAR - VAR");
+		//console.log(results);
+		callback(true, results);
+	    });
+	});
+    } else if(pattern.x.token !== 'var' && pattern.y.token === 'var') {
+	var that = this;
+	var data = {finished:false,
+		    acum: {},
+		    initial: true,
+		    pending: [],
+		    bindings: null,
+		    nextBinding: null,
+		    collected: [],
+		    origVx: pattern.x,
+		    last: null };
+
+	var continueFunction = function(bindings,floop,k,e) {
+	    //console.log("BINDINGS!");
+	    //console.log(bindings);
+
+	    for(var i=0; i<bindings.length; i++) {
+		//console.log(bindings[i][pattern.y.value])
+		var value = bindings[i][pattern.y.value];
+		//console.log("VALUE:"+value);
+		//console.log(e.acum);
+		if(e.acum[value] !== true) {
+		    e.nextBinding = {};
+		    e.nextBinding[pattern.y.value] = value;
+		    e.collected.push(e.nextBinding);
+		    e.acum[value] = true;
+		    //console.log("PUSHIN!!!");
+		    //console.log(value);
+		    //console.log("-----------");
+		    e.pending.push(value);
+		}
+	    }
+	    //console.log("MUST CONTINUE? --> "+(e.initial == true || e.pending.length !== 0));
+	    //console.log(e.initial);
+	    //console.log(e.pending);
+	    //console.log(e.pending.length);
+	    k((e.initial == true || e.pending.length !== 0),floop,e);
+	};
+
+	Utilsmeanwhile((data.initial == true || data.pending.length !== 0),
+		    function(k,e) {
+			var floop = arguments.callee;
+			//console.log("-- Iteration");
+			//console.log(e.pending);
+			//console.log(pattern.path.value[0]);
+			if(e.initial === true) {
+			    //console.log("INITIAL");
+			    //console.log(pattern.path.value[0]);
+			    that.executeAndBGP(projection, dataset, pattern.path, env, function(success, bindings){
+				//console.log("BINDINGS");
+				//console.log(bindings);
+				//console.log("SAVING LAST");
+				//console.log(pattern.x);
+				e.last = pattern.x;
+				e.initial = false;
+				continueFunction(bindings,floop,k,e);
+			    });
+			} else {
+			    //console.log(e.pending.length);
+			    var nextOid = e.pending.pop();
+			    //console.log("POPPING:"+nextOid);
+			    var value = that.retrieve(nextOid);
+			    var path = pattern.path; //Utils.clone(pattern.path);
+			    //console.log(path.value[0]);
+			    //console.log("REPLACING");
+			    //console.log(last);
+			    //console.log("BY");
+			    //console.log(value);
+			    path = that.abstractQueryTree.replace(path, e.last, value, env);
+			    //console.log(path.value[0]);
+			    that.executeAndBGP(projection, dataset, path, env, function(success, bindings){
+				e.last = value;
+				continueFunction(bindings,floop,k,e);
+			    });
+			}
+		    },
+		    function(e) {
+			//console.log("RETURNING TERM - VAR");
+			//console.log(e.collected);
+			callback(true, e.collected);
+		    },
+ 		    data);
+    } else {
+     	throw "Kind of path not supported!";
     }
 };
 
@@ -40859,10 +41897,13 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.executeUNION = function(projecti
 
 MongodbQueryEngine.MongodbQueryEngine.prototype.executeAndBGP = function(projection, dataset, patterns, env, callback) {
     var that = this;
-
     // @modified qp
+    //console.log(" EXECUTE AND BGP");
+    //console.log(patterns.value);
     QueryPlanAsync.executeAndBGPsDPSize(patterns.value, dataset, this, env, function(success,result){
         if(success) {
+	    //console.log("-- RESULTS");
+	    //console.log(result);
             result = QueryFilters.checkFilters(patterns, result, false, dataset, env, that);
             callback(true, result);
         } else {
@@ -41029,7 +42070,6 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.rangeQuery = function(quad, quer
         //console.log("RANGE QUERY:")
         //console.log(key);
         //console.log(new QuadIndexCommon.Pattern(key));
-        //console.log(key);
         that.range(new MongodbQueryEngine.Pattern(key),function(quads){
             //console.log("retrieved");
             //console.log(quads)
@@ -41730,8 +42770,7 @@ MongodbQueryEngine.Pattern = function(components) {
     for(var i=0; i<properties.length; i++) {
         var component = components[properties[i]];
         if(component.indexOf("u:")===0 ||
-           component.indexOf("l:")===0 ||
-           component.indexOf("b:")===0) {
+           component.indexOf("l:")===0) {
             key[properties[i]] = component;
         } else {
             key[properties[i]] = null;
@@ -42676,7 +43715,7 @@ var RDFStoreClient = RDFStoreChildClient;
 /**
  * Version of the store
  */
-Store.VERSION = "0.5.6";
+Store.VERSION = "0.5.7";
 
 /**
  * Create a new RDFStore instance that will be

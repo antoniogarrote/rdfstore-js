@@ -42,6 +42,7 @@ Some other features included in the library are the following:
 - Turtle/N3 parser
 - W3C RDF Interfaces API
 - RDF graph events API
+- Partial support for property paths in queries
 - Parallel execution where WebWorkers are available
 - Persistent storage using HTML5 LocalStorage in the browser version
 - Persistent storage using MongoDB in the Node.js version
@@ -79,6 +80,12 @@ This is a list of the different kind of queries currently implemented:
 - DROP DEFAULT/NAMED/ALL/GRAPH clauses
 - CLEAR DEFAULT/NAMED/ALL/Graph clauses
 - FILTER EXISTS / NOT EXISTS operators
+
+These are supported components in property path expressions:
+
+- Sequence: elt1/elt2/elt3
+- Zero or more occurrences: elt*
+- One or more occurrences: elt+
 
 ##Installation
 

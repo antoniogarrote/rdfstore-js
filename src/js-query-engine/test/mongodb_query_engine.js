@@ -1637,4 +1637,98 @@ if(MongodbQueryEngine.mongodb === true) {
        });
    };
 
+    exports.testPathOwl = function(test) {
+       var engine = new MongodbQueryEngine.MongodbQueryEngine();
+       engine.readConfiguration(function(){
+	   engine.clean(function(){
+		var query = "PREFIX : <http://triplr.org/> \
+                             PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                             PREFIX owl: <http://www.w3.org/2002/07/owl#> \
+                             PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> \
+                             PREFIX  xsd: <http://www.w3.org/2001/XMLSchema#> \
+			     INSERT DATA {\
+			     :actors\
+                                 a owl:ObjectProperty ;\
+                                 rdfs:comment \"A cast member of the movie, TV series, season, or episode, or video.\"@en ;\
+                                 rdfs:domain [\
+                                     a owl:Class ;\
+                                     owl:unionOf (:Movie\
+                                         :TVEpisode\
+                                         :TVSeries\
+                                     )\
+                                 ] ;\
+                                 rdfs:label \"actors\"@en ;\
+                                 rdfs:range [\
+                                     a owl:Class ;\
+                                     owl:unionOf (:Person\
+                                     )\
+                                 ] .\
+                             }";
+    
+		engine.execute(query, function(success, result){
+		    engine.execute('PREFIX : <http://triplr.org/>\
+                                    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                                    PREFIX owl: <http://www.w3.org/2002/07/owl#> \
+                                    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> \
+                                    PREFIX  xsd: <http://www.w3.org/2001/XMLSchema#> \
+                                    SELECT ?domain { :actors rdfs:domain/owl:unionOf/rdf:rest*/rdf:first ?domain } ORDER BY ?domain', function(success, results){
+					console.log(results);
+					test.done();
+				    });
+		});
+	    });
+	});
+    };
+
+   exports.testPathOneMore1 = function(test) {
+       var engine = new MongodbQueryEngine.MongodbQueryEngine();
+       engine.readConfiguration(function(){
+	   engine.clean(function(){
+	       var query = "PREFIX : <http://example/>\
+			    INSERT DATA {\
+			    :s1 :first 1 .\
+			    :s1 :rest :s2 .\
+			    :s2 :first 2 .\
+			    :s2 :rest :s3 .\
+			    :s3 :first 3 .\
+			    :s3 :rest :s4 .\
+			    :s4 :first 4 .\
+			    :s4 :rest :nil }";
+    
+	       engine.execute(query, function(success, result){
+		   engine.execute('PREFIX : <http://example/> SELECT ?data {  :s1 :rest/:restNonExistent+/:first ?data }', function(success, results){
+		       test.ok(results.length === 0);
+		       test.done();
+		   });
+	       });
+	   });
+       });
+   };
+
+   exports.testPathOneMore1 = function(test) {
+       var engine = new MongodbQueryEngine.MongodbQueryEngine();
+       engine.readConfiguration(function(){
+	   engine.clean(function(){
+	       var query = "PREFIX : <http://example/>\
+			    INSERT DATA {\
+			    :s1 :first 1 .\
+			    :s1 :rest :s2 .\
+			    :s2 :first 2 .\
+			    :s2 :rest :s3 .\
+			    :s3 :first 3 .\
+			    :s3 :rest :s4 .\
+			    :s4 :first 4 .\
+			    :s4 :rest :nil }";
+    
+	       engine.execute(query, function(success, result){
+		   engine.execute('PREFIX : <http://example/> SELECT ?data {  :s1 :rest/:rest+/:first ?data }', function(success, results){
+		       test.ok(results.length === 2);
+		       test.done();
+		   });
+	       });
+	   });
+       });
+   };
+
+
 }

@@ -385,7 +385,7 @@ Utils.lexicalFormTerm = function(term, ns) {
     } else if(term.token === 'literal') {
         return {'literal': Utils.lexicalFormLiteral(term, ns)};
     } else if(term.token === 'blank') {
-        var label = '_:'+term.label;
+        var label = '_:'+term.value;
         return {'blank': label};
     } else {
 	throw "Error, cannot get lexical form of unknown token: "+term.token;
@@ -1736,7 +1736,7 @@ Lexicon.Lexicon.prototype.resolveBlank = function(label) {
 //    callback(id);
 
     var oid = this.oidCounter;
-    this.oidCounter++
+    this.oidCounter++;
     return(""+oid);
 };
 
@@ -1825,7 +1825,7 @@ Lexicon.Lexicon.prototype.retrieve = function(oid) {
               } else {
                   var maybeBlank = this.OIDToBlank[""+oid];
                   if(maybeBlank != null) {
-                      return({token:"blank", label:"_:"+oid});
+                      return({token:"blank", value:"_:"+oid});
                   } else {
                       throw("Null value for OID");
                   }
@@ -2637,12 +2637,12 @@ jsonld.toTriples = function(input, graph, callback)
             }
             for(var i2 in obj)
             {
-                var obji2 = obj[i2]
+                var obji2 = obj[i2];
                 if(typeof(obji2) === 'string') {
                     obji2 = {'token': 'literal', 'value':obji2};
                 } else if(obji2['@iri'] != null) {
                     if(obji2['@iri'][0] == "_") {
-                        obji2 = {'token':'blank', 'label':obji2['@iri'].split(":")[1]}
+                        obji2 = {'token':'blank', 'value':obji2['@iri'].split(":")[1]}
                     } else {
                         obji2 = {'token':'uri', 'value':obji2['@iri']}
                     }
@@ -5175,22 +5175,12 @@ AbstractQueryTree.translatePathExpressionsInBGP = function(bgp, env) {
 	    //console.log("BACK FROM TRANSFORMED");
 	    if(bgpTransformed.kind === 'BGP') {
 		before = before.concat(bgpTransformed.value);
-	    } else if(bgpTransformed.kind === 'ZERO_OR_MORE_PATH'){
+	    } else if(bgpTransformed.kind === 'ZERO_OR_MORE_PATH' || bgpTransformed.kind === 'ONE_OR_MORE_PATH'){
 		//console.log("BEFORE");
 		//console.log(bgpTransformed);
 		    
 
 		if(before.length > 0) {
-		    //if(bgpTransformed.y.token === 'var' && bgpTransformed.y.value.indexOf("fresh:")===0) {
-		    // 	console.log("ADDING EXTRA PATTERN");
-		    // 	for(var j=0; j<bgp.value.length; j++) {
-		    // 	    if(bgp.value[j].object && bgp.value[j].object.token === 'var' && bgp.value[j].object.value === bgpTransformed.x.value) {
-		    // 		optionalPattern = Utils.clone(bgp.value[j]);
-		    // 		optionalPattern.object = bgpTransformed.y;
-		    // 	    }
-		    // 	}
-		    //}
-
 		    bottomJoin =  {kind: 'JOIN',
 				   lvalue: {kind: 'BGP', value:before},
 				   rvalue: bgpTransformed};
@@ -5198,26 +5188,29 @@ AbstractQueryTree.translatePathExpressionsInBGP = function(bgp, env) {
 		    bottomJoin = bgpTransformed;
 		}
 
-		if(bgpTransformed.y.token === 'var' && bgpTransformed.y.value.indexOf("fresh:")===0 &&
-		   bgpTransformed.x.token === 'var' && bgpTransformed.x.value.indexOf("fresh:")===0) {
-		    //console.log("ADDING EXTRA PATTERN 1)");
-		    for(var j=0; j<bgp.value.length; j++) {
-			//console.log(bgp.value[j]);
-			if(bgp.value[j].object && bgp.value[j].object.token === 'var' && bgp.value[j].object.value === bgpTransformed.x.value) {
-			    //console.log(" YES 1)");
-			    optionalPattern = Utils.clone(bgp.value[j]);
-			    optionalPattern.object = bgpTransformed.y;
+		
+		if(bgpTransformed.kind === 'ZERO_OR_MORE_PATH') {
+		    if(bgpTransformed.y.token === 'var' && bgpTransformed.y.value.indexOf("fresh:")===0 &&
+		       bgpTransformed.x.token === 'var' && bgpTransformed.x.value.indexOf("fresh:")===0) {
+			//console.log("ADDING EXTRA PATTERN 1)");
+			for(var j=0; j<bgp.value.length; j++) {
+		   	    //console.log(bgp.value[j]);
+		   	    if(bgp.value[j].object && bgp.value[j].object.token === 'var' && bgp.value[j].object.value === bgpTransformed.x.value) {
+		   		//console.log(" YES 1)");
+		   		optionalPattern = Utils.clone(bgp.value[j]);
+		   		optionalPattern.object = bgpTransformed.y;
+		   	    }
 			}
-		    }
-		} else if(bgpTransformed.y.token === 'var' && bgpTransformed.y.value.indexOf("fresh:")===0) {
-		    //console.log("ADDING EXTRA PATTERN 2)");
-		    var from, to;
-		    for(var j=0; j<bgp.value.length; j++) {
-			//console.log(bgp.value[j]);
-			if(bgp.value[j].subject && bgp.value[j].subject.token === 'var' && bgp.value[j].subject.value === bgpTransformed.y.value) {
-			    //console.log(" YES 2)");
-			    optionalPattern = Utils.clone(bgp.value[j]);
-			    optionalPattern.subject = bgpTransformed.x;
+		    } else if(bgpTransformed.y.token === 'var' && bgpTransformed.y.value.indexOf("fresh:")===0) {
+			//console.log("ADDING EXTRA PATTERN 2)");
+			var from, to;
+			for(var j=0; j<bgp.value.length; j++) {
+		   	    //console.log(bgp.value[j]);
+		   	    if(bgp.value[j].subject && bgp.value[j].subject.token === 'var' && bgp.value[j].subject.value === bgpTransformed.y.value) {
+		   		//console.log(" YES 2)");
+		   		optionalPattern = Utils.clone(bgp.value[j]);
+		   		optionalPattern.subject = bgpTransformed.x;
+		   	    }
 			}
 		    }
 		}
@@ -5596,7 +5589,7 @@ AbstractQueryTree.AbstractQueryTree.prototype._replaceTripleContext = function(t
             var comp = triples[i][p];
 	    if(comp.token === 'var' && from.token === 'var' && comp.value === from.value) {
 		triples[i][p] = to;
-	    } else if(comp.token === 'blank' && from.token === 'blank' && comp.label === from.label) {
+	    } else if(comp.token === 'blank' && from.token === 'blank' && comp.value === from.value) {
 		triples[i][p] = to;
 	    } else {
 		if((comp.token === 'literal' || comp.token ==='uri') && 
@@ -22360,10 +22353,10 @@ SparqlParser.parser = (function(){
                 if(c.length == 1 && c[0].token && c[0].token === 'nil') {
                     GlobalBlankNodeCounter++;
                     return  {token: "triplesnodecollection", 
-                             triplesContext:[{subject: {token:'blank', label:("_:"+GlobalBlankNodeCounter)},
+                             triplesContext:[{subject: {token:'blank', value:("_:"+GlobalBlankNodeCounter)},
                                               predicate:{token:'uri', prefix:null, suffix:null, value:'http://www.w3.org/1999/02/22-rdf-syntax-ns#rest'},
-                                              object:  {token:'blank', label:("_:"+(GlobalBlankNodeCounter+1))}}], 
-                             chainSubject:{token:'blank', label:("_:"+GlobalBlankNodeCounter)}};
+                                              object:  {token:'blank', value:("_:"+(GlobalBlankNodeCounter+1))}}], 
+                             chainSubject:{token:'blank', value:("_:"+GlobalBlankNodeCounter)}};
           
                 }
                 */
@@ -22381,7 +22374,7 @@ SparqlParser.parser = (function(){
                         triplesContext = triplesContext.concat(nextSubject.triplesContext);
                     }
                     var currentSubject = null;
-                    triple = {subject: {token:'blank', label:("_:"+GlobalBlankNodeCounter)},
+                    triple = {subject: {token:'blank', value:("_:"+GlobalBlankNodeCounter)},
                               predicate:{token:'uri', prefix:null, suffix:null, value:'http://www.w3.org/1999/02/22-rdf-syntax-ns#first'},
                               object:nextObject };
           
@@ -22392,13 +22385,13 @@ SparqlParser.parser = (function(){
                     triplesContext.push(triple);
           
                     if(i===(c.length-1)) {
-                        triple = {subject: {token:'blank', label:("_:"+GlobalBlankNodeCounter)},
+                        triple = {subject: {token:'blank', value:("_:"+GlobalBlankNodeCounter)},
                                   predicate:{token:'uri', prefix:null, suffix:null, value:'http://www.w3.org/1999/02/22-rdf-syntax-ns#rest'},
                                   object:   {token:'uri', prefix:null, suffix:null, value:'http://www.w3.org/1999/02/22-rdf-syntax-ns#nil'}};
                     } else {
-                        triple = {subject: {token:'blank', label:("_:"+GlobalBlankNodeCounter)},
+                        triple = {subject: {token:'blank', value:("_:"+GlobalBlankNodeCounter)},
                                   predicate:{token:'uri', prefix:null, suffix:null, value:'http://www.w3.org/1999/02/22-rdf-syntax-ns#rest'},
-                                  object:  {token:'blank', label:("_:"+(GlobalBlankNodeCounter+1))} };
+                                  object:  {token:'blank', value:("_:"+(GlobalBlankNodeCounter+1))} };
                     }
           
                     triplesContext.push(triple);
@@ -22530,7 +22523,7 @@ SparqlParser.parser = (function(){
           ? (function(pl) {
           
                 GlobalBlankNodeCounter++;
-                var subject = {token:'blank', label:'_:'+GlobalBlankNodeCounter};
+                var subject = {token:'blank', value:'_:'+GlobalBlankNodeCounter};
                 var newTriples =  [];
           
                 for(var i=0; i< pl.pairs.length; i++) {
@@ -31910,7 +31903,7 @@ SparqlParser.parser = (function(){
         var savedPos1 = pos;
         var result5 = parse_BLANK_NODE_LABEL();
         var result6 = result5 !== null
-          ? (function(l) { return {token:'blank', label:l}})(result5)
+          ? (function(l) { return {token:'blank', value:l}})(result5)
           : null;
         if (result6 !== null) {
           var result4 = result6;
@@ -31924,7 +31917,7 @@ SparqlParser.parser = (function(){
           var savedPos0 = pos;
           var result2 = parse_ANON();
           var result3 = result2 !== null
-            ? (function() { GlobalBlankNodeCounter++; return {token:'blank', label:'_:'+GlobalBlankNodeCounter} })()
+            ? (function() { GlobalBlankNodeCounter++; return {token:'blank', value:'_:'+GlobalBlankNodeCounter} })()
             : null;
           if (result3 !== null) {
             var result1 = result3;
@@ -35717,8 +35710,8 @@ RDFJSInterface.buildRDFResource = function(value, bindings, engine, env) {
 };
 
 RDFJSInterface.buildBlankNode = function(value, bindings, engine, env) {
-    if(value.value == null && value.label) {
-        value.value = value.label;
+    if(value.valuetmp != null) {
+        value.value = value.valuetmp;
     }
     if(value.value.indexOf("_:") === 0) {
         value.value = value.value.split("_:")[1];
@@ -36143,7 +36136,7 @@ QueryFilters.RDFTermEquality = function(v1, v2, queryEngine, env) {
     } else if(v1.token === 'uri' && v2.token === 'uri') {
         return Utils.lexicalFormBaseUri(v1, env) == Utils.lexicalFormBaseUri(v2, env);
     } else if(v1.token === 'blank' && v2.token === 'blank') {
-        return v1.label == v2.label;
+        return v1.value == v2.value;
     } else {
         return false;
     }
@@ -36710,7 +36703,7 @@ QueryFilters.runTotalGtFunction = function(op1,op2) {
         // one of the literals must have type/lang and the othe may not have them
         return QueryFilters.ebvBoolean(""+op1.value+op1.type+op1.lang > ""+op2.value+op2.type+op2.lang);
     } else if(op1.token && op1.token === 'blank' && op2.token && op2.token === 'blank') {    
-        return QueryFilters.ebvBoolean(op1.label > op2.label);
+        return QueryFilters.ebvBoolean(op1.value > op2.value);
     } else if(op1.value && op2.value) {
         return QueryFilters.ebvBoolean(op1.value > op2.value);
     } else {
@@ -37472,7 +37465,7 @@ QueryPlanDPSize.variablesInBGP = function(bgp) {
         if(components[comp] && components[comp].token === "var") {
             variables.push(components[comp].value);
         } else if(components[comp] && components[comp].token === "blank") {
-            variables.push("blank:"+components[comp].label);
+            variables.push("blank:"+components[comp].value);
         }
     }
     bgp.variables = variables;
@@ -37532,7 +37525,7 @@ QueryPlanDPSize.executeAndBGPsGroups = function(bgps) {
                 if(bgp[comp].token === 'var') {
                     vars.push(bgp[comp].value)
                 } else if(bgp[comp].token === 'blank') {
-                    vars.push(bgp[comp].label);
+                    vars.push(bgp[comp].value);
                 }
             }
         }
@@ -37710,7 +37703,7 @@ QueryPlanDPSize.executeAndBGPsDPSize = function(allBgps, dataset, queryEngine, e
                     if(bgps[i][comp].token === 'var') {
                         vars.push(bgps[i][comp].value);
                     } else if(bgps[i][comp].token === 'blank') {
-                        vars.push(bgps[i][comp].label);
+                        vars.push(bgps[i][comp].value);
                     }
                 }
             }
@@ -37907,7 +37900,7 @@ QueryPlanDPSize.buildBindingsFromRange = function(results, bgp) {
         if(components[comp] && components[comp].token === "var") {
             bindings[comp] = components[comp].value;
         } else if(components[comp] && components[comp].token === "blank") {
-            bindings[comp] = "blank:"+components[comp].label;
+            bindings[comp] = "blank:"+components[comp].value;
         }
     }
 
@@ -38465,7 +38458,7 @@ QueryEngine.QueryEngine.prototype.termCost = function(term, env) {
         var lexicalFormLiteral = Utils.lexicalFormLiteral(term, env);
         return(this.lexicon.resolveLiteralCost(lexicalFormLiteral));
     } else if(term.token === 'blank') {
-        var label = term.label;
+        var label = term.value;
         return this.lexicon.resolveBlankCost(label);
     } else if(term.token === 'var') {
         return (this.lexicon.oidCounter/3)
@@ -38498,7 +38491,7 @@ QueryEngine.QueryEngine.prototype.normalizeTerm = function(term, env, shouldInde
             return(oid);
         }
     } else if(term.token === 'blank') {
-        var label = term.label;
+        var label = term.value;
         var oid = env.blanks[label];
         if( oid != null) {
             return(oid);
@@ -38775,11 +38768,13 @@ QueryEngine.QueryEngine.prototype.executeQuery = function(syntaxTree, callback, 
                         if(aqt.template == null) {
                             aqt.template = {triplesContext: aqt.pattern};
                         }
-
                         var blankIdCounter = 1;
+			var toClear = [];
                         for(var i=0; i<result.length; i++) {
                             var bindings = result[i];
-                            var blankMap = {};
+			    for(var j=0; j<toClear.length; j++)
+				delete toClear[j].valuetmp;
+
                             for(var j=0; j<aqt.template.triplesContext.length; j++) {
                                 // fresh IDs for blank nodes in the construct template
                                 var components = ['subject', 'predicate', 'object'];
@@ -38787,15 +38782,14 @@ QueryEngine.QueryEngine.prototype.executeQuery = function(syntaxTree, callback, 
                                 for(var p=0; p<components.length; p++) {
                                     var component = components[p];
                                     if(tripleTemplate[component].token === 'blank') {
-                                        if(blankMap[tripleTemplate[component].label] != null) {
-                                            tripleTemplate[component].value = blankMap[tripleTemplate[component].label];
-                                        } else {
-                                            var blankId = "_:b"+blankIdCounter;
-                                            blankIdCounter++;
-                                            blankMap[tripleTemplate[component].label] = blankId;
-                                            tripleTemplate[component].value = blankId;
-                                        }
-                                    }
+					if(tripleTemplate[component].valuetmp && tripleTemplate[component].valuetmp != null) {
+					} else {
+					    var blankId = "_:b"+blankIdCounter;
+					    blankIdCounter++;
+					    tripleTemplate[component].valuetmp = blankId;
+					    toClear.push(tripleTemplate[component]);
+					}
+				    }
                                 }
                                 var s = RDFJSInterface.buildRDFResource(tripleTemplate.subject,bindings,that,queryEnv);
                                 var p = RDFJSInterface.buildRDFResource(tripleTemplate.predicate,bindings,that,queryEnv);
@@ -39040,7 +39034,7 @@ QueryEngine.QueryEngine.prototype.executeSelectUnit = function(projection, datas
     } else if(pattern.kind === "EMPTY_PATTERN") {
         // as an example of this case  check DAWG test case: algebra/filter-nested-2
         return [];
-    } else if(pattern.kind === "ZERO_OR_MORE_PATH") {
+    } else if(pattern.kind === "ZERO_OR_MORE_PATH" || pattern.kind === 'ONE_OR_MORE_PATH') {
 	return this.executeZeroOrMorePath(pattern, dataset, env);
     } else {
         console.log("Cannot execute query pattern " + pattern.kind + ". Not implemented yet.");
@@ -40770,7 +40764,7 @@ var MongodbQueryEngine = { MongodbQueryEngine: function(){ throw 'MongoDB backen
 /**
  * Version of the store
  */
-Store.VERSION = "0.5.6";
+Store.VERSION = "0.5.7";
 
 /**
  * Create a new RDFStore instance that will be

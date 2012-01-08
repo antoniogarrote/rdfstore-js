@@ -1762,7 +1762,6 @@ if(QueryEngine.mongodb == null) {
 			    :s1 :data (\"1\" \"2\" \"3\" \"4\")	 }";
     
 	       engine.execute(query, function(success, result){
-		   //engine.execute("SELECT ?s ?p ?o { ?s ?p ?o }", function(success, results) {
 		   engine.execute('PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT ?elems {  <http://example/s1> <http://example/data>/rdf:rest*/rdf:first ?elems }', function(success, results){
 		       test.ok(results.length === 4);
 		       var acum = [];
@@ -1784,6 +1783,104 @@ if(QueryEngine.mongodb == null) {
        });
    };
 
+    exports.testPathOwl = function(test) {
+	new Lexicon.Lexicon(function(lexicon){
+	    new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+		var engine = new QueryEngine.QueryEngine({backend: backend,
+							  lexicon: lexicon});	  
+		var query = "PREFIX : <http://triplr.org/> \
+                             PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                             PREFIX owl: <http://www.w3.org/2002/07/owl#> \
+                             PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> \
+                             PREFIX  xsd: <http://www.w3.org/2001/XMLSchema#> \
+			     INSERT DATA {\
+			     :actors\
+                                 a owl:ObjectProperty ;\
+                                 rdfs:comment \"A cast member of the movie, TV series, season, or episode, or video.\"@en ;\
+                                 rdfs:domain [\
+                                     a owl:Class ;\
+                                     owl:unionOf (:Movie\
+                                         :TVEpisode\
+                                         :TVSeries\
+                                     )\
+                                 ] ;\
+                                 rdfs:label \"actors\"@en ;\
+                                 rdfs:range [\
+                                     a owl:Class ;\
+                                     owl:unionOf (:Person\
+                                     )\
+                                 ] .\
+                             }";
+    
+		engine.execute(query, function(success, result){
+		    engine.execute('PREFIX : <http://triplr.org/>\
+                                    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                                    PREFIX owl: <http://www.w3.org/2002/07/owl#> \
+                                    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> \
+                                    PREFIX  xsd: <http://www.w3.org/2001/XMLSchema#> \
+                                    SELECT ?domain { :actors rdfs:domain/owl:unionOf/rdf:rest*/rdf:first ?domain } ORDER BY ?domain', function(success, results){
+					test.ok(results.length === 3);
+					test.ok(results[0].domain.value === 'http://triplr.org/Movie');
+					test.ok(results[1].domain.value === 'http://triplr.org/TVEpisode');
+					test.ok(results[2].domain.value === 'http://triplr.org/TVSeries');
+					test.done();
+				    });
+		});
+	    });
+	});
+    };
+
+   exports.testPathOneMore1 = function(test) {
+       new Lexicon.Lexicon(function(lexicon){
+	   new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+	       var engine = new QueryEngine.QueryEngine({backend: backend,
+							 lexicon: lexicon});	  
+	       var query = "PREFIX : <http://example/>\
+			    INSERT DATA {\
+			    :s1 :first 1 .\
+			    :s1 :rest :s2 .\
+			    :s2 :first 2 .\
+			    :s2 :rest :s3 .\
+			    :s3 :first 3 .\
+			    :s3 :rest :s4 .\
+			    :s4 :first 4 .\
+			    :s4 :rest :nil }";
+    
+	       engine.execute(query, function(success, result){
+		   engine.execute('PREFIX : <http://example/> SELECT ?data {  :s1 :rest/:restNonExistent+/:first ?data }', function(success, results){
+		       test.ok(results.length === 0);
+		       test.done();
+		   });
+	       });
+	   });
+       });
+   };
+
+   exports.testPathOneMore1 = function(test) {
+       new Lexicon.Lexicon(function(lexicon){
+	   new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+	       var engine = new QueryEngine.QueryEngine({backend: backend,
+							 lexicon: lexicon});	  
+	       var query = "PREFIX : <http://example/>\
+			    INSERT DATA {\
+			    :s1 :first 1 .\
+			    :s1 :rest :s2 .\
+			    :s2 :first 2 .\
+			    :s2 :rest :s3 .\
+			    :s3 :first 3 .\
+			    :s3 :rest :s4 .\
+			    :s4 :first 4 .\
+			    :s4 :rest :nil }";
+    
+	       engine.execute(query, function(success, result){
+		   engine.execute('PREFIX : <http://example/> SELECT ?data {  :s1 :rest/:rest+/:first ?data }', function(success, results){
+		       test.ok(results.length === 2);
+		       test.done();
+		   });
+	       });
+	   });
+       });
+   };
 
 }
 

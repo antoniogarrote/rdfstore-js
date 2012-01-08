@@ -107,22 +107,12 @@ AbstractQueryTree.translatePathExpressionsInBGP = function(bgp, env) {
 	    //console.log("BACK FROM TRANSFORMED");
 	    if(bgpTransformed.kind === 'BGP') {
 		before = before.concat(bgpTransformed.value);
-	    } else if(bgpTransformed.kind === 'ZERO_OR_MORE_PATH'){
+	    } else if(bgpTransformed.kind === 'ZERO_OR_MORE_PATH' || bgpTransformed.kind === 'ONE_OR_MORE_PATH'){
 		//console.log("BEFORE");
 		//console.log(bgpTransformed);
 		    
 
 		if(before.length > 0) {
-		    //if(bgpTransformed.y.token === 'var' && bgpTransformed.y.value.indexOf("fresh:")===0) {
-		    // 	console.log("ADDING EXTRA PATTERN");
-		    // 	for(var j=0; j<bgp.value.length; j++) {
-		    // 	    if(bgp.value[j].object && bgp.value[j].object.token === 'var' && bgp.value[j].object.value === bgpTransformed.x.value) {
-		    // 		optionalPattern = Utils.clone(bgp.value[j]);
-		    // 		optionalPattern.object = bgpTransformed.y;
-		    // 	    }
-		    // 	}
-		    //}
-
 		    bottomJoin =  {kind: 'JOIN',
 				   lvalue: {kind: 'BGP', value:before},
 				   rvalue: bgpTransformed};
@@ -130,26 +120,29 @@ AbstractQueryTree.translatePathExpressionsInBGP = function(bgp, env) {
 		    bottomJoin = bgpTransformed;
 		}
 
-		if(bgpTransformed.y.token === 'var' && bgpTransformed.y.value.indexOf("fresh:")===0 &&
-		   bgpTransformed.x.token === 'var' && bgpTransformed.x.value.indexOf("fresh:")===0) {
-		    //console.log("ADDING EXTRA PATTERN 1)");
-		    for(var j=0; j<bgp.value.length; j++) {
-			//console.log(bgp.value[j]);
-			if(bgp.value[j].object && bgp.value[j].object.token === 'var' && bgp.value[j].object.value === bgpTransformed.x.value) {
-			    //console.log(" YES 1)");
-			    optionalPattern = Utils.clone(bgp.value[j]);
-			    optionalPattern.object = bgpTransformed.y;
+		
+		if(bgpTransformed.kind === 'ZERO_OR_MORE_PATH') {
+		    if(bgpTransformed.y.token === 'var' && bgpTransformed.y.value.indexOf("fresh:")===0 &&
+		       bgpTransformed.x.token === 'var' && bgpTransformed.x.value.indexOf("fresh:")===0) {
+			//console.log("ADDING EXTRA PATTERN 1)");
+			for(var j=0; j<bgp.value.length; j++) {
+		   	    //console.log(bgp.value[j]);
+		   	    if(bgp.value[j].object && bgp.value[j].object.token === 'var' && bgp.value[j].object.value === bgpTransformed.x.value) {
+		   		//console.log(" YES 1)");
+		   		optionalPattern = Utils.clone(bgp.value[j]);
+		   		optionalPattern.object = bgpTransformed.y;
+		   	    }
 			}
-		    }
-		} else if(bgpTransformed.y.token === 'var' && bgpTransformed.y.value.indexOf("fresh:")===0) {
-		    //console.log("ADDING EXTRA PATTERN 2)");
-		    var from, to;
-		    for(var j=0; j<bgp.value.length; j++) {
-			//console.log(bgp.value[j]);
-			if(bgp.value[j].subject && bgp.value[j].subject.token === 'var' && bgp.value[j].subject.value === bgpTransformed.y.value) {
-			    //console.log(" YES 2)");
-			    optionalPattern = Utils.clone(bgp.value[j]);
-			    optionalPattern.subject = bgpTransformed.x;
+		    } else if(bgpTransformed.y.token === 'var' && bgpTransformed.y.value.indexOf("fresh:")===0) {
+			//console.log("ADDING EXTRA PATTERN 2)");
+			var from, to;
+			for(var j=0; j<bgp.value.length; j++) {
+		   	    //console.log(bgp.value[j]);
+		   	    if(bgp.value[j].subject && bgp.value[j].subject.token === 'var' && bgp.value[j].subject.value === bgpTransformed.y.value) {
+		   		//console.log(" YES 2)");
+		   		optionalPattern = Utils.clone(bgp.value[j]);
+		   		optionalPattern.subject = bgpTransformed.x;
+		   	    }
 			}
 		    }
 		}
