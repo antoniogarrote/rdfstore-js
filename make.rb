@@ -369,12 +369,11 @@ def write_browser_preamble(of)
   js_code =<<__END
 (function() {\r\n
 
-try {
-  console = console || {};
-} catch(e) {
-  console = {};
-  console.log = function(e){};
-}
+  if(typeof(console)=='undefined') {
+     console = {};
+     console.log = function(e){};
+  }
+
 __END
   of << js_code
 end

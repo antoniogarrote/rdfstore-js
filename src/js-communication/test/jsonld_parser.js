@@ -1,14 +1,16 @@
 var JSONLDParser = require("./../src/jsonld_parser.js").JSONLDParser;
 
+
 exports.testParsing1 = function(test) {
-    var input = {  "rdf:type": "foaf:Person",
+    var input = {  "@type": "foaf:Person",
                    "foaf:name": "Manu Sporny",
                    "foaf:homepage": "http://manu.sporny.org/",
                    "sioc:avatar": "http://twitter.com/account/profile_image/manusporny",
-                   '@context': {'@coerce':{'@iri':['sioc:avatar', 'foaf:homepage']}}};
-    
-    var result = JSONLDParser.parser.parse(input);
+                   '@context': {'sioc:avatar': {'@type': '@id'},
+			        'foaf:homepage': {'@type': '@id'}}
+		};
 
+    var result = JSONLDParser.parser.parse(input);
     test.ok(result.length === 4);
     for(var i=0; i<result.length; i++) {
         var triple = result[i];
@@ -27,13 +29,17 @@ exports.testParsing1 = function(test) {
             test.ok(false);
         }
     }
-
     test.done();
 };
 
 exports.testParsing2 = function(test) {
     var input = { "@context": { "myvocab": "http://example.org/myvocab#",
-                                '@coerce':{'@iri':['sioc:avatar', 'foaf:homepage']} },
+				'sioc:avatar': {
+				   '@type': '@id'
+				},
+				'foaf:homepage': {
+				    '@type': '@id'
+				} },
                   "@type": "foaf:Person",
                   "foaf:name": "Manu Sporny",
                   "foaf:homepage": "http://manu.sporny.org/",
@@ -68,19 +74,19 @@ exports.testParsing2 = function(test) {
 exports.testParsing3 = function(test) {
     var input = [
         {
-            "@subject": "_:bnode1",
+            "@id": "_:bnode1",
             "@type": "foaf:Person",
             "foaf:homepage": "http://example.com/bob/",
             "foaf:name": "Bob"
         },
         {
-            "@subject": "_:bnode2",
+            "@id": "_:bnode2",
             "@type": "foaf:Person",
             "foaf:homepage": "http://example.com/eve/",
             "foaf:name": "Eve"
         },
         {
-            "@subject": "_:bnode3",
+            "@id": "_:bnode3",
             "@type": "foaf:Person",
             "foaf:homepage": "http://example.com/manu/",
             "foaf:name": "Manu"
@@ -109,18 +115,16 @@ exports.testParsing3 = function(test) {
     test.done();
 }
 
-
 exports.testParsing4 = function(test) {
 
     var input = {
         "@context": 
         {
             "vcard": "http://microformats.org/profile/hcard#vcard",
-            "url": "http://microformats.org/profile/hcard#url",
-            "fn": "http://microformats.org/profile/hcard#fn",
-            "@coerce": { "@iri": "url" }
+            "url": {'@id': "http://microformats.org/profile/hcard#url", '@type': '@id'},
+            "fn": "http://microformats.org/profile/hcard#fn"
         },
-        "@subject": "_:bnode1",
+        "@id": "_:bnode1",
         "@type": "vcard",
         "url": "http://tantek.com/",
         "fn": "Tantek Çelik"
@@ -146,25 +150,25 @@ exports.testParsing5 = function(test) {
 
     var input = [
                   {
-                    "@subject": "http://purl.oreilly.com/works/45U8QJGZSQKDH8N",
+                    "@id": "http://purl.oreilly.com/works/45U8QJGZSQKDH8N",
                     "@type": "http://purl.org/vocab/frbr/core#Work",
                     "http://purl.org/dc/terms/title": "Just a Geek",
                     "http://purl.org/dc/terms/creator": "Whil Wheaton",
                     "http://purl.org/vocab/frbr/core#realization": 
                       ["http://purl.oreilly.com/products/9780596007683.BOOK", "http://purl.oreilly.com/products/9780596802189.EBOOK"],
-                    '@context':{'@coerce':{'@iri':["http://purl.org/vocab/frbr/core#realization"]}}
+                    '@context':{"http://purl.org/vocab/frbr/core#realization": {'@type':'@id'}}
                   },
                   {
-                    "@subject": "http://purl.oreilly.com/products/9780596007683.BOOK",
+                    "@id": "http://purl.oreilly.com/products/9780596007683.BOOK",
                     "@type": "http://purl.org/vocab/frbr/core#Expression",
                     "http://purl.org/dc/terms/type": "http://purl.oreilly.com/product-types/BOOK",
-                    '@context':{'@coerce':{'@iri':["http://purl.org/dc/terms/type"]}}
+                    '@context':{"http://purl.org/dc/terms/type":{'@type':'@id'}}
                   },
                   {
-                    "@subject": "http://purl.oreilly.com/products/9780596802189.EBOOK",
+                    "@id": "http://purl.oreilly.com/products/9780596802189.EBOOK",
                     "@type": "http://purl.org/vocab/frbr/core#Expression",
                     "http://purl.org/dc/terms/type": "http://purl.oreilly.com/product-types/EBOOK",
-                    '@context':{'@coerce':{'@iri':["http://purl.org/dc/terms/type"]}}
+                    '@context':{"http://purl.org/dc/terms/type":{'@type':'@id'}}
                   }
                 ];
 
@@ -179,7 +183,7 @@ exports.testParsing5 = function(test) {
         if(triple.predicate.uri === 'http://purl.org/vocab/frbr/core#realization') {
             counter++;
             test.ok(triple.object.uri === 'http://purl.oreilly.com/products/9780596007683.BOOK' ||
-                   triple.object.uri=== 'http://purl.oreilly.com/products/9780596802189.EBOOK')
+                   triple.object.uri=== 'http://purl.oreilly.com/products/9780596802189.EBOOK');
             test.ok(previous !== triple.object.uri);
             previous = triple.object.uri;
         }
@@ -197,18 +201,17 @@ exports.testParsing6 = function(test) {
     test.ok(result.length === 1);
     test.ok(result[0].predicate.uri === 'http://xmlns.com/foaf/0.1/name');
  
-    input = { "foaf:homepage": { "@iri": "http://manu.sporny.org" } };
+    input = { "foaf:homepage": { "@id": "http://manu.sporny.org" } };
  
     result = JSONLDParser.parser.parse(input);
  
     test.ok(result.length === 1);
     test.ok(result[0].object.uri === 'http://manu.sporny.org');
- 
-    input = { "@context": { "@coerce":  { "@iri": "foaf:homepage" } },
-              "foaf:homepage": "http://manu.sporny.org" };
+
+    input = { "@context": {"foaf:homepage": {"@type": "@id"} },
+	      "foaf:homepage": "http://manu.sporny.org" };
  
     result = JSONLDParser.parser.parse(input);
- 
     test.ok(result.length === 1);
     test.ok(result[0].object.uri === "http://manu.sporny.org");
  
@@ -220,27 +223,22 @@ exports.testParsing6 = function(test) {
     test.ok(result.length === 1);
     test.ok(result[0].object.literal === '"花澄"@ja');
  
-    input = {  "@context": {  "@coerce": {      "xsd:dateTime": "dc:modified"    }  }, "dc:modified": "2010-05-29T14:17:39+02:00"}
+    input = {  "@context": {   "dc:modified": {'@type': "xsd:dateTime"}	 }, "dc:modified": "2010-05-29T14:17:39+02:00"};
  
     result = JSONLDParser.parser.parse(input);
  
     test.ok(result.length === 1);
-    test.ok(result[0].object.literal === '"2010-05-29T14:17:39+02:00"^^<http://www.w3.org/2001/XMLSchema#dateTime>')
-
-
+    test.ok(result[0].object.literal === '"2010-05-29T14:17:39+02:00"^^<http://www.w3.org/2001/XMLSchema#dateTime>');
+ 
+ 
     input = {
               "@context": 
               {  
                  "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
                  "xsd": "http://www.w3.org/2001/XMLSchema#",
                  "name": "http://xmlns.com/foaf/0.1/name",
-                 "age": "http://xmlns.com/foaf/0.1/age",
-                 "homepage": "http://xmlns.com/foaf/0.1/homepage",
-                 "@coerce":
-                 {
-                    "xsd:integer": "age",
-                    "xsd:anyURI": "homepage",
-                 }
+                 "age": {'@id': "http://xmlns.com/foaf/0.1/age", '@type':"xsd:integer"},
+                 "homepage": {'@id':"http://xmlns.com/foaf/0.1/homepage", '@type':"xsd:anyURI"}
               },
               "name": "John Smith",
               "age": "41",
@@ -248,13 +246,15 @@ exports.testParsing6 = function(test) {
             };
 
     result = JSONLDParser.parser.parse(input, {uri: 'http://test.com/graph'});
-
+    var found = false;
     for(var i=0; i<result.length; i++) {
         if(result[i].predicate.uri === 'http://xmlns.com/foaf/0.1/age') {
+	    found = true;
             test.ok(result[i].object.literal === '"41"^^<http://www.w3.org/2001/XMLSchema#integer>');
             test.ok(result[i].graph.uri === 'http://test.com/graph');
         }
     }
+    test.ok(found === true);
 
     test.done();
 }

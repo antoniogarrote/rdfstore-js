@@ -491,16 +491,11 @@ rdfstore-js implements parsers for Turtle and JSON-LD. The specification of JSON
                  "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
                  "xsd": "http://www.w3.org/2001/XMLSchema#",
                  "name": "http://xmlns.com/foaf/0.1/name",
-                 "age": "http://xmlns.com/foaf/0.1/age",
-                 "homepage": "http://xmlns.com/foaf/0.1/homepage",
-                 "ex": "http://example.org/people/",
-                 "@coerce":
-                 {
-                    "xsd:integer": "age",
-                    "xsd:anyURI": "homepage",
-                 }
+                 "age": {"@id": "http://xmlns.com/foaf/0.1/age", "@type": "xsd:integer" },
+                 "homepage": {"@id": "http://xmlns.com/foaf/0.1/homepage", "@type": "xsd:anyURI" },
+                 "ex": "http://example.org/people/"
               },
-              "@subject": "ex:john_smith",
+              "@id": "ex:john_smith",
               "name": "John Smith",
               "age": "41",
               "homepage": "http://example.org/home/"
