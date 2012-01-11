@@ -1882,5 +1882,42 @@ if(QueryEngine.mongodb == null) {
        });
    };
 
+   exports.testDisjointUnion = function(test) {
+       new Lexicon.Lexicon(function(lexicon){
+           new QuadBackend.QuadBackend({treeOrder: 15}, function(backend){
+               var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                         lexicon: lexicon});      
+    
+               var query = 'PREFIX ex:  <http://www.w3.org/2009/sparql/docs/tests/data-sparql11/negation#> \
+                            PREFIX dc:  <http://purl.org/dc/elements/1.1/>\
+                            PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> \
+                            INSERT DATA { ex:a ex:p ex:o . ex:d ex:q ex:o2 . }';
+    
+               engine.execute(query, function(success, result){
+                   var query = 'PREFIX ex:  <http://www.w3.org/2009/sparql/docs/tests/data-sparql11/negation#> \
+                                PREFIX dc:  <http://purl.org/dc/elements/1.1/>\
+                                SELECT ?a ?b { { ?a ex:p ?o1 } UNION { ?b ex:q ?o2 } }';
+    
+                   engine.execute(query, function(success, results){
+                       test.ok(success);
+		       test.ok(results.length === 2);
+		       if(results[0].a == null) {
+			   test.ok(results[0].b.value === 'http://www.w3.org/2009/sparql/docs/tests/data-sparql11/negation#d')
+			   test.ok(results[1].a.value === 'http://www.w3.org/2009/sparql/docs/tests/data-sparql11/negation#a')
+			   test.ok(results[1].b == null);
+		       } else if(results[0].b == null) {
+			   test.ok(results[0].a.value === 'http://www.w3.org/2009/sparql/docs/tests/data-sparql11/negation#a')
+			   test.ok(results[1].b.value === 'http://www.w3.org/2009/sparql/docs/tests/data-sparql11/negation#d')
+			   test.ok(results[1].a == null);
+		       } else {
+			   test.ok(false);
+		       }
+                       test.done();
+                   });
+               });
+           });
+       });
+   };
+
 }
 

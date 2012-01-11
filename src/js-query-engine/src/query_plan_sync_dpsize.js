@@ -211,7 +211,7 @@ QueryPlanDPSize.executeBushyTree = function(treeNode, dataset, queryEngine, env)
                 //console.log(bindings);
                 return bindings;
             } else {
-                return null
+                return null;
             }
         }
     }
@@ -639,7 +639,6 @@ QueryPlanDPSize.leftOuterJoinBindings = function(bindingsa, bindingsb) {
             result.push(bindinga);
         }
     }
-
     return result;
 };
 

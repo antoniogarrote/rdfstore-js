@@ -458,22 +458,17 @@ exports.testConnectionLoad1 = function(test) {
 
         var graph = connection.rdf.createGraph();
 
-        input = {
+        var input = {
               "@context": 
               {  
                  "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
                  "xsd": "http://www.w3.org/2001/XMLSchema#",
                  "name": "http://xmlns.com/foaf/0.1/name",
-                 "age": "http://xmlns.com/foaf/0.1/age",
-                 "homepage": "http://xmlns.com/foaf/0.1/homepage",
-                 "ex": "http://example.org/people/",
-                 "@type":
-                 {
-                    "xsd:integer": "age",
-                    "xsd:anyURI": "homepage",
-                 }
+                 "age": {"@id": "http://xmlns.com/foaf/0.1/age", "@type": "xsd:integer"},
+                 "homepage": {"@id": "http://xmlns.com/foaf/0.1/homepage", "@ype": "@id"},
+                 "ex": "http://example.org/people/"
               },
-              "@subject": "ex:john_smith",
+              "@id": "ex:john_smith",
               "name": "John Smith",
               "age": "41",
               "homepage": "http://example.org/home/"
@@ -608,14 +603,14 @@ exports.testEventsAPIBatchLoad = function(test){
         },function(){
 
             var jsonld = {
-                '@subject':"http://test.com/1",
+                '@id':"http://test.com/1",
                 'http://test.com/named': 'hello'
             };
             connection.load("application/json", jsonld, function(success, results){
                 connection.setBatchLoadEvents(true);
 
                 jsonld = {
-                    '@subject':"http://test.com/2",
+                    '@id':"http://test.com/2",
                     'http://test.com/named2': 'hello'
                 };
                 connection.load("application/json", jsonld, function(success, results){
@@ -625,7 +620,7 @@ exports.testEventsAPIBatchLoad = function(test){
                     }, 2000);
                 });
             });
-        })
+        });
     });;
 };
 

@@ -5360,7 +5360,7 @@ AbstractQueryTree.AbstractQueryTree.prototype.build = function(node, env) {
 
 AbstractQueryTree.translatePathExpressionsInBGP = function(bgp, env) {
     var pathExpression,nextTriple,beforeToLink;
-    var before = [];
+    var before = [], rest, bottomJoin;
     for(var i=0; i<bgp.value.length; i++) {
 	if(bgp.value[i].predicate && bgp.value[i].predicate.token === 'path') {
 	    //console.log("FOUND A PATH");
@@ -5468,7 +5468,7 @@ AbstractQueryTree.translatePathExpression  = function(pathExpression, env) {
 		    y: pathExpression.object};
 	} else {
 	    pathExpression.predicate = pathExpression.predicate.value;
-	    return {kind: 'BGP', value: [pathExpression]}
+	    return {kind: 'BGP', value: [pathExpression]};
 	}
     } else if(pathExpression.predicate.kind === 'sequence') {
 	var currentSubject = pathExpression.subject;
@@ -5504,7 +5504,7 @@ AbstractQueryTree.translatePathExpression  = function(pathExpression, env) {
 	    if(i!=pathExpression.predicate.value.length-1)
 		currentSubject = Utils.clone(nextObject);;
 	}
-	bgp = {kind: 'BGP', value: restTriples};
+	var bgp = {kind: 'BGP', value: restTriples};
 	//console.log("BEFORE (1):");
 	//console.log(bgp);
 	//console.log("--------------");
@@ -5852,6 +5852,49 @@ AbstractQueryTree.AbstractQueryTree.prototype._replaceFilter = function(filterEx
     }
 
     return filterExpr;
+};
+
+AbstractQueryTree.AbstractQueryTree.prototype.treeWithUnion = function(aqt) {
+    if(aqt == null)
+	return false;
+    if(aqt.kind == null)
+	return false;
+    if(aqt.kind === 'select') {
+        return this.treeWithUnion(aqt.pattern);
+    } else if(aqt.kind === 'BGP') {
+        return this.treeWithUnion(aqt.value);
+    } else if(aqt.kind === 'ZERO_OR_MORE_PATH') {
+	return false;
+    } else if(aqt.kind === 'UNION') {
+	console.log("UNION!!");
+	if(aqt.value[0].value != null && aqt.value[0].value.variables != null &&
+	   aqt.value[1].value != null && aqt.value[1].value.variables != null) {
+	    console.log("COMPARING:"+aqt.value[0].variables.join("/"));
+	    console.log("VS "+aqt.values[1].variables.join("/"));
+	    if(aqt.value[0].variables.join("/") === aqt.values[1].variables.join("/")) {
+		if(this.treeWithUnion(aqt.value[0]))
+		    return true;
+		else
+		    return this.treeWithUnion(aqt.value[1]);
+	    }
+	} else {
+	    return true;	    
+	}
+    } else if(aqt.kind === 'GRAPH') {
+	return false;
+    } else if(aqt.kind === 'LEFT_JOIN' || aqt.kind === 'JOIN') {
+        var leftUnion  = this.treeWithUnion(aqt.lvalue);
+	if(leftUnion)
+	    return true;
+	else
+            this.treeWithUnion(aqt.rvalue);
+    } else if(aqt.kind === 'FILTER') {
+	return false;
+    } else if(aqt.kind === 'EMPTY_PATTERN') {
+	return false;
+    } else {
+	return false;
+    }
 };
 
 // end of ./src/js-sparql-parser/src/abstract_query_tree.js 
@@ -37857,7 +37900,7 @@ QueryPlanDPSize.executeBushyTree = function(treeNode, dataset, queryEngine, env)
                 //console.log(bindings);
                 return bindings;
             } else {
-                return null
+                return null;
             }
         }
     }
@@ -38285,7 +38328,6 @@ QueryPlanDPSize.leftOuterJoinBindings = function(bindingsa, bindingsb) {
             result.push(bindinga);
         }
     }
-
     return result;
 };
 
@@ -40240,6 +40282,7 @@ QueryEngine.QueryEngine.prototype.executeUNION = function(projection, dataset, p
     if(set1==null) {
         return null;
     }
+
     set2 = that.executeSelectUnit(projection, dataset, setQuery2, env);
     if(set2==null) {
         return null;
@@ -40269,6 +40312,7 @@ QueryEngine.QueryEngine.prototype.executeLEFT_JOIN = function(projection, datase
 
     var that = this;
     var sets = [];
+    var acum, duplicates;
 
     //console.log("SET QUERY 1");
     //console.log(setQuery1.value);
@@ -40362,7 +40406,6 @@ QueryEngine.QueryEngine.prototype.executeJOIN = function(projection, dataset, pa
     var that = this;
     var sets = [];
 
-
     set1 = that.executeSelectUnit(projection, dataset, setQuery1, env);
     if(set1 == null) {
         return null;
@@ -40372,12 +40415,31 @@ QueryEngine.QueryEngine.prototype.executeJOIN = function(projection, dataset, pa
     if(set2 == null) {
         return null;
     }
+    
+    
+    var result = null;
+    if(set1.length ===0 || set2.length===0) {
+	result = [];
+    } else {
+	var commonVarsTmp = {};
+	var commonVars = [];
 
-    //console.log("JOINING");
-    //console.log(set1);
-    //console.log("-----");
-    //console.log(set2);
-    var result = QueryPlan.joinBindings(set1, set2);
+	for(var p in set1[0])
+	    commonVarsTmp[p] = false;
+	for(var p  in set2[0]) {
+	    if(commonVarsTmp[p] === false)
+		commonVars.push(p);
+	}
+
+	if(commonVars.length == 0) {
+	    result = QueryPlan.joinBindings(set1,set2);	    
+	} else if(this.abstractQueryTree.treeWithUnion(setQuery1) || 
+		  this.abstractQueryTree.treeWithUnion(setQuery2)) {
+	    result = QueryPlan.joinBindings(set1,set2);	    	    
+	} else {
+	    result = QueryPlan.joinBindings2(commonVars, set1, set2);
+	}
+    }
     result = QueryFilters.checkFilters(patterns, result, false, dataset, env, that);
     return result;
 };
@@ -40388,7 +40450,7 @@ QueryEngine.QueryEngine.prototype.rangeQuery = function(quad, queryEnv) {
     //console.log("BEFORE:");
     //console.log("QUAD:");
     //console.log(quad);
-    var key = that.normalizeQuad(quad, queryEnv, false)
+    var key = that.normalizeQuad(quad, queryEnv, false);
     if(key != null) {
         //console.log("RANGE QUERY:")
         //console.log(key);
@@ -42232,8 +42294,30 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.executeJOIN = function(projectio
             }
         });
     })(function(){
-        var result = QueryPlanAsync.joinBindings(set1, set2);
-
+           //var result = QueryPlanAsync.joinBindings(set1, set2);
+	var result = null;
+	if(set1.length ===0 || set2.length===0) {
+	    //result = QueryPlanAsync.joinBindings(set1, set2);
+	    result = [];
+	} else {
+	    var commonVarsTmp = {};
+	    var commonVars = [];
+	    for(var p in set1[0])
+		commonVarsTmp[p] = false;
+	    for(var p  in set2[0]) {
+		if(commonVarsTmp[p] === false)
+		    commonVars.push(p);
+	    }
+		
+	    if(commonVars.length == 0) {
+		result = QueryPlanAsync.joinBindings(set1,set2);	    
+	    } else if(that.abstractQueryTree.treeWithUnion(setQuery1) || 
+		      that.abstractQueryTree.treeWithUnion(setQuery2)) {
+		result = QueryPlanAsync.joinBindings(set1,set2);	    	    
+	    } else {
+		result = QueryPlanAsync.joinBindings2(commonVars, set1, set2);
+	    }
+	}
         result = QueryFilters.checkFilters(patterns, result, false, dataset, env, that);
         callback(true, result);
     });
@@ -42260,7 +42344,7 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.rangeQuery = function(quad, quer
     //console.log("BEFORE:");
     //console.log("QUAD:");
     //console.log(quad);
-    var key = that.normalizeQuad(quad, queryEnv, false)
+    var key = that.normalizeQuad(quad, queryEnv, false);
     if(key != null) {
         //console.log("RANGE QUERY:")
         //console.log(key);

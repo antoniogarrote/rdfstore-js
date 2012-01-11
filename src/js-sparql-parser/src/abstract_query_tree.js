@@ -96,7 +96,7 @@ AbstractQueryTree.AbstractQueryTree.prototype.build = function(node, env) {
 
 AbstractQueryTree.translatePathExpressionsInBGP = function(bgp, env) {
     var pathExpression,nextTriple,beforeToLink;
-    var before = [];
+    var before = [], rest, bottomJoin;
     for(var i=0; i<bgp.value.length; i++) {
 	if(bgp.value[i].predicate && bgp.value[i].predicate.token === 'path') {
 	    //console.log("FOUND A PATH");
@@ -204,7 +204,7 @@ AbstractQueryTree.translatePathExpression  = function(pathExpression, env) {
 		    y: pathExpression.object};
 	} else {
 	    pathExpression.predicate = pathExpression.predicate.value;
-	    return {kind: 'BGP', value: [pathExpression]}
+	    return {kind: 'BGP', value: [pathExpression]};
 	}
     } else if(pathExpression.predicate.kind === 'sequence') {
 	var currentSubject = pathExpression.subject;
@@ -240,7 +240,7 @@ AbstractQueryTree.translatePathExpression  = function(pathExpression, env) {
 	    if(i!=pathExpression.predicate.value.length-1)
 		currentSubject = Utils.clone(nextObject);;
 	}
-	bgp = {kind: 'BGP', value: restTriples};
+	var bgp = {kind: 'BGP', value: restTriples};
 	//console.log("BEFORE (1):");
 	//console.log(bgp);
 	//console.log("--------------");
@@ -588,4 +588,47 @@ AbstractQueryTree.AbstractQueryTree.prototype._replaceFilter = function(filterEx
     }
 
     return filterExpr;
+};
+
+AbstractQueryTree.AbstractQueryTree.prototype.treeWithUnion = function(aqt) {
+    if(aqt == null)
+	return false;
+    if(aqt.kind == null)
+	return false;
+    if(aqt.kind === 'select') {
+        return this.treeWithUnion(aqt.pattern);
+    } else if(aqt.kind === 'BGP') {
+        return this.treeWithUnion(aqt.value);
+    } else if(aqt.kind === 'ZERO_OR_MORE_PATH') {
+	return false;
+    } else if(aqt.kind === 'UNION') {
+	console.log("UNION!!");
+	if(aqt.value[0].value != null && aqt.value[0].value.variables != null &&
+	   aqt.value[1].value != null && aqt.value[1].value.variables != null) {
+	    console.log("COMPARING:"+aqt.value[0].variables.join("/"));
+	    console.log("VS "+aqt.values[1].variables.join("/"));
+	    if(aqt.value[0].variables.join("/") === aqt.values[1].variables.join("/")) {
+		if(this.treeWithUnion(aqt.value[0]))
+		    return true;
+		else
+		    return this.treeWithUnion(aqt.value[1]);
+	    }
+	} else {
+	    return true;	    
+	}
+    } else if(aqt.kind === 'GRAPH') {
+	return false;
+    } else if(aqt.kind === 'LEFT_JOIN' || aqt.kind === 'JOIN') {
+        var leftUnion  = this.treeWithUnion(aqt.lvalue);
+	if(leftUnion)
+	    return true;
+	else
+            this.treeWithUnion(aqt.rvalue);
+    } else if(aqt.kind === 'FILTER') {
+	return false;
+    } else if(aqt.kind === 'EMPTY_PATTERN') {
+	return false;
+    } else {
+	return false;
+    }
 };

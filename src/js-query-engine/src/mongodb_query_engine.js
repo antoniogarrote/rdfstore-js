@@ -1368,8 +1368,30 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.executeJOIN = function(projectio
             }
         });
     })(function(){
-        var result = QueryPlanAsync.joinBindings(set1, set2);
-
+           //var result = QueryPlanAsync.joinBindings(set1, set2);
+	var result = null;
+	if(set1.length ===0 || set2.length===0) {
+	    //result = QueryPlanAsync.joinBindings(set1, set2);
+	    result = [];
+	} else {
+	    var commonVarsTmp = {};
+	    var commonVars = [];
+	    for(var p in set1[0])
+		commonVarsTmp[p] = false;
+	    for(var p  in set2[0]) {
+		if(commonVarsTmp[p] === false)
+		    commonVars.push(p);
+	    }
+		
+	    if(commonVars.length == 0) {
+		result = QueryPlanAsync.joinBindings(set1,set2);	    
+	    } else if(that.abstractQueryTree.treeWithUnion(setQuery1) || 
+		      that.abstractQueryTree.treeWithUnion(setQuery2)) {
+		result = QueryPlanAsync.joinBindings(set1,set2);	    	    
+	    } else {
+		result = QueryPlanAsync.joinBindings2(commonVars, set1, set2);
+	    }
+	}
         result = QueryFilters.checkFilters(patterns, result, false, dataset, env, that);
         callback(true, result);
     });
@@ -1396,7 +1418,7 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.rangeQuery = function(quad, quer
     //console.log("BEFORE:");
     //console.log("QUAD:");
     //console.log(quad);
-    var key = that.normalizeQuad(quad, queryEnv, false)
+    var key = that.normalizeQuad(quad, queryEnv, false);
     if(key != null) {
         //console.log("RANGE QUERY:")
         //console.log(key);

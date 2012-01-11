@@ -325,7 +325,7 @@ exports.callbacksBatchLoad = function(test) {
             });
 
             var jsonld = {
-                '@subject':"http://test.com/1",
+                '@id':"http://test.com/1",
                 'http://test.com/named': 'hello'
             };
 
@@ -338,7 +338,7 @@ exports.callbacksBatchLoad = function(test) {
                         engine.eventsOnBatchLoad = true;
 
                         jsonld = {
-                            '@subject':"http://test.com/2",
+                            '@id':"http://test.com/2",
                             'http://test.com/named2': 'hello'
                         };
                         engine.rdfLoader.tryToParse(parser, {'token':'uri', 'value':graph.valueOf()}, jsonld, function(success, quads) {

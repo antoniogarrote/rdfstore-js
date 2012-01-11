@@ -1065,6 +1065,7 @@ QueryEngine.QueryEngine.prototype.executeUNION = function(projection, dataset, p
     if(set1==null) {
         return null;
     }
+
     set2 = that.executeSelectUnit(projection, dataset, setQuery2, env);
     if(set2==null) {
         return null;
@@ -1094,6 +1095,7 @@ QueryEngine.QueryEngine.prototype.executeLEFT_JOIN = function(projection, datase
 
     var that = this;
     var sets = [];
+    var acum, duplicates;
 
     //console.log("SET QUERY 1");
     //console.log(setQuery1.value);
@@ -1187,7 +1189,6 @@ QueryEngine.QueryEngine.prototype.executeJOIN = function(projection, dataset, pa
     var that = this;
     var sets = [];
 
-
     set1 = that.executeSelectUnit(projection, dataset, setQuery1, env);
     if(set1 == null) {
         return null;
@@ -1197,12 +1198,31 @@ QueryEngine.QueryEngine.prototype.executeJOIN = function(projection, dataset, pa
     if(set2 == null) {
         return null;
     }
+    
+    
+    var result = null;
+    if(set1.length ===0 || set2.length===0) {
+	result = [];
+    } else {
+	var commonVarsTmp = {};
+	var commonVars = [];
 
-    //console.log("JOINING");
-    //console.log(set1);
-    //console.log("-----");
-    //console.log(set2);
-    var result = QueryPlan.joinBindings(set1, set2);
+	for(var p in set1[0])
+	    commonVarsTmp[p] = false;
+	for(var p  in set2[0]) {
+	    if(commonVarsTmp[p] === false)
+		commonVars.push(p);
+	}
+
+	if(commonVars.length == 0) {
+	    result = QueryPlan.joinBindings(set1,set2);	    
+	} else if(this.abstractQueryTree.treeWithUnion(setQuery1) || 
+		  this.abstractQueryTree.treeWithUnion(setQuery2)) {
+	    result = QueryPlan.joinBindings(set1,set2);	    	    
+	} else {
+	    result = QueryPlan.joinBindings2(commonVars, set1, set2);
+	}
+    }
     result = QueryFilters.checkFilters(patterns, result, false, dataset, env, that);
     return result;
 };
@@ -1213,7 +1233,7 @@ QueryEngine.QueryEngine.prototype.rangeQuery = function(quad, queryEnv) {
     //console.log("BEFORE:");
     //console.log("QUAD:");
     //console.log(quad);
-    var key = that.normalizeQuad(quad, queryEnv, false)
+    var key = that.normalizeQuad(quad, queryEnv, false);
     if(key != null) {
         //console.log("RANGE QUERY:")
         //console.log(key);

@@ -450,23 +450,17 @@ exports.testLoad1 = function(test) {
         store.setPrefix("ex", "http://example.org/people/");
 
         var graph = store.rdf.createGraph();
-
-        input = {
+        var input = {
               "@context": 
               {  
                  "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
                  "xsd": "http://www.w3.org/2001/XMLSchema#",
                  "name": "http://xmlns.com/foaf/0.1/name",
-                 "age": "http://xmlns.com/foaf/0.1/age",
-                 "homepage": "http://xmlns.com/foaf/0.1/homepage",
-                 "ex": "http://example.org/people/",
-                 "@type":
-                 {
-                    "xsd:integer": "age",
-                    "@iri": "homepage",
-                 }
+                 "age": {"@id": "http://xmlns.com/foaf/0.1/age", "@type": "xsd:integer"},
+                 "homepage": {"@id": "http://xmlns.com/foaf/0.1/homepage", "@ype": "@id"},
+                 "ex": "http://example.org/people/"
               },
-              "@subject": "ex:john_smith",
+              "@id": "ex:john_smith",
               "name": "John Smith",
               "age": "41",
               "homepage": "http://example.org/home/"
@@ -739,7 +733,7 @@ exports.testDuplicatedInsert = function(test) {
 
 exports.testDuplicatedParsing = function(test) {
     new Store.Store({name:'test', overwrite:true}, function(store){
-        var data = {'@subject': 'http://test.com/me', 'http://somproperty.org/prop': 'data'};
+        var data = {'@id': 'http://test.com/me', 'http://somproperty.org/prop': 'data'};
         store.load('application/json',data, function(result, msg){
             store.load('application/json',data, function(result, msg){
                 store.execute('SELECT * { ?s ?p ?o }', function(success,results) {

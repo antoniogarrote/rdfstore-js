@@ -18,9 +18,9 @@ exports.testBasePrefix1 = function(test) {
                     for(var i=0; i< results.length; i++) {
                         var result = results[i];
                         if(result.p.value === "http://example.org/ns#p") {
-                            result.v.value === "d:x ns:p";
+                            test.ok(result.v.value === "d:x ns:p");
                         } else if(result.p.value === "http://example.org/x/p") {
-                            result.v.value === "x:x x:p";
+                            test.ok(result.v.value === "x:x x:p");
                         } else {
                             result.ok(false);
                         }
@@ -5407,6 +5407,7 @@ exports.testAlgebraJoinCombo2 = function(test) {
     });
 };
 
+
 exports.testAlgebraOpt1 = function(test) {
     new Lexicon.Lexicon(function(lexicon){
         new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
@@ -5440,6 +5441,7 @@ exports.testAlgebraOpt1 = function(test) {
         });
     });
 }
+
 
 exports.testAlgebraOpt2 = function(test) {
     new Lexicon.Lexicon(function(lexicon){
@@ -5797,6 +5799,7 @@ exports.testAlgebraNested2 = function(test) {
         });
     });
 }
+
 
 exports.testAlgebraFilterScope1 = function(test) {
     new Lexicon.Lexicon(function(lexicon){

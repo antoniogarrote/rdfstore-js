@@ -567,17 +567,17 @@ this.suite_store.testLoad1 = function(test) {
 
         var graph = store.rdf.createGraph();
 
-        input = {
+        var input = {
               "@context": 
               {  
                  "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
                  "xsd": "http://www.w3.org/2001/XMLSchema#",
                  "name": "http://xmlns.com/foaf/0.1/name",
-                 "ex": "http://example.org/people/",
-                 "age": {'@id': "http://xmlns.com/foaf/0.1/age", '@type':"xsd:integer"},
-                 "homepage": {'@id':"http://xmlns.com/foaf/0.1/homepage", '@type':"xsd:anyURI"}
+                 "age": {"@id": "http://xmlns.com/foaf/0.1/age", "@type": "xsd:integer"},
+                 "homepage": {"@id": "http://xmlns.com/foaf/0.1/homepage", "@ype": "@id"},
+                 "ex": "http://example.org/people/"
               },
-              "@subject": "ex:john_smith",
+              "@id": "ex:john_smith",
               "name": "John Smith",
               "age": "41",
               "homepage": "http://example.org/home/"
