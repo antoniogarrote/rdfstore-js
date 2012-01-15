@@ -620,7 +620,8 @@ if(MongodbQueryEngine.mongodb === true) {
                            SELECT * FROM NAMED <http://example/addresses> { \
                            GRAPH <http://example/addresses> { ?s ?p ?o } }\
                            ORDER BY ?s ?p", function(success, results){
-                          
+
+                               console.log(results);
                                test.ok(success === true);
 
                                test.ok(results[0].s.value === "http://example/president25");

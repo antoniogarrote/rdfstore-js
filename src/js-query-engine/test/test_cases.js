@@ -9126,7 +9126,6 @@ exports.testAggregatesAgg01 = function(test) {
 
                 engine.execute(query, function(success, results){
                     test.ok(success);
-
                     test.ok(results[0].C.value === '5');
                     test.done();
                 });

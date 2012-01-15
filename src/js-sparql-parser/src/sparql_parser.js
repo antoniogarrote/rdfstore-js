@@ -444,146 +444,50 @@ SparqlParser.parser = (function(){
         var savedPos0 = pos;
         var savedPos1 = pos;
         var result3 = [];
-        var result19 = parse_WS();
-        while (result19 !== null) {
-          result3.push(result19);
-          var result19 = parse_WS();
+        var result10 = parse_WS();
+        while (result10 !== null) {
+          result3.push(result10);
+          var result10 = parse_WS();
         }
         if (result3 !== null) {
-          if (input.substr(pos, 1) === "B") {
-            var result18 = "B";
-            pos += 1;
+          if (input.substr(pos, 4) === "BASE") {
+            var result9 = "BASE";
+            pos += 4;
           } else {
-            var result18 = null;
+            var result9 = null;
             if (reportMatchFailures) {
-              matchFailed("\"B\"");
+              matchFailed("\"BASE\"");
             }
           }
-          if (result18 !== null) {
-            var result4 = result18;
+          if (result9 !== null) {
+            var result4 = result9;
           } else {
-            if (input.substr(pos, 1) === "b") {
-              var result17 = "b";
-              pos += 1;
+            if (input.substr(pos, 4) === "base") {
+              var result8 = "base";
+              pos += 4;
             } else {
-              var result17 = null;
+              var result8 = null;
               if (reportMatchFailures) {
-                matchFailed("\"b\"");
+                matchFailed("\"base\"");
               }
             }
-            if (result17 !== null) {
-              var result4 = result17;
+            if (result8 !== null) {
+              var result4 = result8;
             } else {
               var result4 = null;;
             };
           }
           if (result4 !== null) {
-            if (input.substr(pos, 1) === "A") {
-              var result16 = "A";
-              pos += 1;
-            } else {
-              var result16 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"A\"");
-              }
-            }
-            if (result16 !== null) {
-              var result5 = result16;
-            } else {
-              if (input.substr(pos, 1) === "a") {
-                var result15 = "a";
-                pos += 1;
-              } else {
-                var result15 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"a\"");
-                }
-              }
-              if (result15 !== null) {
-                var result5 = result15;
-              } else {
-                var result5 = null;;
-              };
+            var result5 = [];
+            var result7 = parse_WS();
+            while (result7 !== null) {
+              result5.push(result7);
+              var result7 = parse_WS();
             }
             if (result5 !== null) {
-              if (input.substr(pos, 1) === "S") {
-                var result14 = "S";
-                pos += 1;
-              } else {
-                var result14 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"S\"");
-                }
-              }
-              if (result14 !== null) {
-                var result6 = result14;
-              } else {
-                if (input.substr(pos, 1) === "s") {
-                  var result13 = "s";
-                  pos += 1;
-                } else {
-                  var result13 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"s\"");
-                  }
-                }
-                if (result13 !== null) {
-                  var result6 = result13;
-                } else {
-                  var result6 = null;;
-                };
-              }
+              var result6 = parse_IRI_REF();
               if (result6 !== null) {
-                if (input.substr(pos, 1) === "E") {
-                  var result12 = "E";
-                  pos += 1;
-                } else {
-                  var result12 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"E\"");
-                  }
-                }
-                if (result12 !== null) {
-                  var result7 = result12;
-                } else {
-                  if (input.substr(pos, 1) === "e") {
-                    var result11 = "e";
-                    pos += 1;
-                  } else {
-                    var result11 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"e\"");
-                    }
-                  }
-                  if (result11 !== null) {
-                    var result7 = result11;
-                  } else {
-                    var result7 = null;;
-                  };
-                }
-                if (result7 !== null) {
-                  var result8 = [];
-                  var result10 = parse_WS();
-                  while (result10 !== null) {
-                    result8.push(result10);
-                    var result10 = parse_WS();
-                  }
-                  if (result8 !== null) {
-                    var result9 = parse_IRI_REF();
-                    if (result9 !== null) {
-                      var result1 = [result3, result4, result5, result6, result7, result8, result9];
-                    } else {
-                      var result1 = null;
-                      pos = savedPos1;
-                    }
-                  } else {
-                    var result1 = null;
-                    pos = savedPos1;
-                  }
-                } else {
-                  var result1 = null;
-                  pos = savedPos1;
-                }
+                var result1 = [result3, result4, result5, result6];
               } else {
                 var result1 = null;
                 pos = savedPos1;
@@ -609,7 +513,7 @@ SparqlParser.parser = (function(){
                 base.value = i;
           
                 return base;
-          })(result1[6])
+          })(result1[3])
           : null;
         if (result2 !== null) {
           var result0 = result2;
@@ -642,219 +546,59 @@ SparqlParser.parser = (function(){
         var savedPos0 = pos;
         var savedPos1 = pos;
         var result3 = [];
-        var result28 = parse_WS();
-        while (result28 !== null) {
-          result3.push(result28);
-          var result28 = parse_WS();
+        var result13 = parse_WS();
+        while (result13 !== null) {
+          result3.push(result13);
+          var result13 = parse_WS();
         }
         if (result3 !== null) {
-          if (input.substr(pos, 1) === "P") {
-            var result27 = "P";
-            pos += 1;
+          if (input.substr(pos, 6) === "PREFIX") {
+            var result12 = "PREFIX";
+            pos += 6;
           } else {
-            var result27 = null;
+            var result12 = null;
             if (reportMatchFailures) {
-              matchFailed("\"P\"");
+              matchFailed("\"PREFIX\"");
             }
           }
-          if (result27 !== null) {
-            var result4 = result27;
+          if (result12 !== null) {
+            var result4 = result12;
           } else {
-            if (input.substr(pos, 1) === "p") {
-              var result26 = "p";
-              pos += 1;
+            if (input.substr(pos, 6) === "prefix") {
+              var result11 = "prefix";
+              pos += 6;
             } else {
-              var result26 = null;
+              var result11 = null;
               if (reportMatchFailures) {
-                matchFailed("\"p\"");
+                matchFailed("\"prefix\"");
               }
             }
-            if (result26 !== null) {
-              var result4 = result26;
+            if (result11 !== null) {
+              var result4 = result11;
             } else {
               var result4 = null;;
             };
           }
           if (result4 !== null) {
-            if (input.substr(pos, 1) === "R") {
-              var result25 = "R";
-              pos += 1;
-            } else {
-              var result25 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"R\"");
-              }
-            }
-            if (result25 !== null) {
-              var result5 = result25;
-            } else {
-              if (input.substr(pos, 1) === "r") {
-                var result24 = "r";
-                pos += 1;
-              } else {
-                var result24 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"r\"");
-                }
-              }
-              if (result24 !== null) {
-                var result5 = result24;
-              } else {
-                var result5 = null;;
-              };
+            var result5 = [];
+            var result10 = parse_WS();
+            while (result10 !== null) {
+              result5.push(result10);
+              var result10 = parse_WS();
             }
             if (result5 !== null) {
-              if (input.substr(pos, 1) === "E") {
-                var result23 = "E";
-                pos += 1;
-              } else {
-                var result23 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"E\"");
-                }
-              }
-              if (result23 !== null) {
-                var result6 = result23;
-              } else {
-                if (input.substr(pos, 1) === "e") {
-                  var result22 = "e";
-                  pos += 1;
-                } else {
-                  var result22 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"e\"");
-                  }
-                }
-                if (result22 !== null) {
-                  var result6 = result22;
-                } else {
-                  var result6 = null;;
-                };
-              }
+              var result6 = parse_PNAME_NS();
               if (result6 !== null) {
-                if (input.substr(pos, 1) === "F") {
-                  var result21 = "F";
-                  pos += 1;
-                } else {
-                  var result21 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"F\"");
-                  }
-                }
-                if (result21 !== null) {
-                  var result7 = result21;
-                } else {
-                  if (input.substr(pos, 1) === "f") {
-                    var result20 = "f";
-                    pos += 1;
-                  } else {
-                    var result20 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"f\"");
-                    }
-                  }
-                  if (result20 !== null) {
-                    var result7 = result20;
-                  } else {
-                    var result7 = null;;
-                  };
+                var result7 = [];
+                var result9 = parse_WS();
+                while (result9 !== null) {
+                  result7.push(result9);
+                  var result9 = parse_WS();
                 }
                 if (result7 !== null) {
-                  if (input.substr(pos, 1) === "I") {
-                    var result19 = "I";
-                    pos += 1;
-                  } else {
-                    var result19 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"I\"");
-                    }
-                  }
-                  if (result19 !== null) {
-                    var result8 = result19;
-                  } else {
-                    if (input.substr(pos, 1) === "i") {
-                      var result18 = "i";
-                      pos += 1;
-                    } else {
-                      var result18 = null;
-                      if (reportMatchFailures) {
-                        matchFailed("\"i\"");
-                      }
-                    }
-                    if (result18 !== null) {
-                      var result8 = result18;
-                    } else {
-                      var result8 = null;;
-                    };
-                  }
+                  var result8 = parse_IRI_REF();
                   if (result8 !== null) {
-                    if (input.substr(pos, 1) === "X") {
-                      var result17 = "X";
-                      pos += 1;
-                    } else {
-                      var result17 = null;
-                      if (reportMatchFailures) {
-                        matchFailed("\"X\"");
-                      }
-                    }
-                    if (result17 !== null) {
-                      var result9 = result17;
-                    } else {
-                      if (input.substr(pos, 1) === "x") {
-                        var result16 = "x";
-                        pos += 1;
-                      } else {
-                        var result16 = null;
-                        if (reportMatchFailures) {
-                          matchFailed("\"x\"");
-                        }
-                      }
-                      if (result16 !== null) {
-                        var result9 = result16;
-                      } else {
-                        var result9 = null;;
-                      };
-                    }
-                    if (result9 !== null) {
-                      var result10 = [];
-                      var result15 = parse_WS();
-                      while (result15 !== null) {
-                        result10.push(result15);
-                        var result15 = parse_WS();
-                      }
-                      if (result10 !== null) {
-                        var result11 = parse_PNAME_NS();
-                        if (result11 !== null) {
-                          var result12 = [];
-                          var result14 = parse_WS();
-                          while (result14 !== null) {
-                            result12.push(result14);
-                            var result14 = parse_WS();
-                          }
-                          if (result12 !== null) {
-                            var result13 = parse_IRI_REF();
-                            if (result13 !== null) {
-                              var result1 = [result3, result4, result5, result6, result7, result8, result9, result10, result11, result12, result13];
-                            } else {
-                              var result1 = null;
-                              pos = savedPos1;
-                            }
-                          } else {
-                            var result1 = null;
-                            pos = savedPos1;
-                          }
-                        } else {
-                          var result1 = null;
-                          pos = savedPos1;
-                        }
-                      } else {
-                        var result1 = null;
-                        pos = savedPos1;
-                      }
-                    } else {
-                      var result1 = null;
-                      pos = savedPos1;
-                    }
+                    var result1 = [result3, result4, result5, result6, result7, result8];
                   } else {
                     var result1 = null;
                     pos = savedPos1;
@@ -890,7 +634,7 @@ SparqlParser.parser = (function(){
                 prefix.local = l;
           
                 return prefix;
-          })(result1[8], result1[10])
+          })(result1[3], result1[5])
           : null;
         if (result2 !== null) {
           var result0 = result2;
@@ -1542,1188 +1286,534 @@ SparqlParser.parser = (function(){
         var savedPos0 = pos;
         var savedPos1 = pos;
         var result3 = [];
-        var result113 = parse_WS();
-        while (result113 !== null) {
-          result3.push(result113);
-          var result113 = parse_WS();
+        var result54 = parse_WS();
+        while (result54 !== null) {
+          result3.push(result54);
+          var result54 = parse_WS();
         }
         if (result3 !== null) {
-          if (input.substr(pos, 1) === "S") {
-            var result112 = "S";
-            pos += 1;
+          if (input.substr(pos, 6) === "SELECT") {
+            var result53 = "SELECT";
+            pos += 6;
           } else {
-            var result112 = null;
+            var result53 = null;
             if (reportMatchFailures) {
-              matchFailed("\"S\"");
+              matchFailed("\"SELECT\"");
             }
           }
-          if (result112 !== null) {
-            var result4 = result112;
+          if (result53 !== null) {
+            var result4 = result53;
           } else {
-            if (input.substr(pos, 1) === "s") {
-              var result111 = "s";
-              pos += 1;
+            if (input.substr(pos, 6) === "select") {
+              var result52 = "select";
+              pos += 6;
             } else {
-              var result111 = null;
+              var result52 = null;
               if (reportMatchFailures) {
-                matchFailed("\"s\"");
+                matchFailed("\"select\"");
               }
             }
-            if (result111 !== null) {
-              var result4 = result111;
+            if (result52 !== null) {
+              var result4 = result52;
             } else {
               var result4 = null;;
             };
           }
           if (result4 !== null) {
-            if (input.substr(pos, 1) === "E") {
-              var result110 = "E";
-              pos += 1;
-            } else {
-              var result110 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"E\"");
-              }
-            }
-            if (result110 !== null) {
-              var result5 = result110;
-            } else {
-              if (input.substr(pos, 1) === "e") {
-                var result109 = "e";
-                pos += 1;
-              } else {
-                var result109 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"e\"");
-                }
-              }
-              if (result109 !== null) {
-                var result5 = result109;
-              } else {
-                var result5 = null;;
-              };
+            var result5 = [];
+            var result51 = parse_WS();
+            while (result51 !== null) {
+              result5.push(result51);
+              var result51 = parse_WS();
             }
             if (result5 !== null) {
-              if (input.substr(pos, 1) === "L") {
-                var result108 = "L";
-                pos += 1;
+              if (input.substr(pos, 8) === "DISTINCT") {
+                var result50 = "DISTINCT";
+                pos += 8;
               } else {
-                var result108 = null;
+                var result50 = null;
                 if (reportMatchFailures) {
-                  matchFailed("\"L\"");
+                  matchFailed("\"DISTINCT\"");
                 }
               }
-              if (result108 !== null) {
-                var result6 = result108;
+              if (result50 !== null) {
+                var result48 = result50;
               } else {
-                if (input.substr(pos, 1) === "l") {
-                  var result107 = "l";
-                  pos += 1;
+                if (input.substr(pos, 8) === "distinct") {
+                  var result49 = "distinct";
+                  pos += 8;
                 } else {
-                  var result107 = null;
+                  var result49 = null;
                   if (reportMatchFailures) {
-                    matchFailed("\"l\"");
+                    matchFailed("\"distinct\"");
                   }
                 }
-                if (result107 !== null) {
-                  var result6 = result107;
+                if (result49 !== null) {
+                  var result48 = result49;
                 } else {
-                  var result6 = null;;
+                  var result48 = null;;
                 };
               }
-              if (result6 !== null) {
-                if (input.substr(pos, 1) === "E") {
-                  var result106 = "E";
-                  pos += 1;
+              if (result48 !== null) {
+                var result44 = result48;
+              } else {
+                if (input.substr(pos, 7) === "REDUCED") {
+                  var result47 = "REDUCED";
+                  pos += 7;
                 } else {
-                  var result106 = null;
+                  var result47 = null;
                   if (reportMatchFailures) {
-                    matchFailed("\"E\"");
+                    matchFailed("\"REDUCED\"");
                   }
                 }
-                if (result106 !== null) {
-                  var result7 = result106;
+                if (result47 !== null) {
+                  var result45 = result47;
                 } else {
-                  if (input.substr(pos, 1) === "e") {
-                    var result105 = "e";
-                    pos += 1;
+                  if (input.substr(pos, 7) === "reduced") {
+                    var result46 = "reduced";
+                    pos += 7;
                   } else {
-                    var result105 = null;
+                    var result46 = null;
                     if (reportMatchFailures) {
-                      matchFailed("\"e\"");
+                      matchFailed("\"reduced\"");
                     }
                   }
-                  if (result105 !== null) {
-                    var result7 = result105;
+                  if (result46 !== null) {
+                    var result45 = result46;
                   } else {
-                    var result7 = null;;
+                    var result45 = null;;
                   };
                 }
+                if (result45 !== null) {
+                  var result44 = result45;
+                } else {
+                  var result44 = null;;
+                };
+              }
+              var result6 = result44 !== null ? result44 : '';
+              if (result6 !== null) {
+                var result7 = [];
+                var result43 = parse_WS();
+                while (result43 !== null) {
+                  result7.push(result43);
+                  var result43 = parse_WS();
+                }
                 if (result7 !== null) {
-                  if (input.substr(pos, 1) === "C") {
-                    var result104 = "C";
-                    pos += 1;
-                  } else {
-                    var result104 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"C\"");
-                    }
+                  var savedPos4 = pos;
+                  var result38 = [];
+                  var result42 = parse_WS();
+                  while (result42 !== null) {
+                    result38.push(result42);
+                    var result42 = parse_WS();
                   }
-                  if (result104 !== null) {
-                    var result8 = result104;
-                  } else {
-                    if (input.substr(pos, 1) === "c") {
-                      var result103 = "c";
-                      pos += 1;
+                  if (result38 !== null) {
+                    var result39 = parse_Var();
+                    if (result39 !== null) {
+                      var result40 = [];
+                      var result41 = parse_WS();
+                      while (result41 !== null) {
+                        result40.push(result41);
+                        var result41 = parse_WS();
+                      }
+                      if (result40 !== null) {
+                        var result37 = [result38, result39, result40];
+                      } else {
+                        var result37 = null;
+                        pos = savedPos4;
+                      }
                     } else {
-                      var result103 = null;
-                      if (reportMatchFailures) {
-                        matchFailed("\"c\"");
+                      var result37 = null;
+                      pos = savedPos4;
+                    }
+                  } else {
+                    var result37 = null;
+                    pos = savedPos4;
+                  }
+                  if (result37 !== null) {
+                    var result16 = result37;
+                  } else {
+                    var savedPos3 = pos;
+                    var result18 = [];
+                    var result36 = parse_WS();
+                    while (result36 !== null) {
+                      result18.push(result36);
+                      var result36 = parse_WS();
+                    }
+                    if (result18 !== null) {
+                      if (input.substr(pos, 1) === "(") {
+                        var result19 = "(";
+                        pos += 1;
+                      } else {
+                        var result19 = null;
+                        if (reportMatchFailures) {
+                          matchFailed("\"(\"");
+                        }
+                      }
+                      if (result19 !== null) {
+                        var result20 = [];
+                        var result35 = parse_WS();
+                        while (result35 !== null) {
+                          result20.push(result35);
+                          var result35 = parse_WS();
+                        }
+                        if (result20 !== null) {
+                          var result21 = parse_ConditionalOrExpression();
+                          if (result21 !== null) {
+                            var result22 = [];
+                            var result34 = parse_WS();
+                            while (result34 !== null) {
+                              result22.push(result34);
+                              var result34 = parse_WS();
+                            }
+                            if (result22 !== null) {
+                              if (input.substr(pos, 2) === "AS") {
+                                var result33 = "AS";
+                                pos += 2;
+                              } else {
+                                var result33 = null;
+                                if (reportMatchFailures) {
+                                  matchFailed("\"AS\"");
+                                }
+                              }
+                              if (result33 !== null) {
+                                var result23 = result33;
+                              } else {
+                                if (input.substr(pos, 2) === "as") {
+                                  var result32 = "as";
+                                  pos += 2;
+                                } else {
+                                  var result32 = null;
+                                  if (reportMatchFailures) {
+                                    matchFailed("\"as\"");
+                                  }
+                                }
+                                if (result32 !== null) {
+                                  var result23 = result32;
+                                } else {
+                                  var result23 = null;;
+                                };
+                              }
+                              if (result23 !== null) {
+                                var result24 = [];
+                                var result31 = parse_WS();
+                                while (result31 !== null) {
+                                  result24.push(result31);
+                                  var result31 = parse_WS();
+                                }
+                                if (result24 !== null) {
+                                  var result25 = parse_Var();
+                                  if (result25 !== null) {
+                                    var result26 = [];
+                                    var result30 = parse_WS();
+                                    while (result30 !== null) {
+                                      result26.push(result30);
+                                      var result30 = parse_WS();
+                                    }
+                                    if (result26 !== null) {
+                                      if (input.substr(pos, 1) === ")") {
+                                        var result27 = ")";
+                                        pos += 1;
+                                      } else {
+                                        var result27 = null;
+                                        if (reportMatchFailures) {
+                                          matchFailed("\")\"");
+                                        }
+                                      }
+                                      if (result27 !== null) {
+                                        var result28 = [];
+                                        var result29 = parse_WS();
+                                        while (result29 !== null) {
+                                          result28.push(result29);
+                                          var result29 = parse_WS();
+                                        }
+                                        if (result28 !== null) {
+                                          var result17 = [result18, result19, result20, result21, result22, result23, result24, result25, result26, result27, result28];
+                                        } else {
+                                          var result17 = null;
+                                          pos = savedPos3;
+                                        }
+                                      } else {
+                                        var result17 = null;
+                                        pos = savedPos3;
+                                      }
+                                    } else {
+                                      var result17 = null;
+                                      pos = savedPos3;
+                                    }
+                                  } else {
+                                    var result17 = null;
+                                    pos = savedPos3;
+                                  }
+                                } else {
+                                  var result17 = null;
+                                  pos = savedPos3;
+                                }
+                              } else {
+                                var result17 = null;
+                                pos = savedPos3;
+                              }
+                            } else {
+                              var result17 = null;
+                              pos = savedPos3;
+                            }
+                          } else {
+                            var result17 = null;
+                            pos = savedPos3;
+                          }
+                        } else {
+                          var result17 = null;
+                          pos = savedPos3;
+                        }
+                      } else {
+                        var result17 = null;
+                        pos = savedPos3;
+                      }
+                    } else {
+                      var result17 = null;
+                      pos = savedPos3;
+                    }
+                    if (result17 !== null) {
+                      var result16 = result17;
+                    } else {
+                      var result16 = null;;
+                    };
+                  }
+                  if (result16 !== null) {
+                    var result15 = [];
+                    while (result16 !== null) {
+                      result15.push(result16);
+                      var savedPos4 = pos;
+                      var result38 = [];
+                      var result42 = parse_WS();
+                      while (result42 !== null) {
+                        result38.push(result42);
+                        var result42 = parse_WS();
+                      }
+                      if (result38 !== null) {
+                        var result39 = parse_Var();
+                        if (result39 !== null) {
+                          var result40 = [];
+                          var result41 = parse_WS();
+                          while (result41 !== null) {
+                            result40.push(result41);
+                            var result41 = parse_WS();
+                          }
+                          if (result40 !== null) {
+                            var result37 = [result38, result39, result40];
+                          } else {
+                            var result37 = null;
+                            pos = savedPos4;
+                          }
+                        } else {
+                          var result37 = null;
+                          pos = savedPos4;
+                        }
+                      } else {
+                        var result37 = null;
+                        pos = savedPos4;
+                      }
+                      if (result37 !== null) {
+                        var result16 = result37;
+                      } else {
+                        var savedPos3 = pos;
+                        var result18 = [];
+                        var result36 = parse_WS();
+                        while (result36 !== null) {
+                          result18.push(result36);
+                          var result36 = parse_WS();
+                        }
+                        if (result18 !== null) {
+                          if (input.substr(pos, 1) === "(") {
+                            var result19 = "(";
+                            pos += 1;
+                          } else {
+                            var result19 = null;
+                            if (reportMatchFailures) {
+                              matchFailed("\"(\"");
+                            }
+                          }
+                          if (result19 !== null) {
+                            var result20 = [];
+                            var result35 = parse_WS();
+                            while (result35 !== null) {
+                              result20.push(result35);
+                              var result35 = parse_WS();
+                            }
+                            if (result20 !== null) {
+                              var result21 = parse_ConditionalOrExpression();
+                              if (result21 !== null) {
+                                var result22 = [];
+                                var result34 = parse_WS();
+                                while (result34 !== null) {
+                                  result22.push(result34);
+                                  var result34 = parse_WS();
+                                }
+                                if (result22 !== null) {
+                                  if (input.substr(pos, 2) === "AS") {
+                                    var result33 = "AS";
+                                    pos += 2;
+                                  } else {
+                                    var result33 = null;
+                                    if (reportMatchFailures) {
+                                      matchFailed("\"AS\"");
+                                    }
+                                  }
+                                  if (result33 !== null) {
+                                    var result23 = result33;
+                                  } else {
+                                    if (input.substr(pos, 2) === "as") {
+                                      var result32 = "as";
+                                      pos += 2;
+                                    } else {
+                                      var result32 = null;
+                                      if (reportMatchFailures) {
+                                        matchFailed("\"as\"");
+                                      }
+                                    }
+                                    if (result32 !== null) {
+                                      var result23 = result32;
+                                    } else {
+                                      var result23 = null;;
+                                    };
+                                  }
+                                  if (result23 !== null) {
+                                    var result24 = [];
+                                    var result31 = parse_WS();
+                                    while (result31 !== null) {
+                                      result24.push(result31);
+                                      var result31 = parse_WS();
+                                    }
+                                    if (result24 !== null) {
+                                      var result25 = parse_Var();
+                                      if (result25 !== null) {
+                                        var result26 = [];
+                                        var result30 = parse_WS();
+                                        while (result30 !== null) {
+                                          result26.push(result30);
+                                          var result30 = parse_WS();
+                                        }
+                                        if (result26 !== null) {
+                                          if (input.substr(pos, 1) === ")") {
+                                            var result27 = ")";
+                                            pos += 1;
+                                          } else {
+                                            var result27 = null;
+                                            if (reportMatchFailures) {
+                                              matchFailed("\")\"");
+                                            }
+                                          }
+                                          if (result27 !== null) {
+                                            var result28 = [];
+                                            var result29 = parse_WS();
+                                            while (result29 !== null) {
+                                              result28.push(result29);
+                                              var result29 = parse_WS();
+                                            }
+                                            if (result28 !== null) {
+                                              var result17 = [result18, result19, result20, result21, result22, result23, result24, result25, result26, result27, result28];
+                                            } else {
+                                              var result17 = null;
+                                              pos = savedPos3;
+                                            }
+                                          } else {
+                                            var result17 = null;
+                                            pos = savedPos3;
+                                          }
+                                        } else {
+                                          var result17 = null;
+                                          pos = savedPos3;
+                                        }
+                                      } else {
+                                        var result17 = null;
+                                        pos = savedPos3;
+                                      }
+                                    } else {
+                                      var result17 = null;
+                                      pos = savedPos3;
+                                    }
+                                  } else {
+                                    var result17 = null;
+                                    pos = savedPos3;
+                                  }
+                                } else {
+                                  var result17 = null;
+                                  pos = savedPos3;
+                                }
+                              } else {
+                                var result17 = null;
+                                pos = savedPos3;
+                              }
+                            } else {
+                              var result17 = null;
+                              pos = savedPos3;
+                            }
+                          } else {
+                            var result17 = null;
+                            pos = savedPos3;
+                          }
+                        } else {
+                          var result17 = null;
+                          pos = savedPos3;
+                        }
+                        if (result17 !== null) {
+                          var result16 = result17;
+                        } else {
+                          var result16 = null;;
+                        };
                       }
                     }
-                    if (result103 !== null) {
-                      var result8 = result103;
+                  } else {
+                    var result15 = null;
+                  }
+                  if (result15 !== null) {
+                    var result8 = result15;
+                  } else {
+                    var savedPos2 = pos;
+                    var result10 = [];
+                    var result14 = parse_WS();
+                    while (result14 !== null) {
+                      result10.push(result14);
+                      var result14 = parse_WS();
+                    }
+                    if (result10 !== null) {
+                      if (input.substr(pos, 1) === "*") {
+                        var result11 = "*";
+                        pos += 1;
+                      } else {
+                        var result11 = null;
+                        if (reportMatchFailures) {
+                          matchFailed("\"*\"");
+                        }
+                      }
+                      if (result11 !== null) {
+                        var result12 = [];
+                        var result13 = parse_WS();
+                        while (result13 !== null) {
+                          result12.push(result13);
+                          var result13 = parse_WS();
+                        }
+                        if (result12 !== null) {
+                          var result9 = [result10, result11, result12];
+                        } else {
+                          var result9 = null;
+                          pos = savedPos2;
+                        }
+                      } else {
+                        var result9 = null;
+                        pos = savedPos2;
+                      }
+                    } else {
+                      var result9 = null;
+                      pos = savedPos2;
+                    }
+                    if (result9 !== null) {
+                      var result8 = result9;
                     } else {
                       var result8 = null;;
                     };
                   }
                   if (result8 !== null) {
-                    if (input.substr(pos, 1) === "T") {
-                      var result102 = "T";
-                      pos += 1;
-                    } else {
-                      var result102 = null;
-                      if (reportMatchFailures) {
-                        matchFailed("\"T\"");
-                      }
-                    }
-                    if (result102 !== null) {
-                      var result9 = result102;
-                    } else {
-                      if (input.substr(pos, 1) === "t") {
-                        var result101 = "t";
-                        pos += 1;
-                      } else {
-                        var result101 = null;
-                        if (reportMatchFailures) {
-                          matchFailed("\"t\"");
-                        }
-                      }
-                      if (result101 !== null) {
-                        var result9 = result101;
-                      } else {
-                        var result9 = null;;
-                      };
-                    }
-                    if (result9 !== null) {
-                      var result10 = [];
-                      var result100 = parse_WS();
-                      while (result100 !== null) {
-                        result10.push(result100);
-                        var result100 = parse_WS();
-                      }
-                      if (result10 !== null) {
-                        var savedPos6 = pos;
-                        if (input.substr(pos, 1) === "D") {
-                          var result99 = "D";
-                          pos += 1;
-                        } else {
-                          var result99 = null;
-                          if (reportMatchFailures) {
-                            matchFailed("\"D\"");
-                          }
-                        }
-                        if (result99 !== null) {
-                          var result76 = result99;
-                        } else {
-                          if (input.substr(pos, 1) === "d") {
-                            var result98 = "d";
-                            pos += 1;
-                          } else {
-                            var result98 = null;
-                            if (reportMatchFailures) {
-                              matchFailed("\"d\"");
-                            }
-                          }
-                          if (result98 !== null) {
-                            var result76 = result98;
-                          } else {
-                            var result76 = null;;
-                          };
-                        }
-                        if (result76 !== null) {
-                          if (input.substr(pos, 1) === "I") {
-                            var result97 = "I";
-                            pos += 1;
-                          } else {
-                            var result97 = null;
-                            if (reportMatchFailures) {
-                              matchFailed("\"I\"");
-                            }
-                          }
-                          if (result97 !== null) {
-                            var result77 = result97;
-                          } else {
-                            if (input.substr(pos, 1) === "i") {
-                              var result96 = "i";
-                              pos += 1;
-                            } else {
-                              var result96 = null;
-                              if (reportMatchFailures) {
-                                matchFailed("\"i\"");
-                              }
-                            }
-                            if (result96 !== null) {
-                              var result77 = result96;
-                            } else {
-                              var result77 = null;;
-                            };
-                          }
-                          if (result77 !== null) {
-                            if (input.substr(pos, 1) === "S") {
-                              var result95 = "S";
-                              pos += 1;
-                            } else {
-                              var result95 = null;
-                              if (reportMatchFailures) {
-                                matchFailed("\"S\"");
-                              }
-                            }
-                            if (result95 !== null) {
-                              var result78 = result95;
-                            } else {
-                              if (input.substr(pos, 1) === "s") {
-                                var result94 = "s";
-                                pos += 1;
-                              } else {
-                                var result94 = null;
-                                if (reportMatchFailures) {
-                                  matchFailed("\"s\"");
-                                }
-                              }
-                              if (result94 !== null) {
-                                var result78 = result94;
-                              } else {
-                                var result78 = null;;
-                              };
-                            }
-                            if (result78 !== null) {
-                              if (input.substr(pos, 1) === "T") {
-                                var result93 = "T";
-                                pos += 1;
-                              } else {
-                                var result93 = null;
-                                if (reportMatchFailures) {
-                                  matchFailed("\"T\"");
-                                }
-                              }
-                              if (result93 !== null) {
-                                var result79 = result93;
-                              } else {
-                                if (input.substr(pos, 1) === "t") {
-                                  var result92 = "t";
-                                  pos += 1;
-                                } else {
-                                  var result92 = null;
-                                  if (reportMatchFailures) {
-                                    matchFailed("\"t\"");
-                                  }
-                                }
-                                if (result92 !== null) {
-                                  var result79 = result92;
-                                } else {
-                                  var result79 = null;;
-                                };
-                              }
-                              if (result79 !== null) {
-                                if (input.substr(pos, 1) === "I") {
-                                  var result91 = "I";
-                                  pos += 1;
-                                } else {
-                                  var result91 = null;
-                                  if (reportMatchFailures) {
-                                    matchFailed("\"I\"");
-                                  }
-                                }
-                                if (result91 !== null) {
-                                  var result80 = result91;
-                                } else {
-                                  if (input.substr(pos, 1) === "i") {
-                                    var result90 = "i";
-                                    pos += 1;
-                                  } else {
-                                    var result90 = null;
-                                    if (reportMatchFailures) {
-                                      matchFailed("\"i\"");
-                                    }
-                                  }
-                                  if (result90 !== null) {
-                                    var result80 = result90;
-                                  } else {
-                                    var result80 = null;;
-                                  };
-                                }
-                                if (result80 !== null) {
-                                  if (input.substr(pos, 1) === "N") {
-                                    var result89 = "N";
-                                    pos += 1;
-                                  } else {
-                                    var result89 = null;
-                                    if (reportMatchFailures) {
-                                      matchFailed("\"N\"");
-                                    }
-                                  }
-                                  if (result89 !== null) {
-                                    var result81 = result89;
-                                  } else {
-                                    if (input.substr(pos, 1) === "n") {
-                                      var result88 = "n";
-                                      pos += 1;
-                                    } else {
-                                      var result88 = null;
-                                      if (reportMatchFailures) {
-                                        matchFailed("\"n\"");
-                                      }
-                                    }
-                                    if (result88 !== null) {
-                                      var result81 = result88;
-                                    } else {
-                                      var result81 = null;;
-                                    };
-                                  }
-                                  if (result81 !== null) {
-                                    if (input.substr(pos, 1) === "C") {
-                                      var result87 = "C";
-                                      pos += 1;
-                                    } else {
-                                      var result87 = null;
-                                      if (reportMatchFailures) {
-                                        matchFailed("\"C\"");
-                                      }
-                                    }
-                                    if (result87 !== null) {
-                                      var result82 = result87;
-                                    } else {
-                                      if (input.substr(pos, 1) === "c") {
-                                        var result86 = "c";
-                                        pos += 1;
-                                      } else {
-                                        var result86 = null;
-                                        if (reportMatchFailures) {
-                                          matchFailed("\"c\"");
-                                        }
-                                      }
-                                      if (result86 !== null) {
-                                        var result82 = result86;
-                                      } else {
-                                        var result82 = null;;
-                                      };
-                                    }
-                                    if (result82 !== null) {
-                                      if (input.substr(pos, 1) === "T") {
-                                        var result85 = "T";
-                                        pos += 1;
-                                      } else {
-                                        var result85 = null;
-                                        if (reportMatchFailures) {
-                                          matchFailed("\"T\"");
-                                        }
-                                      }
-                                      if (result85 !== null) {
-                                        var result83 = result85;
-                                      } else {
-                                        if (input.substr(pos, 1) === "t") {
-                                          var result84 = "t";
-                                          pos += 1;
-                                        } else {
-                                          var result84 = null;
-                                          if (reportMatchFailures) {
-                                            matchFailed("\"t\"");
-                                          }
-                                        }
-                                        if (result84 !== null) {
-                                          var result83 = result84;
-                                        } else {
-                                          var result83 = null;;
-                                        };
-                                      }
-                                      if (result83 !== null) {
-                                        var result75 = [result76, result77, result78, result79, result80, result81, result82, result83];
-                                      } else {
-                                        var result75 = null;
-                                        pos = savedPos6;
-                                      }
-                                    } else {
-                                      var result75 = null;
-                                      pos = savedPos6;
-                                    }
-                                  } else {
-                                    var result75 = null;
-                                    pos = savedPos6;
-                                  }
-                                } else {
-                                  var result75 = null;
-                                  pos = savedPos6;
-                                }
-                              } else {
-                                var result75 = null;
-                                pos = savedPos6;
-                              }
-                            } else {
-                              var result75 = null;
-                              pos = savedPos6;
-                            }
-                          } else {
-                            var result75 = null;
-                            pos = savedPos6;
-                          }
-                        } else {
-                          var result75 = null;
-                          pos = savedPos6;
-                        }
-                        if (result75 !== null) {
-                          var result52 = result75;
-                        } else {
-                          var savedPos5 = pos;
-                          if (input.substr(pos, 1) === "R") {
-                            var result74 = "R";
-                            pos += 1;
-                          } else {
-                            var result74 = null;
-                            if (reportMatchFailures) {
-                              matchFailed("\"R\"");
-                            }
-                          }
-                          if (result74 !== null) {
-                            var result54 = result74;
-                          } else {
-                            if (input.substr(pos, 1) === "r") {
-                              var result73 = "r";
-                              pos += 1;
-                            } else {
-                              var result73 = null;
-                              if (reportMatchFailures) {
-                                matchFailed("\"r\"");
-                              }
-                            }
-                            if (result73 !== null) {
-                              var result54 = result73;
-                            } else {
-                              var result54 = null;;
-                            };
-                          }
-                          if (result54 !== null) {
-                            if (input.substr(pos, 1) === "E") {
-                              var result72 = "E";
-                              pos += 1;
-                            } else {
-                              var result72 = null;
-                              if (reportMatchFailures) {
-                                matchFailed("\"E\"");
-                              }
-                            }
-                            if (result72 !== null) {
-                              var result55 = result72;
-                            } else {
-                              if (input.substr(pos, 1) === "e") {
-                                var result71 = "e";
-                                pos += 1;
-                              } else {
-                                var result71 = null;
-                                if (reportMatchFailures) {
-                                  matchFailed("\"e\"");
-                                }
-                              }
-                              if (result71 !== null) {
-                                var result55 = result71;
-                              } else {
-                                var result55 = null;;
-                              };
-                            }
-                            if (result55 !== null) {
-                              if (input.substr(pos, 1) === "D") {
-                                var result70 = "D";
-                                pos += 1;
-                              } else {
-                                var result70 = null;
-                                if (reportMatchFailures) {
-                                  matchFailed("\"D\"");
-                                }
-                              }
-                              if (result70 !== null) {
-                                var result56 = result70;
-                              } else {
-                                if (input.substr(pos, 1) === "d") {
-                                  var result69 = "d";
-                                  pos += 1;
-                                } else {
-                                  var result69 = null;
-                                  if (reportMatchFailures) {
-                                    matchFailed("\"d\"");
-                                  }
-                                }
-                                if (result69 !== null) {
-                                  var result56 = result69;
-                                } else {
-                                  var result56 = null;;
-                                };
-                              }
-                              if (result56 !== null) {
-                                if (input.substr(pos, 1) === "U") {
-                                  var result68 = "U";
-                                  pos += 1;
-                                } else {
-                                  var result68 = null;
-                                  if (reportMatchFailures) {
-                                    matchFailed("\"U\"");
-                                  }
-                                }
-                                if (result68 !== null) {
-                                  var result57 = result68;
-                                } else {
-                                  if (input.substr(pos, 1) === "u") {
-                                    var result67 = "u";
-                                    pos += 1;
-                                  } else {
-                                    var result67 = null;
-                                    if (reportMatchFailures) {
-                                      matchFailed("\"u\"");
-                                    }
-                                  }
-                                  if (result67 !== null) {
-                                    var result57 = result67;
-                                  } else {
-                                    var result57 = null;;
-                                  };
-                                }
-                                if (result57 !== null) {
-                                  if (input.substr(pos, 1) === "C") {
-                                    var result66 = "C";
-                                    pos += 1;
-                                  } else {
-                                    var result66 = null;
-                                    if (reportMatchFailures) {
-                                      matchFailed("\"C\"");
-                                    }
-                                  }
-                                  if (result66 !== null) {
-                                    var result58 = result66;
-                                  } else {
-                                    if (input.substr(pos, 1) === "c") {
-                                      var result65 = "c";
-                                      pos += 1;
-                                    } else {
-                                      var result65 = null;
-                                      if (reportMatchFailures) {
-                                        matchFailed("\"c\"");
-                                      }
-                                    }
-                                    if (result65 !== null) {
-                                      var result58 = result65;
-                                    } else {
-                                      var result58 = null;;
-                                    };
-                                  }
-                                  if (result58 !== null) {
-                                    if (input.substr(pos, 1) === "E") {
-                                      var result64 = "E";
-                                      pos += 1;
-                                    } else {
-                                      var result64 = null;
-                                      if (reportMatchFailures) {
-                                        matchFailed("\"E\"");
-                                      }
-                                    }
-                                    if (result64 !== null) {
-                                      var result59 = result64;
-                                    } else {
-                                      if (input.substr(pos, 1) === "e") {
-                                        var result63 = "e";
-                                        pos += 1;
-                                      } else {
-                                        var result63 = null;
-                                        if (reportMatchFailures) {
-                                          matchFailed("\"e\"");
-                                        }
-                                      }
-                                      if (result63 !== null) {
-                                        var result59 = result63;
-                                      } else {
-                                        var result59 = null;;
-                                      };
-                                    }
-                                    if (result59 !== null) {
-                                      if (input.substr(pos, 1) === "D") {
-                                        var result62 = "D";
-                                        pos += 1;
-                                      } else {
-                                        var result62 = null;
-                                        if (reportMatchFailures) {
-                                          matchFailed("\"D\"");
-                                        }
-                                      }
-                                      if (result62 !== null) {
-                                        var result60 = result62;
-                                      } else {
-                                        if (input.substr(pos, 1) === "d") {
-                                          var result61 = "d";
-                                          pos += 1;
-                                        } else {
-                                          var result61 = null;
-                                          if (reportMatchFailures) {
-                                            matchFailed("\"d\"");
-                                          }
-                                        }
-                                        if (result61 !== null) {
-                                          var result60 = result61;
-                                        } else {
-                                          var result60 = null;;
-                                        };
-                                      }
-                                      if (result60 !== null) {
-                                        var result53 = [result54, result55, result56, result57, result58, result59, result60];
-                                      } else {
-                                        var result53 = null;
-                                        pos = savedPos5;
-                                      }
-                                    } else {
-                                      var result53 = null;
-                                      pos = savedPos5;
-                                    }
-                                  } else {
-                                    var result53 = null;
-                                    pos = savedPos5;
-                                  }
-                                } else {
-                                  var result53 = null;
-                                  pos = savedPos5;
-                                }
-                              } else {
-                                var result53 = null;
-                                pos = savedPos5;
-                              }
-                            } else {
-                              var result53 = null;
-                              pos = savedPos5;
-                            }
-                          } else {
-                            var result53 = null;
-                            pos = savedPos5;
-                          }
-                          if (result53 !== null) {
-                            var result52 = result53;
-                          } else {
-                            var result52 = null;;
-                          };
-                        }
-                        var result11 = result52 !== null ? result52 : '';
-                        if (result11 !== null) {
-                          var result12 = [];
-                          var result51 = parse_WS();
-                          while (result51 !== null) {
-                            result12.push(result51);
-                            var result51 = parse_WS();
-                          }
-                          if (result12 !== null) {
-                            var savedPos4 = pos;
-                            var result46 = [];
-                            var result50 = parse_WS();
-                            while (result50 !== null) {
-                              result46.push(result50);
-                              var result50 = parse_WS();
-                            }
-                            if (result46 !== null) {
-                              var result47 = parse_Var();
-                              if (result47 !== null) {
-                                var result48 = [];
-                                var result49 = parse_WS();
-                                while (result49 !== null) {
-                                  result48.push(result49);
-                                  var result49 = parse_WS();
-                                }
-                                if (result48 !== null) {
-                                  var result45 = [result46, result47, result48];
-                                } else {
-                                  var result45 = null;
-                                  pos = savedPos4;
-                                }
-                              } else {
-                                var result45 = null;
-                                pos = savedPos4;
-                              }
-                            } else {
-                              var result45 = null;
-                              pos = savedPos4;
-                            }
-                            if (result45 !== null) {
-                              var result21 = result45;
-                            } else {
-                              var savedPos3 = pos;
-                              var result23 = [];
-                              var result44 = parse_WS();
-                              while (result44 !== null) {
-                                result23.push(result44);
-                                var result44 = parse_WS();
-                              }
-                              if (result23 !== null) {
-                                if (input.substr(pos, 1) === "(") {
-                                  var result24 = "(";
-                                  pos += 1;
-                                } else {
-                                  var result24 = null;
-                                  if (reportMatchFailures) {
-                                    matchFailed("\"(\"");
-                                  }
-                                }
-                                if (result24 !== null) {
-                                  var result25 = [];
-                                  var result43 = parse_WS();
-                                  while (result43 !== null) {
-                                    result25.push(result43);
-                                    var result43 = parse_WS();
-                                  }
-                                  if (result25 !== null) {
-                                    var result26 = parse_ConditionalOrExpression();
-                                    if (result26 !== null) {
-                                      var result27 = [];
-                                      var result42 = parse_WS();
-                                      while (result42 !== null) {
-                                        result27.push(result42);
-                                        var result42 = parse_WS();
-                                      }
-                                      if (result27 !== null) {
-                                        if (input.substr(pos, 1) === "A") {
-                                          var result41 = "A";
-                                          pos += 1;
-                                        } else {
-                                          var result41 = null;
-                                          if (reportMatchFailures) {
-                                            matchFailed("\"A\"");
-                                          }
-                                        }
-                                        if (result41 !== null) {
-                                          var result28 = result41;
-                                        } else {
-                                          if (input.substr(pos, 1) === "a") {
-                                            var result40 = "a";
-                                            pos += 1;
-                                          } else {
-                                            var result40 = null;
-                                            if (reportMatchFailures) {
-                                              matchFailed("\"a\"");
-                                            }
-                                          }
-                                          if (result40 !== null) {
-                                            var result28 = result40;
-                                          } else {
-                                            var result28 = null;;
-                                          };
-                                        }
-                                        if (result28 !== null) {
-                                          if (input.substr(pos, 1) === "S") {
-                                            var result39 = "S";
-                                            pos += 1;
-                                          } else {
-                                            var result39 = null;
-                                            if (reportMatchFailures) {
-                                              matchFailed("\"S\"");
-                                            }
-                                          }
-                                          if (result39 !== null) {
-                                            var result29 = result39;
-                                          } else {
-                                            if (input.substr(pos, 1) === "s") {
-                                              var result38 = "s";
-                                              pos += 1;
-                                            } else {
-                                              var result38 = null;
-                                              if (reportMatchFailures) {
-                                                matchFailed("\"s\"");
-                                              }
-                                            }
-                                            if (result38 !== null) {
-                                              var result29 = result38;
-                                            } else {
-                                              var result29 = null;;
-                                            };
-                                          }
-                                          if (result29 !== null) {
-                                            var result30 = [];
-                                            var result37 = parse_WS();
-                                            while (result37 !== null) {
-                                              result30.push(result37);
-                                              var result37 = parse_WS();
-                                            }
-                                            if (result30 !== null) {
-                                              var result31 = parse_Var();
-                                              if (result31 !== null) {
-                                                var result32 = [];
-                                                var result36 = parse_WS();
-                                                while (result36 !== null) {
-                                                  result32.push(result36);
-                                                  var result36 = parse_WS();
-                                                }
-                                                if (result32 !== null) {
-                                                  if (input.substr(pos, 1) === ")") {
-                                                    var result33 = ")";
-                                                    pos += 1;
-                                                  } else {
-                                                    var result33 = null;
-                                                    if (reportMatchFailures) {
-                                                      matchFailed("\")\"");
-                                                    }
-                                                  }
-                                                  if (result33 !== null) {
-                                                    var result34 = [];
-                                                    var result35 = parse_WS();
-                                                    while (result35 !== null) {
-                                                      result34.push(result35);
-                                                      var result35 = parse_WS();
-                                                    }
-                                                    if (result34 !== null) {
-                                                      var result22 = [result23, result24, result25, result26, result27, result28, result29, result30, result31, result32, result33, result34];
-                                                    } else {
-                                                      var result22 = null;
-                                                      pos = savedPos3;
-                                                    }
-                                                  } else {
-                                                    var result22 = null;
-                                                    pos = savedPos3;
-                                                  }
-                                                } else {
-                                                  var result22 = null;
-                                                  pos = savedPos3;
-                                                }
-                                              } else {
-                                                var result22 = null;
-                                                pos = savedPos3;
-                                              }
-                                            } else {
-                                              var result22 = null;
-                                              pos = savedPos3;
-                                            }
-                                          } else {
-                                            var result22 = null;
-                                            pos = savedPos3;
-                                          }
-                                        } else {
-                                          var result22 = null;
-                                          pos = savedPos3;
-                                        }
-                                      } else {
-                                        var result22 = null;
-                                        pos = savedPos3;
-                                      }
-                                    } else {
-                                      var result22 = null;
-                                      pos = savedPos3;
-                                    }
-                                  } else {
-                                    var result22 = null;
-                                    pos = savedPos3;
-                                  }
-                                } else {
-                                  var result22 = null;
-                                  pos = savedPos3;
-                                }
-                              } else {
-                                var result22 = null;
-                                pos = savedPos3;
-                              }
-                              if (result22 !== null) {
-                                var result21 = result22;
-                              } else {
-                                var result21 = null;;
-                              };
-                            }
-                            if (result21 !== null) {
-                              var result20 = [];
-                              while (result21 !== null) {
-                                result20.push(result21);
-                                var savedPos4 = pos;
-                                var result46 = [];
-                                var result50 = parse_WS();
-                                while (result50 !== null) {
-                                  result46.push(result50);
-                                  var result50 = parse_WS();
-                                }
-                                if (result46 !== null) {
-                                  var result47 = parse_Var();
-                                  if (result47 !== null) {
-                                    var result48 = [];
-                                    var result49 = parse_WS();
-                                    while (result49 !== null) {
-                                      result48.push(result49);
-                                      var result49 = parse_WS();
-                                    }
-                                    if (result48 !== null) {
-                                      var result45 = [result46, result47, result48];
-                                    } else {
-                                      var result45 = null;
-                                      pos = savedPos4;
-                                    }
-                                  } else {
-                                    var result45 = null;
-                                    pos = savedPos4;
-                                  }
-                                } else {
-                                  var result45 = null;
-                                  pos = savedPos4;
-                                }
-                                if (result45 !== null) {
-                                  var result21 = result45;
-                                } else {
-                                  var savedPos3 = pos;
-                                  var result23 = [];
-                                  var result44 = parse_WS();
-                                  while (result44 !== null) {
-                                    result23.push(result44);
-                                    var result44 = parse_WS();
-                                  }
-                                  if (result23 !== null) {
-                                    if (input.substr(pos, 1) === "(") {
-                                      var result24 = "(";
-                                      pos += 1;
-                                    } else {
-                                      var result24 = null;
-                                      if (reportMatchFailures) {
-                                        matchFailed("\"(\"");
-                                      }
-                                    }
-                                    if (result24 !== null) {
-                                      var result25 = [];
-                                      var result43 = parse_WS();
-                                      while (result43 !== null) {
-                                        result25.push(result43);
-                                        var result43 = parse_WS();
-                                      }
-                                      if (result25 !== null) {
-                                        var result26 = parse_ConditionalOrExpression();
-                                        if (result26 !== null) {
-                                          var result27 = [];
-                                          var result42 = parse_WS();
-                                          while (result42 !== null) {
-                                            result27.push(result42);
-                                            var result42 = parse_WS();
-                                          }
-                                          if (result27 !== null) {
-                                            if (input.substr(pos, 1) === "A") {
-                                              var result41 = "A";
-                                              pos += 1;
-                                            } else {
-                                              var result41 = null;
-                                              if (reportMatchFailures) {
-                                                matchFailed("\"A\"");
-                                              }
-                                            }
-                                            if (result41 !== null) {
-                                              var result28 = result41;
-                                            } else {
-                                              if (input.substr(pos, 1) === "a") {
-                                                var result40 = "a";
-                                                pos += 1;
-                                              } else {
-                                                var result40 = null;
-                                                if (reportMatchFailures) {
-                                                  matchFailed("\"a\"");
-                                                }
-                                              }
-                                              if (result40 !== null) {
-                                                var result28 = result40;
-                                              } else {
-                                                var result28 = null;;
-                                              };
-                                            }
-                                            if (result28 !== null) {
-                                              if (input.substr(pos, 1) === "S") {
-                                                var result39 = "S";
-                                                pos += 1;
-                                              } else {
-                                                var result39 = null;
-                                                if (reportMatchFailures) {
-                                                  matchFailed("\"S\"");
-                                                }
-                                              }
-                                              if (result39 !== null) {
-                                                var result29 = result39;
-                                              } else {
-                                                if (input.substr(pos, 1) === "s") {
-                                                  var result38 = "s";
-                                                  pos += 1;
-                                                } else {
-                                                  var result38 = null;
-                                                  if (reportMatchFailures) {
-                                                    matchFailed("\"s\"");
-                                                  }
-                                                }
-                                                if (result38 !== null) {
-                                                  var result29 = result38;
-                                                } else {
-                                                  var result29 = null;;
-                                                };
-                                              }
-                                              if (result29 !== null) {
-                                                var result30 = [];
-                                                var result37 = parse_WS();
-                                                while (result37 !== null) {
-                                                  result30.push(result37);
-                                                  var result37 = parse_WS();
-                                                }
-                                                if (result30 !== null) {
-                                                  var result31 = parse_Var();
-                                                  if (result31 !== null) {
-                                                    var result32 = [];
-                                                    var result36 = parse_WS();
-                                                    while (result36 !== null) {
-                                                      result32.push(result36);
-                                                      var result36 = parse_WS();
-                                                    }
-                                                    if (result32 !== null) {
-                                                      if (input.substr(pos, 1) === ")") {
-                                                        var result33 = ")";
-                                                        pos += 1;
-                                                      } else {
-                                                        var result33 = null;
-                                                        if (reportMatchFailures) {
-                                                          matchFailed("\")\"");
-                                                        }
-                                                      }
-                                                      if (result33 !== null) {
-                                                        var result34 = [];
-                                                        var result35 = parse_WS();
-                                                        while (result35 !== null) {
-                                                          result34.push(result35);
-                                                          var result35 = parse_WS();
-                                                        }
-                                                        if (result34 !== null) {
-                                                          var result22 = [result23, result24, result25, result26, result27, result28, result29, result30, result31, result32, result33, result34];
-                                                        } else {
-                                                          var result22 = null;
-                                                          pos = savedPos3;
-                                                        }
-                                                      } else {
-                                                        var result22 = null;
-                                                        pos = savedPos3;
-                                                      }
-                                                    } else {
-                                                      var result22 = null;
-                                                      pos = savedPos3;
-                                                    }
-                                                  } else {
-                                                    var result22 = null;
-                                                    pos = savedPos3;
-                                                  }
-                                                } else {
-                                                  var result22 = null;
-                                                  pos = savedPos3;
-                                                }
-                                              } else {
-                                                var result22 = null;
-                                                pos = savedPos3;
-                                              }
-                                            } else {
-                                              var result22 = null;
-                                              pos = savedPos3;
-                                            }
-                                          } else {
-                                            var result22 = null;
-                                            pos = savedPos3;
-                                          }
-                                        } else {
-                                          var result22 = null;
-                                          pos = savedPos3;
-                                        }
-                                      } else {
-                                        var result22 = null;
-                                        pos = savedPos3;
-                                      }
-                                    } else {
-                                      var result22 = null;
-                                      pos = savedPos3;
-                                    }
-                                  } else {
-                                    var result22 = null;
-                                    pos = savedPos3;
-                                  }
-                                  if (result22 !== null) {
-                                    var result21 = result22;
-                                  } else {
-                                    var result21 = null;;
-                                  };
-                                }
-                              }
-                            } else {
-                              var result20 = null;
-                            }
-                            if (result20 !== null) {
-                              var result13 = result20;
-                            } else {
-                              var savedPos2 = pos;
-                              var result15 = [];
-                              var result19 = parse_WS();
-                              while (result19 !== null) {
-                                result15.push(result19);
-                                var result19 = parse_WS();
-                              }
-                              if (result15 !== null) {
-                                if (input.substr(pos, 1) === "*") {
-                                  var result16 = "*";
-                                  pos += 1;
-                                } else {
-                                  var result16 = null;
-                                  if (reportMatchFailures) {
-                                    matchFailed("\"*\"");
-                                  }
-                                }
-                                if (result16 !== null) {
-                                  var result17 = [];
-                                  var result18 = parse_WS();
-                                  while (result18 !== null) {
-                                    result17.push(result18);
-                                    var result18 = parse_WS();
-                                  }
-                                  if (result17 !== null) {
-                                    var result14 = [result15, result16, result17];
-                                  } else {
-                                    var result14 = null;
-                                    pos = savedPos2;
-                                  }
-                                } else {
-                                  var result14 = null;
-                                  pos = savedPos2;
-                                }
-                              } else {
-                                var result14 = null;
-                                pos = savedPos2;
-                              }
-                              if (result14 !== null) {
-                                var result13 = result14;
-                              } else {
-                                var result13 = null;;
-                              };
-                            }
-                            if (result13 !== null) {
-                              var result1 = [result3, result4, result5, result6, result7, result8, result9, result10, result11, result12, result13];
-                            } else {
-                              var result1 = null;
-                              pos = savedPos1;
-                            }
-                          } else {
-                            var result1 = null;
-                            pos = savedPos1;
-                          }
-                        } else {
-                          var result1 = null;
-                          pos = savedPos1;
-                        }
-                      } else {
-                        var result1 = null;
-                        pos = savedPos1;
-                      }
-                    } else {
-                      var result1 = null;
-                      pos = savedPos1;
-                    }
+                    var result1 = [result3, result4, result5, result6, result7, result8];
                   } else {
                     var result1 = null;
                     pos = savedPos1;
@@ -2761,12 +1851,12 @@ SparqlParser.parser = (function(){
                     if(aVar.length === 3) {
                         vars.push({token: 'variable', kind:'var', value:aVar[1]});
                     } else {
-                        vars.push({token: 'variable', kind:'aliased', expression: aVar[3], alias:aVar[8]})
+                        vars.push({token: 'variable', kind:'aliased', expression: aVar[3], alias:aVar[7]})
                     }
                 }
           
                 return {vars: vars, modifier:arrayToString(mod)};
-          })(result1[8], result1[10])
+          })(result1[3], result1[5])
           : null;
         if (result2 !== null) {
           var result0 = result2;
@@ -2799,338 +1889,82 @@ SparqlParser.parser = (function(){
         var savedPos0 = pos;
         var savedPos1 = pos;
         var result3 = [];
-        var result44 = parse_WS();
-        while (result44 !== null) {
-          result3.push(result44);
-          var result44 = parse_WS();
+        var result20 = parse_WS();
+        while (result20 !== null) {
+          result3.push(result20);
+          var result20 = parse_WS();
         }
         if (result3 !== null) {
-          if (input.substr(pos, 1) === "C") {
-            var result43 = "C";
-            pos += 1;
+          if (input.substr(pos, 9) === "CONSTRUCT") {
+            var result19 = "CONSTRUCT";
+            pos += 9;
           } else {
-            var result43 = null;
+            var result19 = null;
             if (reportMatchFailures) {
-              matchFailed("\"C\"");
+              matchFailed("\"CONSTRUCT\"");
             }
           }
-          if (result43 !== null) {
-            var result4 = result43;
+          if (result19 !== null) {
+            var result4 = result19;
           } else {
-            if (input.substr(pos, 1) === "c") {
-              var result42 = "c";
-              pos += 1;
+            if (input.substr(pos, 9) === "construct") {
+              var result18 = "construct";
+              pos += 9;
             } else {
-              var result42 = null;
+              var result18 = null;
               if (reportMatchFailures) {
-                matchFailed("\"c\"");
+                matchFailed("\"construct\"");
               }
             }
-            if (result42 !== null) {
-              var result4 = result42;
+            if (result18 !== null) {
+              var result4 = result18;
             } else {
               var result4 = null;;
             };
           }
           if (result4 !== null) {
-            if (input.substr(pos, 1) === "O") {
-              var result41 = "O";
-              pos += 1;
-            } else {
-              var result41 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"O\"");
-              }
-            }
-            if (result41 !== null) {
-              var result5 = result41;
-            } else {
-              if (input.substr(pos, 1) === "o") {
-                var result40 = "o";
-                pos += 1;
-              } else {
-                var result40 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"o\"");
-                }
-              }
-              if (result40 !== null) {
-                var result5 = result40;
-              } else {
-                var result5 = null;;
-              };
+            var result5 = [];
+            var result17 = parse_WS();
+            while (result17 !== null) {
+              result5.push(result17);
+              var result17 = parse_WS();
             }
             if (result5 !== null) {
-              if (input.substr(pos, 1) === "N") {
-                var result39 = "N";
-                pos += 1;
-              } else {
-                var result39 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"N\"");
-                }
-              }
-              if (result39 !== null) {
-                var result6 = result39;
-              } else {
-                if (input.substr(pos, 1) === "n") {
-                  var result38 = "n";
-                  pos += 1;
-                } else {
-                  var result38 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"n\"");
-                  }
-                }
-                if (result38 !== null) {
-                  var result6 = result38;
-                } else {
-                  var result6 = null;;
-                };
-              }
+              var result6 = parse_ConstructTemplate();
               if (result6 !== null) {
-                if (input.substr(pos, 1) === "S") {
-                  var result37 = "S";
-                  pos += 1;
-                } else {
-                  var result37 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"S\"");
-                  }
-                }
-                if (result37 !== null) {
-                  var result7 = result37;
-                } else {
-                  if (input.substr(pos, 1) === "s") {
-                    var result36 = "s";
-                    pos += 1;
-                  } else {
-                    var result36 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"s\"");
-                    }
-                  }
-                  if (result36 !== null) {
-                    var result7 = result36;
-                  } else {
-                    var result7 = null;;
-                  };
+                var result7 = [];
+                var result16 = parse_WS();
+                while (result16 !== null) {
+                  result7.push(result16);
+                  var result16 = parse_WS();
                 }
                 if (result7 !== null) {
-                  if (input.substr(pos, 1) === "T") {
-                    var result35 = "T";
-                    pos += 1;
-                  } else {
-                    var result35 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"T\"");
-                    }
-                  }
-                  if (result35 !== null) {
-                    var result8 = result35;
-                  } else {
-                    if (input.substr(pos, 1) === "t") {
-                      var result34 = "t";
-                      pos += 1;
-                    } else {
-                      var result34 = null;
-                      if (reportMatchFailures) {
-                        matchFailed("\"t\"");
-                      }
-                    }
-                    if (result34 !== null) {
-                      var result8 = result34;
-                    } else {
-                      var result8 = null;;
-                    };
+                  var result8 = [];
+                  var result15 = parse_DatasetClause();
+                  while (result15 !== null) {
+                    result8.push(result15);
+                    var result15 = parse_DatasetClause();
                   }
                   if (result8 !== null) {
-                    if (input.substr(pos, 1) === "R") {
-                      var result33 = "R";
-                      pos += 1;
-                    } else {
-                      var result33 = null;
-                      if (reportMatchFailures) {
-                        matchFailed("\"R\"");
-                      }
-                    }
-                    if (result33 !== null) {
-                      var result9 = result33;
-                    } else {
-                      if (input.substr(pos, 1) === "r") {
-                        var result32 = "r";
-                        pos += 1;
-                      } else {
-                        var result32 = null;
-                        if (reportMatchFailures) {
-                          matchFailed("\"r\"");
-                        }
-                      }
-                      if (result32 !== null) {
-                        var result9 = result32;
-                      } else {
-                        var result9 = null;;
-                      };
+                    var result9 = [];
+                    var result14 = parse_WS();
+                    while (result14 !== null) {
+                      result9.push(result14);
+                      var result14 = parse_WS();
                     }
                     if (result9 !== null) {
-                      if (input.substr(pos, 1) === "U") {
-                        var result31 = "U";
-                        pos += 1;
-                      } else {
-                        var result31 = null;
-                        if (reportMatchFailures) {
-                          matchFailed("\"U\"");
-                        }
-                      }
-                      if (result31 !== null) {
-                        var result10 = result31;
-                      } else {
-                        if (input.substr(pos, 1) === "u") {
-                          var result30 = "u";
-                          pos += 1;
-                        } else {
-                          var result30 = null;
-                          if (reportMatchFailures) {
-                            matchFailed("\"u\"");
-                          }
-                        }
-                        if (result30 !== null) {
-                          var result10 = result30;
-                        } else {
-                          var result10 = null;;
-                        };
-                      }
+                      var result10 = parse_WhereClause();
                       if (result10 !== null) {
-                        if (input.substr(pos, 1) === "C") {
-                          var result29 = "C";
-                          pos += 1;
-                        } else {
-                          var result29 = null;
-                          if (reportMatchFailures) {
-                            matchFailed("\"C\"");
-                          }
-                        }
-                        if (result29 !== null) {
-                          var result11 = result29;
-                        } else {
-                          if (input.substr(pos, 1) === "c") {
-                            var result28 = "c";
-                            pos += 1;
-                          } else {
-                            var result28 = null;
-                            if (reportMatchFailures) {
-                              matchFailed("\"c\"");
-                            }
-                          }
-                          if (result28 !== null) {
-                            var result11 = result28;
-                          } else {
-                            var result11 = null;;
-                          };
+                        var result11 = [];
+                        var result13 = parse_WS();
+                        while (result13 !== null) {
+                          result11.push(result13);
+                          var result13 = parse_WS();
                         }
                         if (result11 !== null) {
-                          if (input.substr(pos, 1) === "T") {
-                            var result27 = "T";
-                            pos += 1;
-                          } else {
-                            var result27 = null;
-                            if (reportMatchFailures) {
-                              matchFailed("\"T\"");
-                            }
-                          }
-                          if (result27 !== null) {
-                            var result12 = result27;
-                          } else {
-                            if (input.substr(pos, 1) === "t") {
-                              var result26 = "t";
-                              pos += 1;
-                            } else {
-                              var result26 = null;
-                              if (reportMatchFailures) {
-                                matchFailed("\"t\"");
-                              }
-                            }
-                            if (result26 !== null) {
-                              var result12 = result26;
-                            } else {
-                              var result12 = null;;
-                            };
-                          }
+                          var result12 = parse_SolutionModifier();
                           if (result12 !== null) {
-                            var result13 = [];
-                            var result25 = parse_WS();
-                            while (result25 !== null) {
-                              result13.push(result25);
-                              var result25 = parse_WS();
-                            }
-                            if (result13 !== null) {
-                              var result14 = parse_ConstructTemplate();
-                              if (result14 !== null) {
-                                var result15 = [];
-                                var result24 = parse_WS();
-                                while (result24 !== null) {
-                                  result15.push(result24);
-                                  var result24 = parse_WS();
-                                }
-                                if (result15 !== null) {
-                                  var result16 = [];
-                                  var result23 = parse_DatasetClause();
-                                  while (result23 !== null) {
-                                    result16.push(result23);
-                                    var result23 = parse_DatasetClause();
-                                  }
-                                  if (result16 !== null) {
-                                    var result17 = [];
-                                    var result22 = parse_WS();
-                                    while (result22 !== null) {
-                                      result17.push(result22);
-                                      var result22 = parse_WS();
-                                    }
-                                    if (result17 !== null) {
-                                      var result18 = parse_WhereClause();
-                                      if (result18 !== null) {
-                                        var result19 = [];
-                                        var result21 = parse_WS();
-                                        while (result21 !== null) {
-                                          result19.push(result21);
-                                          var result21 = parse_WS();
-                                        }
-                                        if (result19 !== null) {
-                                          var result20 = parse_SolutionModifier();
-                                          if (result20 !== null) {
-                                            var result1 = [result3, result4, result5, result6, result7, result8, result9, result10, result11, result12, result13, result14, result15, result16, result17, result18, result19, result20];
-                                          } else {
-                                            var result1 = null;
-                                            pos = savedPos1;
-                                          }
-                                        } else {
-                                          var result1 = null;
-                                          pos = savedPos1;
-                                        }
-                                      } else {
-                                        var result1 = null;
-                                        pos = savedPos1;
-                                      }
-                                    } else {
-                                      var result1 = null;
-                                      pos = savedPos1;
-                                    }
-                                  } else {
-                                    var result1 = null;
-                                    pos = savedPos1;
-                                  }
-                                } else {
-                                  var result1 = null;
-                                  pos = savedPos1;
-                                }
-                              } else {
-                                var result1 = null;
-                                pos = savedPos1;
-                              }
-                            } else {
-                              var result1 = null;
-                              pos = savedPos1;
-                            }
+                            var result1 = [result3, result4, result5, result6, result7, result8, result9, result10, result11, result12];
                           } else {
                             var result1 = null;
                             pos = savedPos1;
@@ -3209,7 +2043,7 @@ SparqlParser.parser = (function(){
                 }
                 return query
           
-          })(result1[11], result1[13], result1[15], result1[17])
+          })(result1[3], result1[5], result1[7], result1[9])
           : null;
         if (result2 !== null) {
           var result0 = result2;
@@ -3337,128 +2171,64 @@ SparqlParser.parser = (function(){
         var savedPos0 = pos;
         var savedPos1 = pos;
         var result3 = [];
-        var result20 = parse_WS();
-        while (result20 !== null) {
-          result3.push(result20);
-          var result20 = parse_WS();
+        var result14 = parse_WS();
+        while (result14 !== null) {
+          result3.push(result14);
+          var result14 = parse_WS();
         }
         if (result3 !== null) {
-          if (input.substr(pos, 1) === "A") {
-            var result19 = "A";
-            pos += 1;
+          if (input.substr(pos, 3) === "ASK") {
+            var result13 = "ASK";
+            pos += 3;
           } else {
-            var result19 = null;
+            var result13 = null;
             if (reportMatchFailures) {
-              matchFailed("\"A\"");
+              matchFailed("\"ASK\"");
             }
           }
-          if (result19 !== null) {
-            var result4 = result19;
+          if (result13 !== null) {
+            var result4 = result13;
           } else {
-            if (input.substr(pos, 1) === "a") {
-              var result18 = "a";
-              pos += 1;
+            if (input.substr(pos, 3) === "ask") {
+              var result12 = "ask";
+              pos += 3;
             } else {
-              var result18 = null;
+              var result12 = null;
               if (reportMatchFailures) {
-                matchFailed("\"a\"");
+                matchFailed("\"ask\"");
               }
             }
-            if (result18 !== null) {
-              var result4 = result18;
+            if (result12 !== null) {
+              var result4 = result12;
             } else {
               var result4 = null;;
             };
           }
           if (result4 !== null) {
-            if (input.substr(pos, 1) === "S") {
-              var result17 = "S";
-              pos += 1;
-            } else {
-              var result17 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"S\"");
-              }
-            }
-            if (result17 !== null) {
-              var result5 = result17;
-            } else {
-              if (input.substr(pos, 1) === "s") {
-                var result16 = "s";
-                pos += 1;
-              } else {
-                var result16 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"s\"");
-                }
-              }
-              if (result16 !== null) {
-                var result5 = result16;
-              } else {
-                var result5 = null;;
-              };
+            var result5 = [];
+            var result11 = parse_WS();
+            while (result11 !== null) {
+              result5.push(result11);
+              var result11 = parse_WS();
             }
             if (result5 !== null) {
-              if (input.substr(pos, 1) === "K") {
-                var result15 = "K";
-                pos += 1;
-              } else {
-                var result15 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"K\"");
-                }
-              }
-              if (result15 !== null) {
-                var result6 = result15;
-              } else {
-                if (input.substr(pos, 1) === "k") {
-                  var result14 = "k";
-                  pos += 1;
-                } else {
-                  var result14 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"k\"");
-                  }
-                }
-                if (result14 !== null) {
-                  var result6 = result14;
-                } else {
-                  var result6 = null;;
-                };
+              var result6 = [];
+              var result10 = parse_DatasetClause();
+              while (result10 !== null) {
+                result6.push(result10);
+                var result10 = parse_DatasetClause();
               }
               if (result6 !== null) {
                 var result7 = [];
-                var result13 = parse_WS();
-                while (result13 !== null) {
-                  result7.push(result13);
-                  var result13 = parse_WS();
+                var result9 = parse_WS();
+                while (result9 !== null) {
+                  result7.push(result9);
+                  var result9 = parse_WS();
                 }
                 if (result7 !== null) {
-                  var result8 = [];
-                  var result12 = parse_DatasetClause();
-                  while (result12 !== null) {
-                    result8.push(result12);
-                    var result12 = parse_DatasetClause();
-                  }
+                  var result8 = parse_WhereClause();
                   if (result8 !== null) {
-                    var result9 = [];
-                    var result11 = parse_WS();
-                    while (result11 !== null) {
-                      result9.push(result11);
-                      var result11 = parse_WS();
-                    }
-                    if (result9 !== null) {
-                      var result10 = parse_WhereClause();
-                      if (result10 !== null) {
-                        var result1 = [result3, result4, result5, result6, result7, result8, result9, result10];
-                      } else {
-                        var result1 = null;
-                        pos = savedPos1;
-                      }
-                    } else {
-                      var result1 = null;
-                      pos = savedPos1;
-                    }
+                    var result1 = [result3, result4, result5, result6, result7, result8];
                   } else {
                     var result1 = null;
                     pos = savedPos1;
@@ -3510,7 +2280,7 @@ SparqlParser.parser = (function(){
                 query.pattern = w
           
                 return query
-          })(result1[5], result1[7])
+          })(result1[3], result1[5])
           : null;
         if (result2 !== null) {
           var result0 = result2;
@@ -3542,157 +2312,61 @@ SparqlParser.parser = (function(){
         reportMatchFailures = false;
         var savedPos0 = pos;
         var savedPos1 = pos;
-        if (input.substr(pos, 1) === "F") {
-          var result21 = "F";
-          pos += 1;
+        if (input.substr(pos, 4) === "FROM") {
+          var result12 = "FROM";
+          pos += 4;
         } else {
-          var result21 = null;
+          var result12 = null;
           if (reportMatchFailures) {
-            matchFailed("\"F\"");
+            matchFailed("\"FROM\"");
           }
         }
-        if (result21 !== null) {
-          var result3 = result21;
+        if (result12 !== null) {
+          var result3 = result12;
         } else {
-          if (input.substr(pos, 1) === "f") {
-            var result20 = "f";
-            pos += 1;
+          if (input.substr(pos, 4) === "from") {
+            var result11 = "from";
+            pos += 4;
           } else {
-            var result20 = null;
+            var result11 = null;
             if (reportMatchFailures) {
-              matchFailed("\"f\"");
+              matchFailed("\"from\"");
             }
           }
-          if (result20 !== null) {
-            var result3 = result20;
+          if (result11 !== null) {
+            var result3 = result11;
           } else {
             var result3 = null;;
           };
         }
         if (result3 !== null) {
-          if (input.substr(pos, 1) === "R") {
-            var result19 = "R";
-            pos += 1;
-          } else {
-            var result19 = null;
-            if (reportMatchFailures) {
-              matchFailed("\"R\"");
-            }
-          }
-          if (result19 !== null) {
-            var result4 = result19;
-          } else {
-            if (input.substr(pos, 1) === "r") {
-              var result18 = "r";
-              pos += 1;
-            } else {
-              var result18 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"r\"");
-              }
-            }
-            if (result18 !== null) {
-              var result4 = result18;
-            } else {
-              var result4 = null;;
-            };
+          var result4 = [];
+          var result10 = parse_WS();
+          while (result10 !== null) {
+            result4.push(result10);
+            var result10 = parse_WS();
           }
           if (result4 !== null) {
-            if (input.substr(pos, 1) === "O") {
-              var result17 = "O";
-              pos += 1;
+            var result9 = parse_DefaultGraphClause();
+            if (result9 !== null) {
+              var result5 = result9;
             } else {
-              var result17 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"O\"");
-              }
-            }
-            if (result17 !== null) {
-              var result5 = result17;
-            } else {
-              if (input.substr(pos, 1) === "o") {
-                var result16 = "o";
-                pos += 1;
-              } else {
-                var result16 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"o\"");
-                }
-              }
-              if (result16 !== null) {
-                var result5 = result16;
+              var result8 = parse_NamedGraphClause();
+              if (result8 !== null) {
+                var result5 = result8;
               } else {
                 var result5 = null;;
               };
             }
             if (result5 !== null) {
-              if (input.substr(pos, 1) === "M") {
-                var result15 = "M";
-                pos += 1;
-              } else {
-                var result15 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"M\"");
-                }
-              }
-              if (result15 !== null) {
-                var result6 = result15;
-              } else {
-                if (input.substr(pos, 1) === "m") {
-                  var result14 = "m";
-                  pos += 1;
-                } else {
-                  var result14 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"m\"");
-                  }
-                }
-                if (result14 !== null) {
-                  var result6 = result14;
-                } else {
-                  var result6 = null;;
-                };
+              var result6 = [];
+              var result7 = parse_WS();
+              while (result7 !== null) {
+                result6.push(result7);
+                var result7 = parse_WS();
               }
               if (result6 !== null) {
-                var result7 = [];
-                var result13 = parse_WS();
-                while (result13 !== null) {
-                  result7.push(result13);
-                  var result13 = parse_WS();
-                }
-                if (result7 !== null) {
-                  var result12 = parse_DefaultGraphClause();
-                  if (result12 !== null) {
-                    var result8 = result12;
-                  } else {
-                    var result11 = parse_NamedGraphClause();
-                    if (result11 !== null) {
-                      var result8 = result11;
-                    } else {
-                      var result8 = null;;
-                    };
-                  }
-                  if (result8 !== null) {
-                    var result9 = [];
-                    var result10 = parse_WS();
-                    while (result10 !== null) {
-                      result9.push(result10);
-                      var result10 = parse_WS();
-                    }
-                    if (result9 !== null) {
-                      var result1 = [result3, result4, result5, result6, result7, result8, result9];
-                    } else {
-                      var result1 = null;
-                      pos = savedPos1;
-                    }
-                  } else {
-                    var result1 = null;
-                    pos = savedPos1;
-                  }
-                } else {
-                  var result1 = null;
-                  pos = savedPos1;
-                }
+                var result1 = [result3, result4, result5, result6];
               } else {
                 var result1 = null;
                 pos = savedPos1;
@@ -3712,7 +2386,7 @@ SparqlParser.parser = (function(){
         var result2 = result1 !== null
           ? (function(gs) {
                 return gs;
-          })(result1[5])
+          })(result1[2])
           : null;
         if (result2 !== null) {
           var result0 = result2;
@@ -3797,172 +2471,44 @@ SparqlParser.parser = (function(){
         reportMatchFailures = false;
         var savedPos0 = pos;
         var savedPos1 = pos;
-        if (input.substr(pos, 1) === "N") {
-          var result20 = "N";
-          pos += 1;
+        if (input.substr(pos, 5) === "NAMED") {
+          var result8 = "NAMED";
+          pos += 5;
         } else {
-          var result20 = null;
+          var result8 = null;
           if (reportMatchFailures) {
-            matchFailed("\"N\"");
+            matchFailed("\"NAMED\"");
           }
         }
-        if (result20 !== null) {
-          var result3 = result20;
+        if (result8 !== null) {
+          var result3 = result8;
         } else {
-          if (input.substr(pos, 1) === "n") {
-            var result19 = "n";
-            pos += 1;
+          if (input.substr(pos, 5) === "named") {
+            var result7 = "named";
+            pos += 5;
           } else {
-            var result19 = null;
+            var result7 = null;
             if (reportMatchFailures) {
-              matchFailed("\"n\"");
+              matchFailed("\"named\"");
             }
           }
-          if (result19 !== null) {
-            var result3 = result19;
+          if (result7 !== null) {
+            var result3 = result7;
           } else {
             var result3 = null;;
           };
         }
         if (result3 !== null) {
-          if (input.substr(pos, 1) === "A") {
-            var result18 = "A";
-            pos += 1;
-          } else {
-            var result18 = null;
-            if (reportMatchFailures) {
-              matchFailed("\"A\"");
-            }
-          }
-          if (result18 !== null) {
-            var result4 = result18;
-          } else {
-            if (input.substr(pos, 1) === "a") {
-              var result17 = "a";
-              pos += 1;
-            } else {
-              var result17 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"a\"");
-              }
-            }
-            if (result17 !== null) {
-              var result4 = result17;
-            } else {
-              var result4 = null;;
-            };
+          var result4 = [];
+          var result6 = parse_WS();
+          while (result6 !== null) {
+            result4.push(result6);
+            var result6 = parse_WS();
           }
           if (result4 !== null) {
-            if (input.substr(pos, 1) === "M") {
-              var result16 = "M";
-              pos += 1;
-            } else {
-              var result16 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"M\"");
-              }
-            }
-            if (result16 !== null) {
-              var result5 = result16;
-            } else {
-              if (input.substr(pos, 1) === "m") {
-                var result15 = "m";
-                pos += 1;
-              } else {
-                var result15 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"m\"");
-                }
-              }
-              if (result15 !== null) {
-                var result5 = result15;
-              } else {
-                var result5 = null;;
-              };
-            }
+            var result5 = parse_IRIref();
             if (result5 !== null) {
-              if (input.substr(pos, 1) === "E") {
-                var result14 = "E";
-                pos += 1;
-              } else {
-                var result14 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"E\"");
-                }
-              }
-              if (result14 !== null) {
-                var result6 = result14;
-              } else {
-                if (input.substr(pos, 1) === "e") {
-                  var result13 = "e";
-                  pos += 1;
-                } else {
-                  var result13 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"e\"");
-                  }
-                }
-                if (result13 !== null) {
-                  var result6 = result13;
-                } else {
-                  var result6 = null;;
-                };
-              }
-              if (result6 !== null) {
-                if (input.substr(pos, 1) === "D") {
-                  var result12 = "D";
-                  pos += 1;
-                } else {
-                  var result12 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"D\"");
-                  }
-                }
-                if (result12 !== null) {
-                  var result7 = result12;
-                } else {
-                  if (input.substr(pos, 1) === "d") {
-                    var result11 = "d";
-                    pos += 1;
-                  } else {
-                    var result11 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"d\"");
-                    }
-                  }
-                  if (result11 !== null) {
-                    var result7 = result11;
-                  } else {
-                    var result7 = null;;
-                  };
-                }
-                if (result7 !== null) {
-                  var result8 = [];
-                  var result10 = parse_WS();
-                  while (result10 !== null) {
-                    result8.push(result10);
-                    var result10 = parse_WS();
-                  }
-                  if (result8 !== null) {
-                    var result9 = parse_IRIref();
-                    if (result9 !== null) {
-                      var result1 = [result3, result4, result5, result6, result7, result8, result9];
-                    } else {
-                      var result1 = null;
-                      pos = savedPos1;
-                    }
-                  } else {
-                    var result1 = null;
-                    pos = savedPos1;
-                  }
-                } else {
-                  var result1 = null;
-                  pos = savedPos1;
-                }
-              } else {
-                var result1 = null;
-                pos = savedPos1;
-              }
+              var result1 = [result3, result4, result5];
             } else {
               var result1 = null;
               pos = savedPos1;
@@ -3978,7 +2524,7 @@ SparqlParser.parser = (function(){
         var result2 = result1 !== null
           ? (function(s) {      
                 return {graph:s, kind:'named', token:'graphCluase'};
-          })(result1[6])
+          })(result1[2])
           : null;
         if (result2 !== null) {
           var result0 = result2;
@@ -4010,167 +2556,32 @@ SparqlParser.parser = (function(){
         reportMatchFailures = false;
         var savedPos0 = pos;
         var savedPos1 = pos;
-        var savedPos2 = pos;
-        if (input.substr(pos, 1) === "W") {
-          var result24 = "W";
-          pos += 1;
+        if (input.substr(pos, 5) === "WHERE") {
+          var result11 = "WHERE";
+          pos += 5;
         } else {
-          var result24 = null;
+          var result11 = null;
           if (reportMatchFailures) {
-            matchFailed("\"W\"");
+            matchFailed("\"WHERE\"");
           }
         }
-        if (result24 !== null) {
-          var result10 = result24;
+        if (result11 !== null) {
+          var result9 = result11;
         } else {
-          if (input.substr(pos, 1) === "w") {
-            var result23 = "w";
-            pos += 1;
+          if (input.substr(pos, 5) === "where") {
+            var result10 = "where";
+            pos += 5;
           } else {
-            var result23 = null;
+            var result10 = null;
             if (reportMatchFailures) {
-              matchFailed("\"w\"");
+              matchFailed("\"where\"");
             }
           }
-          if (result23 !== null) {
-            var result10 = result23;
+          if (result10 !== null) {
+            var result9 = result10;
           } else {
-            var result10 = null;;
+            var result9 = null;;
           };
-        }
-        if (result10 !== null) {
-          if (input.substr(pos, 1) === "H") {
-            var result22 = "H";
-            pos += 1;
-          } else {
-            var result22 = null;
-            if (reportMatchFailures) {
-              matchFailed("\"H\"");
-            }
-          }
-          if (result22 !== null) {
-            var result11 = result22;
-          } else {
-            if (input.substr(pos, 1) === "h") {
-              var result21 = "h";
-              pos += 1;
-            } else {
-              var result21 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"h\"");
-              }
-            }
-            if (result21 !== null) {
-              var result11 = result21;
-            } else {
-              var result11 = null;;
-            };
-          }
-          if (result11 !== null) {
-            if (input.substr(pos, 1) === "E") {
-              var result20 = "E";
-              pos += 1;
-            } else {
-              var result20 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"E\"");
-              }
-            }
-            if (result20 !== null) {
-              var result12 = result20;
-            } else {
-              if (input.substr(pos, 1) === "e") {
-                var result19 = "e";
-                pos += 1;
-              } else {
-                var result19 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"e\"");
-                }
-              }
-              if (result19 !== null) {
-                var result12 = result19;
-              } else {
-                var result12 = null;;
-              };
-            }
-            if (result12 !== null) {
-              if (input.substr(pos, 1) === "R") {
-                var result18 = "R";
-                pos += 1;
-              } else {
-                var result18 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"R\"");
-                }
-              }
-              if (result18 !== null) {
-                var result13 = result18;
-              } else {
-                if (input.substr(pos, 1) === "r") {
-                  var result17 = "r";
-                  pos += 1;
-                } else {
-                  var result17 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"r\"");
-                  }
-                }
-                if (result17 !== null) {
-                  var result13 = result17;
-                } else {
-                  var result13 = null;;
-                };
-              }
-              if (result13 !== null) {
-                if (input.substr(pos, 1) === "E") {
-                  var result16 = "E";
-                  pos += 1;
-                } else {
-                  var result16 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"E\"");
-                  }
-                }
-                if (result16 !== null) {
-                  var result14 = result16;
-                } else {
-                  if (input.substr(pos, 1) === "e") {
-                    var result15 = "e";
-                    pos += 1;
-                  } else {
-                    var result15 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"e\"");
-                    }
-                  }
-                  if (result15 !== null) {
-                    var result14 = result15;
-                  } else {
-                    var result14 = null;;
-                  };
-                }
-                if (result14 !== null) {
-                  var result9 = [result10, result11, result12, result13, result14];
-                } else {
-                  var result9 = null;
-                  pos = savedPos2;
-                }
-              } else {
-                var result9 = null;
-                pos = savedPos2;
-              }
-            } else {
-              var result9 = null;
-              pos = savedPos2;
-            }
-          } else {
-            var result9 = null;
-            pos = savedPos2;
-          }
-        } else {
-          var result9 = null;
-          pos = savedPos2;
         }
         var result3 = result9 !== null ? result9 : '';
         if (result3 !== null) {
@@ -4322,248 +2733,88 @@ SparqlParser.parser = (function(){
         reportMatchFailures = false;
         var savedPos0 = pos;
         var savedPos1 = pos;
-        if (input.substr(pos, 1) === "G") {
-          var result29 = "G";
-          pos += 1;
+        if (input.substr(pos, 5) === "GROUP") {
+          var result14 = "GROUP";
+          pos += 5;
         } else {
-          var result29 = null;
+          var result14 = null;
           if (reportMatchFailures) {
-            matchFailed("\"G\"");
+            matchFailed("\"GROUP\"");
           }
         }
-        if (result29 !== null) {
-          var result3 = result29;
+        if (result14 !== null) {
+          var result3 = result14;
         } else {
-          if (input.substr(pos, 1) === "g") {
-            var result28 = "g";
-            pos += 1;
+          if (input.substr(pos, 5) === "group") {
+            var result13 = "group";
+            pos += 5;
           } else {
-            var result28 = null;
+            var result13 = null;
             if (reportMatchFailures) {
-              matchFailed("\"g\"");
+              matchFailed("\"group\"");
             }
           }
-          if (result28 !== null) {
-            var result3 = result28;
+          if (result13 !== null) {
+            var result3 = result13;
           } else {
             var result3 = null;;
           };
         }
         if (result3 !== null) {
-          if (input.substr(pos, 1) === "R") {
-            var result27 = "R";
-            pos += 1;
-          } else {
-            var result27 = null;
-            if (reportMatchFailures) {
-              matchFailed("\"R\"");
-            }
-          }
-          if (result27 !== null) {
-            var result4 = result27;
-          } else {
-            if (input.substr(pos, 1) === "r") {
-              var result26 = "r";
-              pos += 1;
-            } else {
-              var result26 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"r\"");
-              }
-            }
-            if (result26 !== null) {
-              var result4 = result26;
-            } else {
-              var result4 = null;;
-            };
+          var result4 = [];
+          var result12 = parse_WS();
+          while (result12 !== null) {
+            result4.push(result12);
+            var result12 = parse_WS();
           }
           if (result4 !== null) {
-            if (input.substr(pos, 1) === "O") {
-              var result25 = "O";
-              pos += 1;
+            if (input.substr(pos, 2) === "BY") {
+              var result11 = "BY";
+              pos += 2;
             } else {
-              var result25 = null;
+              var result11 = null;
               if (reportMatchFailures) {
-                matchFailed("\"O\"");
+                matchFailed("\"BY\"");
               }
             }
-            if (result25 !== null) {
-              var result5 = result25;
+            if (result11 !== null) {
+              var result5 = result11;
             } else {
-              if (input.substr(pos, 1) === "o") {
-                var result24 = "o";
-                pos += 1;
+              if (input.substr(pos, 2) === "by") {
+                var result10 = "by";
+                pos += 2;
               } else {
-                var result24 = null;
+                var result10 = null;
                 if (reportMatchFailures) {
-                  matchFailed("\"o\"");
+                  matchFailed("\"by\"");
                 }
               }
-              if (result24 !== null) {
-                var result5 = result24;
+              if (result10 !== null) {
+                var result5 = result10;
               } else {
                 var result5 = null;;
               };
             }
             if (result5 !== null) {
-              if (input.substr(pos, 1) === "U") {
-                var result23 = "U";
-                pos += 1;
-              } else {
-                var result23 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"U\"");
-                }
-              }
-              if (result23 !== null) {
-                var result6 = result23;
-              } else {
-                if (input.substr(pos, 1) === "u") {
-                  var result22 = "u";
-                  pos += 1;
-                } else {
-                  var result22 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"u\"");
-                  }
-                }
-                if (result22 !== null) {
-                  var result6 = result22;
-                } else {
-                  var result6 = null;;
-                };
+              var result6 = [];
+              var result9 = parse_WS();
+              while (result9 !== null) {
+                result6.push(result9);
+                var result9 = parse_WS();
               }
               if (result6 !== null) {
-                if (input.substr(pos, 1) === "P") {
-                  var result21 = "P";
-                  pos += 1;
-                } else {
-                  var result21 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"P\"");
+                var result8 = parse_GroupCondition();
+                if (result8 !== null) {
+                  var result7 = [];
+                  while (result8 !== null) {
+                    result7.push(result8);
+                    var result8 = parse_GroupCondition();
                   }
-                }
-                if (result21 !== null) {
-                  var result7 = result21;
                 } else {
-                  if (input.substr(pos, 1) === "p") {
-                    var result20 = "p";
-                    pos += 1;
-                  } else {
-                    var result20 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"p\"");
-                    }
-                  }
-                  if (result20 !== null) {
-                    var result7 = result20;
-                  } else {
-                    var result7 = null;;
-                  };
+                  var result7 = null;
                 }
                 if (result7 !== null) {
-                  var result8 = [];
-                  var result19 = parse_WS();
-                  while (result19 !== null) {
-                    result8.push(result19);
-                    var result19 = parse_WS();
-                  }
-                  if (result8 !== null) {
-                    if (input.substr(pos, 1) === "B") {
-                      var result18 = "B";
-                      pos += 1;
-                    } else {
-                      var result18 = null;
-                      if (reportMatchFailures) {
-                        matchFailed("\"B\"");
-                      }
-                    }
-                    if (result18 !== null) {
-                      var result9 = result18;
-                    } else {
-                      if (input.substr(pos, 1) === "b") {
-                        var result17 = "b";
-                        pos += 1;
-                      } else {
-                        var result17 = null;
-                        if (reportMatchFailures) {
-                          matchFailed("\"b\"");
-                        }
-                      }
-                      if (result17 !== null) {
-                        var result9 = result17;
-                      } else {
-                        var result9 = null;;
-                      };
-                    }
-                    if (result9 !== null) {
-                      if (input.substr(pos, 1) === "Y") {
-                        var result16 = "Y";
-                        pos += 1;
-                      } else {
-                        var result16 = null;
-                        if (reportMatchFailures) {
-                          matchFailed("\"Y\"");
-                        }
-                      }
-                      if (result16 !== null) {
-                        var result10 = result16;
-                      } else {
-                        if (input.substr(pos, 1) === "y") {
-                          var result15 = "y";
-                          pos += 1;
-                        } else {
-                          var result15 = null;
-                          if (reportMatchFailures) {
-                            matchFailed("\"y\"");
-                          }
-                        }
-                        if (result15 !== null) {
-                          var result10 = result15;
-                        } else {
-                          var result10 = null;;
-                        };
-                      }
-                      if (result10 !== null) {
-                        var result11 = [];
-                        var result14 = parse_WS();
-                        while (result14 !== null) {
-                          result11.push(result14);
-                          var result14 = parse_WS();
-                        }
-                        if (result11 !== null) {
-                          var result13 = parse_GroupCondition();
-                          if (result13 !== null) {
-                            var result12 = [];
-                            while (result13 !== null) {
-                              result12.push(result13);
-                              var result13 = parse_GroupCondition();
-                            }
-                          } else {
-                            var result12 = null;
-                          }
-                          if (result12 !== null) {
-                            var result1 = [result3, result4, result5, result6, result7, result8, result9, result10, result11, result12];
-                          } else {
-                            var result1 = null;
-                            pos = savedPos1;
-                          }
-                        } else {
-                          var result1 = null;
-                          pos = savedPos1;
-                        }
-                      } else {
-                        var result1 = null;
-                        pos = savedPos1;
-                      }
-                    } else {
-                      var result1 = null;
-                      pos = savedPos1;
-                    }
-                  } else {
-                    var result1 = null;
-                    pos = savedPos1;
-                  }
+                  var result1 = [result3, result4, result5, result6, result7];
                 } else {
                   var result1 = null;
                   pos = savedPos1;
@@ -4587,7 +2838,7 @@ SparqlParser.parser = (function(){
         var result2 = result1 !== null
           ? (function(conds) {
                 return conds;
-          })(result1[9])
+          })(result1[4])
           : null;
         if (result2 !== null) {
           var result0 = result2;
@@ -4619,101 +2870,101 @@ SparqlParser.parser = (function(){
         reportMatchFailures = false;
         var savedPos7 = pos;
         var savedPos8 = pos;
-        var result47 = [];
-        var result51 = parse_WS();
-        while (result51 !== null) {
-          result47.push(result51);
-          var result51 = parse_WS();
+        var result44 = [];
+        var result48 = parse_WS();
+        while (result48 !== null) {
+          result44.push(result48);
+          var result48 = parse_WS();
         }
-        if (result47 !== null) {
-          var result48 = parse_BuiltInCall();
-          if (result48 !== null) {
-            var result49 = [];
-            var result50 = parse_WS();
-            while (result50 !== null) {
-              result49.push(result50);
-              var result50 = parse_WS();
+        if (result44 !== null) {
+          var result45 = parse_BuiltInCall();
+          if (result45 !== null) {
+            var result46 = [];
+            var result47 = parse_WS();
+            while (result47 !== null) {
+              result46.push(result47);
+              var result47 = parse_WS();
             }
-            if (result49 !== null) {
-              var result45 = [result47, result48, result49];
+            if (result46 !== null) {
+              var result42 = [result44, result45, result46];
             } else {
-              var result45 = null;
+              var result42 = null;
               pos = savedPos8;
             }
           } else {
-            var result45 = null;
+            var result42 = null;
             pos = savedPos8;
           }
         } else {
-          var result45 = null;
+          var result42 = null;
           pos = savedPos8;
         }
-        var result46 = result45 !== null
+        var result43 = result42 !== null
           ? (function(b) {
                 return b;
-          })(result45[1])
+          })(result42[1])
           : null;
-        if (result46 !== null) {
-          var result44 = result46;
+        if (result43 !== null) {
+          var result41 = result43;
         } else {
-          var result44 = null;
+          var result41 = null;
           pos = savedPos7;
         }
-        if (result44 !== null) {
-          var result0 = result44;
+        if (result41 !== null) {
+          var result0 = result41;
         } else {
           var savedPos5 = pos;
           var savedPos6 = pos;
-          var result39 = [];
-          var result43 = parse_WS();
-          while (result43 !== null) {
-            result39.push(result43);
-            var result43 = parse_WS();
+          var result36 = [];
+          var result40 = parse_WS();
+          while (result40 !== null) {
+            result36.push(result40);
+            var result40 = parse_WS();
           }
-          if (result39 !== null) {
-            var result40 = parse_FunctionCall();
-            if (result40 !== null) {
-              var result41 = [];
-              var result42 = parse_WS();
-              while (result42 !== null) {
-                result41.push(result42);
-                var result42 = parse_WS();
+          if (result36 !== null) {
+            var result37 = parse_FunctionCall();
+            if (result37 !== null) {
+              var result38 = [];
+              var result39 = parse_WS();
+              while (result39 !== null) {
+                result38.push(result39);
+                var result39 = parse_WS();
               }
-              if (result41 !== null) {
-                var result37 = [result39, result40, result41];
+              if (result38 !== null) {
+                var result34 = [result36, result37, result38];
               } else {
-                var result37 = null;
+                var result34 = null;
                 pos = savedPos6;
               }
             } else {
-              var result37 = null;
+              var result34 = null;
               pos = savedPos6;
             }
           } else {
-            var result37 = null;
+            var result34 = null;
             pos = savedPos6;
           }
-          var result38 = result37 !== null
+          var result35 = result34 !== null
             ? (function(f) {
                   return f;
-            })(result37[1])
+            })(result34[1])
             : null;
-          if (result38 !== null) {
-            var result36 = result38;
+          if (result35 !== null) {
+            var result33 = result35;
           } else {
-            var result36 = null;
+            var result33 = null;
             pos = savedPos5;
           }
-          if (result36 !== null) {
-            var result0 = result36;
+          if (result33 !== null) {
+            var result0 = result33;
           } else {
             var savedPos2 = pos;
             var savedPos3 = pos;
             var result12 = [];
-            var result35 = parse_WS();
-            while (result35 !== null) {
-              result12.push(result35);
-              var result35 = parse_WS();
+            var result32 = parse_WS();
+            while (result32 !== null) {
+              result12.push(result32);
+              var result32 = parse_WS();
             }
             if (result12 !== null) {
               if (input.substr(pos, 1) === "(") {
@@ -4727,92 +2978,60 @@ SparqlParser.parser = (function(){
               }
               if (result13 !== null) {
                 var result14 = [];
-                var result34 = parse_WS();
-                while (result34 !== null) {
-                  result14.push(result34);
-                  var result34 = parse_WS();
+                var result31 = parse_WS();
+                while (result31 !== null) {
+                  result14.push(result31);
+                  var result31 = parse_WS();
                 }
                 if (result14 !== null) {
                   var result15 = parse_ConditionalOrExpression();
                   if (result15 !== null) {
                     var result16 = [];
-                    var result33 = parse_WS();
-                    while (result33 !== null) {
-                      result16.push(result33);
-                      var result33 = parse_WS();
+                    var result30 = parse_WS();
+                    while (result30 !== null) {
+                      result16.push(result30);
+                      var result30 = parse_WS();
                     }
                     if (result16 !== null) {
                       var savedPos4 = pos;
-                      if (input.substr(pos, 1) === "A") {
-                        var result32 = "A";
-                        pos += 1;
+                      if (input.substr(pos, 2) === "AS") {
+                        var result29 = "AS";
+                        pos += 2;
                       } else {
-                        var result32 = null;
+                        var result29 = null;
                         if (reportMatchFailures) {
-                          matchFailed("\"A\"");
+                          matchFailed("\"AS\"");
                         }
                       }
-                      if (result32 !== null) {
-                        var result24 = result32;
+                      if (result29 !== null) {
+                        var result24 = result29;
                       } else {
-                        if (input.substr(pos, 1) === "a") {
-                          var result31 = "a";
-                          pos += 1;
+                        if (input.substr(pos, 2) === "as") {
+                          var result28 = "as";
+                          pos += 2;
                         } else {
-                          var result31 = null;
+                          var result28 = null;
                           if (reportMatchFailures) {
-                            matchFailed("\"a\"");
+                            matchFailed("\"as\"");
                           }
                         }
-                        if (result31 !== null) {
-                          var result24 = result31;
+                        if (result28 !== null) {
+                          var result24 = result28;
                         } else {
                           var result24 = null;;
                         };
                       }
                       if (result24 !== null) {
-                        if (input.substr(pos, 1) === "S") {
-                          var result30 = "S";
-                          pos += 1;
-                        } else {
-                          var result30 = null;
-                          if (reportMatchFailures) {
-                            matchFailed("\"S\"");
-                          }
-                        }
-                        if (result30 !== null) {
-                          var result25 = result30;
-                        } else {
-                          if (input.substr(pos, 1) === "s") {
-                            var result29 = "s";
-                            pos += 1;
-                          } else {
-                            var result29 = null;
-                            if (reportMatchFailures) {
-                              matchFailed("\"s\"");
-                            }
-                          }
-                          if (result29 !== null) {
-                            var result25 = result29;
-                          } else {
-                            var result25 = null;;
-                          };
+                        var result25 = [];
+                        var result27 = parse_WS();
+                        while (result27 !== null) {
+                          result25.push(result27);
+                          var result27 = parse_WS();
                         }
                         if (result25 !== null) {
-                          var result26 = [];
-                          var result28 = parse_WS();
-                          while (result28 !== null) {
-                            result26.push(result28);
-                            var result28 = parse_WS();
-                          }
+                          var result26 = parse_Var();
                           if (result26 !== null) {
-                            var result27 = parse_Var();
-                            if (result27 !== null) {
-                              var result23 = [result24, result25, result26, result27];
-                            } else {
-                              var result23 = null;
-                              pos = savedPos4;
-                            }
+                            var result23 = [result24, result25, result26];
                           } else {
                             var result23 = null;
                             pos = savedPos4;
@@ -4893,7 +3112,7 @@ SparqlParser.parser = (function(){
                     if(alias.length != 0) {
                         return {token: 'aliased_expression',
                                 expression: e,
-                                alias: alias[3] };
+                                alias: alias[2] };
                     } else {
                         return e;
                     }
@@ -5035,255 +3254,95 @@ SparqlParser.parser = (function(){
         reportMatchFailures = false;
         var savedPos0 = pos;
         var savedPos1 = pos;
-        if (input.substr(pos, 1) === "O") {
-          var result31 = "O";
-          pos += 1;
+        if (input.substr(pos, 5) === "ORDER") {
+          var result16 = "ORDER";
+          pos += 5;
         } else {
-          var result31 = null;
+          var result16 = null;
           if (reportMatchFailures) {
-            matchFailed("\"O\"");
+            matchFailed("\"ORDER\"");
           }
         }
-        if (result31 !== null) {
-          var result3 = result31;
+        if (result16 !== null) {
+          var result3 = result16;
         } else {
-          if (input.substr(pos, 1) === "o") {
-            var result30 = "o";
-            pos += 1;
+          if (input.substr(pos, 5) === "order") {
+            var result15 = "order";
+            pos += 5;
           } else {
-            var result30 = null;
+            var result15 = null;
             if (reportMatchFailures) {
-              matchFailed("\"o\"");
+              matchFailed("\"order\"");
             }
           }
-          if (result30 !== null) {
-            var result3 = result30;
+          if (result15 !== null) {
+            var result3 = result15;
           } else {
             var result3 = null;;
           };
         }
         if (result3 !== null) {
-          if (input.substr(pos, 1) === "R") {
-            var result29 = "R";
-            pos += 1;
-          } else {
-            var result29 = null;
-            if (reportMatchFailures) {
-              matchFailed("\"R\"");
-            }
-          }
-          if (result29 !== null) {
-            var result4 = result29;
-          } else {
-            if (input.substr(pos, 1) === "r") {
-              var result28 = "r";
-              pos += 1;
-            } else {
-              var result28 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"r\"");
-              }
-            }
-            if (result28 !== null) {
-              var result4 = result28;
-            } else {
-              var result4 = null;;
-            };
+          var result4 = [];
+          var result14 = parse_WS();
+          while (result14 !== null) {
+            result4.push(result14);
+            var result14 = parse_WS();
           }
           if (result4 !== null) {
-            if (input.substr(pos, 1) === "D") {
-              var result27 = "D";
-              pos += 1;
+            if (input.substr(pos, 2) === "BY") {
+              var result13 = "BY";
+              pos += 2;
             } else {
-              var result27 = null;
+              var result13 = null;
               if (reportMatchFailures) {
-                matchFailed("\"D\"");
+                matchFailed("\"BY\"");
               }
             }
-            if (result27 !== null) {
-              var result5 = result27;
+            if (result13 !== null) {
+              var result5 = result13;
             } else {
-              if (input.substr(pos, 1) === "d") {
-                var result26 = "d";
-                pos += 1;
+              if (input.substr(pos, 2) === "by") {
+                var result12 = "by";
+                pos += 2;
               } else {
-                var result26 = null;
+                var result12 = null;
                 if (reportMatchFailures) {
-                  matchFailed("\"d\"");
+                  matchFailed("\"by\"");
                 }
               }
-              if (result26 !== null) {
-                var result5 = result26;
+              if (result12 !== null) {
+                var result5 = result12;
               } else {
                 var result5 = null;;
               };
             }
             if (result5 !== null) {
-              if (input.substr(pos, 1) === "E") {
-                var result25 = "E";
-                pos += 1;
-              } else {
-                var result25 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"E\"");
-                }
-              }
-              if (result25 !== null) {
-                var result6 = result25;
-              } else {
-                if (input.substr(pos, 1) === "e") {
-                  var result24 = "e";
-                  pos += 1;
-                } else {
-                  var result24 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"e\"");
-                  }
-                }
-                if (result24 !== null) {
-                  var result6 = result24;
-                } else {
-                  var result6 = null;;
-                };
+              var result6 = [];
+              var result11 = parse_WS();
+              while (result11 !== null) {
+                result6.push(result11);
+                var result11 = parse_WS();
               }
               if (result6 !== null) {
-                if (input.substr(pos, 1) === "R") {
-                  var result23 = "R";
-                  pos += 1;
-                } else {
-                  var result23 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"R\"");
+                var result10 = parse_OrderCondition();
+                if (result10 !== null) {
+                  var result7 = [];
+                  while (result10 !== null) {
+                    result7.push(result10);
+                    var result10 = parse_OrderCondition();
                   }
-                }
-                if (result23 !== null) {
-                  var result7 = result23;
                 } else {
-                  if (input.substr(pos, 1) === "r") {
-                    var result22 = "r";
-                    pos += 1;
-                  } else {
-                    var result22 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"r\"");
-                    }
-                  }
-                  if (result22 !== null) {
-                    var result7 = result22;
-                  } else {
-                    var result7 = null;;
-                  };
+                  var result7 = null;
                 }
                 if (result7 !== null) {
                   var result8 = [];
-                  var result21 = parse_WS();
-                  while (result21 !== null) {
-                    result8.push(result21);
-                    var result21 = parse_WS();
+                  var result9 = parse_WS();
+                  while (result9 !== null) {
+                    result8.push(result9);
+                    var result9 = parse_WS();
                   }
                   if (result8 !== null) {
-                    if (input.substr(pos, 1) === "B") {
-                      var result20 = "B";
-                      pos += 1;
-                    } else {
-                      var result20 = null;
-                      if (reportMatchFailures) {
-                        matchFailed("\"B\"");
-                      }
-                    }
-                    if (result20 !== null) {
-                      var result9 = result20;
-                    } else {
-                      if (input.substr(pos, 1) === "b") {
-                        var result19 = "b";
-                        pos += 1;
-                      } else {
-                        var result19 = null;
-                        if (reportMatchFailures) {
-                          matchFailed("\"b\"");
-                        }
-                      }
-                      if (result19 !== null) {
-                        var result9 = result19;
-                      } else {
-                        var result9 = null;;
-                      };
-                    }
-                    if (result9 !== null) {
-                      if (input.substr(pos, 1) === "Y") {
-                        var result18 = "Y";
-                        pos += 1;
-                      } else {
-                        var result18 = null;
-                        if (reportMatchFailures) {
-                          matchFailed("\"Y\"");
-                        }
-                      }
-                      if (result18 !== null) {
-                        var result10 = result18;
-                      } else {
-                        if (input.substr(pos, 1) === "y") {
-                          var result17 = "y";
-                          pos += 1;
-                        } else {
-                          var result17 = null;
-                          if (reportMatchFailures) {
-                            matchFailed("\"y\"");
-                          }
-                        }
-                        if (result17 !== null) {
-                          var result10 = result17;
-                        } else {
-                          var result10 = null;;
-                        };
-                      }
-                      if (result10 !== null) {
-                        var result11 = [];
-                        var result16 = parse_WS();
-                        while (result16 !== null) {
-                          result11.push(result16);
-                          var result16 = parse_WS();
-                        }
-                        if (result11 !== null) {
-                          var result15 = parse_OrderCondition();
-                          if (result15 !== null) {
-                            var result12 = [];
-                            while (result15 !== null) {
-                              result12.push(result15);
-                              var result15 = parse_OrderCondition();
-                            }
-                          } else {
-                            var result12 = null;
-                          }
-                          if (result12 !== null) {
-                            var result13 = [];
-                            var result14 = parse_WS();
-                            while (result14 !== null) {
-                              result13.push(result14);
-                              var result14 = parse_WS();
-                            }
-                            if (result13 !== null) {
-                              var result1 = [result3, result4, result5, result6, result7, result8, result9, result10, result11, result12, result13];
-                            } else {
-                              var result1 = null;
-                              pos = savedPos1;
-                            }
-                          } else {
-                            var result1 = null;
-                            pos = savedPos1;
-                          }
-                        } else {
-                          var result1 = null;
-                          pos = savedPos1;
-                        }
-                      } else {
-                        var result1 = null;
-                        pos = savedPos1;
-                      }
-                    } else {
-                      var result1 = null;
-                      pos = savedPos1;
-                    }
+                    var result1 = [result3, result4, result5, result6, result7, result8];
                   } else {
                     var result1 = null;
                     pos = savedPos1;
@@ -5311,7 +3370,7 @@ SparqlParser.parser = (function(){
         var result2 = result1 !== null
           ? (function(os) {
                 return os;
-          })(result1[9])
+          })(result1[4])
           : null;
         if (result2 !== null) {
           var result0 = result2;
@@ -5344,30 +3403,56 @@ SparqlParser.parser = (function(){
         var savedPos2 = pos;
         var savedPos3 = pos;
         if (input.substr(pos, 3) === "ASC") {
-          var result19 = "ASC";
+          var result21 = "ASC";
           pos += 3;
         } else {
-          var result19 = null;
+          var result21 = null;
           if (reportMatchFailures) {
             matchFailed("\"ASC\"");
           }
         }
-        if (result19 !== null) {
-          var result12 = result19;
+        if (result21 !== null) {
+          var result12 = result21;
         } else {
-          if (input.substr(pos, 4) === "DESC") {
-            var result18 = "DESC";
-            pos += 4;
+          if (input.substr(pos, 3) === "asc") {
+            var result20 = "asc";
+            pos += 3;
           } else {
-            var result18 = null;
+            var result20 = null;
             if (reportMatchFailures) {
-              matchFailed("\"DESC\"");
+              matchFailed("\"asc\"");
             }
           }
-          if (result18 !== null) {
-            var result12 = result18;
+          if (result20 !== null) {
+            var result12 = result20;
           } else {
-            var result12 = null;;
+            if (input.substr(pos, 4) === "DESC") {
+              var result19 = "DESC";
+              pos += 4;
+            } else {
+              var result19 = null;
+              if (reportMatchFailures) {
+                matchFailed("\"DESC\"");
+              }
+            }
+            if (result19 !== null) {
+              var result12 = result19;
+            } else {
+              if (input.substr(pos, 4) === "desc") {
+                var result18 = "desc";
+                pos += 4;
+              } else {
+                var result18 = null;
+                if (reportMatchFailures) {
+                  matchFailed("\"desc\"");
+                }
+              }
+              if (result18 !== null) {
+                var result12 = result18;
+              } else {
+                var result12 = null;;
+              };
+            };
           };
         }
         if (result12 !== null) {
@@ -5406,7 +3491,7 @@ SparqlParser.parser = (function(){
         }
         var result11 = result10 !== null
           ? (function(direction, e) {
-                return { direction: direction, expression:e };
+                return { direction: direction.toUpperCase(), expression:e };
           })(result10[0], result10[2])
           : null;
         if (result11 !== null) {
@@ -5578,179 +3663,51 @@ SparqlParser.parser = (function(){
         reportMatchFailures = false;
         var savedPos0 = pos;
         var savedPos1 = pos;
-        if (input.substr(pos, 1) === "L") {
-          var result22 = "L";
-          pos += 1;
+        if (input.substr(pos, 5) === "LIMIT") {
+          var result10 = "LIMIT";
+          pos += 5;
         } else {
-          var result22 = null;
+          var result10 = null;
           if (reportMatchFailures) {
-            matchFailed("\"L\"");
+            matchFailed("\"LIMIT\"");
           }
         }
-        if (result22 !== null) {
-          var result3 = result22;
+        if (result10 !== null) {
+          var result3 = result10;
         } else {
-          if (input.substr(pos, 1) === "l") {
-            var result21 = "l";
-            pos += 1;
+          if (input.substr(pos, 5) === "limit") {
+            var result9 = "limit";
+            pos += 5;
           } else {
-            var result21 = null;
+            var result9 = null;
             if (reportMatchFailures) {
-              matchFailed("\"l\"");
+              matchFailed("\"limit\"");
             }
           }
-          if (result21 !== null) {
-            var result3 = result21;
+          if (result9 !== null) {
+            var result3 = result9;
           } else {
             var result3 = null;;
           };
         }
         if (result3 !== null) {
-          if (input.substr(pos, 1) === "I") {
-            var result20 = "I";
-            pos += 1;
-          } else {
-            var result20 = null;
-            if (reportMatchFailures) {
-              matchFailed("\"I\"");
-            }
-          }
-          if (result20 !== null) {
-            var result4 = result20;
-          } else {
-            if (input.substr(pos, 1) === "i") {
-              var result19 = "i";
-              pos += 1;
-            } else {
-              var result19 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"i\"");
-              }
-            }
-            if (result19 !== null) {
-              var result4 = result19;
-            } else {
-              var result4 = null;;
-            };
+          var result4 = [];
+          var result8 = parse_WS();
+          while (result8 !== null) {
+            result4.push(result8);
+            var result8 = parse_WS();
           }
           if (result4 !== null) {
-            if (input.substr(pos, 1) === "M") {
-              var result18 = "M";
-              pos += 1;
-            } else {
-              var result18 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"M\"");
-              }
-            }
-            if (result18 !== null) {
-              var result5 = result18;
-            } else {
-              if (input.substr(pos, 1) === "m") {
-                var result17 = "m";
-                pos += 1;
-              } else {
-                var result17 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"m\"");
-                }
-              }
-              if (result17 !== null) {
-                var result5 = result17;
-              } else {
-                var result5 = null;;
-              };
-            }
+            var result5 = parse_INTEGER();
             if (result5 !== null) {
-              if (input.substr(pos, 1) === "I") {
-                var result16 = "I";
-                pos += 1;
-              } else {
-                var result16 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"I\"");
-                }
-              }
-              if (result16 !== null) {
-                var result6 = result16;
-              } else {
-                if (input.substr(pos, 1) === "i") {
-                  var result15 = "i";
-                  pos += 1;
-                } else {
-                  var result15 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"i\"");
-                  }
-                }
-                if (result15 !== null) {
-                  var result6 = result15;
-                } else {
-                  var result6 = null;;
-                };
+              var result6 = [];
+              var result7 = parse_WS();
+              while (result7 !== null) {
+                result6.push(result7);
+                var result7 = parse_WS();
               }
               if (result6 !== null) {
-                if (input.substr(pos, 1) === "T") {
-                  var result14 = "T";
-                  pos += 1;
-                } else {
-                  var result14 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"T\"");
-                  }
-                }
-                if (result14 !== null) {
-                  var result7 = result14;
-                } else {
-                  if (input.substr(pos, 1) === "t") {
-                    var result13 = "t";
-                    pos += 1;
-                  } else {
-                    var result13 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"t\"");
-                    }
-                  }
-                  if (result13 !== null) {
-                    var result7 = result13;
-                  } else {
-                    var result7 = null;;
-                  };
-                }
-                if (result7 !== null) {
-                  var result8 = [];
-                  var result12 = parse_WS();
-                  while (result12 !== null) {
-                    result8.push(result12);
-                    var result12 = parse_WS();
-                  }
-                  if (result8 !== null) {
-                    var result9 = parse_INTEGER();
-                    if (result9 !== null) {
-                      var result10 = [];
-                      var result11 = parse_WS();
-                      while (result11 !== null) {
-                        result10.push(result11);
-                        var result11 = parse_WS();
-                      }
-                      if (result10 !== null) {
-                        var result1 = [result3, result4, result5, result6, result7, result8, result9, result10];
-                      } else {
-                        var result1 = null;
-                        pos = savedPos1;
-                      }
-                    } else {
-                      var result1 = null;
-                      pos = savedPos1;
-                    }
-                  } else {
-                    var result1 = null;
-                    pos = savedPos1;
-                  }
-                } else {
-                  var result1 = null;
-                  pos = savedPos1;
-                }
+                var result1 = [result3, result4, result5, result6];
               } else {
                 var result1 = null;
                 pos = savedPos1;
@@ -5770,7 +3727,7 @@ SparqlParser.parser = (function(){
         var result2 = result1 !== null
           ? (function(i) {
             return { limit:parseInt(i.value) };
-          })(result1[6])
+          })(result1[2])
           : null;
         if (result2 !== null) {
           var result0 = result2;
@@ -5802,211 +3759,51 @@ SparqlParser.parser = (function(){
         reportMatchFailures = false;
         var savedPos0 = pos;
         var savedPos1 = pos;
-        if (input.substr(pos, 1) === "O") {
-          var result25 = "O";
-          pos += 1;
+        if (input.substr(pos, 6) === "OFFSET") {
+          var result10 = "OFFSET";
+          pos += 6;
         } else {
-          var result25 = null;
+          var result10 = null;
           if (reportMatchFailures) {
-            matchFailed("\"O\"");
+            matchFailed("\"OFFSET\"");
           }
         }
-        if (result25 !== null) {
-          var result3 = result25;
+        if (result10 !== null) {
+          var result3 = result10;
         } else {
-          if (input.substr(pos, 1) === "o") {
-            var result24 = "o";
-            pos += 1;
+          if (input.substr(pos, 6) === "offset") {
+            var result9 = "offset";
+            pos += 6;
           } else {
-            var result24 = null;
+            var result9 = null;
             if (reportMatchFailures) {
-              matchFailed("\"o\"");
+              matchFailed("\"offset\"");
             }
           }
-          if (result24 !== null) {
-            var result3 = result24;
+          if (result9 !== null) {
+            var result3 = result9;
           } else {
             var result3 = null;;
           };
         }
         if (result3 !== null) {
-          if (input.substr(pos, 1) === "F") {
-            var result23 = "F";
-            pos += 1;
-          } else {
-            var result23 = null;
-            if (reportMatchFailures) {
-              matchFailed("\"F\"");
-            }
-          }
-          if (result23 !== null) {
-            var result4 = result23;
-          } else {
-            if (input.substr(pos, 1) === "f") {
-              var result22 = "f";
-              pos += 1;
-            } else {
-              var result22 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"f\"");
-              }
-            }
-            if (result22 !== null) {
-              var result4 = result22;
-            } else {
-              var result4 = null;;
-            };
+          var result4 = [];
+          var result8 = parse_WS();
+          while (result8 !== null) {
+            result4.push(result8);
+            var result8 = parse_WS();
           }
           if (result4 !== null) {
-            if (input.substr(pos, 1) === "F") {
-              var result21 = "F";
-              pos += 1;
-            } else {
-              var result21 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"F\"");
-              }
-            }
-            if (result21 !== null) {
-              var result5 = result21;
-            } else {
-              if (input.substr(pos, 1) === "f") {
-                var result20 = "f";
-                pos += 1;
-              } else {
-                var result20 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"f\"");
-                }
-              }
-              if (result20 !== null) {
-                var result5 = result20;
-              } else {
-                var result5 = null;;
-              };
-            }
+            var result5 = parse_INTEGER();
             if (result5 !== null) {
-              if (input.substr(pos, 1) === "S") {
-                var result19 = "S";
-                pos += 1;
-              } else {
-                var result19 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"S\"");
-                }
-              }
-              if (result19 !== null) {
-                var result6 = result19;
-              } else {
-                if (input.substr(pos, 1) === "s") {
-                  var result18 = "s";
-                  pos += 1;
-                } else {
-                  var result18 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"s\"");
-                  }
-                }
-                if (result18 !== null) {
-                  var result6 = result18;
-                } else {
-                  var result6 = null;;
-                };
+              var result6 = [];
+              var result7 = parse_WS();
+              while (result7 !== null) {
+                result6.push(result7);
+                var result7 = parse_WS();
               }
               if (result6 !== null) {
-                if (input.substr(pos, 1) === "E") {
-                  var result17 = "E";
-                  pos += 1;
-                } else {
-                  var result17 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"E\"");
-                  }
-                }
-                if (result17 !== null) {
-                  var result7 = result17;
-                } else {
-                  if (input.substr(pos, 1) === "e") {
-                    var result16 = "e";
-                    pos += 1;
-                  } else {
-                    var result16 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"e\"");
-                    }
-                  }
-                  if (result16 !== null) {
-                    var result7 = result16;
-                  } else {
-                    var result7 = null;;
-                  };
-                }
-                if (result7 !== null) {
-                  if (input.substr(pos, 1) === "T") {
-                    var result15 = "T";
-                    pos += 1;
-                  } else {
-                    var result15 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"T\"");
-                    }
-                  }
-                  if (result15 !== null) {
-                    var result8 = result15;
-                  } else {
-                    if (input.substr(pos, 1) === "t") {
-                      var result14 = "t";
-                      pos += 1;
-                    } else {
-                      var result14 = null;
-                      if (reportMatchFailures) {
-                        matchFailed("\"t\"");
-                      }
-                    }
-                    if (result14 !== null) {
-                      var result8 = result14;
-                    } else {
-                      var result8 = null;;
-                    };
-                  }
-                  if (result8 !== null) {
-                    var result9 = [];
-                    var result13 = parse_WS();
-                    while (result13 !== null) {
-                      result9.push(result13);
-                      var result13 = parse_WS();
-                    }
-                    if (result9 !== null) {
-                      var result10 = parse_INTEGER();
-                      if (result10 !== null) {
-                        var result11 = [];
-                        var result12 = parse_WS();
-                        while (result12 !== null) {
-                          result11.push(result12);
-                          var result12 = parse_WS();
-                        }
-                        if (result11 !== null) {
-                          var result1 = [result3, result4, result5, result6, result7, result8, result9, result10, result11];
-                        } else {
-                          var result1 = null;
-                          pos = savedPos1;
-                        }
-                      } else {
-                        var result1 = null;
-                        pos = savedPos1;
-                      }
-                    } else {
-                      var result1 = null;
-                      pos = savedPos1;
-                    }
-                  } else {
-                    var result1 = null;
-                    pos = savedPos1;
-                  }
-                } else {
-                  var result1 = null;
-                  pos = savedPos1;
-                }
+                var result1 = [result3, result4, result5, result6];
               } else {
                 var result1 = null;
                 pos = savedPos1;
@@ -6026,7 +3823,7 @@ SparqlParser.parser = (function(){
         var result2 = result1 !== null
           ? (function(i) {
             return { offset:parseInt(i.value) };
-          })(result1[7])
+          })(result1[2])
           : null;
         if (result2 !== null) {
           var result0 = result2;
@@ -6497,296 +4294,104 @@ SparqlParser.parser = (function(){
         reportMatchFailures = false;
         var savedPos0 = pos;
         var savedPos1 = pos;
-        if (input.substr(pos, 1) === "L") {
-          var result36 = "L";
-          pos += 1;
+        if (input.substr(pos, 4) === "LOAD") {
+          var result18 = "LOAD";
+          pos += 4;
         } else {
-          var result36 = null;
+          var result18 = null;
           if (reportMatchFailures) {
-            matchFailed("\"L\"");
+            matchFailed("\"LOAD\"");
           }
         }
-        if (result36 !== null) {
-          var result3 = result36;
+        if (result18 !== null) {
+          var result3 = result18;
         } else {
-          if (input.substr(pos, 1) === "l") {
-            var result35 = "l";
-            pos += 1;
+          if (input.substr(pos, 4) === "load") {
+            var result17 = "load";
+            pos += 4;
           } else {
-            var result35 = null;
+            var result17 = null;
             if (reportMatchFailures) {
-              matchFailed("\"l\"");
+              matchFailed("\"load\"");
             }
           }
-          if (result35 !== null) {
-            var result3 = result35;
+          if (result17 !== null) {
+            var result3 = result17;
           } else {
             var result3 = null;;
           };
         }
         if (result3 !== null) {
-          if (input.substr(pos, 1) === "O") {
-            var result34 = "O";
-            pos += 1;
-          } else {
-            var result34 = null;
-            if (reportMatchFailures) {
-              matchFailed("\"O\"");
-            }
-          }
-          if (result34 !== null) {
-            var result4 = result34;
-          } else {
-            if (input.substr(pos, 1) === "o") {
-              var result33 = "o";
-              pos += 1;
-            } else {
-              var result33 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"o\"");
-              }
-            }
-            if (result33 !== null) {
-              var result4 = result33;
-            } else {
-              var result4 = null;;
-            };
+          var result4 = [];
+          var result16 = parse_WS();
+          while (result16 !== null) {
+            result4.push(result16);
+            var result16 = parse_WS();
           }
           if (result4 !== null) {
-            if (input.substr(pos, 1) === "A") {
-              var result32 = "A";
-              pos += 1;
-            } else {
-              var result32 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"A\"");
-              }
-            }
-            if (result32 !== null) {
-              var result5 = result32;
-            } else {
-              if (input.substr(pos, 1) === "a") {
-                var result31 = "a";
-                pos += 1;
-              } else {
-                var result31 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"a\"");
-                }
-              }
-              if (result31 !== null) {
-                var result5 = result31;
-              } else {
-                var result5 = null;;
-              };
-            }
+            var result5 = parse_IRIref();
             if (result5 !== null) {
-              if (input.substr(pos, 1) === "D") {
-                var result30 = "D";
-                pos += 1;
-              } else {
-                var result30 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"D\"");
-                }
-              }
-              if (result30 !== null) {
-                var result6 = result30;
-              } else {
-                if (input.substr(pos, 1) === "d") {
-                  var result29 = "d";
-                  pos += 1;
-                } else {
-                  var result29 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"d\"");
-                  }
-                }
-                if (result29 !== null) {
-                  var result6 = result29;
-                } else {
-                  var result6 = null;;
-                };
+              var result6 = [];
+              var result15 = parse_WS();
+              while (result15 !== null) {
+                result6.push(result15);
+                var result15 = parse_WS();
               }
               if (result6 !== null) {
-                var result7 = [];
-                var result28 = parse_WS();
-                while (result28 !== null) {
-                  result7.push(result28);
-                  var result28 = parse_WS();
+                var savedPos2 = pos;
+                if (input.substr(pos, 4) === "INTO") {
+                  var result14 = "INTO";
+                  pos += 4;
+                } else {
+                  var result14 = null;
+                  if (reportMatchFailures) {
+                    matchFailed("\"INTO\"");
+                  }
                 }
-                if (result7 !== null) {
-                  var result8 = parse_IRIref();
-                  if (result8 !== null) {
-                    var result9 = [];
-                    var result27 = parse_WS();
-                    while (result27 !== null) {
-                      result9.push(result27);
-                      var result27 = parse_WS();
+                if (result14 !== null) {
+                  var result9 = result14;
+                } else {
+                  if (input.substr(pos, 4) === "into") {
+                    var result13 = "into";
+                    pos += 4;
+                  } else {
+                    var result13 = null;
+                    if (reportMatchFailures) {
+                      matchFailed("\"into\"");
                     }
-                    if (result9 !== null) {
-                      var savedPos2 = pos;
-                      if (input.substr(pos, 1) === "I") {
-                        var result26 = "I";
-                        pos += 1;
-                      } else {
-                        var result26 = null;
-                        if (reportMatchFailures) {
-                          matchFailed("\"I\"");
-                        }
-                      }
-                      if (result26 !== null) {
-                        var result12 = result26;
-                      } else {
-                        if (input.substr(pos, 1) === "i") {
-                          var result25 = "i";
-                          pos += 1;
-                        } else {
-                          var result25 = null;
-                          if (reportMatchFailures) {
-                            matchFailed("\"i\"");
-                          }
-                        }
-                        if (result25 !== null) {
-                          var result12 = result25;
-                        } else {
-                          var result12 = null;;
-                        };
-                      }
-                      if (result12 !== null) {
-                        if (input.substr(pos, 1) === "N") {
-                          var result24 = "N";
-                          pos += 1;
-                        } else {
-                          var result24 = null;
-                          if (reportMatchFailures) {
-                            matchFailed("\"N\"");
-                          }
-                        }
-                        if (result24 !== null) {
-                          var result13 = result24;
-                        } else {
-                          if (input.substr(pos, 1) === "n") {
-                            var result23 = "n";
-                            pos += 1;
-                          } else {
-                            var result23 = null;
-                            if (reportMatchFailures) {
-                              matchFailed("\"n\"");
-                            }
-                          }
-                          if (result23 !== null) {
-                            var result13 = result23;
-                          } else {
-                            var result13 = null;;
-                          };
-                        }
-                        if (result13 !== null) {
-                          if (input.substr(pos, 1) === "T") {
-                            var result22 = "T";
-                            pos += 1;
-                          } else {
-                            var result22 = null;
-                            if (reportMatchFailures) {
-                              matchFailed("\"T\"");
-                            }
-                          }
-                          if (result22 !== null) {
-                            var result14 = result22;
-                          } else {
-                            if (input.substr(pos, 1) === "t") {
-                              var result21 = "t";
-                              pos += 1;
-                            } else {
-                              var result21 = null;
-                              if (reportMatchFailures) {
-                                matchFailed("\"t\"");
-                              }
-                            }
-                            if (result21 !== null) {
-                              var result14 = result21;
-                            } else {
-                              var result14 = null;;
-                            };
-                          }
-                          if (result14 !== null) {
-                            if (input.substr(pos, 1) === "O") {
-                              var result20 = "O";
-                              pos += 1;
-                            } else {
-                              var result20 = null;
-                              if (reportMatchFailures) {
-                                matchFailed("\"O\"");
-                              }
-                            }
-                            if (result20 !== null) {
-                              var result15 = result20;
-                            } else {
-                              if (input.substr(pos, 1) === "o") {
-                                var result19 = "o";
-                                pos += 1;
-                              } else {
-                                var result19 = null;
-                                if (reportMatchFailures) {
-                                  matchFailed("\"o\"");
-                                }
-                              }
-                              if (result19 !== null) {
-                                var result15 = result19;
-                              } else {
-                                var result15 = null;;
-                              };
-                            }
-                            if (result15 !== null) {
-                              var result16 = [];
-                              var result18 = parse_WS();
-                              while (result18 !== null) {
-                                result16.push(result18);
-                                var result18 = parse_WS();
-                              }
-                              if (result16 !== null) {
-                                var result17 = parse_GraphRef();
-                                if (result17 !== null) {
-                                  var result11 = [result12, result13, result14, result15, result16, result17];
-                                } else {
-                                  var result11 = null;
-                                  pos = savedPos2;
-                                }
-                              } else {
-                                var result11 = null;
-                                pos = savedPos2;
-                              }
-                            } else {
-                              var result11 = null;
-                              pos = savedPos2;
-                            }
-                          } else {
-                            var result11 = null;
-                            pos = savedPos2;
-                          }
-                        } else {
-                          var result11 = null;
-                          pos = savedPos2;
-                        }
-                      } else {
-                        var result11 = null;
-                        pos = savedPos2;
-                      }
-                      var result10 = result11 !== null ? result11 : '';
-                      if (result10 !== null) {
-                        var result1 = [result3, result4, result5, result6, result7, result8, result9, result10];
-                      } else {
-                        var result1 = null;
-                        pos = savedPos1;
-                      }
+                  }
+                  if (result13 !== null) {
+                    var result9 = result13;
+                  } else {
+                    var result9 = null;;
+                  };
+                }
+                if (result9 !== null) {
+                  var result10 = [];
+                  var result12 = parse_WS();
+                  while (result12 !== null) {
+                    result10.push(result12);
+                    var result12 = parse_WS();
+                  }
+                  if (result10 !== null) {
+                    var result11 = parse_GraphRef();
+                    if (result11 !== null) {
+                      var result8 = [result9, result10, result11];
                     } else {
-                      var result1 = null;
-                      pos = savedPos1;
+                      var result8 = null;
+                      pos = savedPos2;
                     }
                   } else {
-                    var result1 = null;
-                    pos = savedPos1;
+                    var result8 = null;
+                    pos = savedPos2;
                   }
+                } else {
+                  var result8 = null;
+                  pos = savedPos2;
+                }
+                var result7 = result8 !== null ? result8 : '';
+                if (result7 !== null) {
+                  var result1 = [result3, result4, result5, result6, result7];
                 } else {
                   var result1 = null;
                   pos = savedPos1;
@@ -6813,10 +4418,10 @@ SparqlParser.parser = (function(){
                 query.kind = 'load';
                 query.token = 'executableunit'
                 query.sourceGraph = sg;
-                query.destinyGraph = dg[5];
+                query.destinyGraph = dg[2];
                 
                 return query;
-          })(result1[5], result1[7])
+          })(result1[2], result1[4])
           : null;
         if (result2 !== null) {
           var result0 = result2;
@@ -6848,375 +4453,80 @@ SparqlParser.parser = (function(){
         reportMatchFailures = false;
         var savedPos0 = pos;
         var savedPos1 = pos;
-        if (input.substr(pos, 1) === "C") {
-          var result42 = "C";
-          pos += 1;
+        if (input.substr(pos, 5) === "CLEAR") {
+          var result14 = "CLEAR";
+          pos += 5;
         } else {
-          var result42 = null;
+          var result14 = null;
           if (reportMatchFailures) {
-            matchFailed("\"C\"");
+            matchFailed("\"CLEAR\"");
           }
         }
-        if (result42 !== null) {
-          var result3 = result42;
+        if (result14 !== null) {
+          var result3 = result14;
         } else {
-          if (input.substr(pos, 1) === "c") {
-            var result41 = "c";
-            pos += 1;
+          if (input.substr(pos, 5) === "clear") {
+            var result13 = "clear";
+            pos += 5;
           } else {
-            var result41 = null;
+            var result13 = null;
             if (reportMatchFailures) {
-              matchFailed("\"c\"");
+              matchFailed("\"clear\"");
             }
           }
-          if (result41 !== null) {
-            var result3 = result41;
+          if (result13 !== null) {
+            var result3 = result13;
           } else {
             var result3 = null;;
           };
         }
         if (result3 !== null) {
-          if (input.substr(pos, 1) === "L") {
-            var result40 = "L";
-            pos += 1;
-          } else {
-            var result40 = null;
-            if (reportMatchFailures) {
-              matchFailed("\"L\"");
-            }
-          }
-          if (result40 !== null) {
-            var result4 = result40;
-          } else {
-            if (input.substr(pos, 1) === "l") {
-              var result39 = "l";
-              pos += 1;
-            } else {
-              var result39 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"l\"");
-              }
-            }
-            if (result39 !== null) {
-              var result4 = result39;
-            } else {
-              var result4 = null;;
-            };
+          var result4 = [];
+          var result12 = parse_WS();
+          while (result12 !== null) {
+            result4.push(result12);
+            var result12 = parse_WS();
           }
           if (result4 !== null) {
-            if (input.substr(pos, 1) === "E") {
-              var result38 = "E";
-              pos += 1;
+            if (input.substr(pos, 6) === "SILENT") {
+              var result11 = "SILENT";
+              pos += 6;
             } else {
-              var result38 = null;
+              var result11 = null;
               if (reportMatchFailures) {
-                matchFailed("\"E\"");
+                matchFailed("\"SILENT\"");
               }
             }
-            if (result38 !== null) {
-              var result5 = result38;
+            if (result11 !== null) {
+              var result9 = result11;
             } else {
-              if (input.substr(pos, 1) === "e") {
-                var result37 = "e";
-                pos += 1;
+              if (input.substr(pos, 6) === "silent") {
+                var result10 = "silent";
+                pos += 6;
               } else {
-                var result37 = null;
+                var result10 = null;
                 if (reportMatchFailures) {
-                  matchFailed("\"e\"");
+                  matchFailed("\"silent\"");
                 }
               }
-              if (result37 !== null) {
-                var result5 = result37;
+              if (result10 !== null) {
+                var result9 = result10;
               } else {
-                var result5 = null;;
+                var result9 = null;;
               };
             }
+            var result5 = result9 !== null ? result9 : '';
             if (result5 !== null) {
-              if (input.substr(pos, 1) === "A") {
-                var result36 = "A";
-                pos += 1;
-              } else {
-                var result36 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"A\"");
-                }
-              }
-              if (result36 !== null) {
-                var result6 = result36;
-              } else {
-                if (input.substr(pos, 1) === "a") {
-                  var result35 = "a";
-                  pos += 1;
-                } else {
-                  var result35 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"a\"");
-                  }
-                }
-                if (result35 !== null) {
-                  var result6 = result35;
-                } else {
-                  var result6 = null;;
-                };
+              var result6 = [];
+              var result8 = parse_WS();
+              while (result8 !== null) {
+                result6.push(result8);
+                var result8 = parse_WS();
               }
               if (result6 !== null) {
-                if (input.substr(pos, 1) === "R") {
-                  var result34 = "R";
-                  pos += 1;
-                } else {
-                  var result34 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"R\"");
-                  }
-                }
-                if (result34 !== null) {
-                  var result7 = result34;
-                } else {
-                  if (input.substr(pos, 1) === "r") {
-                    var result33 = "r";
-                    pos += 1;
-                  } else {
-                    var result33 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"r\"");
-                    }
-                  }
-                  if (result33 !== null) {
-                    var result7 = result33;
-                  } else {
-                    var result7 = null;;
-                  };
-                }
+                var result7 = parse_GraphRefAll();
                 if (result7 !== null) {
-                  var result8 = [];
-                  var result32 = parse_WS();
-                  while (result32 !== null) {
-                    result8.push(result32);
-                    var result32 = parse_WS();
-                  }
-                  if (result8 !== null) {
-                    var savedPos2 = pos;
-                    if (input.substr(pos, 1) === "S") {
-                      var result31 = "S";
-                      pos += 1;
-                    } else {
-                      var result31 = null;
-                      if (reportMatchFailures) {
-                        matchFailed("\"S\"");
-                      }
-                    }
-                    if (result31 !== null) {
-                      var result14 = result31;
-                    } else {
-                      if (input.substr(pos, 1) === "s") {
-                        var result30 = "s";
-                        pos += 1;
-                      } else {
-                        var result30 = null;
-                        if (reportMatchFailures) {
-                          matchFailed("\"s\"");
-                        }
-                      }
-                      if (result30 !== null) {
-                        var result14 = result30;
-                      } else {
-                        var result14 = null;;
-                      };
-                    }
-                    if (result14 !== null) {
-                      if (input.substr(pos, 1) === "I") {
-                        var result29 = "I";
-                        pos += 1;
-                      } else {
-                        var result29 = null;
-                        if (reportMatchFailures) {
-                          matchFailed("\"I\"");
-                        }
-                      }
-                      if (result29 !== null) {
-                        var result15 = result29;
-                      } else {
-                        if (input.substr(pos, 1) === "i") {
-                          var result28 = "i";
-                          pos += 1;
-                        } else {
-                          var result28 = null;
-                          if (reportMatchFailures) {
-                            matchFailed("\"i\"");
-                          }
-                        }
-                        if (result28 !== null) {
-                          var result15 = result28;
-                        } else {
-                          var result15 = null;;
-                        };
-                      }
-                      if (result15 !== null) {
-                        if (input.substr(pos, 1) === "L") {
-                          var result27 = "L";
-                          pos += 1;
-                        } else {
-                          var result27 = null;
-                          if (reportMatchFailures) {
-                            matchFailed("\"L\"");
-                          }
-                        }
-                        if (result27 !== null) {
-                          var result16 = result27;
-                        } else {
-                          if (input.substr(pos, 1) === "l") {
-                            var result26 = "l";
-                            pos += 1;
-                          } else {
-                            var result26 = null;
-                            if (reportMatchFailures) {
-                              matchFailed("\"l\"");
-                            }
-                          }
-                          if (result26 !== null) {
-                            var result16 = result26;
-                          } else {
-                            var result16 = null;;
-                          };
-                        }
-                        if (result16 !== null) {
-                          if (input.substr(pos, 1) === "E") {
-                            var result25 = "E";
-                            pos += 1;
-                          } else {
-                            var result25 = null;
-                            if (reportMatchFailures) {
-                              matchFailed("\"E\"");
-                            }
-                          }
-                          if (result25 !== null) {
-                            var result17 = result25;
-                          } else {
-                            if (input.substr(pos, 1) === "e") {
-                              var result24 = "e";
-                              pos += 1;
-                            } else {
-                              var result24 = null;
-                              if (reportMatchFailures) {
-                                matchFailed("\"e\"");
-                              }
-                            }
-                            if (result24 !== null) {
-                              var result17 = result24;
-                            } else {
-                              var result17 = null;;
-                            };
-                          }
-                          if (result17 !== null) {
-                            if (input.substr(pos, 1) === "N") {
-                              var result23 = "N";
-                              pos += 1;
-                            } else {
-                              var result23 = null;
-                              if (reportMatchFailures) {
-                                matchFailed("\"N\"");
-                              }
-                            }
-                            if (result23 !== null) {
-                              var result18 = result23;
-                            } else {
-                              if (input.substr(pos, 1) === "n") {
-                                var result22 = "n";
-                                pos += 1;
-                              } else {
-                                var result22 = null;
-                                if (reportMatchFailures) {
-                                  matchFailed("\"n\"");
-                                }
-                              }
-                              if (result22 !== null) {
-                                var result18 = result22;
-                              } else {
-                                var result18 = null;;
-                              };
-                            }
-                            if (result18 !== null) {
-                              if (input.substr(pos, 1) === "T") {
-                                var result21 = "T";
-                                pos += 1;
-                              } else {
-                                var result21 = null;
-                                if (reportMatchFailures) {
-                                  matchFailed("\"T\"");
-                                }
-                              }
-                              if (result21 !== null) {
-                                var result19 = result21;
-                              } else {
-                                if (input.substr(pos, 1) === "t") {
-                                  var result20 = "t";
-                                  pos += 1;
-                                } else {
-                                  var result20 = null;
-                                  if (reportMatchFailures) {
-                                    matchFailed("\"t\"");
-                                  }
-                                }
-                                if (result20 !== null) {
-                                  var result19 = result20;
-                                } else {
-                                  var result19 = null;;
-                                };
-                              }
-                              if (result19 !== null) {
-                                var result13 = [result14, result15, result16, result17, result18, result19];
-                              } else {
-                                var result13 = null;
-                                pos = savedPos2;
-                              }
-                            } else {
-                              var result13 = null;
-                              pos = savedPos2;
-                            }
-                          } else {
-                            var result13 = null;
-                            pos = savedPos2;
-                          }
-                        } else {
-                          var result13 = null;
-                          pos = savedPos2;
-                        }
-                      } else {
-                        var result13 = null;
-                        pos = savedPos2;
-                      }
-                    } else {
-                      var result13 = null;
-                      pos = savedPos2;
-                    }
-                    var result9 = result13 !== null ? result13 : '';
-                    if (result9 !== null) {
-                      var result10 = [];
-                      var result12 = parse_WS();
-                      while (result12 !== null) {
-                        result10.push(result12);
-                        var result12 = parse_WS();
-                      }
-                      if (result10 !== null) {
-                        var result11 = parse_GraphRefAll();
-                        if (result11 !== null) {
-                          var result1 = [result3, result4, result5, result6, result7, result8, result9, result10, result11];
-                        } else {
-                          var result1 = null;
-                          pos = savedPos1;
-                        }
-                      } else {
-                        var result1 = null;
-                        pos = savedPos1;
-                      }
-                    } else {
-                      var result1 = null;
-                      pos = savedPos1;
-                    }
-                  } else {
-                    var result1 = null;
-                    pos = savedPos1;
-                  }
+                  var result1 = [result3, result4, result5, result6, result7];
                 } else {
                   var result1 = null;
                   pos = savedPos1;
@@ -7245,7 +4555,7 @@ SparqlParser.parser = (function(){
                 query.destinyGraph = ref;
                 
                 return query;
-          })(result1[8])
+          })(result1[4])
           : null;
         if (result2 !== null) {
           var result0 = result2;
@@ -7277,343 +4587,80 @@ SparqlParser.parser = (function(){
         reportMatchFailures = false;
         var savedPos0 = pos;
         var savedPos1 = pos;
-        if (input.substr(pos, 1) === "D") {
-          var result39 = "D";
-          pos += 1;
+        if (input.substr(pos, 4) === "DROP") {
+          var result14 = "DROP";
+          pos += 4;
         } else {
-          var result39 = null;
+          var result14 = null;
           if (reportMatchFailures) {
-            matchFailed("\"D\"");
+            matchFailed("\"DROP\"");
           }
         }
-        if (result39 !== null) {
-          var result3 = result39;
+        if (result14 !== null) {
+          var result3 = result14;
         } else {
-          if (input.substr(pos, 1) === "d") {
-            var result38 = "d";
-            pos += 1;
+          if (input.substr(pos, 4) === "drop") {
+            var result13 = "drop";
+            pos += 4;
           } else {
-            var result38 = null;
+            var result13 = null;
             if (reportMatchFailures) {
-              matchFailed("\"d\"");
+              matchFailed("\"drop\"");
             }
           }
-          if (result38 !== null) {
-            var result3 = result38;
+          if (result13 !== null) {
+            var result3 = result13;
           } else {
             var result3 = null;;
           };
         }
         if (result3 !== null) {
-          if (input.substr(pos, 1) === "R") {
-            var result37 = "R";
-            pos += 1;
-          } else {
-            var result37 = null;
-            if (reportMatchFailures) {
-              matchFailed("\"R\"");
-            }
-          }
-          if (result37 !== null) {
-            var result4 = result37;
-          } else {
-            if (input.substr(pos, 1) === "r") {
-              var result36 = "r";
-              pos += 1;
-            } else {
-              var result36 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"r\"");
-              }
-            }
-            if (result36 !== null) {
-              var result4 = result36;
-            } else {
-              var result4 = null;;
-            };
+          var result4 = [];
+          var result12 = parse_WS();
+          while (result12 !== null) {
+            result4.push(result12);
+            var result12 = parse_WS();
           }
           if (result4 !== null) {
-            if (input.substr(pos, 1) === "O") {
-              var result35 = "O";
-              pos += 1;
+            if (input.substr(pos, 6) === "SILENT") {
+              var result11 = "SILENT";
+              pos += 6;
             } else {
-              var result35 = null;
+              var result11 = null;
               if (reportMatchFailures) {
-                matchFailed("\"O\"");
+                matchFailed("\"SILENT\"");
               }
             }
-            if (result35 !== null) {
-              var result5 = result35;
+            if (result11 !== null) {
+              var result9 = result11;
             } else {
-              if (input.substr(pos, 1) === "o") {
-                var result34 = "o";
-                pos += 1;
+              if (input.substr(pos, 6) === "silent") {
+                var result10 = "silent";
+                pos += 6;
               } else {
-                var result34 = null;
+                var result10 = null;
                 if (reportMatchFailures) {
-                  matchFailed("\"o\"");
+                  matchFailed("\"silent\"");
                 }
               }
-              if (result34 !== null) {
-                var result5 = result34;
+              if (result10 !== null) {
+                var result9 = result10;
               } else {
-                var result5 = null;;
+                var result9 = null;;
               };
             }
+            var result5 = result9 !== null ? result9 : '';
             if (result5 !== null) {
-              if (input.substr(pos, 1) === "P") {
-                var result33 = "P";
-                pos += 1;
-              } else {
-                var result33 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"P\"");
-                }
-              }
-              if (result33 !== null) {
-                var result6 = result33;
-              } else {
-                if (input.substr(pos, 1) === "p") {
-                  var result32 = "p";
-                  pos += 1;
-                } else {
-                  var result32 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"p\"");
-                  }
-                }
-                if (result32 !== null) {
-                  var result6 = result32;
-                } else {
-                  var result6 = null;;
-                };
+              var result6 = [];
+              var result8 = parse_WS();
+              while (result8 !== null) {
+                result6.push(result8);
+                var result8 = parse_WS();
               }
               if (result6 !== null) {
-                var result7 = [];
-                var result31 = parse_WS();
-                while (result31 !== null) {
-                  result7.push(result31);
-                  var result31 = parse_WS();
-                }
+                var result7 = parse_GraphRefAll();
                 if (result7 !== null) {
-                  var savedPos2 = pos;
-                  if (input.substr(pos, 1) === "S") {
-                    var result30 = "S";
-                    pos += 1;
-                  } else {
-                    var result30 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"S\"");
-                    }
-                  }
-                  if (result30 !== null) {
-                    var result13 = result30;
-                  } else {
-                    if (input.substr(pos, 1) === "s") {
-                      var result29 = "s";
-                      pos += 1;
-                    } else {
-                      var result29 = null;
-                      if (reportMatchFailures) {
-                        matchFailed("\"s\"");
-                      }
-                    }
-                    if (result29 !== null) {
-                      var result13 = result29;
-                    } else {
-                      var result13 = null;;
-                    };
-                  }
-                  if (result13 !== null) {
-                    if (input.substr(pos, 1) === "I") {
-                      var result28 = "I";
-                      pos += 1;
-                    } else {
-                      var result28 = null;
-                      if (reportMatchFailures) {
-                        matchFailed("\"I\"");
-                      }
-                    }
-                    if (result28 !== null) {
-                      var result14 = result28;
-                    } else {
-                      if (input.substr(pos, 1) === "i") {
-                        var result27 = "i";
-                        pos += 1;
-                      } else {
-                        var result27 = null;
-                        if (reportMatchFailures) {
-                          matchFailed("\"i\"");
-                        }
-                      }
-                      if (result27 !== null) {
-                        var result14 = result27;
-                      } else {
-                        var result14 = null;;
-                      };
-                    }
-                    if (result14 !== null) {
-                      if (input.substr(pos, 1) === "L") {
-                        var result26 = "L";
-                        pos += 1;
-                      } else {
-                        var result26 = null;
-                        if (reportMatchFailures) {
-                          matchFailed("\"L\"");
-                        }
-                      }
-                      if (result26 !== null) {
-                        var result15 = result26;
-                      } else {
-                        if (input.substr(pos, 1) === "l") {
-                          var result25 = "l";
-                          pos += 1;
-                        } else {
-                          var result25 = null;
-                          if (reportMatchFailures) {
-                            matchFailed("\"l\"");
-                          }
-                        }
-                        if (result25 !== null) {
-                          var result15 = result25;
-                        } else {
-                          var result15 = null;;
-                        };
-                      }
-                      if (result15 !== null) {
-                        if (input.substr(pos, 1) === "E") {
-                          var result24 = "E";
-                          pos += 1;
-                        } else {
-                          var result24 = null;
-                          if (reportMatchFailures) {
-                            matchFailed("\"E\"");
-                          }
-                        }
-                        if (result24 !== null) {
-                          var result16 = result24;
-                        } else {
-                          if (input.substr(pos, 1) === "e") {
-                            var result23 = "e";
-                            pos += 1;
-                          } else {
-                            var result23 = null;
-                            if (reportMatchFailures) {
-                              matchFailed("\"e\"");
-                            }
-                          }
-                          if (result23 !== null) {
-                            var result16 = result23;
-                          } else {
-                            var result16 = null;;
-                          };
-                        }
-                        if (result16 !== null) {
-                          if (input.substr(pos, 1) === "N") {
-                            var result22 = "N";
-                            pos += 1;
-                          } else {
-                            var result22 = null;
-                            if (reportMatchFailures) {
-                              matchFailed("\"N\"");
-                            }
-                          }
-                          if (result22 !== null) {
-                            var result17 = result22;
-                          } else {
-                            if (input.substr(pos, 1) === "n") {
-                              var result21 = "n";
-                              pos += 1;
-                            } else {
-                              var result21 = null;
-                              if (reportMatchFailures) {
-                                matchFailed("\"n\"");
-                              }
-                            }
-                            if (result21 !== null) {
-                              var result17 = result21;
-                            } else {
-                              var result17 = null;;
-                            };
-                          }
-                          if (result17 !== null) {
-                            if (input.substr(pos, 1) === "T") {
-                              var result20 = "T";
-                              pos += 1;
-                            } else {
-                              var result20 = null;
-                              if (reportMatchFailures) {
-                                matchFailed("\"T\"");
-                              }
-                            }
-                            if (result20 !== null) {
-                              var result18 = result20;
-                            } else {
-                              if (input.substr(pos, 1) === "t") {
-                                var result19 = "t";
-                                pos += 1;
-                              } else {
-                                var result19 = null;
-                                if (reportMatchFailures) {
-                                  matchFailed("\"t\"");
-                                }
-                              }
-                              if (result19 !== null) {
-                                var result18 = result19;
-                              } else {
-                                var result18 = null;;
-                              };
-                            }
-                            if (result18 !== null) {
-                              var result12 = [result13, result14, result15, result16, result17, result18];
-                            } else {
-                              var result12 = null;
-                              pos = savedPos2;
-                            }
-                          } else {
-                            var result12 = null;
-                            pos = savedPos2;
-                          }
-                        } else {
-                          var result12 = null;
-                          pos = savedPos2;
-                        }
-                      } else {
-                        var result12 = null;
-                        pos = savedPos2;
-                      }
-                    } else {
-                      var result12 = null;
-                      pos = savedPos2;
-                    }
-                  } else {
-                    var result12 = null;
-                    pos = savedPos2;
-                  }
-                  var result8 = result12 !== null ? result12 : '';
-                  if (result8 !== null) {
-                    var result9 = [];
-                    var result11 = parse_WS();
-                    while (result11 !== null) {
-                      result9.push(result11);
-                      var result11 = parse_WS();
-                    }
-                    if (result9 !== null) {
-                      var result10 = parse_GraphRefAll();
-                      if (result10 !== null) {
-                        var result1 = [result3, result4, result5, result6, result7, result8, result9, result10];
-                      } else {
-                        var result1 = null;
-                        pos = savedPos1;
-                      }
-                    } else {
-                      var result1 = null;
-                      pos = savedPos1;
-                    }
-                  } else {
-                    var result1 = null;
-                    pos = savedPos1;
-                  }
+                  var result1 = [result3, result4, result5, result6, result7];
                 } else {
                   var result1 = null;
                   pos = savedPos1;
@@ -7642,7 +4689,7 @@ SparqlParser.parser = (function(){
                 query.destinyGraph = ref;
                 
                 return query;
-          })(result1[7])
+          })(result1[4])
           : null;
         if (result2 !== null) {
           var result0 = result2;
@@ -7674,407 +4721,80 @@ SparqlParser.parser = (function(){
         reportMatchFailures = false;
         var savedPos0 = pos;
         var savedPos1 = pos;
-        if (input.substr(pos, 1) === "C") {
-          var result45 = "C";
-          pos += 1;
+        if (input.substr(pos, 6) === "CREATE") {
+          var result14 = "CREATE";
+          pos += 6;
         } else {
-          var result45 = null;
+          var result14 = null;
           if (reportMatchFailures) {
-            matchFailed("\"C\"");
+            matchFailed("\"CREATE\"");
           }
         }
-        if (result45 !== null) {
-          var result3 = result45;
+        if (result14 !== null) {
+          var result3 = result14;
         } else {
-          if (input.substr(pos, 1) === "c") {
-            var result44 = "c";
-            pos += 1;
+          if (input.substr(pos, 6) === "create") {
+            var result13 = "create";
+            pos += 6;
           } else {
-            var result44 = null;
+            var result13 = null;
             if (reportMatchFailures) {
-              matchFailed("\"c\"");
+              matchFailed("\"create\"");
             }
           }
-          if (result44 !== null) {
-            var result3 = result44;
+          if (result13 !== null) {
+            var result3 = result13;
           } else {
             var result3 = null;;
           };
         }
         if (result3 !== null) {
-          if (input.substr(pos, 1) === "R") {
-            var result43 = "R";
-            pos += 1;
-          } else {
-            var result43 = null;
-            if (reportMatchFailures) {
-              matchFailed("\"R\"");
-            }
-          }
-          if (result43 !== null) {
-            var result4 = result43;
-          } else {
-            if (input.substr(pos, 1) === "r") {
-              var result42 = "r";
-              pos += 1;
-            } else {
-              var result42 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"r\"");
-              }
-            }
-            if (result42 !== null) {
-              var result4 = result42;
-            } else {
-              var result4 = null;;
-            };
+          var result4 = [];
+          var result12 = parse_WS();
+          while (result12 !== null) {
+            result4.push(result12);
+            var result12 = parse_WS();
           }
           if (result4 !== null) {
-            if (input.substr(pos, 1) === "E") {
-              var result41 = "E";
-              pos += 1;
+            if (input.substr(pos, 6) === "SILENT") {
+              var result11 = "SILENT";
+              pos += 6;
             } else {
-              var result41 = null;
+              var result11 = null;
               if (reportMatchFailures) {
-                matchFailed("\"E\"");
+                matchFailed("\"SILENT\"");
               }
             }
-            if (result41 !== null) {
-              var result5 = result41;
+            if (result11 !== null) {
+              var result9 = result11;
             } else {
-              if (input.substr(pos, 1) === "e") {
-                var result40 = "e";
-                pos += 1;
+              if (input.substr(pos, 6) === "silent") {
+                var result10 = "silent";
+                pos += 6;
               } else {
-                var result40 = null;
+                var result10 = null;
                 if (reportMatchFailures) {
-                  matchFailed("\"e\"");
+                  matchFailed("\"silent\"");
                 }
               }
-              if (result40 !== null) {
-                var result5 = result40;
+              if (result10 !== null) {
+                var result9 = result10;
               } else {
-                var result5 = null;;
+                var result9 = null;;
               };
             }
+            var result5 = result9 !== null ? result9 : '';
             if (result5 !== null) {
-              if (input.substr(pos, 1) === "A") {
-                var result39 = "A";
-                pos += 1;
-              } else {
-                var result39 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"A\"");
-                }
-              }
-              if (result39 !== null) {
-                var result6 = result39;
-              } else {
-                if (input.substr(pos, 1) === "a") {
-                  var result38 = "a";
-                  pos += 1;
-                } else {
-                  var result38 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"a\"");
-                  }
-                }
-                if (result38 !== null) {
-                  var result6 = result38;
-                } else {
-                  var result6 = null;;
-                };
+              var result6 = [];
+              var result8 = parse_WS();
+              while (result8 !== null) {
+                result6.push(result8);
+                var result8 = parse_WS();
               }
               if (result6 !== null) {
-                if (input.substr(pos, 1) === "T") {
-                  var result37 = "T";
-                  pos += 1;
-                } else {
-                  var result37 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"T\"");
-                  }
-                }
-                if (result37 !== null) {
-                  var result7 = result37;
-                } else {
-                  if (input.substr(pos, 1) === "t") {
-                    var result36 = "t";
-                    pos += 1;
-                  } else {
-                    var result36 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"t\"");
-                    }
-                  }
-                  if (result36 !== null) {
-                    var result7 = result36;
-                  } else {
-                    var result7 = null;;
-                  };
-                }
+                var result7 = parse_GraphRef();
                 if (result7 !== null) {
-                  if (input.substr(pos, 1) === "E") {
-                    var result35 = "E";
-                    pos += 1;
-                  } else {
-                    var result35 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"E\"");
-                    }
-                  }
-                  if (result35 !== null) {
-                    var result8 = result35;
-                  } else {
-                    if (input.substr(pos, 1) === "e") {
-                      var result34 = "e";
-                      pos += 1;
-                    } else {
-                      var result34 = null;
-                      if (reportMatchFailures) {
-                        matchFailed("\"e\"");
-                      }
-                    }
-                    if (result34 !== null) {
-                      var result8 = result34;
-                    } else {
-                      var result8 = null;;
-                    };
-                  }
-                  if (result8 !== null) {
-                    var result9 = [];
-                    var result33 = parse_WS();
-                    while (result33 !== null) {
-                      result9.push(result33);
-                      var result33 = parse_WS();
-                    }
-                    if (result9 !== null) {
-                      var savedPos2 = pos;
-                      if (input.substr(pos, 1) === "S") {
-                        var result32 = "S";
-                        pos += 1;
-                      } else {
-                        var result32 = null;
-                        if (reportMatchFailures) {
-                          matchFailed("\"S\"");
-                        }
-                      }
-                      if (result32 !== null) {
-                        var result15 = result32;
-                      } else {
-                        if (input.substr(pos, 1) === "s") {
-                          var result31 = "s";
-                          pos += 1;
-                        } else {
-                          var result31 = null;
-                          if (reportMatchFailures) {
-                            matchFailed("\"s\"");
-                          }
-                        }
-                        if (result31 !== null) {
-                          var result15 = result31;
-                        } else {
-                          var result15 = null;;
-                        };
-                      }
-                      if (result15 !== null) {
-                        if (input.substr(pos, 1) === "I") {
-                          var result30 = "I";
-                          pos += 1;
-                        } else {
-                          var result30 = null;
-                          if (reportMatchFailures) {
-                            matchFailed("\"I\"");
-                          }
-                        }
-                        if (result30 !== null) {
-                          var result16 = result30;
-                        } else {
-                          if (input.substr(pos, 1) === "i") {
-                            var result29 = "i";
-                            pos += 1;
-                          } else {
-                            var result29 = null;
-                            if (reportMatchFailures) {
-                              matchFailed("\"i\"");
-                            }
-                          }
-                          if (result29 !== null) {
-                            var result16 = result29;
-                          } else {
-                            var result16 = null;;
-                          };
-                        }
-                        if (result16 !== null) {
-                          if (input.substr(pos, 1) === "L") {
-                            var result28 = "L";
-                            pos += 1;
-                          } else {
-                            var result28 = null;
-                            if (reportMatchFailures) {
-                              matchFailed("\"L\"");
-                            }
-                          }
-                          if (result28 !== null) {
-                            var result17 = result28;
-                          } else {
-                            if (input.substr(pos, 1) === "l") {
-                              var result27 = "l";
-                              pos += 1;
-                            } else {
-                              var result27 = null;
-                              if (reportMatchFailures) {
-                                matchFailed("\"l\"");
-                              }
-                            }
-                            if (result27 !== null) {
-                              var result17 = result27;
-                            } else {
-                              var result17 = null;;
-                            };
-                          }
-                          if (result17 !== null) {
-                            if (input.substr(pos, 1) === "E") {
-                              var result26 = "E";
-                              pos += 1;
-                            } else {
-                              var result26 = null;
-                              if (reportMatchFailures) {
-                                matchFailed("\"E\"");
-                              }
-                            }
-                            if (result26 !== null) {
-                              var result18 = result26;
-                            } else {
-                              if (input.substr(pos, 1) === "e") {
-                                var result25 = "e";
-                                pos += 1;
-                              } else {
-                                var result25 = null;
-                                if (reportMatchFailures) {
-                                  matchFailed("\"e\"");
-                                }
-                              }
-                              if (result25 !== null) {
-                                var result18 = result25;
-                              } else {
-                                var result18 = null;;
-                              };
-                            }
-                            if (result18 !== null) {
-                              if (input.substr(pos, 1) === "N") {
-                                var result24 = "N";
-                                pos += 1;
-                              } else {
-                                var result24 = null;
-                                if (reportMatchFailures) {
-                                  matchFailed("\"N\"");
-                                }
-                              }
-                              if (result24 !== null) {
-                                var result19 = result24;
-                              } else {
-                                if (input.substr(pos, 1) === "n") {
-                                  var result23 = "n";
-                                  pos += 1;
-                                } else {
-                                  var result23 = null;
-                                  if (reportMatchFailures) {
-                                    matchFailed("\"n\"");
-                                  }
-                                }
-                                if (result23 !== null) {
-                                  var result19 = result23;
-                                } else {
-                                  var result19 = null;;
-                                };
-                              }
-                              if (result19 !== null) {
-                                if (input.substr(pos, 1) === "T") {
-                                  var result22 = "T";
-                                  pos += 1;
-                                } else {
-                                  var result22 = null;
-                                  if (reportMatchFailures) {
-                                    matchFailed("\"T\"");
-                                  }
-                                }
-                                if (result22 !== null) {
-                                  var result20 = result22;
-                                } else {
-                                  if (input.substr(pos, 1) === "t") {
-                                    var result21 = "t";
-                                    pos += 1;
-                                  } else {
-                                    var result21 = null;
-                                    if (reportMatchFailures) {
-                                      matchFailed("\"t\"");
-                                    }
-                                  }
-                                  if (result21 !== null) {
-                                    var result20 = result21;
-                                  } else {
-                                    var result20 = null;;
-                                  };
-                                }
-                                if (result20 !== null) {
-                                  var result14 = [result15, result16, result17, result18, result19, result20];
-                                } else {
-                                  var result14 = null;
-                                  pos = savedPos2;
-                                }
-                              } else {
-                                var result14 = null;
-                                pos = savedPos2;
-                              }
-                            } else {
-                              var result14 = null;
-                              pos = savedPos2;
-                            }
-                          } else {
-                            var result14 = null;
-                            pos = savedPos2;
-                          }
-                        } else {
-                          var result14 = null;
-                          pos = savedPos2;
-                        }
-                      } else {
-                        var result14 = null;
-                        pos = savedPos2;
-                      }
-                      var result10 = result14 !== null ? result14 : '';
-                      if (result10 !== null) {
-                        var result11 = [];
-                        var result13 = parse_WS();
-                        while (result13 !== null) {
-                          result11.push(result13);
-                          var result13 = parse_WS();
-                        }
-                        if (result11 !== null) {
-                          var result12 = parse_GraphRef();
-                          if (result12 !== null) {
-                            var result1 = [result3, result4, result5, result6, result7, result8, result9, result10, result11, result12];
-                          } else {
-                            var result1 = null;
-                            pos = savedPos1;
-                          }
-                        } else {
-                          var result1 = null;
-                          pos = savedPos1;
-                        }
-                      } else {
-                        var result1 = null;
-                        pos = savedPos1;
-                      }
-                    } else {
-                      var result1 = null;
-                      pos = savedPos1;
-                    }
-                  } else {
-                    var result1 = null;
-                    pos = savedPos1;
-                  }
+                  var result1 = [result3, result4, result5, result6, result7];
                 } else {
                   var result1 = null;
                   pos = savedPos1;
@@ -8103,7 +4823,7 @@ SparqlParser.parser = (function(){
                 query.destinyGraph = ref;
                 
                 return query;
-          })(result1[9])
+          })(result1[4])
           : null;
         if (result2 !== null) {
           var result0 = result2;
@@ -8135,335 +4855,79 @@ SparqlParser.parser = (function(){
         reportMatchFailures = false;
         var savedPos0 = pos;
         var savedPos1 = pos;
-        if (input.substr(pos, 1) === "I") {
-          var result37 = "I";
-          pos += 1;
+        if (input.substr(pos, 6) === "INSERT") {
+          var result13 = "INSERT";
+          pos += 6;
         } else {
-          var result37 = null;
+          var result13 = null;
           if (reportMatchFailures) {
-            matchFailed("\"I\"");
+            matchFailed("\"INSERT\"");
           }
         }
-        if (result37 !== null) {
-          var result3 = result37;
+        if (result13 !== null) {
+          var result3 = result13;
         } else {
-          if (input.substr(pos, 1) === "i") {
-            var result36 = "i";
-            pos += 1;
+          if (input.substr(pos, 6) === "insert") {
+            var result12 = "insert";
+            pos += 6;
           } else {
-            var result36 = null;
+            var result12 = null;
             if (reportMatchFailures) {
-              matchFailed("\"i\"");
+              matchFailed("\"insert\"");
             }
           }
-          if (result36 !== null) {
-            var result3 = result36;
+          if (result12 !== null) {
+            var result3 = result12;
           } else {
             var result3 = null;;
           };
         }
         if (result3 !== null) {
-          if (input.substr(pos, 1) === "N") {
-            var result35 = "N";
-            pos += 1;
-          } else {
-            var result35 = null;
-            if (reportMatchFailures) {
-              matchFailed("\"N\"");
-            }
-          }
-          if (result35 !== null) {
-            var result4 = result35;
-          } else {
-            if (input.substr(pos, 1) === "n") {
-              var result34 = "n";
-              pos += 1;
-            } else {
-              var result34 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"n\"");
-              }
-            }
-            if (result34 !== null) {
-              var result4 = result34;
-            } else {
-              var result4 = null;;
-            };
+          var result4 = [];
+          var result11 = parse_WS();
+          while (result11 !== null) {
+            result4.push(result11);
+            var result11 = parse_WS();
           }
           if (result4 !== null) {
-            if (input.substr(pos, 1) === "S") {
-              var result33 = "S";
-              pos += 1;
+            if (input.substr(pos, 4) === "DATA") {
+              var result10 = "DATA";
+              pos += 4;
             } else {
-              var result33 = null;
+              var result10 = null;
               if (reportMatchFailures) {
-                matchFailed("\"S\"");
+                matchFailed("\"DATA\"");
               }
             }
-            if (result33 !== null) {
-              var result5 = result33;
+            if (result10 !== null) {
+              var result5 = result10;
             } else {
-              if (input.substr(pos, 1) === "s") {
-                var result32 = "s";
-                pos += 1;
+              if (input.substr(pos, 4) === "data") {
+                var result9 = "data";
+                pos += 4;
               } else {
-                var result32 = null;
+                var result9 = null;
                 if (reportMatchFailures) {
-                  matchFailed("\"s\"");
+                  matchFailed("\"data\"");
                 }
               }
-              if (result32 !== null) {
-                var result5 = result32;
+              if (result9 !== null) {
+                var result5 = result9;
               } else {
                 var result5 = null;;
               };
             }
             if (result5 !== null) {
-              if (input.substr(pos, 1) === "E") {
-                var result31 = "E";
-                pos += 1;
-              } else {
-                var result31 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"E\"");
-                }
-              }
-              if (result31 !== null) {
-                var result6 = result31;
-              } else {
-                if (input.substr(pos, 1) === "e") {
-                  var result30 = "e";
-                  pos += 1;
-                } else {
-                  var result30 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"e\"");
-                  }
-                }
-                if (result30 !== null) {
-                  var result6 = result30;
-                } else {
-                  var result6 = null;;
-                };
+              var result6 = [];
+              var result8 = parse_WS();
+              while (result8 !== null) {
+                result6.push(result8);
+                var result8 = parse_WS();
               }
               if (result6 !== null) {
-                if (input.substr(pos, 1) === "R") {
-                  var result29 = "R";
-                  pos += 1;
-                } else {
-                  var result29 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"R\"");
-                  }
-                }
-                if (result29 !== null) {
-                  var result7 = result29;
-                } else {
-                  if (input.substr(pos, 1) === "r") {
-                    var result28 = "r";
-                    pos += 1;
-                  } else {
-                    var result28 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"r\"");
-                    }
-                  }
-                  if (result28 !== null) {
-                    var result7 = result28;
-                  } else {
-                    var result7 = null;;
-                  };
-                }
+                var result7 = parse_QuadData();
                 if (result7 !== null) {
-                  if (input.substr(pos, 1) === "T") {
-                    var result27 = "T";
-                    pos += 1;
-                  } else {
-                    var result27 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"T\"");
-                    }
-                  }
-                  if (result27 !== null) {
-                    var result8 = result27;
-                  } else {
-                    if (input.substr(pos, 1) === "t") {
-                      var result26 = "t";
-                      pos += 1;
-                    } else {
-                      var result26 = null;
-                      if (reportMatchFailures) {
-                        matchFailed("\"t\"");
-                      }
-                    }
-                    if (result26 !== null) {
-                      var result8 = result26;
-                    } else {
-                      var result8 = null;;
-                    };
-                  }
-                  if (result8 !== null) {
-                    var result9 = [];
-                    var result25 = parse_WS();
-                    while (result25 !== null) {
-                      result9.push(result25);
-                      var result25 = parse_WS();
-                    }
-                    if (result9 !== null) {
-                      if (input.substr(pos, 1) === "D") {
-                        var result24 = "D";
-                        pos += 1;
-                      } else {
-                        var result24 = null;
-                        if (reportMatchFailures) {
-                          matchFailed("\"D\"");
-                        }
-                      }
-                      if (result24 !== null) {
-                        var result10 = result24;
-                      } else {
-                        if (input.substr(pos, 1) === "d") {
-                          var result23 = "d";
-                          pos += 1;
-                        } else {
-                          var result23 = null;
-                          if (reportMatchFailures) {
-                            matchFailed("\"d\"");
-                          }
-                        }
-                        if (result23 !== null) {
-                          var result10 = result23;
-                        } else {
-                          var result10 = null;;
-                        };
-                      }
-                      if (result10 !== null) {
-                        if (input.substr(pos, 1) === "A") {
-                          var result22 = "A";
-                          pos += 1;
-                        } else {
-                          var result22 = null;
-                          if (reportMatchFailures) {
-                            matchFailed("\"A\"");
-                          }
-                        }
-                        if (result22 !== null) {
-                          var result11 = result22;
-                        } else {
-                          if (input.substr(pos, 1) === "a") {
-                            var result21 = "a";
-                            pos += 1;
-                          } else {
-                            var result21 = null;
-                            if (reportMatchFailures) {
-                              matchFailed("\"a\"");
-                            }
-                          }
-                          if (result21 !== null) {
-                            var result11 = result21;
-                          } else {
-                            var result11 = null;;
-                          };
-                        }
-                        if (result11 !== null) {
-                          if (input.substr(pos, 1) === "T") {
-                            var result20 = "T";
-                            pos += 1;
-                          } else {
-                            var result20 = null;
-                            if (reportMatchFailures) {
-                              matchFailed("\"T\"");
-                            }
-                          }
-                          if (result20 !== null) {
-                            var result12 = result20;
-                          } else {
-                            if (input.substr(pos, 1) === "t") {
-                              var result19 = "t";
-                              pos += 1;
-                            } else {
-                              var result19 = null;
-                              if (reportMatchFailures) {
-                                matchFailed("\"t\"");
-                              }
-                            }
-                            if (result19 !== null) {
-                              var result12 = result19;
-                            } else {
-                              var result12 = null;;
-                            };
-                          }
-                          if (result12 !== null) {
-                            if (input.substr(pos, 1) === "A") {
-                              var result18 = "A";
-                              pos += 1;
-                            } else {
-                              var result18 = null;
-                              if (reportMatchFailures) {
-                                matchFailed("\"A\"");
-                              }
-                            }
-                            if (result18 !== null) {
-                              var result13 = result18;
-                            } else {
-                              if (input.substr(pos, 1) === "a") {
-                                var result17 = "a";
-                                pos += 1;
-                              } else {
-                                var result17 = null;
-                                if (reportMatchFailures) {
-                                  matchFailed("\"a\"");
-                                }
-                              }
-                              if (result17 !== null) {
-                                var result13 = result17;
-                              } else {
-                                var result13 = null;;
-                              };
-                            }
-                            if (result13 !== null) {
-                              var result14 = [];
-                              var result16 = parse_WS();
-                              while (result16 !== null) {
-                                result14.push(result16);
-                                var result16 = parse_WS();
-                              }
-                              if (result14 !== null) {
-                                var result15 = parse_QuadData();
-                                if (result15 !== null) {
-                                  var result1 = [result3, result4, result5, result6, result7, result8, result9, result10, result11, result12, result13, result14, result15];
-                                } else {
-                                  var result1 = null;
-                                  pos = savedPos1;
-                                }
-                              } else {
-                                var result1 = null;
-                                pos = savedPos1;
-                              }
-                            } else {
-                              var result1 = null;
-                              pos = savedPos1;
-                            }
-                          } else {
-                            var result1 = null;
-                            pos = savedPos1;
-                          }
-                        } else {
-                          var result1 = null;
-                          pos = savedPos1;
-                        }
-                      } else {
-                        var result1 = null;
-                        pos = savedPos1;
-                      }
-                    } else {
-                      var result1 = null;
-                      pos = savedPos1;
-                    }
-                  } else {
-                    var result1 = null;
-                    pos = savedPos1;
-                  }
+                  var result1 = [result3, result4, result5, result6, result7];
                 } else {
                   var result1 = null;
                   pos = savedPos1;
@@ -8492,7 +4956,7 @@ SparqlParser.parser = (function(){
                 query.quads = qs;
           
                 return query;
-          })(result1[12])
+          })(result1[4])
           : null;
         if (result2 !== null) {
           var result0 = result2;
@@ -8524,328 +4988,72 @@ SparqlParser.parser = (function(){
         reportMatchFailures = false;
         var savedPos0 = pos;
         var savedPos1 = pos;
-        if (input.substr(pos, 1) === "D") {
-          var result35 = "D";
-          pos += 1;
+        if (input.substr(pos, 6) === "DELETE") {
+          var result11 = "DELETE";
+          pos += 6;
         } else {
-          var result35 = null;
+          var result11 = null;
           if (reportMatchFailures) {
-            matchFailed("\"D\"");
+            matchFailed("\"DELETE\"");
           }
         }
-        if (result35 !== null) {
-          var result3 = result35;
+        if (result11 !== null) {
+          var result3 = result11;
         } else {
-          if (input.substr(pos, 1) === "d") {
-            var result34 = "d";
-            pos += 1;
+          if (input.substr(pos, 6) === "delete") {
+            var result10 = "delete";
+            pos += 6;
           } else {
-            var result34 = null;
+            var result10 = null;
             if (reportMatchFailures) {
-              matchFailed("\"d\"");
+              matchFailed("\"delete\"");
             }
           }
-          if (result34 !== null) {
-            var result3 = result34;
+          if (result10 !== null) {
+            var result3 = result10;
           } else {
             var result3 = null;;
           };
         }
         if (result3 !== null) {
-          if (input.substr(pos, 1) === "E") {
-            var result33 = "E";
-            pos += 1;
-          } else {
-            var result33 = null;
-            if (reportMatchFailures) {
-              matchFailed("\"E\"");
-            }
-          }
-          if (result33 !== null) {
-            var result4 = result33;
-          } else {
-            if (input.substr(pos, 1) === "e") {
-              var result32 = "e";
-              pos += 1;
-            } else {
-              var result32 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"e\"");
-              }
-            }
-            if (result32 !== null) {
-              var result4 = result32;
-            } else {
-              var result4 = null;;
-            };
+          var result4 = [];
+          var result9 = parse_WS();
+          while (result9 !== null) {
+            result4.push(result9);
+            var result9 = parse_WS();
           }
           if (result4 !== null) {
-            if (input.substr(pos, 1) === "L") {
-              var result31 = "L";
-              pos += 1;
+            if (input.substr(pos, 4) === "DATA") {
+              var result8 = "DATA";
+              pos += 4;
             } else {
-              var result31 = null;
+              var result8 = null;
               if (reportMatchFailures) {
-                matchFailed("\"L\"");
+                matchFailed("\"DATA\"");
               }
             }
-            if (result31 !== null) {
-              var result5 = result31;
+            if (result8 !== null) {
+              var result5 = result8;
             } else {
-              if (input.substr(pos, 1) === "l") {
-                var result30 = "l";
-                pos += 1;
+              if (input.substr(pos, 4) === "data") {
+                var result7 = "data";
+                pos += 4;
               } else {
-                var result30 = null;
+                var result7 = null;
                 if (reportMatchFailures) {
-                  matchFailed("\"l\"");
+                  matchFailed("\"data\"");
                 }
               }
-              if (result30 !== null) {
-                var result5 = result30;
+              if (result7 !== null) {
+                var result5 = result7;
               } else {
                 var result5 = null;;
               };
             }
             if (result5 !== null) {
-              if (input.substr(pos, 1) === "E") {
-                var result29 = "E";
-                pos += 1;
-              } else {
-                var result29 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"E\"");
-                }
-              }
-              if (result29 !== null) {
-                var result6 = result29;
-              } else {
-                if (input.substr(pos, 1) === "e") {
-                  var result28 = "e";
-                  pos += 1;
-                } else {
-                  var result28 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"e\"");
-                  }
-                }
-                if (result28 !== null) {
-                  var result6 = result28;
-                } else {
-                  var result6 = null;;
-                };
-              }
+              var result6 = parse_QuadData();
               if (result6 !== null) {
-                if (input.substr(pos, 1) === "T") {
-                  var result27 = "T";
-                  pos += 1;
-                } else {
-                  var result27 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"T\"");
-                  }
-                }
-                if (result27 !== null) {
-                  var result7 = result27;
-                } else {
-                  if (input.substr(pos, 1) === "t") {
-                    var result26 = "t";
-                    pos += 1;
-                  } else {
-                    var result26 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"t\"");
-                    }
-                  }
-                  if (result26 !== null) {
-                    var result7 = result26;
-                  } else {
-                    var result7 = null;;
-                  };
-                }
-                if (result7 !== null) {
-                  if (input.substr(pos, 1) === "E") {
-                    var result25 = "E";
-                    pos += 1;
-                  } else {
-                    var result25 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"E\"");
-                    }
-                  }
-                  if (result25 !== null) {
-                    var result8 = result25;
-                  } else {
-                    if (input.substr(pos, 1) === "e") {
-                      var result24 = "e";
-                      pos += 1;
-                    } else {
-                      var result24 = null;
-                      if (reportMatchFailures) {
-                        matchFailed("\"e\"");
-                      }
-                    }
-                    if (result24 !== null) {
-                      var result8 = result24;
-                    } else {
-                      var result8 = null;;
-                    };
-                  }
-                  if (result8 !== null) {
-                    var result9 = [];
-                    var result23 = parse_WS();
-                    while (result23 !== null) {
-                      result9.push(result23);
-                      var result23 = parse_WS();
-                    }
-                    if (result9 !== null) {
-                      if (input.substr(pos, 1) === "D") {
-                        var result22 = "D";
-                        pos += 1;
-                      } else {
-                        var result22 = null;
-                        if (reportMatchFailures) {
-                          matchFailed("\"D\"");
-                        }
-                      }
-                      if (result22 !== null) {
-                        var result10 = result22;
-                      } else {
-                        if (input.substr(pos, 1) === "d") {
-                          var result21 = "d";
-                          pos += 1;
-                        } else {
-                          var result21 = null;
-                          if (reportMatchFailures) {
-                            matchFailed("\"d\"");
-                          }
-                        }
-                        if (result21 !== null) {
-                          var result10 = result21;
-                        } else {
-                          var result10 = null;;
-                        };
-                      }
-                      if (result10 !== null) {
-                        if (input.substr(pos, 1) === "A") {
-                          var result20 = "A";
-                          pos += 1;
-                        } else {
-                          var result20 = null;
-                          if (reportMatchFailures) {
-                            matchFailed("\"A\"");
-                          }
-                        }
-                        if (result20 !== null) {
-                          var result11 = result20;
-                        } else {
-                          if (input.substr(pos, 1) === "a") {
-                            var result19 = "a";
-                            pos += 1;
-                          } else {
-                            var result19 = null;
-                            if (reportMatchFailures) {
-                              matchFailed("\"a\"");
-                            }
-                          }
-                          if (result19 !== null) {
-                            var result11 = result19;
-                          } else {
-                            var result11 = null;;
-                          };
-                        }
-                        if (result11 !== null) {
-                          if (input.substr(pos, 1) === "T") {
-                            var result18 = "T";
-                            pos += 1;
-                          } else {
-                            var result18 = null;
-                            if (reportMatchFailures) {
-                              matchFailed("\"T\"");
-                            }
-                          }
-                          if (result18 !== null) {
-                            var result12 = result18;
-                          } else {
-                            if (input.substr(pos, 1) === "t") {
-                              var result17 = "t";
-                              pos += 1;
-                            } else {
-                              var result17 = null;
-                              if (reportMatchFailures) {
-                                matchFailed("\"t\"");
-                              }
-                            }
-                            if (result17 !== null) {
-                              var result12 = result17;
-                            } else {
-                              var result12 = null;;
-                            };
-                          }
-                          if (result12 !== null) {
-                            if (input.substr(pos, 1) === "A") {
-                              var result16 = "A";
-                              pos += 1;
-                            } else {
-                              var result16 = null;
-                              if (reportMatchFailures) {
-                                matchFailed("\"A\"");
-                              }
-                            }
-                            if (result16 !== null) {
-                              var result13 = result16;
-                            } else {
-                              if (input.substr(pos, 1) === "a") {
-                                var result15 = "a";
-                                pos += 1;
-                              } else {
-                                var result15 = null;
-                                if (reportMatchFailures) {
-                                  matchFailed("\"a\"");
-                                }
-                              }
-                              if (result15 !== null) {
-                                var result13 = result15;
-                              } else {
-                                var result13 = null;;
-                              };
-                            }
-                            if (result13 !== null) {
-                              var result14 = parse_QuadData();
-                              if (result14 !== null) {
-                                var result1 = [result3, result4, result5, result6, result7, result8, result9, result10, result11, result12, result13, result14];
-                              } else {
-                                var result1 = null;
-                                pos = savedPos1;
-                              }
-                            } else {
-                              var result1 = null;
-                              pos = savedPos1;
-                            }
-                          } else {
-                            var result1 = null;
-                            pos = savedPos1;
-                          }
-                        } else {
-                          var result1 = null;
-                          pos = savedPos1;
-                        }
-                      } else {
-                        var result1 = null;
-                        pos = savedPos1;
-                      }
-                    } else {
-                      var result1 = null;
-                      pos = savedPos1;
-                    }
-                  } else {
-                    var result1 = null;
-                    pos = savedPos1;
-                  }
-                } else {
-                  var result1 = null;
-                  pos = savedPos1;
-                }
+                var result1 = [result3, result4, result5, result6];
               } else {
                 var result1 = null;
                 pos = savedPos1;
@@ -8870,7 +5078,7 @@ SparqlParser.parser = (function(){
                 query.quads = qs;
           
                 return query;
-          })(result1[11])
+          })(result1[3])
           : null;
         if (result2 !== null) {
           var result0 = result2;
@@ -8902,367 +5110,79 @@ SparqlParser.parser = (function(){
         reportMatchFailures = false;
         var savedPos0 = pos;
         var savedPos1 = pos;
-        if (input.substr(pos, 1) === "D") {
-          var result40 = "D";
-          pos += 1;
+        if (input.substr(pos, 6) === "DELETE") {
+          var result13 = "DELETE";
+          pos += 6;
         } else {
-          var result40 = null;
+          var result13 = null;
           if (reportMatchFailures) {
-            matchFailed("\"D\"");
+            matchFailed("\"DELETE\"");
           }
         }
-        if (result40 !== null) {
-          var result3 = result40;
+        if (result13 !== null) {
+          var result3 = result13;
         } else {
-          if (input.substr(pos, 1) === "d") {
-            var result39 = "d";
-            pos += 1;
+          if (input.substr(pos, 6) === "delete") {
+            var result12 = "delete";
+            pos += 6;
           } else {
-            var result39 = null;
+            var result12 = null;
             if (reportMatchFailures) {
-              matchFailed("\"d\"");
+              matchFailed("\"delete\"");
             }
           }
-          if (result39 !== null) {
-            var result3 = result39;
+          if (result12 !== null) {
+            var result3 = result12;
           } else {
             var result3 = null;;
           };
         }
         if (result3 !== null) {
-          if (input.substr(pos, 1) === "E") {
-            var result38 = "E";
-            pos += 1;
-          } else {
-            var result38 = null;
-            if (reportMatchFailures) {
-              matchFailed("\"E\"");
-            }
-          }
-          if (result38 !== null) {
-            var result4 = result38;
-          } else {
-            if (input.substr(pos, 1) === "e") {
-              var result37 = "e";
-              pos += 1;
-            } else {
-              var result37 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"e\"");
-              }
-            }
-            if (result37 !== null) {
-              var result4 = result37;
-            } else {
-              var result4 = null;;
-            };
+          var result4 = [];
+          var result11 = parse_WS();
+          while (result11 !== null) {
+            result4.push(result11);
+            var result11 = parse_WS();
           }
           if (result4 !== null) {
-            if (input.substr(pos, 1) === "L") {
-              var result36 = "L";
-              pos += 1;
+            if (input.substr(pos, 5) === "WHERE") {
+              var result10 = "WHERE";
+              pos += 5;
             } else {
-              var result36 = null;
+              var result10 = null;
               if (reportMatchFailures) {
-                matchFailed("\"L\"");
+                matchFailed("\"WHERE\"");
               }
             }
-            if (result36 !== null) {
-              var result5 = result36;
+            if (result10 !== null) {
+              var result5 = result10;
             } else {
-              if (input.substr(pos, 1) === "l") {
-                var result35 = "l";
-                pos += 1;
+              if (input.substr(pos, 5) === "where") {
+                var result9 = "where";
+                pos += 5;
               } else {
-                var result35 = null;
+                var result9 = null;
                 if (reportMatchFailures) {
-                  matchFailed("\"l\"");
+                  matchFailed("\"where\"");
                 }
               }
-              if (result35 !== null) {
-                var result5 = result35;
+              if (result9 !== null) {
+                var result5 = result9;
               } else {
                 var result5 = null;;
               };
             }
             if (result5 !== null) {
-              if (input.substr(pos, 1) === "E") {
-                var result34 = "E";
-                pos += 1;
-              } else {
-                var result34 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"E\"");
-                }
-              }
-              if (result34 !== null) {
-                var result6 = result34;
-              } else {
-                if (input.substr(pos, 1) === "e") {
-                  var result33 = "e";
-                  pos += 1;
-                } else {
-                  var result33 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"e\"");
-                  }
-                }
-                if (result33 !== null) {
-                  var result6 = result33;
-                } else {
-                  var result6 = null;;
-                };
+              var result6 = [];
+              var result8 = parse_WS();
+              while (result8 !== null) {
+                result6.push(result8);
+                var result8 = parse_WS();
               }
               if (result6 !== null) {
-                if (input.substr(pos, 1) === "T") {
-                  var result32 = "T";
-                  pos += 1;
-                } else {
-                  var result32 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"T\"");
-                  }
-                }
-                if (result32 !== null) {
-                  var result7 = result32;
-                } else {
-                  if (input.substr(pos, 1) === "t") {
-                    var result31 = "t";
-                    pos += 1;
-                  } else {
-                    var result31 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"t\"");
-                    }
-                  }
-                  if (result31 !== null) {
-                    var result7 = result31;
-                  } else {
-                    var result7 = null;;
-                  };
-                }
+                var result7 = parse_GroupGraphPattern();
                 if (result7 !== null) {
-                  if (input.substr(pos, 1) === "E") {
-                    var result30 = "E";
-                    pos += 1;
-                  } else {
-                    var result30 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"E\"");
-                    }
-                  }
-                  if (result30 !== null) {
-                    var result8 = result30;
-                  } else {
-                    if (input.substr(pos, 1) === "e") {
-                      var result29 = "e";
-                      pos += 1;
-                    } else {
-                      var result29 = null;
-                      if (reportMatchFailures) {
-                        matchFailed("\"e\"");
-                      }
-                    }
-                    if (result29 !== null) {
-                      var result8 = result29;
-                    } else {
-                      var result8 = null;;
-                    };
-                  }
-                  if (result8 !== null) {
-                    var result9 = [];
-                    var result28 = parse_WS();
-                    while (result28 !== null) {
-                      result9.push(result28);
-                      var result28 = parse_WS();
-                    }
-                    if (result9 !== null) {
-                      if (input.substr(pos, 1) === "W") {
-                        var result27 = "W";
-                        pos += 1;
-                      } else {
-                        var result27 = null;
-                        if (reportMatchFailures) {
-                          matchFailed("\"W\"");
-                        }
-                      }
-                      if (result27 !== null) {
-                        var result10 = result27;
-                      } else {
-                        if (input.substr(pos, 1) === "w") {
-                          var result26 = "w";
-                          pos += 1;
-                        } else {
-                          var result26 = null;
-                          if (reportMatchFailures) {
-                            matchFailed("\"w\"");
-                          }
-                        }
-                        if (result26 !== null) {
-                          var result10 = result26;
-                        } else {
-                          var result10 = null;;
-                        };
-                      }
-                      if (result10 !== null) {
-                        if (input.substr(pos, 1) === "H") {
-                          var result25 = "H";
-                          pos += 1;
-                        } else {
-                          var result25 = null;
-                          if (reportMatchFailures) {
-                            matchFailed("\"H\"");
-                          }
-                        }
-                        if (result25 !== null) {
-                          var result11 = result25;
-                        } else {
-                          if (input.substr(pos, 1) === "h") {
-                            var result24 = "h";
-                            pos += 1;
-                          } else {
-                            var result24 = null;
-                            if (reportMatchFailures) {
-                              matchFailed("\"h\"");
-                            }
-                          }
-                          if (result24 !== null) {
-                            var result11 = result24;
-                          } else {
-                            var result11 = null;;
-                          };
-                        }
-                        if (result11 !== null) {
-                          if (input.substr(pos, 1) === "E") {
-                            var result23 = "E";
-                            pos += 1;
-                          } else {
-                            var result23 = null;
-                            if (reportMatchFailures) {
-                              matchFailed("\"E\"");
-                            }
-                          }
-                          if (result23 !== null) {
-                            var result12 = result23;
-                          } else {
-                            if (input.substr(pos, 1) === "e") {
-                              var result22 = "e";
-                              pos += 1;
-                            } else {
-                              var result22 = null;
-                              if (reportMatchFailures) {
-                                matchFailed("\"e\"");
-                              }
-                            }
-                            if (result22 !== null) {
-                              var result12 = result22;
-                            } else {
-                              var result12 = null;;
-                            };
-                          }
-                          if (result12 !== null) {
-                            if (input.substr(pos, 1) === "R") {
-                              var result21 = "R";
-                              pos += 1;
-                            } else {
-                              var result21 = null;
-                              if (reportMatchFailures) {
-                                matchFailed("\"R\"");
-                              }
-                            }
-                            if (result21 !== null) {
-                              var result13 = result21;
-                            } else {
-                              if (input.substr(pos, 1) === "r") {
-                                var result20 = "r";
-                                pos += 1;
-                              } else {
-                                var result20 = null;
-                                if (reportMatchFailures) {
-                                  matchFailed("\"r\"");
-                                }
-                              }
-                              if (result20 !== null) {
-                                var result13 = result20;
-                              } else {
-                                var result13 = null;;
-                              };
-                            }
-                            if (result13 !== null) {
-                              if (input.substr(pos, 1) === "E") {
-                                var result19 = "E";
-                                pos += 1;
-                              } else {
-                                var result19 = null;
-                                if (reportMatchFailures) {
-                                  matchFailed("\"E\"");
-                                }
-                              }
-                              if (result19 !== null) {
-                                var result14 = result19;
-                              } else {
-                                if (input.substr(pos, 1) === "e") {
-                                  var result18 = "e";
-                                  pos += 1;
-                                } else {
-                                  var result18 = null;
-                                  if (reportMatchFailures) {
-                                    matchFailed("\"e\"");
-                                  }
-                                }
-                                if (result18 !== null) {
-                                  var result14 = result18;
-                                } else {
-                                  var result14 = null;;
-                                };
-                              }
-                              if (result14 !== null) {
-                                var result15 = [];
-                                var result17 = parse_WS();
-                                while (result17 !== null) {
-                                  result15.push(result17);
-                                  var result17 = parse_WS();
-                                }
-                                if (result15 !== null) {
-                                  var result16 = parse_GroupGraphPattern();
-                                  if (result16 !== null) {
-                                    var result1 = [result3, result4, result5, result6, result7, result8, result9, result10, result11, result12, result13, result14, result15, result16];
-                                  } else {
-                                    var result1 = null;
-                                    pos = savedPos1;
-                                  }
-                                } else {
-                                  var result1 = null;
-                                  pos = savedPos1;
-                                }
-                              } else {
-                                var result1 = null;
-                                pos = savedPos1;
-                              }
-                            } else {
-                              var result1 = null;
-                              pos = savedPos1;
-                            }
-                          } else {
-                            var result1 = null;
-                            pos = savedPos1;
-                          }
-                        } else {
-                          var result1 = null;
-                          pos = savedPos1;
-                        }
-                      } else {
-                        var result1 = null;
-                        pos = savedPos1;
-                      }
-                    } else {
-                      var result1 = null;
-                      pos = savedPos1;
-                    }
-                  } else {
-                    var result1 = null;
-                    pos = savedPos1;
-                  }
+                  var result1 = [result3, result4, result5, result6, result7];
                 } else {
                   var result1 = null;
                   pos = savedPos1;
@@ -9316,7 +5236,7 @@ SparqlParser.parser = (function(){
                 query.delete = quads;
           
                 return query;
-          })(result1[13])
+          })(result1[4])
           : null;
         if (result2 !== null) {
           var result0 = result2;
@@ -9349,392 +5269,168 @@ SparqlParser.parser = (function(){
         var savedPos0 = pos;
         var savedPos1 = pos;
         var savedPos3 = pos;
-        if (input.substr(pos, 1) === "W") {
-          var result55 = "W";
-          pos += 1;
+        if (input.substr(pos, 4) === "WITH") {
+          var result34 = "WITH";
+          pos += 4;
         } else {
-          var result55 = null;
+          var result34 = null;
           if (reportMatchFailures) {
-            matchFailed("\"W\"");
+            matchFailed("\"WITH\"");
           }
         }
-        if (result55 !== null) {
-          var result41 = result55;
+        if (result34 !== null) {
+          var result29 = result34;
         } else {
-          if (input.substr(pos, 1) === "w") {
-            var result54 = "w";
-            pos += 1;
+          if (input.substr(pos, 4) === "with") {
+            var result33 = "with";
+            pos += 4;
           } else {
-            var result54 = null;
+            var result33 = null;
             if (reportMatchFailures) {
-              matchFailed("\"w\"");
+              matchFailed("\"with\"");
             }
           }
-          if (result54 !== null) {
-            var result41 = result54;
+          if (result33 !== null) {
+            var result29 = result33;
           } else {
-            var result41 = null;;
+            var result29 = null;;
           };
         }
-        if (result41 !== null) {
-          if (input.substr(pos, 1) === "I") {
-            var result53 = "I";
-            pos += 1;
-          } else {
-            var result53 = null;
-            if (reportMatchFailures) {
-              matchFailed("\"I\"");
-            }
+        if (result29 !== null) {
+          var result30 = [];
+          var result32 = parse_WS();
+          while (result32 !== null) {
+            result30.push(result32);
+            var result32 = parse_WS();
           }
-          if (result53 !== null) {
-            var result42 = result53;
-          } else {
-            if (input.substr(pos, 1) === "i") {
-              var result52 = "i";
-              pos += 1;
+          if (result30 !== null) {
+            var result31 = parse_IRIref();
+            if (result31 !== null) {
+              var result28 = [result29, result30, result31];
             } else {
-              var result52 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"i\"");
-              }
-            }
-            if (result52 !== null) {
-              var result42 = result52;
-            } else {
-              var result42 = null;;
-            };
-          }
-          if (result42 !== null) {
-            if (input.substr(pos, 1) === "T") {
-              var result51 = "T";
-              pos += 1;
-            } else {
-              var result51 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"T\"");
-              }
-            }
-            if (result51 !== null) {
-              var result43 = result51;
-            } else {
-              if (input.substr(pos, 1) === "t") {
-                var result50 = "t";
-                pos += 1;
-              } else {
-                var result50 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"t\"");
-                }
-              }
-              if (result50 !== null) {
-                var result43 = result50;
-              } else {
-                var result43 = null;;
-              };
-            }
-            if (result43 !== null) {
-              if (input.substr(pos, 1) === "H") {
-                var result49 = "H";
-                pos += 1;
-              } else {
-                var result49 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"H\"");
-                }
-              }
-              if (result49 !== null) {
-                var result44 = result49;
-              } else {
-                if (input.substr(pos, 1) === "h") {
-                  var result48 = "h";
-                  pos += 1;
-                } else {
-                  var result48 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"h\"");
-                  }
-                }
-                if (result48 !== null) {
-                  var result44 = result48;
-                } else {
-                  var result44 = null;;
-                };
-              }
-              if (result44 !== null) {
-                var result45 = [];
-                var result47 = parse_WS();
-                while (result47 !== null) {
-                  result45.push(result47);
-                  var result47 = parse_WS();
-                }
-                if (result45 !== null) {
-                  var result46 = parse_IRIref();
-                  if (result46 !== null) {
-                    var result40 = [result41, result42, result43, result44, result45, result46];
-                  } else {
-                    var result40 = null;
-                    pos = savedPos3;
-                  }
-                } else {
-                  var result40 = null;
-                  pos = savedPos3;
-                }
-              } else {
-                var result40 = null;
-                pos = savedPos3;
-              }
-            } else {
-              var result40 = null;
+              var result28 = null;
               pos = savedPos3;
             }
           } else {
-            var result40 = null;
+            var result28 = null;
             pos = savedPos3;
           }
         } else {
-          var result40 = null;
+          var result28 = null;
           pos = savedPos3;
         }
-        var result3 = result40 !== null ? result40 : '';
+        var result3 = result28 !== null ? result28 : '';
         if (result3 !== null) {
           var result4 = [];
-          var result39 = parse_WS();
-          while (result39 !== null) {
-            result4.push(result39);
-            var result39 = parse_WS();
+          var result27 = parse_WS();
+          while (result27 !== null) {
+            result4.push(result27);
+            var result27 = parse_WS();
           }
           if (result4 !== null) {
             var savedPos2 = pos;
-            var result34 = parse_DeleteClause();
-            if (result34 !== null) {
-              var result35 = [];
-              var result38 = parse_WS();
-              while (result38 !== null) {
-                result35.push(result38);
-                var result38 = parse_WS();
+            var result22 = parse_DeleteClause();
+            if (result22 !== null) {
+              var result23 = [];
+              var result26 = parse_WS();
+              while (result26 !== null) {
+                result23.push(result26);
+                var result26 = parse_WS();
               }
-              if (result35 !== null) {
-                var result37 = parse_InsertClause();
-                var result36 = result37 !== null ? result37 : '';
-                if (result36 !== null) {
-                  var result33 = [result34, result35, result36];
+              if (result23 !== null) {
+                var result25 = parse_InsertClause();
+                var result24 = result25 !== null ? result25 : '';
+                if (result24 !== null) {
+                  var result21 = [result22, result23, result24];
                 } else {
-                  var result33 = null;
+                  var result21 = null;
                   pos = savedPos2;
                 }
               } else {
-                var result33 = null;
+                var result21 = null;
                 pos = savedPos2;
               }
             } else {
-              var result33 = null;
+              var result21 = null;
               pos = savedPos2;
             }
-            if (result33 !== null) {
-              var result5 = result33;
+            if (result21 !== null) {
+              var result5 = result21;
             } else {
-              var result32 = parse_InsertClause();
-              if (result32 !== null) {
-                var result5 = result32;
+              var result20 = parse_InsertClause();
+              if (result20 !== null) {
+                var result5 = result20;
               } else {
                 var result5 = null;;
               };
             }
             if (result5 !== null) {
               var result6 = [];
-              var result31 = parse_WS();
-              while (result31 !== null) {
-                result6.push(result31);
-                var result31 = parse_WS();
+              var result19 = parse_WS();
+              while (result19 !== null) {
+                result6.push(result19);
+                var result19 = parse_WS();
               }
               if (result6 !== null) {
                 var result7 = [];
-                var result30 = parse_UsingClause();
-                while (result30 !== null) {
-                  result7.push(result30);
-                  var result30 = parse_UsingClause();
+                var result18 = parse_UsingClause();
+                while (result18 !== null) {
+                  result7.push(result18);
+                  var result18 = parse_UsingClause();
                 }
                 if (result7 !== null) {
                   var result8 = [];
-                  var result29 = parse_WS();
-                  while (result29 !== null) {
-                    result8.push(result29);
-                    var result29 = parse_WS();
+                  var result17 = parse_WS();
+                  while (result17 !== null) {
+                    result8.push(result17);
+                    var result17 = parse_WS();
                   }
                   if (result8 !== null) {
-                    if (input.substr(pos, 1) === "W") {
-                      var result28 = "W";
-                      pos += 1;
+                    if (input.substr(pos, 5) === "WHERE") {
+                      var result16 = "WHERE";
+                      pos += 5;
                     } else {
-                      var result28 = null;
+                      var result16 = null;
                       if (reportMatchFailures) {
-                        matchFailed("\"W\"");
+                        matchFailed("\"WHERE\"");
                       }
                     }
-                    if (result28 !== null) {
-                      var result9 = result28;
+                    if (result16 !== null) {
+                      var result9 = result16;
                     } else {
-                      if (input.substr(pos, 1) === "w") {
-                        var result27 = "w";
-                        pos += 1;
+                      if (input.substr(pos, 5) === "where") {
+                        var result15 = "where";
+                        pos += 5;
                       } else {
-                        var result27 = null;
+                        var result15 = null;
                         if (reportMatchFailures) {
-                          matchFailed("\"w\"");
+                          matchFailed("\"where\"");
                         }
                       }
-                      if (result27 !== null) {
-                        var result9 = result27;
+                      if (result15 !== null) {
+                        var result9 = result15;
                       } else {
                         var result9 = null;;
                       };
                     }
                     if (result9 !== null) {
-                      if (input.substr(pos, 1) === "H") {
-                        var result26 = "H";
-                        pos += 1;
-                      } else {
-                        var result26 = null;
-                        if (reportMatchFailures) {
-                          matchFailed("\"H\"");
-                        }
-                      }
-                      if (result26 !== null) {
-                        var result10 = result26;
-                      } else {
-                        if (input.substr(pos, 1) === "h") {
-                          var result25 = "h";
-                          pos += 1;
-                        } else {
-                          var result25 = null;
-                          if (reportMatchFailures) {
-                            matchFailed("\"h\"");
-                          }
-                        }
-                        if (result25 !== null) {
-                          var result10 = result25;
-                        } else {
-                          var result10 = null;;
-                        };
+                      var result10 = [];
+                      var result14 = parse_WS();
+                      while (result14 !== null) {
+                        result10.push(result14);
+                        var result14 = parse_WS();
                       }
                       if (result10 !== null) {
-                        if (input.substr(pos, 1) === "E") {
-                          var result24 = "E";
-                          pos += 1;
-                        } else {
-                          var result24 = null;
-                          if (reportMatchFailures) {
-                            matchFailed("\"E\"");
-                          }
-                        }
-                        if (result24 !== null) {
-                          var result11 = result24;
-                        } else {
-                          if (input.substr(pos, 1) === "e") {
-                            var result23 = "e";
-                            pos += 1;
-                          } else {
-                            var result23 = null;
-                            if (reportMatchFailures) {
-                              matchFailed("\"e\"");
-                            }
-                          }
-                          if (result23 !== null) {
-                            var result11 = result23;
-                          } else {
-                            var result11 = null;;
-                          };
-                        }
+                        var result11 = parse_GroupGraphPattern();
                         if (result11 !== null) {
-                          if (input.substr(pos, 1) === "R") {
-                            var result22 = "R";
-                            pos += 1;
-                          } else {
-                            var result22 = null;
-                            if (reportMatchFailures) {
-                              matchFailed("\"R\"");
-                            }
-                          }
-                          if (result22 !== null) {
-                            var result12 = result22;
-                          } else {
-                            if (input.substr(pos, 1) === "r") {
-                              var result21 = "r";
-                              pos += 1;
-                            } else {
-                              var result21 = null;
-                              if (reportMatchFailures) {
-                                matchFailed("\"r\"");
-                              }
-                            }
-                            if (result21 !== null) {
-                              var result12 = result21;
-                            } else {
-                              var result12 = null;;
-                            };
+                          var result12 = [];
+                          var result13 = parse_WS();
+                          while (result13 !== null) {
+                            result12.push(result13);
+                            var result13 = parse_WS();
                           }
                           if (result12 !== null) {
-                            if (input.substr(pos, 1) === "E") {
-                              var result20 = "E";
-                              pos += 1;
-                            } else {
-                              var result20 = null;
-                              if (reportMatchFailures) {
-                                matchFailed("\"E\"");
-                              }
-                            }
-                            if (result20 !== null) {
-                              var result13 = result20;
-                            } else {
-                              if (input.substr(pos, 1) === "e") {
-                                var result19 = "e";
-                                pos += 1;
-                              } else {
-                                var result19 = null;
-                                if (reportMatchFailures) {
-                                  matchFailed("\"e\"");
-                                }
-                              }
-                              if (result19 !== null) {
-                                var result13 = result19;
-                              } else {
-                                var result13 = null;;
-                              };
-                            }
-                            if (result13 !== null) {
-                              var result14 = [];
-                              var result18 = parse_WS();
-                              while (result18 !== null) {
-                                result14.push(result18);
-                                var result18 = parse_WS();
-                              }
-                              if (result14 !== null) {
-                                var result15 = parse_GroupGraphPattern();
-                                if (result15 !== null) {
-                                  var result16 = [];
-                                  var result17 = parse_WS();
-                                  while (result17 !== null) {
-                                    result16.push(result17);
-                                    var result17 = parse_WS();
-                                  }
-                                  if (result16 !== null) {
-                                    var result1 = [result3, result4, result5, result6, result7, result8, result9, result10, result11, result12, result13, result14, result15, result16];
-                                  } else {
-                                    var result1 = null;
-                                    pos = savedPos1;
-                                  }
-                                } else {
-                                  var result1 = null;
-                                  pos = savedPos1;
-                                }
-                              } else {
-                                var result1 = null;
-                                pos = savedPos1;
-                              }
-                            } else {
-                              var result1 = null;
-                              pos = savedPos1;
-                            }
+                            var result1 = [result3, result4, result5, result6, result7, result8, result9, result10, result11, result12];
                           } else {
                             var result1 = null;
                             pos = savedPos1;
@@ -9781,7 +5477,7 @@ SparqlParser.parser = (function(){
                 query.kind = 'modify';
           
                 if(wg != "") {
-                    query.with = wg[5];
+                    query.with = wg[2];
                 } else {
                     query.with = null;
                 }
@@ -9805,7 +5501,7 @@ SparqlParser.parser = (function(){
                 query.pattern = p;
           
                 return query;
-          })(result1[0], result1[2], result1[4], result1[12])
+          })(result1[0], result1[2], result1[4], result1[8])
           : null;
         if (result2 !== null) {
           var result0 = result2;
@@ -9837,197 +5533,37 @@ SparqlParser.parser = (function(){
         reportMatchFailures = false;
         var savedPos0 = pos;
         var savedPos1 = pos;
-        if (input.substr(pos, 1) === "D") {
-          var result21 = "D";
-          pos += 1;
+        if (input.substr(pos, 6) === "DELETE") {
+          var result6 = "DELETE";
+          pos += 6;
         } else {
-          var result21 = null;
+          var result6 = null;
           if (reportMatchFailures) {
-            matchFailed("\"D\"");
+            matchFailed("\"DELETE\"");
           }
         }
-        if (result21 !== null) {
-          var result3 = result21;
+        if (result6 !== null) {
+          var result3 = result6;
         } else {
-          if (input.substr(pos, 1) === "d") {
-            var result20 = "d";
-            pos += 1;
+          if (input.substr(pos, 6) === "delete") {
+            var result5 = "delete";
+            pos += 6;
           } else {
-            var result20 = null;
+            var result5 = null;
             if (reportMatchFailures) {
-              matchFailed("\"d\"");
+              matchFailed("\"delete\"");
             }
           }
-          if (result20 !== null) {
-            var result3 = result20;
+          if (result5 !== null) {
+            var result3 = result5;
           } else {
             var result3 = null;;
           };
         }
         if (result3 !== null) {
-          if (input.substr(pos, 1) === "E") {
-            var result19 = "E";
-            pos += 1;
-          } else {
-            var result19 = null;
-            if (reportMatchFailures) {
-              matchFailed("\"E\"");
-            }
-          }
-          if (result19 !== null) {
-            var result4 = result19;
-          } else {
-            if (input.substr(pos, 1) === "e") {
-              var result18 = "e";
-              pos += 1;
-            } else {
-              var result18 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"e\"");
-              }
-            }
-            if (result18 !== null) {
-              var result4 = result18;
-            } else {
-              var result4 = null;;
-            };
-          }
+          var result4 = parse_QuadPattern();
           if (result4 !== null) {
-            if (input.substr(pos, 1) === "L") {
-              var result17 = "L";
-              pos += 1;
-            } else {
-              var result17 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"L\"");
-              }
-            }
-            if (result17 !== null) {
-              var result5 = result17;
-            } else {
-              if (input.substr(pos, 1) === "l") {
-                var result16 = "l";
-                pos += 1;
-              } else {
-                var result16 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"l\"");
-                }
-              }
-              if (result16 !== null) {
-                var result5 = result16;
-              } else {
-                var result5 = null;;
-              };
-            }
-            if (result5 !== null) {
-              if (input.substr(pos, 1) === "E") {
-                var result15 = "E";
-                pos += 1;
-              } else {
-                var result15 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"E\"");
-                }
-              }
-              if (result15 !== null) {
-                var result6 = result15;
-              } else {
-                if (input.substr(pos, 1) === "e") {
-                  var result14 = "e";
-                  pos += 1;
-                } else {
-                  var result14 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"e\"");
-                  }
-                }
-                if (result14 !== null) {
-                  var result6 = result14;
-                } else {
-                  var result6 = null;;
-                };
-              }
-              if (result6 !== null) {
-                if (input.substr(pos, 1) === "T") {
-                  var result13 = "T";
-                  pos += 1;
-                } else {
-                  var result13 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"T\"");
-                  }
-                }
-                if (result13 !== null) {
-                  var result7 = result13;
-                } else {
-                  if (input.substr(pos, 1) === "t") {
-                    var result12 = "t";
-                    pos += 1;
-                  } else {
-                    var result12 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"t\"");
-                    }
-                  }
-                  if (result12 !== null) {
-                    var result7 = result12;
-                  } else {
-                    var result7 = null;;
-                  };
-                }
-                if (result7 !== null) {
-                  if (input.substr(pos, 1) === "E") {
-                    var result11 = "E";
-                    pos += 1;
-                  } else {
-                    var result11 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"E\"");
-                    }
-                  }
-                  if (result11 !== null) {
-                    var result8 = result11;
-                  } else {
-                    if (input.substr(pos, 1) === "e") {
-                      var result10 = "e";
-                      pos += 1;
-                    } else {
-                      var result10 = null;
-                      if (reportMatchFailures) {
-                        matchFailed("\"e\"");
-                      }
-                    }
-                    if (result10 !== null) {
-                      var result8 = result10;
-                    } else {
-                      var result8 = null;;
-                    };
-                  }
-                  if (result8 !== null) {
-                    var result9 = parse_QuadPattern();
-                    if (result9 !== null) {
-                      var result1 = [result3, result4, result5, result6, result7, result8, result9];
-                    } else {
-                      var result1 = null;
-                      pos = savedPos1;
-                    }
-                  } else {
-                    var result1 = null;
-                    pos = savedPos1;
-                  }
-                } else {
-                  var result1 = null;
-                  pos = savedPos1;
-                }
-              } else {
-                var result1 = null;
-                pos = savedPos1;
-              }
-            } else {
-              var result1 = null;
-              pos = savedPos1;
-            }
+            var result1 = [result3, result4];
           } else {
             var result1 = null;
             pos = savedPos1;
@@ -10039,7 +5575,7 @@ SparqlParser.parser = (function(){
         var result2 = result1 !== null
           ? (function(q) {
                 return q;
-          })(result1[6])
+          })(result1[1])
           : null;
         if (result2 !== null) {
           var result0 = result2;
@@ -10071,197 +5607,37 @@ SparqlParser.parser = (function(){
         reportMatchFailures = false;
         var savedPos0 = pos;
         var savedPos1 = pos;
-        if (input.substr(pos, 1) === "I") {
-          var result21 = "I";
-          pos += 1;
+        if (input.substr(pos, 6) === "INSERT") {
+          var result6 = "INSERT";
+          pos += 6;
         } else {
-          var result21 = null;
+          var result6 = null;
           if (reportMatchFailures) {
-            matchFailed("\"I\"");
+            matchFailed("\"INSERT\"");
           }
         }
-        if (result21 !== null) {
-          var result3 = result21;
+        if (result6 !== null) {
+          var result3 = result6;
         } else {
-          if (input.substr(pos, 1) === "i") {
-            var result20 = "i";
-            pos += 1;
+          if (input.substr(pos, 6) === "insert") {
+            var result5 = "insert";
+            pos += 6;
           } else {
-            var result20 = null;
+            var result5 = null;
             if (reportMatchFailures) {
-              matchFailed("\"i\"");
+              matchFailed("\"insert\"");
             }
           }
-          if (result20 !== null) {
-            var result3 = result20;
+          if (result5 !== null) {
+            var result3 = result5;
           } else {
             var result3 = null;;
           };
         }
         if (result3 !== null) {
-          if (input.substr(pos, 1) === "N") {
-            var result19 = "N";
-            pos += 1;
-          } else {
-            var result19 = null;
-            if (reportMatchFailures) {
-              matchFailed("\"N\"");
-            }
-          }
-          if (result19 !== null) {
-            var result4 = result19;
-          } else {
-            if (input.substr(pos, 1) === "n") {
-              var result18 = "n";
-              pos += 1;
-            } else {
-              var result18 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"n\"");
-              }
-            }
-            if (result18 !== null) {
-              var result4 = result18;
-            } else {
-              var result4 = null;;
-            };
-          }
+          var result4 = parse_QuadPattern();
           if (result4 !== null) {
-            if (input.substr(pos, 1) === "S") {
-              var result17 = "S";
-              pos += 1;
-            } else {
-              var result17 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"S\"");
-              }
-            }
-            if (result17 !== null) {
-              var result5 = result17;
-            } else {
-              if (input.substr(pos, 1) === "s") {
-                var result16 = "s";
-                pos += 1;
-              } else {
-                var result16 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"s\"");
-                }
-              }
-              if (result16 !== null) {
-                var result5 = result16;
-              } else {
-                var result5 = null;;
-              };
-            }
-            if (result5 !== null) {
-              if (input.substr(pos, 1) === "E") {
-                var result15 = "E";
-                pos += 1;
-              } else {
-                var result15 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"E\"");
-                }
-              }
-              if (result15 !== null) {
-                var result6 = result15;
-              } else {
-                if (input.substr(pos, 1) === "e") {
-                  var result14 = "e";
-                  pos += 1;
-                } else {
-                  var result14 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"e\"");
-                  }
-                }
-                if (result14 !== null) {
-                  var result6 = result14;
-                } else {
-                  var result6 = null;;
-                };
-              }
-              if (result6 !== null) {
-                if (input.substr(pos, 1) === "R") {
-                  var result13 = "R";
-                  pos += 1;
-                } else {
-                  var result13 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"R\"");
-                  }
-                }
-                if (result13 !== null) {
-                  var result7 = result13;
-                } else {
-                  if (input.substr(pos, 1) === "r") {
-                    var result12 = "r";
-                    pos += 1;
-                  } else {
-                    var result12 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"r\"");
-                    }
-                  }
-                  if (result12 !== null) {
-                    var result7 = result12;
-                  } else {
-                    var result7 = null;;
-                  };
-                }
-                if (result7 !== null) {
-                  if (input.substr(pos, 1) === "T") {
-                    var result11 = "T";
-                    pos += 1;
-                  } else {
-                    var result11 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"T\"");
-                    }
-                  }
-                  if (result11 !== null) {
-                    var result8 = result11;
-                  } else {
-                    if (input.substr(pos, 1) === "t") {
-                      var result10 = "t";
-                      pos += 1;
-                    } else {
-                      var result10 = null;
-                      if (reportMatchFailures) {
-                        matchFailed("\"t\"");
-                      }
-                    }
-                    if (result10 !== null) {
-                      var result8 = result10;
-                    } else {
-                      var result8 = null;;
-                    };
-                  }
-                  if (result8 !== null) {
-                    var result9 = parse_QuadPattern();
-                    if (result9 !== null) {
-                      var result1 = [result3, result4, result5, result6, result7, result8, result9];
-                    } else {
-                      var result1 = null;
-                      pos = savedPos1;
-                    }
-                  } else {
-                    var result1 = null;
-                    pos = savedPos1;
-                  }
-                } else {
-                  var result1 = null;
-                  pos = savedPos1;
-                }
-              } else {
-                var result1 = null;
-                pos = savedPos1;
-              }
-            } else {
-              var result1 = null;
-              pos = savedPos1;
-            }
+            var result1 = [result3, result4];
           } else {
             var result1 = null;
             pos = savedPos1;
@@ -10273,7 +5649,7 @@ SparqlParser.parser = (function(){
         var result2 = result1 !== null
           ? (function(q) {
             return q;
-          })(result1[6])
+          })(result1[1])
           : null;
         if (result2 !== null) {
           var result0 = result2;
@@ -10306,366 +5682,110 @@ SparqlParser.parser = (function(){
         var savedPos0 = pos;
         var savedPos1 = pos;
         var result3 = [];
-        var result42 = parse_WS();
-        while (result42 !== null) {
-          result3.push(result42);
-          var result42 = parse_WS();
+        var result18 = parse_WS();
+        while (result18 !== null) {
+          result3.push(result18);
+          var result18 = parse_WS();
         }
         if (result3 !== null) {
-          if (input.substr(pos, 1) === "U") {
-            var result41 = "U";
-            pos += 1;
+          if (input.substr(pos, 5) === "USING") {
+            var result17 = "USING";
+            pos += 5;
           } else {
-            var result41 = null;
+            var result17 = null;
             if (reportMatchFailures) {
-              matchFailed("\"U\"");
+              matchFailed("\"USING\"");
             }
           }
-          if (result41 !== null) {
-            var result4 = result41;
+          if (result17 !== null) {
+            var result4 = result17;
           } else {
-            if (input.substr(pos, 1) === "u") {
-              var result40 = "u";
-              pos += 1;
+            if (input.substr(pos, 5) === "using") {
+              var result16 = "using";
+              pos += 5;
             } else {
-              var result40 = null;
+              var result16 = null;
               if (reportMatchFailures) {
-                matchFailed("\"u\"");
+                matchFailed("\"using\"");
               }
             }
-            if (result40 !== null) {
-              var result4 = result40;
+            if (result16 !== null) {
+              var result4 = result16;
             } else {
               var result4 = null;;
             };
           }
           if (result4 !== null) {
-            if (input.substr(pos, 1) === "S") {
-              var result39 = "S";
-              pos += 1;
-            } else {
-              var result39 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"S\"");
-              }
-            }
-            if (result39 !== null) {
-              var result5 = result39;
-            } else {
-              if (input.substr(pos, 1) === "s") {
-                var result38 = "s";
-                pos += 1;
-              } else {
-                var result38 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"s\"");
-                }
-              }
-              if (result38 !== null) {
-                var result5 = result38;
-              } else {
-                var result5 = null;;
-              };
+            var result5 = [];
+            var result15 = parse_WS();
+            while (result15 !== null) {
+              result5.push(result15);
+              var result15 = parse_WS();
             }
             if (result5 !== null) {
-              if (input.substr(pos, 1) === "I") {
-                var result37 = "I";
-                pos += 1;
+              var result14 = parse_IRIref();
+              if (result14 !== null) {
+                var result6 = result14;
               } else {
-                var result37 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"I\"");
-                }
-              }
-              if (result37 !== null) {
-                var result6 = result37;
-              } else {
-                if (input.substr(pos, 1) === "i") {
-                  var result36 = "i";
-                  pos += 1;
+                var savedPos2 = pos;
+                if (input.substr(pos, 5) === "NAMED") {
+                  var result13 = "NAMED";
+                  pos += 5;
                 } else {
-                  var result36 = null;
+                  var result13 = null;
                   if (reportMatchFailures) {
-                    matchFailed("\"i\"");
+                    matchFailed("\"NAMED\"");
                   }
                 }
-                if (result36 !== null) {
-                  var result6 = result36;
+                if (result13 !== null) {
+                  var result8 = result13;
+                } else {
+                  if (input.substr(pos, 5) === "named") {
+                    var result12 = "named";
+                    pos += 5;
+                  } else {
+                    var result12 = null;
+                    if (reportMatchFailures) {
+                      matchFailed("\"named\"");
+                    }
+                  }
+                  if (result12 !== null) {
+                    var result8 = result12;
+                  } else {
+                    var result8 = null;;
+                  };
+                }
+                if (result8 !== null) {
+                  var result9 = [];
+                  var result11 = parse_WS();
+                  while (result11 !== null) {
+                    result9.push(result11);
+                    var result11 = parse_WS();
+                  }
+                  if (result9 !== null) {
+                    var result10 = parse_IRIref();
+                    if (result10 !== null) {
+                      var result7 = [result8, result9, result10];
+                    } else {
+                      var result7 = null;
+                      pos = savedPos2;
+                    }
+                  } else {
+                    var result7 = null;
+                    pos = savedPos2;
+                  }
+                } else {
+                  var result7 = null;
+                  pos = savedPos2;
+                }
+                if (result7 !== null) {
+                  var result6 = result7;
                 } else {
                   var result6 = null;;
                 };
               }
               if (result6 !== null) {
-                if (input.substr(pos, 1) === "N") {
-                  var result35 = "N";
-                  pos += 1;
-                } else {
-                  var result35 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"N\"");
-                  }
-                }
-                if (result35 !== null) {
-                  var result7 = result35;
-                } else {
-                  if (input.substr(pos, 1) === "n") {
-                    var result34 = "n";
-                    pos += 1;
-                  } else {
-                    var result34 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"n\"");
-                    }
-                  }
-                  if (result34 !== null) {
-                    var result7 = result34;
-                  } else {
-                    var result7 = null;;
-                  };
-                }
-                if (result7 !== null) {
-                  if (input.substr(pos, 1) === "G") {
-                    var result33 = "G";
-                    pos += 1;
-                  } else {
-                    var result33 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"G\"");
-                    }
-                  }
-                  if (result33 !== null) {
-                    var result8 = result33;
-                  } else {
-                    if (input.substr(pos, 1) === "g") {
-                      var result32 = "g";
-                      pos += 1;
-                    } else {
-                      var result32 = null;
-                      if (reportMatchFailures) {
-                        matchFailed("\"g\"");
-                      }
-                    }
-                    if (result32 !== null) {
-                      var result8 = result32;
-                    } else {
-                      var result8 = null;;
-                    };
-                  }
-                  if (result8 !== null) {
-                    var result9 = [];
-                    var result31 = parse_WS();
-                    while (result31 !== null) {
-                      result9.push(result31);
-                      var result31 = parse_WS();
-                    }
-                    if (result9 !== null) {
-                      var result30 = parse_IRIref();
-                      if (result30 !== null) {
-                        var result10 = result30;
-                      } else {
-                        var savedPos2 = pos;
-                        if (input.substr(pos, 1) === "N") {
-                          var result29 = "N";
-                          pos += 1;
-                        } else {
-                          var result29 = null;
-                          if (reportMatchFailures) {
-                            matchFailed("\"N\"");
-                          }
-                        }
-                        if (result29 !== null) {
-                          var result12 = result29;
-                        } else {
-                          if (input.substr(pos, 1) === "n") {
-                            var result28 = "n";
-                            pos += 1;
-                          } else {
-                            var result28 = null;
-                            if (reportMatchFailures) {
-                              matchFailed("\"n\"");
-                            }
-                          }
-                          if (result28 !== null) {
-                            var result12 = result28;
-                          } else {
-                            var result12 = null;;
-                          };
-                        }
-                        if (result12 !== null) {
-                          if (input.substr(pos, 1) === "A") {
-                            var result27 = "A";
-                            pos += 1;
-                          } else {
-                            var result27 = null;
-                            if (reportMatchFailures) {
-                              matchFailed("\"A\"");
-                            }
-                          }
-                          if (result27 !== null) {
-                            var result13 = result27;
-                          } else {
-                            if (input.substr(pos, 1) === "a") {
-                              var result26 = "a";
-                              pos += 1;
-                            } else {
-                              var result26 = null;
-                              if (reportMatchFailures) {
-                                matchFailed("\"a\"");
-                              }
-                            }
-                            if (result26 !== null) {
-                              var result13 = result26;
-                            } else {
-                              var result13 = null;;
-                            };
-                          }
-                          if (result13 !== null) {
-                            if (input.substr(pos, 1) === "M") {
-                              var result25 = "M";
-                              pos += 1;
-                            } else {
-                              var result25 = null;
-                              if (reportMatchFailures) {
-                                matchFailed("\"M\"");
-                              }
-                            }
-                            if (result25 !== null) {
-                              var result14 = result25;
-                            } else {
-                              if (input.substr(pos, 1) === "m") {
-                                var result24 = "m";
-                                pos += 1;
-                              } else {
-                                var result24 = null;
-                                if (reportMatchFailures) {
-                                  matchFailed("\"m\"");
-                                }
-                              }
-                              if (result24 !== null) {
-                                var result14 = result24;
-                              } else {
-                                var result14 = null;;
-                              };
-                            }
-                            if (result14 !== null) {
-                              if (input.substr(pos, 1) === "E") {
-                                var result23 = "E";
-                                pos += 1;
-                              } else {
-                                var result23 = null;
-                                if (reportMatchFailures) {
-                                  matchFailed("\"E\"");
-                                }
-                              }
-                              if (result23 !== null) {
-                                var result15 = result23;
-                              } else {
-                                if (input.substr(pos, 1) === "e") {
-                                  var result22 = "e";
-                                  pos += 1;
-                                } else {
-                                  var result22 = null;
-                                  if (reportMatchFailures) {
-                                    matchFailed("\"e\"");
-                                  }
-                                }
-                                if (result22 !== null) {
-                                  var result15 = result22;
-                                } else {
-                                  var result15 = null;;
-                                };
-                              }
-                              if (result15 !== null) {
-                                if (input.substr(pos, 1) === "D") {
-                                  var result21 = "D";
-                                  pos += 1;
-                                } else {
-                                  var result21 = null;
-                                  if (reportMatchFailures) {
-                                    matchFailed("\"D\"");
-                                  }
-                                }
-                                if (result21 !== null) {
-                                  var result16 = result21;
-                                } else {
-                                  if (input.substr(pos, 1) === "d") {
-                                    var result20 = "d";
-                                    pos += 1;
-                                  } else {
-                                    var result20 = null;
-                                    if (reportMatchFailures) {
-                                      matchFailed("\"d\"");
-                                    }
-                                  }
-                                  if (result20 !== null) {
-                                    var result16 = result20;
-                                  } else {
-                                    var result16 = null;;
-                                  };
-                                }
-                                if (result16 !== null) {
-                                  var result17 = [];
-                                  var result19 = parse_WS();
-                                  while (result19 !== null) {
-                                    result17.push(result19);
-                                    var result19 = parse_WS();
-                                  }
-                                  if (result17 !== null) {
-                                    var result18 = parse_IRIref();
-                                    if (result18 !== null) {
-                                      var result11 = [result12, result13, result14, result15, result16, result17, result18];
-                                    } else {
-                                      var result11 = null;
-                                      pos = savedPos2;
-                                    }
-                                  } else {
-                                    var result11 = null;
-                                    pos = savedPos2;
-                                  }
-                                } else {
-                                  var result11 = null;
-                                  pos = savedPos2;
-                                }
-                              } else {
-                                var result11 = null;
-                                pos = savedPos2;
-                              }
-                            } else {
-                              var result11 = null;
-                              pos = savedPos2;
-                            }
-                          } else {
-                            var result11 = null;
-                            pos = savedPos2;
-                          }
-                        } else {
-                          var result11 = null;
-                          pos = savedPos2;
-                        }
-                        if (result11 !== null) {
-                          var result10 = result11;
-                        } else {
-                          var result10 = null;;
-                        };
-                      }
-                      if (result10 !== null) {
-                        var result1 = [result3, result4, result5, result6, result7, result8, result9, result10];
-                      } else {
-                        var result1 = null;
-                        pos = savedPos1;
-                      }
-                    } else {
-                      var result1 = null;
-                      pos = savedPos1;
-                    }
-                  } else {
-                    var result1 = null;
-                    pos = savedPos1;
-                  }
-                } else {
-                  var result1 = null;
-                  pos = savedPos1;
-                }
+                var result1 = [result3, result4, result5, result6];
               } else {
                 var result1 = null;
                 pos = savedPos1;
@@ -10685,11 +5805,11 @@ SparqlParser.parser = (function(){
         var result2 = result1 !== null
           ? (function(g) {
                 if(g.length!=null) {
-                    return {kind: 'named', uri: g[6]};
+                    return {kind: 'named', uri: g[2]};
                 } else {
                     return {kind: 'default', uri: g};
                 }
-          })(result1[7])
+          })(result1[3])
           : null;
         if (result2 !== null) {
           var result0 = result2;
@@ -10721,172 +5841,44 @@ SparqlParser.parser = (function(){
         reportMatchFailures = false;
         var savedPos0 = pos;
         var savedPos1 = pos;
-        if (input.substr(pos, 1) === "G") {
-          var result20 = "G";
-          pos += 1;
+        if (input.substr(pos, 5) === "GRAPH") {
+          var result8 = "GRAPH";
+          pos += 5;
         } else {
-          var result20 = null;
+          var result8 = null;
           if (reportMatchFailures) {
-            matchFailed("\"G\"");
+            matchFailed("\"GRAPH\"");
           }
         }
-        if (result20 !== null) {
-          var result3 = result20;
+        if (result8 !== null) {
+          var result3 = result8;
         } else {
-          if (input.substr(pos, 1) === "g") {
-            var result19 = "g";
-            pos += 1;
+          if (input.substr(pos, 5) === "graph") {
+            var result7 = "graph";
+            pos += 5;
           } else {
-            var result19 = null;
+            var result7 = null;
             if (reportMatchFailures) {
-              matchFailed("\"g\"");
+              matchFailed("\"graph\"");
             }
           }
-          if (result19 !== null) {
-            var result3 = result19;
+          if (result7 !== null) {
+            var result3 = result7;
           } else {
             var result3 = null;;
           };
         }
         if (result3 !== null) {
-          if (input.substr(pos, 1) === "R") {
-            var result18 = "R";
-            pos += 1;
-          } else {
-            var result18 = null;
-            if (reportMatchFailures) {
-              matchFailed("\"R\"");
-            }
-          }
-          if (result18 !== null) {
-            var result4 = result18;
-          } else {
-            if (input.substr(pos, 1) === "r") {
-              var result17 = "r";
-              pos += 1;
-            } else {
-              var result17 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"r\"");
-              }
-            }
-            if (result17 !== null) {
-              var result4 = result17;
-            } else {
-              var result4 = null;;
-            };
+          var result4 = [];
+          var result6 = parse_WS();
+          while (result6 !== null) {
+            result4.push(result6);
+            var result6 = parse_WS();
           }
           if (result4 !== null) {
-            if (input.substr(pos, 1) === "A") {
-              var result16 = "A";
-              pos += 1;
-            } else {
-              var result16 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"A\"");
-              }
-            }
-            if (result16 !== null) {
-              var result5 = result16;
-            } else {
-              if (input.substr(pos, 1) === "a") {
-                var result15 = "a";
-                pos += 1;
-              } else {
-                var result15 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"a\"");
-                }
-              }
-              if (result15 !== null) {
-                var result5 = result15;
-              } else {
-                var result5 = null;;
-              };
-            }
+            var result5 = parse_IRIref();
             if (result5 !== null) {
-              if (input.substr(pos, 1) === "P") {
-                var result14 = "P";
-                pos += 1;
-              } else {
-                var result14 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"P\"");
-                }
-              }
-              if (result14 !== null) {
-                var result6 = result14;
-              } else {
-                if (input.substr(pos, 1) === "p") {
-                  var result13 = "p";
-                  pos += 1;
-                } else {
-                  var result13 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"p\"");
-                  }
-                }
-                if (result13 !== null) {
-                  var result6 = result13;
-                } else {
-                  var result6 = null;;
-                };
-              }
-              if (result6 !== null) {
-                if (input.substr(pos, 1) === "H") {
-                  var result12 = "H";
-                  pos += 1;
-                } else {
-                  var result12 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"H\"");
-                  }
-                }
-                if (result12 !== null) {
-                  var result7 = result12;
-                } else {
-                  if (input.substr(pos, 1) === "h") {
-                    var result11 = "h";
-                    pos += 1;
-                  } else {
-                    var result11 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"h\"");
-                    }
-                  }
-                  if (result11 !== null) {
-                    var result7 = result11;
-                  } else {
-                    var result7 = null;;
-                  };
-                }
-                if (result7 !== null) {
-                  var result8 = [];
-                  var result10 = parse_WS();
-                  while (result10 !== null) {
-                    result8.push(result10);
-                    var result10 = parse_WS();
-                  }
-                  if (result8 !== null) {
-                    var result9 = parse_IRIref();
-                    if (result9 !== null) {
-                      var result1 = [result3, result4, result5, result6, result7, result8, result9];
-                    } else {
-                      var result1 = null;
-                      pos = savedPos1;
-                    }
-                  } else {
-                    var result1 = null;
-                    pos = savedPos1;
-                  }
-                } else {
-                  var result1 = null;
-                  pos = savedPos1;
-                }
-              } else {
-                var result1 = null;
-                pos = savedPos1;
-              }
+              var result1 = [result3, result4, result5];
             } else {
               var result1 = null;
               pos = savedPos1;
@@ -10902,7 +5894,7 @@ SparqlParser.parser = (function(){
         var result2 = result1 !== null
           ? (function(i) {
                 return i;
-          })(result1[6])
+          })(result1[2])
           : null;
         if (result2 !== null) {
           var result0 = result2;
@@ -10932,538 +5924,133 @@ SparqlParser.parser = (function(){
         
         var savedReportMatchFailures = reportMatchFailures;
         reportMatchFailures = false;
-        var savedPos6 = pos;
-        var result56 = parse_GraphRef();
-        var result57 = result56 !== null
+        var savedPos3 = pos;
+        var result17 = parse_GraphRef();
+        var result18 = result17 !== null
           ? (function(g) {
                 return g;
-          })(result56)
+          })(result17)
           : null;
-        if (result57 !== null) {
-          var result55 = result57;
+        if (result18 !== null) {
+          var result16 = result18;
         } else {
-          var result55 = null;
-          pos = savedPos6;
+          var result16 = null;
+          pos = savedPos3;
         }
-        if (result55 !== null) {
-          var result0 = result55;
+        if (result16 !== null) {
+          var result0 = result16;
         } else {
-          var savedPos4 = pos;
-          var savedPos5 = pos;
-          if (input.substr(pos, 1) === "D") {
-            var result54 = "D";
-            pos += 1;
+          var savedPos2 = pos;
+          if (input.substr(pos, 7) === "DEFAULT") {
+            var result15 = "DEFAULT";
+            pos += 7;
           } else {
-            var result54 = null;
+            var result15 = null;
             if (reportMatchFailures) {
-              matchFailed("\"D\"");
+              matchFailed("\"DEFAULT\"");
             }
           }
-          if (result54 !== null) {
-            var result34 = result54;
+          if (result15 !== null) {
+            var result12 = result15;
           } else {
-            if (input.substr(pos, 1) === "d") {
-              var result53 = "d";
-              pos += 1;
+            if (input.substr(pos, 7) === "default") {
+              var result14 = "default";
+              pos += 7;
             } else {
-              var result53 = null;
+              var result14 = null;
               if (reportMatchFailures) {
-                matchFailed("\"d\"");
+                matchFailed("\"default\"");
               }
             }
-            if (result53 !== null) {
-              var result34 = result53;
+            if (result14 !== null) {
+              var result12 = result14;
             } else {
-              var result34 = null;;
+              var result12 = null;;
             };
           }
-          if (result34 !== null) {
-            if (input.substr(pos, 1) === "E") {
-              var result52 = "E";
-              pos += 1;
-            } else {
-              var result52 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"E\"");
-              }
-            }
-            if (result52 !== null) {
-              var result35 = result52;
-            } else {
-              if (input.substr(pos, 1) === "e") {
-                var result51 = "e";
-                pos += 1;
-              } else {
-                var result51 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"e\"");
-                }
-              }
-              if (result51 !== null) {
-                var result35 = result51;
-              } else {
-                var result35 = null;;
-              };
-            }
-            if (result35 !== null) {
-              if (input.substr(pos, 1) === "F") {
-                var result50 = "F";
-                pos += 1;
-              } else {
-                var result50 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"F\"");
-                }
-              }
-              if (result50 !== null) {
-                var result36 = result50;
-              } else {
-                if (input.substr(pos, 1) === "f") {
-                  var result49 = "f";
-                  pos += 1;
-                } else {
-                  var result49 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"f\"");
-                  }
-                }
-                if (result49 !== null) {
-                  var result36 = result49;
-                } else {
-                  var result36 = null;;
-                };
-              }
-              if (result36 !== null) {
-                if (input.substr(pos, 1) === "A") {
-                  var result48 = "A";
-                  pos += 1;
-                } else {
-                  var result48 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"A\"");
-                  }
-                }
-                if (result48 !== null) {
-                  var result37 = result48;
-                } else {
-                  if (input.substr(pos, 1) === "a") {
-                    var result47 = "a";
-                    pos += 1;
-                  } else {
-                    var result47 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"a\"");
-                    }
-                  }
-                  if (result47 !== null) {
-                    var result37 = result47;
-                  } else {
-                    var result37 = null;;
-                  };
-                }
-                if (result37 !== null) {
-                  if (input.substr(pos, 1) === "U") {
-                    var result46 = "U";
-                    pos += 1;
-                  } else {
-                    var result46 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"U\"");
-                    }
-                  }
-                  if (result46 !== null) {
-                    var result38 = result46;
-                  } else {
-                    if (input.substr(pos, 1) === "u") {
-                      var result45 = "u";
-                      pos += 1;
-                    } else {
-                      var result45 = null;
-                      if (reportMatchFailures) {
-                        matchFailed("\"u\"");
-                      }
-                    }
-                    if (result45 !== null) {
-                      var result38 = result45;
-                    } else {
-                      var result38 = null;;
-                    };
-                  }
-                  if (result38 !== null) {
-                    if (input.substr(pos, 1) === "L") {
-                      var result44 = "L";
-                      pos += 1;
-                    } else {
-                      var result44 = null;
-                      if (reportMatchFailures) {
-                        matchFailed("\"L\"");
-                      }
-                    }
-                    if (result44 !== null) {
-                      var result39 = result44;
-                    } else {
-                      if (input.substr(pos, 1) === "l") {
-                        var result43 = "l";
-                        pos += 1;
-                      } else {
-                        var result43 = null;
-                        if (reportMatchFailures) {
-                          matchFailed("\"l\"");
-                        }
-                      }
-                      if (result43 !== null) {
-                        var result39 = result43;
-                      } else {
-                        var result39 = null;;
-                      };
-                    }
-                    if (result39 !== null) {
-                      if (input.substr(pos, 1) === "T") {
-                        var result42 = "T";
-                        pos += 1;
-                      } else {
-                        var result42 = null;
-                        if (reportMatchFailures) {
-                          matchFailed("\"T\"");
-                        }
-                      }
-                      if (result42 !== null) {
-                        var result40 = result42;
-                      } else {
-                        if (input.substr(pos, 1) === "t") {
-                          var result41 = "t";
-                          pos += 1;
-                        } else {
-                          var result41 = null;
-                          if (reportMatchFailures) {
-                            matchFailed("\"t\"");
-                          }
-                        }
-                        if (result41 !== null) {
-                          var result40 = result41;
-                        } else {
-                          var result40 = null;;
-                        };
-                      }
-                      if (result40 !== null) {
-                        var result32 = [result34, result35, result36, result37, result38, result39, result40];
-                      } else {
-                        var result32 = null;
-                        pos = savedPos5;
-                      }
-                    } else {
-                      var result32 = null;
-                      pos = savedPos5;
-                    }
-                  } else {
-                    var result32 = null;
-                    pos = savedPos5;
-                  }
-                } else {
-                  var result32 = null;
-                  pos = savedPos5;
-                }
-              } else {
-                var result32 = null;
-                pos = savedPos5;
-              }
-            } else {
-              var result32 = null;
-              pos = savedPos5;
-            }
-          } else {
-            var result32 = null;
-            pos = savedPos5;
-          }
-          var result33 = result32 !== null
+          var result13 = result12 !== null
             ? (function() {
                   return 'default';
             })()
             : null;
-          if (result33 !== null) {
-            var result31 = result33;
+          if (result13 !== null) {
+            var result11 = result13;
           } else {
-            var result31 = null;
-            pos = savedPos4;
+            var result11 = null;
+            pos = savedPos2;
           }
-          if (result31 !== null) {
-            var result0 = result31;
+          if (result11 !== null) {
+            var result0 = result11;
           } else {
-            var savedPos2 = pos;
-            var savedPos3 = pos;
-            if (input.substr(pos, 1) === "N") {
-              var result30 = "N";
-              pos += 1;
+            var savedPos1 = pos;
+            if (input.substr(pos, 5) === "NAMED") {
+              var result10 = "NAMED";
+              pos += 5;
             } else {
-              var result30 = null;
+              var result10 = null;
               if (reportMatchFailures) {
-                matchFailed("\"N\"");
+                matchFailed("\"NAMED\"");
               }
             }
-            if (result30 !== null) {
-              var result16 = result30;
+            if (result10 !== null) {
+              var result7 = result10;
             } else {
-              if (input.substr(pos, 1) === "n") {
-                var result29 = "n";
-                pos += 1;
+              if (input.substr(pos, 5) === "named") {
+                var result9 = "named";
+                pos += 5;
               } else {
-                var result29 = null;
+                var result9 = null;
                 if (reportMatchFailures) {
-                  matchFailed("\"n\"");
+                  matchFailed("\"named\"");
                 }
               }
-              if (result29 !== null) {
-                var result16 = result29;
+              if (result9 !== null) {
+                var result7 = result9;
               } else {
-                var result16 = null;;
+                var result7 = null;;
               };
             }
-            if (result16 !== null) {
-              if (input.substr(pos, 1) === "A") {
-                var result28 = "A";
-                pos += 1;
-              } else {
-                var result28 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"A\"");
-                }
-              }
-              if (result28 !== null) {
-                var result17 = result28;
-              } else {
-                if (input.substr(pos, 1) === "a") {
-                  var result27 = "a";
-                  pos += 1;
-                } else {
-                  var result27 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"a\"");
-                  }
-                }
-                if (result27 !== null) {
-                  var result17 = result27;
-                } else {
-                  var result17 = null;;
-                };
-              }
-              if (result17 !== null) {
-                if (input.substr(pos, 1) === "M") {
-                  var result26 = "M";
-                  pos += 1;
-                } else {
-                  var result26 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"M\"");
-                  }
-                }
-                if (result26 !== null) {
-                  var result18 = result26;
-                } else {
-                  if (input.substr(pos, 1) === "m") {
-                    var result25 = "m";
-                    pos += 1;
-                  } else {
-                    var result25 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"m\"");
-                    }
-                  }
-                  if (result25 !== null) {
-                    var result18 = result25;
-                  } else {
-                    var result18 = null;;
-                  };
-                }
-                if (result18 !== null) {
-                  if (input.substr(pos, 1) === "E") {
-                    var result24 = "E";
-                    pos += 1;
-                  } else {
-                    var result24 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"E\"");
-                    }
-                  }
-                  if (result24 !== null) {
-                    var result19 = result24;
-                  } else {
-                    if (input.substr(pos, 1) === "e") {
-                      var result23 = "e";
-                      pos += 1;
-                    } else {
-                      var result23 = null;
-                      if (reportMatchFailures) {
-                        matchFailed("\"e\"");
-                      }
-                    }
-                    if (result23 !== null) {
-                      var result19 = result23;
-                    } else {
-                      var result19 = null;;
-                    };
-                  }
-                  if (result19 !== null) {
-                    if (input.substr(pos, 1) === "D") {
-                      var result22 = "D";
-                      pos += 1;
-                    } else {
-                      var result22 = null;
-                      if (reportMatchFailures) {
-                        matchFailed("\"D\"");
-                      }
-                    }
-                    if (result22 !== null) {
-                      var result20 = result22;
-                    } else {
-                      if (input.substr(pos, 1) === "d") {
-                        var result21 = "d";
-                        pos += 1;
-                      } else {
-                        var result21 = null;
-                        if (reportMatchFailures) {
-                          matchFailed("\"d\"");
-                        }
-                      }
-                      if (result21 !== null) {
-                        var result20 = result21;
-                      } else {
-                        var result20 = null;;
-                      };
-                    }
-                    if (result20 !== null) {
-                      var result14 = [result16, result17, result18, result19, result20];
-                    } else {
-                      var result14 = null;
-                      pos = savedPos3;
-                    }
-                  } else {
-                    var result14 = null;
-                    pos = savedPos3;
-                  }
-                } else {
-                  var result14 = null;
-                  pos = savedPos3;
-                }
-              } else {
-                var result14 = null;
-                pos = savedPos3;
-              }
-            } else {
-              var result14 = null;
-              pos = savedPos3;
-            }
-            var result15 = result14 !== null
+            var result8 = result7 !== null
               ? (function() {
                     return 'named';
               })()
               : null;
-            if (result15 !== null) {
-              var result13 = result15;
+            if (result8 !== null) {
+              var result6 = result8;
             } else {
-              var result13 = null;
-              pos = savedPos2;
+              var result6 = null;
+              pos = savedPos1;
             }
-            if (result13 !== null) {
-              var result0 = result13;
+            if (result6 !== null) {
+              var result0 = result6;
             } else {
               var savedPos0 = pos;
-              var savedPos1 = pos;
-              if (input.substr(pos, 1) === "A") {
-                var result12 = "A";
-                pos += 1;
+              if (input.substr(pos, 3) === "ALL") {
+                var result5 = "ALL";
+                pos += 3;
               } else {
-                var result12 = null;
+                var result5 = null;
                 if (reportMatchFailures) {
-                  matchFailed("\"A\"");
+                  matchFailed("\"ALL\"");
                 }
               }
-              if (result12 !== null) {
-                var result4 = result12;
+              if (result5 !== null) {
+                var result2 = result5;
               } else {
-                if (input.substr(pos, 1) === "a") {
-                  var result11 = "a";
-                  pos += 1;
+                if (input.substr(pos, 3) === "all") {
+                  var result4 = "all";
+                  pos += 3;
                 } else {
-                  var result11 = null;
+                  var result4 = null;
                   if (reportMatchFailures) {
-                    matchFailed("\"a\"");
+                    matchFailed("\"all\"");
                   }
                 }
-                if (result11 !== null) {
-                  var result4 = result11;
+                if (result4 !== null) {
+                  var result2 = result4;
                 } else {
-                  var result4 = null;;
+                  var result2 = null;;
                 };
-              }
-              if (result4 !== null) {
-                if (input.substr(pos, 1) === "L") {
-                  var result10 = "L";
-                  pos += 1;
-                } else {
-                  var result10 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"L\"");
-                  }
-                }
-                if (result10 !== null) {
-                  var result5 = result10;
-                } else {
-                  if (input.substr(pos, 1) === "l") {
-                    var result9 = "l";
-                    pos += 1;
-                  } else {
-                    var result9 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"l\"");
-                    }
-                  }
-                  if (result9 !== null) {
-                    var result5 = result9;
-                  } else {
-                    var result5 = null;;
-                  };
-                }
-                if (result5 !== null) {
-                  if (input.substr(pos, 1) === "L") {
-                    var result8 = "L";
-                    pos += 1;
-                  } else {
-                    var result8 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"L\"");
-                    }
-                  }
-                  if (result8 !== null) {
-                    var result6 = result8;
-                  } else {
-                    if (input.substr(pos, 1) === "l") {
-                      var result7 = "l";
-                      pos += 1;
-                    } else {
-                      var result7 = null;
-                      if (reportMatchFailures) {
-                        matchFailed("\"l\"");
-                      }
-                    }
-                    if (result7 !== null) {
-                      var result6 = result7;
-                    } else {
-                      var result6 = null;;
-                    };
-                  }
-                  if (result6 !== null) {
-                    var result2 = [result4, result5, result6];
-                  } else {
-                    var result2 = null;
-                    pos = savedPos1;
-                  }
-                } else {
-                  var result2 = null;
-                  pos = savedPos1;
-                }
-              } else {
-                var result2 = null;
-                pos = savedPos1;
               }
               var result3 = result2 !== null
                 ? (function() {
@@ -11871,229 +6458,101 @@ SparqlParser.parser = (function(){
         var savedPos0 = pos;
         var savedPos1 = pos;
         var result3 = [];
-        var result34 = parse_WS();
-        while (result34 !== null) {
-          result3.push(result34);
-          var result34 = parse_WS();
+        var result22 = parse_WS();
+        while (result22 !== null) {
+          result3.push(result22);
+          var result22 = parse_WS();
         }
         if (result3 !== null) {
-          if (input.substr(pos, 1) === "G") {
-            var result33 = "G";
-            pos += 1;
+          if (input.substr(pos, 5) === "GRAPH") {
+            var result21 = "GRAPH";
+            pos += 5;
           } else {
-            var result33 = null;
+            var result21 = null;
             if (reportMatchFailures) {
-              matchFailed("\"G\"");
+              matchFailed("\"GRAPH\"");
             }
           }
-          if (result33 !== null) {
-            var result4 = result33;
+          if (result21 !== null) {
+            var result4 = result21;
           } else {
-            if (input.substr(pos, 1) === "g") {
-              var result32 = "g";
-              pos += 1;
+            if (input.substr(pos, 5) === "graph") {
+              var result20 = "graph";
+              pos += 5;
             } else {
-              var result32 = null;
+              var result20 = null;
               if (reportMatchFailures) {
-                matchFailed("\"g\"");
+                matchFailed("\"graph\"");
               }
             }
-            if (result32 !== null) {
-              var result4 = result32;
+            if (result20 !== null) {
+              var result4 = result20;
             } else {
               var result4 = null;;
             };
           }
           if (result4 !== null) {
-            if (input.substr(pos, 1) === "R") {
-              var result31 = "R";
-              pos += 1;
-            } else {
-              var result31 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"R\"");
-              }
-            }
-            if (result31 !== null) {
-              var result5 = result31;
-            } else {
-              if (input.substr(pos, 1) === "r") {
-                var result30 = "r";
-                pos += 1;
-              } else {
-                var result30 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"r\"");
-                }
-              }
-              if (result30 !== null) {
-                var result5 = result30;
-              } else {
-                var result5 = null;;
-              };
+            var result5 = [];
+            var result19 = parse_WS();
+            while (result19 !== null) {
+              result5.push(result19);
+              var result19 = parse_WS();
             }
             if (result5 !== null) {
-              if (input.substr(pos, 1) === "A") {
-                var result29 = "A";
-                pos += 1;
-              } else {
-                var result29 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"A\"");
-                }
-              }
-              if (result29 !== null) {
-                var result6 = result29;
-              } else {
-                if (input.substr(pos, 1) === "a") {
-                  var result28 = "a";
-                  pos += 1;
-                } else {
-                  var result28 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"a\"");
-                  }
-                }
-                if (result28 !== null) {
-                  var result6 = result28;
-                } else {
-                  var result6 = null;;
-                };
-              }
+              var result6 = parse_VarOrIRIref();
               if (result6 !== null) {
-                if (input.substr(pos, 1) === "P") {
-                  var result27 = "P";
-                  pos += 1;
-                } else {
-                  var result27 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"P\"");
-                  }
-                }
-                if (result27 !== null) {
-                  var result7 = result27;
-                } else {
-                  if (input.substr(pos, 1) === "p") {
-                    var result26 = "p";
-                    pos += 1;
-                  } else {
-                    var result26 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"p\"");
-                    }
-                  }
-                  if (result26 !== null) {
-                    var result7 = result26;
-                  } else {
-                    var result7 = null;;
-                  };
+                var result7 = [];
+                var result18 = parse_WS();
+                while (result18 !== null) {
+                  result7.push(result18);
+                  var result18 = parse_WS();
                 }
                 if (result7 !== null) {
-                  if (input.substr(pos, 1) === "H") {
-                    var result25 = "H";
+                  if (input.substr(pos, 1) === "{") {
+                    var result8 = "{";
                     pos += 1;
                   } else {
-                    var result25 = null;
+                    var result8 = null;
                     if (reportMatchFailures) {
-                      matchFailed("\"H\"");
+                      matchFailed("\"{\"");
                     }
-                  }
-                  if (result25 !== null) {
-                    var result8 = result25;
-                  } else {
-                    if (input.substr(pos, 1) === "h") {
-                      var result24 = "h";
-                      pos += 1;
-                    } else {
-                      var result24 = null;
-                      if (reportMatchFailures) {
-                        matchFailed("\"h\"");
-                      }
-                    }
-                    if (result24 !== null) {
-                      var result8 = result24;
-                    } else {
-                      var result8 = null;;
-                    };
                   }
                   if (result8 !== null) {
                     var result9 = [];
-                    var result23 = parse_WS();
-                    while (result23 !== null) {
-                      result9.push(result23);
-                      var result23 = parse_WS();
+                    var result17 = parse_WS();
+                    while (result17 !== null) {
+                      result9.push(result17);
+                      var result17 = parse_WS();
                     }
                     if (result9 !== null) {
-                      var result10 = parse_VarOrIRIref();
+                      var result16 = parse_TriplesTemplate();
+                      var result10 = result16 !== null ? result16 : '';
                       if (result10 !== null) {
                         var result11 = [];
-                        var result22 = parse_WS();
-                        while (result22 !== null) {
-                          result11.push(result22);
-                          var result22 = parse_WS();
+                        var result15 = parse_WS();
+                        while (result15 !== null) {
+                          result11.push(result15);
+                          var result15 = parse_WS();
                         }
                         if (result11 !== null) {
-                          if (input.substr(pos, 1) === "{") {
-                            var result12 = "{";
+                          if (input.substr(pos, 1) === "}") {
+                            var result12 = "}";
                             pos += 1;
                           } else {
                             var result12 = null;
                             if (reportMatchFailures) {
-                              matchFailed("\"{\"");
+                              matchFailed("\"}\"");
                             }
                           }
                           if (result12 !== null) {
                             var result13 = [];
-                            var result21 = parse_WS();
-                            while (result21 !== null) {
-                              result13.push(result21);
-                              var result21 = parse_WS();
+                            var result14 = parse_WS();
+                            while (result14 !== null) {
+                              result13.push(result14);
+                              var result14 = parse_WS();
                             }
                             if (result13 !== null) {
-                              var result20 = parse_TriplesTemplate();
-                              var result14 = result20 !== null ? result20 : '';
-                              if (result14 !== null) {
-                                var result15 = [];
-                                var result19 = parse_WS();
-                                while (result19 !== null) {
-                                  result15.push(result19);
-                                  var result19 = parse_WS();
-                                }
-                                if (result15 !== null) {
-                                  if (input.substr(pos, 1) === "}") {
-                                    var result16 = "}";
-                                    pos += 1;
-                                  } else {
-                                    var result16 = null;
-                                    if (reportMatchFailures) {
-                                      matchFailed("\"}\"");
-                                    }
-                                  }
-                                  if (result16 !== null) {
-                                    var result17 = [];
-                                    var result18 = parse_WS();
-                                    while (result18 !== null) {
-                                      result17.push(result18);
-                                      var result18 = parse_WS();
-                                    }
-                                    if (result17 !== null) {
-                                      var result1 = [result3, result4, result5, result6, result7, result8, result9, result10, result11, result12, result13, result14, result15, result16, result17];
-                                    } else {
-                                      var result1 = null;
-                                      pos = savedPos1;
-                                    }
-                                  } else {
-                                    var result1 = null;
-                                    pos = savedPos1;
-                                  }
-                                } else {
-                                  var result1 = null;
-                                  pos = savedPos1;
-                                }
-                              } else {
-                                var result1 = null;
-                                pos = savedPos1;
-                              }
+                              var result1 = [result3, result4, result5, result6, result7, result8, result9, result10, result11, result12, result13];
                             } else {
                               var result1 = null;
                               pos = savedPos1;
@@ -12149,7 +6608,7 @@ SparqlParser.parser = (function(){
           
                 return {token:'quadsnottriples',
                         quadsContext: quads}
-          })(result1[7], result1[11])
+          })(result1[3], result1[7])
           : null;
         if (result2 !== null) {
           var result0 = result2;
@@ -12908,187 +7367,59 @@ SparqlParser.parser = (function(){
         var savedPos0 = pos;
         var savedPos1 = pos;
         var result3 = [];
-        var result25 = parse_WS();
-        while (result25 !== null) {
-          result3.push(result25);
-          var result25 = parse_WS();
+        var result13 = parse_WS();
+        while (result13 !== null) {
+          result3.push(result13);
+          var result13 = parse_WS();
         }
         if (result3 !== null) {
-          if (input.substr(pos, 1) === "G") {
-            var result24 = "G";
-            pos += 1;
+          if (input.substr(pos, 5) === "GRAPH") {
+            var result12 = "GRAPH";
+            pos += 5;
           } else {
-            var result24 = null;
+            var result12 = null;
             if (reportMatchFailures) {
-              matchFailed("\"G\"");
+              matchFailed("\"GRAPH\"");
             }
           }
-          if (result24 !== null) {
-            var result4 = result24;
+          if (result12 !== null) {
+            var result4 = result12;
           } else {
-            if (input.substr(pos, 1) === "g") {
-              var result23 = "g";
-              pos += 1;
+            if (input.substr(pos, 5) === "graph") {
+              var result11 = "graph";
+              pos += 5;
             } else {
-              var result23 = null;
+              var result11 = null;
               if (reportMatchFailures) {
-                matchFailed("\"g\"");
+                matchFailed("\"graph\"");
               }
             }
-            if (result23 !== null) {
-              var result4 = result23;
+            if (result11 !== null) {
+              var result4 = result11;
             } else {
               var result4 = null;;
             };
           }
           if (result4 !== null) {
-            if (input.substr(pos, 1) === "R") {
-              var result22 = "R";
-              pos += 1;
-            } else {
-              var result22 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"R\"");
-              }
-            }
-            if (result22 !== null) {
-              var result5 = result22;
-            } else {
-              if (input.substr(pos, 1) === "r") {
-                var result21 = "r";
-                pos += 1;
-              } else {
-                var result21 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"r\"");
-                }
-              }
-              if (result21 !== null) {
-                var result5 = result21;
-              } else {
-                var result5 = null;;
-              };
+            var result5 = [];
+            var result10 = parse_WS();
+            while (result10 !== null) {
+              result5.push(result10);
+              var result10 = parse_WS();
             }
             if (result5 !== null) {
-              if (input.substr(pos, 1) === "A") {
-                var result20 = "A";
-                pos += 1;
-              } else {
-                var result20 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"A\"");
-                }
-              }
-              if (result20 !== null) {
-                var result6 = result20;
-              } else {
-                if (input.substr(pos, 1) === "a") {
-                  var result19 = "a";
-                  pos += 1;
-                } else {
-                  var result19 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"a\"");
-                  }
-                }
-                if (result19 !== null) {
-                  var result6 = result19;
-                } else {
-                  var result6 = null;;
-                };
-              }
+              var result6 = parse_VarOrIRIref();
               if (result6 !== null) {
-                if (input.substr(pos, 1) === "P") {
-                  var result18 = "P";
-                  pos += 1;
-                } else {
-                  var result18 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"P\"");
-                  }
-                }
-                if (result18 !== null) {
-                  var result7 = result18;
-                } else {
-                  if (input.substr(pos, 1) === "p") {
-                    var result17 = "p";
-                    pos += 1;
-                  } else {
-                    var result17 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"p\"");
-                    }
-                  }
-                  if (result17 !== null) {
-                    var result7 = result17;
-                  } else {
-                    var result7 = null;;
-                  };
+                var result7 = [];
+                var result9 = parse_WS();
+                while (result9 !== null) {
+                  result7.push(result9);
+                  var result9 = parse_WS();
                 }
                 if (result7 !== null) {
-                  if (input.substr(pos, 1) === "H") {
-                    var result16 = "H";
-                    pos += 1;
-                  } else {
-                    var result16 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"H\"");
-                    }
-                  }
-                  if (result16 !== null) {
-                    var result8 = result16;
-                  } else {
-                    if (input.substr(pos, 1) === "h") {
-                      var result15 = "h";
-                      pos += 1;
-                    } else {
-                      var result15 = null;
-                      if (reportMatchFailures) {
-                        matchFailed("\"h\"");
-                      }
-                    }
-                    if (result15 !== null) {
-                      var result8 = result15;
-                    } else {
-                      var result8 = null;;
-                    };
-                  }
+                  var result8 = parse_GroupGraphPattern();
                   if (result8 !== null) {
-                    var result9 = [];
-                    var result14 = parse_WS();
-                    while (result14 !== null) {
-                      result9.push(result14);
-                      var result14 = parse_WS();
-                    }
-                    if (result9 !== null) {
-                      var result10 = parse_VarOrIRIref();
-                      if (result10 !== null) {
-                        var result11 = [];
-                        var result13 = parse_WS();
-                        while (result13 !== null) {
-                          result11.push(result13);
-                          var result13 = parse_WS();
-                        }
-                        if (result11 !== null) {
-                          var result12 = parse_GroupGraphPattern();
-                          if (result12 !== null) {
-                            var result1 = [result3, result4, result5, result6, result7, result8, result9, result10, result11, result12];
-                          } else {
-                            var result1 = null;
-                            pos = savedPos1;
-                          }
-                        } else {
-                          var result1 = null;
-                          pos = savedPos1;
-                        }
-                      } else {
-                        var result1 = null;
-                        pos = savedPos1;
-                      }
-                    } else {
-                      var result1 = null;
-                      pos = savedPos1;
-                    }
+                    var result1 = [result3, result4, result5, result6, result7, result8];
                   } else {
                     var result1 = null;
                     pos = savedPos1;
@@ -13126,7 +7457,7 @@ SparqlParser.parser = (function(){
           
                 gg.token = 'groupgraphpattern'
                 return gg;
-          })(result1[7], result1[9])
+          })(result1[3], result1[5])
           : null;
         if (result2 !== null) {
           var result0 = result2;
@@ -13285,178 +7616,50 @@ SparqlParser.parser = (function(){
           var result4 = [];
           var savedPos2 = pos;
           var result6 = [];
-          var result25 = parse_WS();
-          while (result25 !== null) {
-            result6.push(result25);
-            var result25 = parse_WS();
+          var result13 = parse_WS();
+          while (result13 !== null) {
+            result6.push(result13);
+            var result13 = parse_WS();
           }
           if (result6 !== null) {
-            if (input.substr(pos, 1) === "U") {
-              var result24 = "U";
-              pos += 1;
+            if (input.substr(pos, 5) === "UNION") {
+              var result12 = "UNION";
+              pos += 5;
             } else {
-              var result24 = null;
+              var result12 = null;
               if (reportMatchFailures) {
-                matchFailed("\"U\"");
+                matchFailed("\"UNION\"");
               }
             }
-            if (result24 !== null) {
-              var result7 = result24;
+            if (result12 !== null) {
+              var result7 = result12;
             } else {
-              if (input.substr(pos, 1) === "u") {
-                var result23 = "u";
-                pos += 1;
+              if (input.substr(pos, 5) === "union") {
+                var result11 = "union";
+                pos += 5;
               } else {
-                var result23 = null;
+                var result11 = null;
                 if (reportMatchFailures) {
-                  matchFailed("\"u\"");
+                  matchFailed("\"union\"");
                 }
               }
-              if (result23 !== null) {
-                var result7 = result23;
+              if (result11 !== null) {
+                var result7 = result11;
               } else {
                 var result7 = null;;
               };
             }
             if (result7 !== null) {
-              if (input.substr(pos, 1) === "N") {
-                var result22 = "N";
-                pos += 1;
-              } else {
-                var result22 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"N\"");
-                }
-              }
-              if (result22 !== null) {
-                var result8 = result22;
-              } else {
-                if (input.substr(pos, 1) === "n") {
-                  var result21 = "n";
-                  pos += 1;
-                } else {
-                  var result21 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"n\"");
-                  }
-                }
-                if (result21 !== null) {
-                  var result8 = result21;
-                } else {
-                  var result8 = null;;
-                };
+              var result8 = [];
+              var result10 = parse_WS();
+              while (result10 !== null) {
+                result8.push(result10);
+                var result10 = parse_WS();
               }
               if (result8 !== null) {
-                if (input.substr(pos, 1) === "I") {
-                  var result20 = "I";
-                  pos += 1;
-                } else {
-                  var result20 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"I\"");
-                  }
-                }
-                if (result20 !== null) {
-                  var result9 = result20;
-                } else {
-                  if (input.substr(pos, 1) === "i") {
-                    var result19 = "i";
-                    pos += 1;
-                  } else {
-                    var result19 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"i\"");
-                    }
-                  }
-                  if (result19 !== null) {
-                    var result9 = result19;
-                  } else {
-                    var result9 = null;;
-                  };
-                }
+                var result9 = parse_GroupGraphPattern();
                 if (result9 !== null) {
-                  if (input.substr(pos, 1) === "O") {
-                    var result18 = "O";
-                    pos += 1;
-                  } else {
-                    var result18 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"O\"");
-                    }
-                  }
-                  if (result18 !== null) {
-                    var result10 = result18;
-                  } else {
-                    if (input.substr(pos, 1) === "o") {
-                      var result17 = "o";
-                      pos += 1;
-                    } else {
-                      var result17 = null;
-                      if (reportMatchFailures) {
-                        matchFailed("\"o\"");
-                      }
-                    }
-                    if (result17 !== null) {
-                      var result10 = result17;
-                    } else {
-                      var result10 = null;;
-                    };
-                  }
-                  if (result10 !== null) {
-                    if (input.substr(pos, 1) === "N") {
-                      var result16 = "N";
-                      pos += 1;
-                    } else {
-                      var result16 = null;
-                      if (reportMatchFailures) {
-                        matchFailed("\"N\"");
-                      }
-                    }
-                    if (result16 !== null) {
-                      var result11 = result16;
-                    } else {
-                      if (input.substr(pos, 1) === "n") {
-                        var result15 = "n";
-                        pos += 1;
-                      } else {
-                        var result15 = null;
-                        if (reportMatchFailures) {
-                          matchFailed("\"n\"");
-                        }
-                      }
-                      if (result15 !== null) {
-                        var result11 = result15;
-                      } else {
-                        var result11 = null;;
-                      };
-                    }
-                    if (result11 !== null) {
-                      var result12 = [];
-                      var result14 = parse_WS();
-                      while (result14 !== null) {
-                        result12.push(result14);
-                        var result14 = parse_WS();
-                      }
-                      if (result12 !== null) {
-                        var result13 = parse_GroupGraphPattern();
-                        if (result13 !== null) {
-                          var result5 = [result6, result7, result8, result9, result10, result11, result12, result13];
-                        } else {
-                          var result5 = null;
-                          pos = savedPos2;
-                        }
-                      } else {
-                        var result5 = null;
-                        pos = savedPos2;
-                      }
-                    } else {
-                      var result5 = null;
-                      pos = savedPos2;
-                    }
-                  } else {
-                    var result5 = null;
-                    pos = savedPos2;
-                  }
+                  var result5 = [result6, result7, result8, result9];
                 } else {
                   var result5 = null;
                   pos = savedPos2;
@@ -13477,178 +7680,50 @@ SparqlParser.parser = (function(){
             result4.push(result5);
             var savedPos2 = pos;
             var result6 = [];
-            var result25 = parse_WS();
-            while (result25 !== null) {
-              result6.push(result25);
-              var result25 = parse_WS();
+            var result13 = parse_WS();
+            while (result13 !== null) {
+              result6.push(result13);
+              var result13 = parse_WS();
             }
             if (result6 !== null) {
-              if (input.substr(pos, 1) === "U") {
-                var result24 = "U";
-                pos += 1;
+              if (input.substr(pos, 5) === "UNION") {
+                var result12 = "UNION";
+                pos += 5;
               } else {
-                var result24 = null;
+                var result12 = null;
                 if (reportMatchFailures) {
-                  matchFailed("\"U\"");
+                  matchFailed("\"UNION\"");
                 }
               }
-              if (result24 !== null) {
-                var result7 = result24;
+              if (result12 !== null) {
+                var result7 = result12;
               } else {
-                if (input.substr(pos, 1) === "u") {
-                  var result23 = "u";
-                  pos += 1;
+                if (input.substr(pos, 5) === "union") {
+                  var result11 = "union";
+                  pos += 5;
                 } else {
-                  var result23 = null;
+                  var result11 = null;
                   if (reportMatchFailures) {
-                    matchFailed("\"u\"");
+                    matchFailed("\"union\"");
                   }
                 }
-                if (result23 !== null) {
-                  var result7 = result23;
+                if (result11 !== null) {
+                  var result7 = result11;
                 } else {
                   var result7 = null;;
                 };
               }
               if (result7 !== null) {
-                if (input.substr(pos, 1) === "N") {
-                  var result22 = "N";
-                  pos += 1;
-                } else {
-                  var result22 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"N\"");
-                  }
-                }
-                if (result22 !== null) {
-                  var result8 = result22;
-                } else {
-                  if (input.substr(pos, 1) === "n") {
-                    var result21 = "n";
-                    pos += 1;
-                  } else {
-                    var result21 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"n\"");
-                    }
-                  }
-                  if (result21 !== null) {
-                    var result8 = result21;
-                  } else {
-                    var result8 = null;;
-                  };
+                var result8 = [];
+                var result10 = parse_WS();
+                while (result10 !== null) {
+                  result8.push(result10);
+                  var result10 = parse_WS();
                 }
                 if (result8 !== null) {
-                  if (input.substr(pos, 1) === "I") {
-                    var result20 = "I";
-                    pos += 1;
-                  } else {
-                    var result20 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"I\"");
-                    }
-                  }
-                  if (result20 !== null) {
-                    var result9 = result20;
-                  } else {
-                    if (input.substr(pos, 1) === "i") {
-                      var result19 = "i";
-                      pos += 1;
-                    } else {
-                      var result19 = null;
-                      if (reportMatchFailures) {
-                        matchFailed("\"i\"");
-                      }
-                    }
-                    if (result19 !== null) {
-                      var result9 = result19;
-                    } else {
-                      var result9 = null;;
-                    };
-                  }
+                  var result9 = parse_GroupGraphPattern();
                   if (result9 !== null) {
-                    if (input.substr(pos, 1) === "O") {
-                      var result18 = "O";
-                      pos += 1;
-                    } else {
-                      var result18 = null;
-                      if (reportMatchFailures) {
-                        matchFailed("\"O\"");
-                      }
-                    }
-                    if (result18 !== null) {
-                      var result10 = result18;
-                    } else {
-                      if (input.substr(pos, 1) === "o") {
-                        var result17 = "o";
-                        pos += 1;
-                      } else {
-                        var result17 = null;
-                        if (reportMatchFailures) {
-                          matchFailed("\"o\"");
-                        }
-                      }
-                      if (result17 !== null) {
-                        var result10 = result17;
-                      } else {
-                        var result10 = null;;
-                      };
-                    }
-                    if (result10 !== null) {
-                      if (input.substr(pos, 1) === "N") {
-                        var result16 = "N";
-                        pos += 1;
-                      } else {
-                        var result16 = null;
-                        if (reportMatchFailures) {
-                          matchFailed("\"N\"");
-                        }
-                      }
-                      if (result16 !== null) {
-                        var result11 = result16;
-                      } else {
-                        if (input.substr(pos, 1) === "n") {
-                          var result15 = "n";
-                          pos += 1;
-                        } else {
-                          var result15 = null;
-                          if (reportMatchFailures) {
-                            matchFailed("\"n\"");
-                          }
-                        }
-                        if (result15 !== null) {
-                          var result11 = result15;
-                        } else {
-                          var result11 = null;;
-                        };
-                      }
-                      if (result11 !== null) {
-                        var result12 = [];
-                        var result14 = parse_WS();
-                        while (result14 !== null) {
-                          result12.push(result14);
-                          var result14 = parse_WS();
-                        }
-                        if (result12 !== null) {
-                          var result13 = parse_GroupGraphPattern();
-                          if (result13 !== null) {
-                            var result5 = [result6, result7, result8, result9, result10, result11, result12, result13];
-                          } else {
-                            var result5 = null;
-                            pos = savedPos2;
-                          }
-                        } else {
-                          var result5 = null;
-                          pos = savedPos2;
-                        }
-                      } else {
-                        var result5 = null;
-                        pos = savedPos2;
-                      }
-                    } else {
-                      var result5 = null;
-                      pos = savedPos2;
-                    }
+                    var result5 = [result6, result7, result8, result9];
                   } else {
                     var result5 = null;
                     pos = savedPos2;
@@ -13687,9 +7762,9 @@ SparqlParser.parser = (function(){
           
                     for(var i=0; i<b.length; i++) {
                         if(i==b.length-1) {
-                            lastToken.value.push(b[i][7]);
+                            lastToken.value.push(b[i][3]);
                         } else {
-                            lastToken.value.push(b[i][7]);
+                            lastToken.value.push(b[i][3]);
                             var newToken = {token: 'graphunionpattern',
                                             value: [lastToken]}
           
@@ -13733,210 +7808,50 @@ SparqlParser.parser = (function(){
         var savedPos0 = pos;
         var savedPos1 = pos;
         var result3 = [];
-        var result25 = parse_WS();
-        while (result25 !== null) {
-          result3.push(result25);
-          var result25 = parse_WS();
+        var result10 = parse_WS();
+        while (result10 !== null) {
+          result3.push(result10);
+          var result10 = parse_WS();
         }
         if (result3 !== null) {
-          if (input.substr(pos, 1) === "F") {
-            var result24 = "F";
-            pos += 1;
+          if (input.substr(pos, 6) === "FILTER") {
+            var result9 = "FILTER";
+            pos += 6;
           } else {
-            var result24 = null;
+            var result9 = null;
             if (reportMatchFailures) {
-              matchFailed("\"F\"");
+              matchFailed("\"FILTER\"");
             }
           }
-          if (result24 !== null) {
-            var result4 = result24;
+          if (result9 !== null) {
+            var result4 = result9;
           } else {
-            if (input.substr(pos, 1) === "f") {
-              var result23 = "f";
-              pos += 1;
+            if (input.substr(pos, 6) === "filter") {
+              var result8 = "filter";
+              pos += 6;
             } else {
-              var result23 = null;
+              var result8 = null;
               if (reportMatchFailures) {
-                matchFailed("\"f\"");
+                matchFailed("\"filter\"");
               }
             }
-            if (result23 !== null) {
-              var result4 = result23;
+            if (result8 !== null) {
+              var result4 = result8;
             } else {
               var result4 = null;;
             };
           }
           if (result4 !== null) {
-            if (input.substr(pos, 1) === "I") {
-              var result22 = "I";
-              pos += 1;
-            } else {
-              var result22 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"I\"");
-              }
-            }
-            if (result22 !== null) {
-              var result5 = result22;
-            } else {
-              if (input.substr(pos, 1) === "i") {
-                var result21 = "i";
-                pos += 1;
-              } else {
-                var result21 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"i\"");
-                }
-              }
-              if (result21 !== null) {
-                var result5 = result21;
-              } else {
-                var result5 = null;;
-              };
+            var result5 = [];
+            var result7 = parse_WS();
+            while (result7 !== null) {
+              result5.push(result7);
+              var result7 = parse_WS();
             }
             if (result5 !== null) {
-              if (input.substr(pos, 1) === "L") {
-                var result20 = "L";
-                pos += 1;
-              } else {
-                var result20 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"L\"");
-                }
-              }
-              if (result20 !== null) {
-                var result6 = result20;
-              } else {
-                if (input.substr(pos, 1) === "l") {
-                  var result19 = "l";
-                  pos += 1;
-                } else {
-                  var result19 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"l\"");
-                  }
-                }
-                if (result19 !== null) {
-                  var result6 = result19;
-                } else {
-                  var result6 = null;;
-                };
-              }
+              var result6 = parse_Constraint();
               if (result6 !== null) {
-                if (input.substr(pos, 1) === "T") {
-                  var result18 = "T";
-                  pos += 1;
-                } else {
-                  var result18 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"T\"");
-                  }
-                }
-                if (result18 !== null) {
-                  var result7 = result18;
-                } else {
-                  if (input.substr(pos, 1) === "t") {
-                    var result17 = "t";
-                    pos += 1;
-                  } else {
-                    var result17 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"t\"");
-                    }
-                  }
-                  if (result17 !== null) {
-                    var result7 = result17;
-                  } else {
-                    var result7 = null;;
-                  };
-                }
-                if (result7 !== null) {
-                  if (input.substr(pos, 1) === "E") {
-                    var result16 = "E";
-                    pos += 1;
-                  } else {
-                    var result16 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"E\"");
-                    }
-                  }
-                  if (result16 !== null) {
-                    var result8 = result16;
-                  } else {
-                    if (input.substr(pos, 1) === "e") {
-                      var result15 = "e";
-                      pos += 1;
-                    } else {
-                      var result15 = null;
-                      if (reportMatchFailures) {
-                        matchFailed("\"e\"");
-                      }
-                    }
-                    if (result15 !== null) {
-                      var result8 = result15;
-                    } else {
-                      var result8 = null;;
-                    };
-                  }
-                  if (result8 !== null) {
-                    if (input.substr(pos, 1) === "R") {
-                      var result14 = "R";
-                      pos += 1;
-                    } else {
-                      var result14 = null;
-                      if (reportMatchFailures) {
-                        matchFailed("\"R\"");
-                      }
-                    }
-                    if (result14 !== null) {
-                      var result9 = result14;
-                    } else {
-                      if (input.substr(pos, 1) === "r") {
-                        var result13 = "r";
-                        pos += 1;
-                      } else {
-                        var result13 = null;
-                        if (reportMatchFailures) {
-                          matchFailed("\"r\"");
-                        }
-                      }
-                      if (result13 !== null) {
-                        var result9 = result13;
-                      } else {
-                        var result9 = null;;
-                      };
-                    }
-                    if (result9 !== null) {
-                      var result10 = [];
-                      var result12 = parse_WS();
-                      while (result12 !== null) {
-                        result10.push(result12);
-                        var result12 = parse_WS();
-                      }
-                      if (result10 !== null) {
-                        var result11 = parse_Constraint();
-                        if (result11 !== null) {
-                          var result1 = [result3, result4, result5, result6, result7, result8, result9, result10, result11];
-                        } else {
-                          var result1 = null;
-                          pos = savedPos1;
-                        }
-                      } else {
-                        var result1 = null;
-                        pos = savedPos1;
-                      }
-                    } else {
-                      var result1 = null;
-                      pos = savedPos1;
-                    }
-                  } else {
-                    var result1 = null;
-                    pos = savedPos1;
-                  }
-                } else {
-                  var result1 = null;
-                  pos = savedPos1;
-                }
+                var result1 = [result3, result4, result5, result6];
               } else {
                 var result1 = null;
                 pos = savedPos1;
@@ -13957,7 +7872,7 @@ SparqlParser.parser = (function(){
           ? (function(c) {
                 return {token: 'filter',
                         value: c}
-          })(result1[8])
+          })(result1[3])
           : null;
         if (result2 !== null) {
           var result0 = result2;
@@ -14080,8 +7995,8 @@ SparqlParser.parser = (function(){
         var savedReportMatchFailures = reportMatchFailures;
         reportMatchFailures = false;
         var savedPos3 = pos;
-        var result14 = parse_NIL();
-        var result15 = result14 !== null
+        var result16 = parse_NIL();
+        var result17 = result16 !== null
           ? (function() {
                 var args = {};
                 args.token = 'args';
@@ -14089,14 +8004,14 @@ SparqlParser.parser = (function(){
                 return args;
           })()
           : null;
-        if (result15 !== null) {
-          var result13 = result15;
+        if (result17 !== null) {
+          var result15 = result17;
         } else {
-          var result13 = null;
+          var result15 = null;
           pos = savedPos3;
         }
-        if (result13 !== null) {
-          var result0 = result13;
+        if (result15 !== null) {
+          var result0 = result15;
         } else {
           var savedPos0 = pos;
           var savedPos1 = pos;
@@ -14111,13 +8026,31 @@ SparqlParser.parser = (function(){
           }
           if (result4 !== null) {
             if (input.substr(pos, 8) === "DISTINCT") {
-              var result12 = "DISTINCT";
+              var result14 = "DISTINCT";
               pos += 8;
             } else {
-              var result12 = null;
+              var result14 = null;
               if (reportMatchFailures) {
                 matchFailed("\"DISTINCT\"");
               }
+            }
+            if (result14 !== null) {
+              var result12 = result14;
+            } else {
+              if (input.substr(pos, 8) === "distinct") {
+                var result13 = "distinct";
+                pos += 8;
+              } else {
+                var result13 = null;
+                if (reportMatchFailures) {
+                  matchFailed("\"distinct\"");
+                }
+              }
+              if (result13 !== null) {
+                var result12 = result13;
+              } else {
+                var result12 = null;;
+              };
             }
             var result5 = result12 !== null ? result12 : '';
             if (result5 !== null) {
@@ -14214,7 +8147,7 @@ SparqlParser.parser = (function(){
                   args.token = 'args';
                   args.value = [e].concat(cleanEx);
             
-                  if(d==="DISTINCT") {
+                  if(d!=null && d.toUpperCase()==="DISTINCT") {
                       args.distinct = true;
                   } else {
                       args.distinct = false;
@@ -19466,173 +13399,109 @@ SparqlParser.parser = (function(){
         
         var savedReportMatchFailures = reportMatchFailures;
         reportMatchFailures = false;
-        var savedPos29 = pos;
-        var savedPos30 = pos;
-        if (input.substr(pos, 1) === "S") {
-          var result289 = "S";
-          pos += 1;
+        var savedPos27 = pos;
+        var savedPos28 = pos;
+        if (input.substr(pos, 3) === "STR") {
+          var result216 = "STR";
+          pos += 3;
         } else {
-          var result289 = null;
+          var result216 = null;
           if (reportMatchFailures) {
-            matchFailed("\"S\"");
+            matchFailed("\"STR\"");
           }
         }
-        if (result289 !== null) {
-          var result272 = result289;
+        if (result216 !== null) {
+          var result205 = result216;
         } else {
-          if (input.substr(pos, 1) === "s") {
-            var result288 = "s";
-            pos += 1;
+          if (input.substr(pos, 3) === "str") {
+            var result215 = "str";
+            pos += 3;
           } else {
-            var result288 = null;
+            var result215 = null;
             if (reportMatchFailures) {
-              matchFailed("\"s\"");
+              matchFailed("\"str\"");
             }
           }
-          if (result288 !== null) {
-            var result272 = result288;
+          if (result215 !== null) {
+            var result205 = result215;
           } else {
-            var result272 = null;;
+            var result205 = null;;
           };
         }
-        if (result272 !== null) {
-          if (input.substr(pos, 1) === "T") {
-            var result287 = "T";
-            pos += 1;
-          } else {
-            var result287 = null;
-            if (reportMatchFailures) {
-              matchFailed("\"T\"");
-            }
+        if (result205 !== null) {
+          var result206 = [];
+          var result214 = parse_WS();
+          while (result214 !== null) {
+            result206.push(result214);
+            var result214 = parse_WS();
           }
-          if (result287 !== null) {
-            var result273 = result287;
-          } else {
-            if (input.substr(pos, 1) === "t") {
-              var result286 = "t";
+          if (result206 !== null) {
+            if (input.substr(pos, 1) === "(") {
+              var result207 = "(";
               pos += 1;
             } else {
-              var result286 = null;
+              var result207 = null;
               if (reportMatchFailures) {
-                matchFailed("\"t\"");
+                matchFailed("\"(\"");
               }
             }
-            if (result286 !== null) {
-              var result273 = result286;
-            } else {
-              var result273 = null;;
-            };
-          }
-          if (result273 !== null) {
-            if (input.substr(pos, 1) === "R") {
-              var result285 = "R";
-              pos += 1;
-            } else {
-              var result285 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"R\"");
+            if (result207 !== null) {
+              var result208 = [];
+              var result213 = parse_WS();
+              while (result213 !== null) {
+                result208.push(result213);
+                var result213 = parse_WS();
               }
-            }
-            if (result285 !== null) {
-              var result274 = result285;
-            } else {
-              if (input.substr(pos, 1) === "r") {
-                var result284 = "r";
-                pos += 1;
-              } else {
-                var result284 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"r\"");
-                }
-              }
-              if (result284 !== null) {
-                var result274 = result284;
-              } else {
-                var result274 = null;;
-              };
-            }
-            if (result274 !== null) {
-              var result275 = [];
-              var result283 = parse_WS();
-              while (result283 !== null) {
-                result275.push(result283);
-                var result283 = parse_WS();
-              }
-              if (result275 !== null) {
-                if (input.substr(pos, 1) === "(") {
-                  var result276 = "(";
-                  pos += 1;
-                } else {
-                  var result276 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"(\"");
+              if (result208 !== null) {
+                var result209 = parse_ConditionalOrExpression();
+                if (result209 !== null) {
+                  var result210 = [];
+                  var result212 = parse_WS();
+                  while (result212 !== null) {
+                    result210.push(result212);
+                    var result212 = parse_WS();
                   }
-                }
-                if (result276 !== null) {
-                  var result277 = [];
-                  var result282 = parse_WS();
-                  while (result282 !== null) {
-                    result277.push(result282);
-                    var result282 = parse_WS();
-                  }
-                  if (result277 !== null) {
-                    var result278 = parse_ConditionalOrExpression();
-                    if (result278 !== null) {
-                      var result279 = [];
-                      var result281 = parse_WS();
-                      while (result281 !== null) {
-                        result279.push(result281);
-                        var result281 = parse_WS();
-                      }
-                      if (result279 !== null) {
-                        if (input.substr(pos, 1) === ")") {
-                          var result280 = ")";
-                          pos += 1;
-                        } else {
-                          var result280 = null;
-                          if (reportMatchFailures) {
-                            matchFailed("\")\"");
-                          }
-                        }
-                        if (result280 !== null) {
-                          var result270 = [result272, result273, result274, result275, result276, result277, result278, result279, result280];
-                        } else {
-                          var result270 = null;
-                          pos = savedPos30;
-                        }
-                      } else {
-                        var result270 = null;
-                        pos = savedPos30;
-                      }
+                  if (result210 !== null) {
+                    if (input.substr(pos, 1) === ")") {
+                      var result211 = ")";
+                      pos += 1;
                     } else {
-                      var result270 = null;
-                      pos = savedPos30;
+                      var result211 = null;
+                      if (reportMatchFailures) {
+                        matchFailed("\")\"");
+                      }
+                    }
+                    if (result211 !== null) {
+                      var result203 = [result205, result206, result207, result208, result209, result210, result211];
+                    } else {
+                      var result203 = null;
+                      pos = savedPos28;
                     }
                   } else {
-                    var result270 = null;
-                    pos = savedPos30;
+                    var result203 = null;
+                    pos = savedPos28;
                   }
                 } else {
-                  var result270 = null;
-                  pos = savedPos30;
+                  var result203 = null;
+                  pos = savedPos28;
                 }
               } else {
-                var result270 = null;
-                pos = savedPos30;
+                var result203 = null;
+                pos = savedPos28;
               }
             } else {
-              var result270 = null;
-              pos = savedPos30;
+              var result203 = null;
+              pos = savedPos28;
             }
           } else {
-            var result270 = null;
-            pos = savedPos30;
+            var result203 = null;
+            pos = savedPos28;
           }
         } else {
-          var result270 = null;
-          pos = savedPos30;
+          var result203 = null;
+          pos = savedPos28;
         }
-        var result271 = result270 !== null
+        var result204 = result203 !== null
           ? (function(e) {
                 var ex = {};
                 ex.token = 'expression'
@@ -19641,216 +13510,120 @@ SparqlParser.parser = (function(){
                 ex.args = [e]
           
                 return ex;
-            })(result270[6])
+            })(result203[4])
           : null;
-        if (result271 !== null) {
-          var result269 = result271;
+        if (result204 !== null) {
+          var result202 = result204;
         } else {
-          var result269 = null;
-          pos = savedPos29;
+          var result202 = null;
+          pos = savedPos27;
         }
-        if (result269 !== null) {
-          var result0 = result269;
+        if (result202 !== null) {
+          var result0 = result202;
         } else {
-          var savedPos27 = pos;
-          var savedPos28 = pos;
-          if (input.substr(pos, 1) === "L") {
-            var result268 = "L";
-            pos += 1;
+          var savedPos25 = pos;
+          var savedPos26 = pos;
+          if (input.substr(pos, 4) === "LANG") {
+            var result201 = "LANG";
+            pos += 4;
           } else {
-            var result268 = null;
+            var result201 = null;
             if (reportMatchFailures) {
-              matchFailed("\"L\"");
+              matchFailed("\"LANG\"");
             }
           }
-          if (result268 !== null) {
-            var result248 = result268;
+          if (result201 !== null) {
+            var result190 = result201;
           } else {
-            if (input.substr(pos, 1) === "l") {
-              var result267 = "l";
-              pos += 1;
+            if (input.substr(pos, 4) === "lang") {
+              var result200 = "lang";
+              pos += 4;
             } else {
-              var result267 = null;
+              var result200 = null;
               if (reportMatchFailures) {
-                matchFailed("\"l\"");
+                matchFailed("\"lang\"");
               }
             }
-            if (result267 !== null) {
-              var result248 = result267;
+            if (result200 !== null) {
+              var result190 = result200;
             } else {
-              var result248 = null;;
+              var result190 = null;;
             };
           }
-          if (result248 !== null) {
-            if (input.substr(pos, 1) === "A") {
-              var result266 = "A";
-              pos += 1;
-            } else {
-              var result266 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"A\"");
-              }
+          if (result190 !== null) {
+            var result191 = [];
+            var result199 = parse_WS();
+            while (result199 !== null) {
+              result191.push(result199);
+              var result199 = parse_WS();
             }
-            if (result266 !== null) {
-              var result249 = result266;
-            } else {
-              if (input.substr(pos, 1) === "a") {
-                var result265 = "a";
+            if (result191 !== null) {
+              if (input.substr(pos, 1) === "(") {
+                var result192 = "(";
                 pos += 1;
               } else {
-                var result265 = null;
+                var result192 = null;
                 if (reportMatchFailures) {
-                  matchFailed("\"a\"");
+                  matchFailed("\"(\"");
                 }
               }
-              if (result265 !== null) {
-                var result249 = result265;
-              } else {
-                var result249 = null;;
-              };
-            }
-            if (result249 !== null) {
-              if (input.substr(pos, 1) === "N") {
-                var result264 = "N";
-                pos += 1;
-              } else {
-                var result264 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"N\"");
+              if (result192 !== null) {
+                var result193 = [];
+                var result198 = parse_WS();
+                while (result198 !== null) {
+                  result193.push(result198);
+                  var result198 = parse_WS();
                 }
-              }
-              if (result264 !== null) {
-                var result250 = result264;
-              } else {
-                if (input.substr(pos, 1) === "n") {
-                  var result263 = "n";
-                  pos += 1;
-                } else {
-                  var result263 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"n\"");
-                  }
-                }
-                if (result263 !== null) {
-                  var result250 = result263;
-                } else {
-                  var result250 = null;;
-                };
-              }
-              if (result250 !== null) {
-                if (input.substr(pos, 1) === "G") {
-                  var result262 = "G";
-                  pos += 1;
-                } else {
-                  var result262 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"G\"");
-                  }
-                }
-                if (result262 !== null) {
-                  var result251 = result262;
-                } else {
-                  if (input.substr(pos, 1) === "g") {
-                    var result261 = "g";
-                    pos += 1;
-                  } else {
-                    var result261 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"g\"");
+                if (result193 !== null) {
+                  var result194 = parse_ConditionalOrExpression();
+                  if (result194 !== null) {
+                    var result195 = [];
+                    var result197 = parse_WS();
+                    while (result197 !== null) {
+                      result195.push(result197);
+                      var result197 = parse_WS();
                     }
-                  }
-                  if (result261 !== null) {
-                    var result251 = result261;
-                  } else {
-                    var result251 = null;;
-                  };
-                }
-                if (result251 !== null) {
-                  var result252 = [];
-                  var result260 = parse_WS();
-                  while (result260 !== null) {
-                    result252.push(result260);
-                    var result260 = parse_WS();
-                  }
-                  if (result252 !== null) {
-                    if (input.substr(pos, 1) === "(") {
-                      var result253 = "(";
-                      pos += 1;
-                    } else {
-                      var result253 = null;
-                      if (reportMatchFailures) {
-                        matchFailed("\"(\"");
-                      }
-                    }
-                    if (result253 !== null) {
-                      var result254 = [];
-                      var result259 = parse_WS();
-                      while (result259 !== null) {
-                        result254.push(result259);
-                        var result259 = parse_WS();
-                      }
-                      if (result254 !== null) {
-                        var result255 = parse_ConditionalOrExpression();
-                        if (result255 !== null) {
-                          var result256 = [];
-                          var result258 = parse_WS();
-                          while (result258 !== null) {
-                            result256.push(result258);
-                            var result258 = parse_WS();
-                          }
-                          if (result256 !== null) {
-                            if (input.substr(pos, 1) === ")") {
-                              var result257 = ")";
-                              pos += 1;
-                            } else {
-                              var result257 = null;
-                              if (reportMatchFailures) {
-                                matchFailed("\")\"");
-                              }
-                            }
-                            if (result257 !== null) {
-                              var result246 = [result248, result249, result250, result251, result252, result253, result254, result255, result256, result257];
-                            } else {
-                              var result246 = null;
-                              pos = savedPos28;
-                            }
-                          } else {
-                            var result246 = null;
-                            pos = savedPos28;
-                          }
-                        } else {
-                          var result246 = null;
-                          pos = savedPos28;
-                        }
+                    if (result195 !== null) {
+                      if (input.substr(pos, 1) === ")") {
+                        var result196 = ")";
+                        pos += 1;
                       } else {
-                        var result246 = null;
-                        pos = savedPos28;
+                        var result196 = null;
+                        if (reportMatchFailures) {
+                          matchFailed("\")\"");
+                        }
+                      }
+                      if (result196 !== null) {
+                        var result188 = [result190, result191, result192, result193, result194, result195, result196];
+                      } else {
+                        var result188 = null;
+                        pos = savedPos26;
                       }
                     } else {
-                      var result246 = null;
-                      pos = savedPos28;
+                      var result188 = null;
+                      pos = savedPos26;
                     }
                   } else {
-                    var result246 = null;
-                    pos = savedPos28;
+                    var result188 = null;
+                    pos = savedPos26;
                   }
                 } else {
-                  var result246 = null;
-                  pos = savedPos28;
+                  var result188 = null;
+                  pos = savedPos26;
                 }
               } else {
-                var result246 = null;
-                pos = savedPos28;
+                var result188 = null;
+                pos = savedPos26;
               }
             } else {
-              var result246 = null;
-              pos = savedPos28;
+              var result188 = null;
+              pos = savedPos26;
             }
           } else {
-            var result246 = null;
-            pos = savedPos28;
+            var result188 = null;
+            pos = savedPos26;
           }
-          var result247 = result246 !== null
+          var result189 = result188 !== null
             ? (function(e) {
                   var ex = {};
                   ex.token = 'expression'
@@ -19859,144 +13632,144 @@ SparqlParser.parser = (function(){
                   ex.args = [e]
             
                   return ex;
-            })(result246[7])
+            })(result188[4])
             : null;
-          if (result247 !== null) {
-            var result245 = result247;
+          if (result189 !== null) {
+            var result187 = result189;
           } else {
-            var result245 = null;
-            pos = savedPos27;
+            var result187 = null;
+            pos = savedPos25;
           }
-          if (result245 !== null) {
-            var result0 = result245;
+          if (result187 !== null) {
+            var result0 = result187;
           } else {
-            var savedPos25 = pos;
-            var savedPos26 = pos;
+            var savedPos23 = pos;
+            var savedPos24 = pos;
             if (input.substr(pos, 11) === "LANGMATCHES") {
-              var result229 = "LANGMATCHES";
+              var result171 = "LANGMATCHES";
               pos += 11;
             } else {
-              var result229 = null;
+              var result171 = null;
               if (reportMatchFailures) {
                 matchFailed("\"LANGMATCHES\"");
               }
             }
-            if (result229 !== null) {
-              var result230 = [];
-              var result244 = parse_WS();
-              while (result244 !== null) {
-                result230.push(result244);
-                var result244 = parse_WS();
+            if (result171 !== null) {
+              var result172 = [];
+              var result186 = parse_WS();
+              while (result186 !== null) {
+                result172.push(result186);
+                var result186 = parse_WS();
               }
-              if (result230 !== null) {
+              if (result172 !== null) {
                 if (input.substr(pos, 1) === "(") {
-                  var result231 = "(";
+                  var result173 = "(";
                   pos += 1;
                 } else {
-                  var result231 = null;
+                  var result173 = null;
                   if (reportMatchFailures) {
                     matchFailed("\"(\"");
                   }
                 }
-                if (result231 !== null) {
-                  var result232 = [];
-                  var result243 = parse_WS();
-                  while (result243 !== null) {
-                    result232.push(result243);
-                    var result243 = parse_WS();
+                if (result173 !== null) {
+                  var result174 = [];
+                  var result185 = parse_WS();
+                  while (result185 !== null) {
+                    result174.push(result185);
+                    var result185 = parse_WS();
                   }
-                  if (result232 !== null) {
-                    var result233 = parse_ConditionalOrExpression();
-                    if (result233 !== null) {
-                      var result234 = [];
-                      var result242 = parse_WS();
-                      while (result242 !== null) {
-                        result234.push(result242);
-                        var result242 = parse_WS();
+                  if (result174 !== null) {
+                    var result175 = parse_ConditionalOrExpression();
+                    if (result175 !== null) {
+                      var result176 = [];
+                      var result184 = parse_WS();
+                      while (result184 !== null) {
+                        result176.push(result184);
+                        var result184 = parse_WS();
                       }
-                      if (result234 !== null) {
+                      if (result176 !== null) {
                         if (input.substr(pos, 1) === ",") {
-                          var result235 = ",";
+                          var result177 = ",";
                           pos += 1;
                         } else {
-                          var result235 = null;
+                          var result177 = null;
                           if (reportMatchFailures) {
                             matchFailed("\",\"");
                           }
                         }
-                        if (result235 !== null) {
-                          var result236 = [];
-                          var result241 = parse_WS();
-                          while (result241 !== null) {
-                            result236.push(result241);
-                            var result241 = parse_WS();
+                        if (result177 !== null) {
+                          var result178 = [];
+                          var result183 = parse_WS();
+                          while (result183 !== null) {
+                            result178.push(result183);
+                            var result183 = parse_WS();
                           }
-                          if (result236 !== null) {
-                            var result237 = parse_ConditionalOrExpression();
-                            if (result237 !== null) {
-                              var result238 = [];
-                              var result240 = parse_WS();
-                              while (result240 !== null) {
-                                result238.push(result240);
-                                var result240 = parse_WS();
+                          if (result178 !== null) {
+                            var result179 = parse_ConditionalOrExpression();
+                            if (result179 !== null) {
+                              var result180 = [];
+                              var result182 = parse_WS();
+                              while (result182 !== null) {
+                                result180.push(result182);
+                                var result182 = parse_WS();
                               }
-                              if (result238 !== null) {
+                              if (result180 !== null) {
                                 if (input.substr(pos, 1) === ")") {
-                                  var result239 = ")";
+                                  var result181 = ")";
                                   pos += 1;
                                 } else {
-                                  var result239 = null;
+                                  var result181 = null;
                                   if (reportMatchFailures) {
                                     matchFailed("\")\"");
                                   }
                                 }
-                                if (result239 !== null) {
-                                  var result227 = [result229, result230, result231, result232, result233, result234, result235, result236, result237, result238, result239];
+                                if (result181 !== null) {
+                                  var result169 = [result171, result172, result173, result174, result175, result176, result177, result178, result179, result180, result181];
                                 } else {
-                                  var result227 = null;
-                                  pos = savedPos26;
+                                  var result169 = null;
+                                  pos = savedPos24;
                                 }
                               } else {
-                                var result227 = null;
-                                pos = savedPos26;
+                                var result169 = null;
+                                pos = savedPos24;
                               }
                             } else {
-                              var result227 = null;
-                              pos = savedPos26;
+                              var result169 = null;
+                              pos = savedPos24;
                             }
                           } else {
-                            var result227 = null;
-                            pos = savedPos26;
+                            var result169 = null;
+                            pos = savedPos24;
                           }
                         } else {
-                          var result227 = null;
-                          pos = savedPos26;
+                          var result169 = null;
+                          pos = savedPos24;
                         }
                       } else {
-                        var result227 = null;
-                        pos = savedPos26;
+                        var result169 = null;
+                        pos = savedPos24;
                       }
                     } else {
-                      var result227 = null;
-                      pos = savedPos26;
+                      var result169 = null;
+                      pos = savedPos24;
                     }
                   } else {
-                    var result227 = null;
-                    pos = savedPos26;
+                    var result169 = null;
+                    pos = savedPos24;
                   }
                 } else {
-                  var result227 = null;
-                  pos = savedPos26;
+                  var result169 = null;
+                  pos = savedPos24;
                 }
               } else {
-                var result227 = null;
-                pos = savedPos26;
+                var result169 = null;
+                pos = savedPos24;
               }
             } else {
-              var result227 = null;
-              pos = savedPos26;
+              var result169 = null;
+              pos = savedPos24;
             }
-            var result228 = result227 !== null
+            var result170 = result169 !== null
               ? (function(e1, e2) {
                     var ex = {};
                     ex.token = 'expression'
@@ -20005,344 +13778,120 @@ SparqlParser.parser = (function(){
                     ex.args = [e1,e2]
               
                     return ex;
-              })(result227[4], result227[8])
+              })(result169[4], result169[8])
               : null;
-            if (result228 !== null) {
-              var result226 = result228;
+            if (result170 !== null) {
+              var result168 = result170;
             } else {
-              var result226 = null;
-              pos = savedPos25;
+              var result168 = null;
+              pos = savedPos23;
             }
-            if (result226 !== null) {
-              var result0 = result226;
+            if (result168 !== null) {
+              var result0 = result168;
             } else {
-              var savedPos23 = pos;
-              var savedPos24 = pos;
-              if (input.substr(pos, 1) === "D") {
-                var result225 = "D";
-                pos += 1;
+              var savedPos21 = pos;
+              var savedPos22 = pos;
+              if (input.substr(pos, 8) === "DATATYPE") {
+                var result167 = "DATATYPE";
+                pos += 8;
               } else {
-                var result225 = null;
+                var result167 = null;
                 if (reportMatchFailures) {
-                  matchFailed("\"D\"");
+                  matchFailed("\"DATATYPE\"");
                 }
               }
-              if (result225 !== null) {
-                var result193 = result225;
+              if (result167 !== null) {
+                var result156 = result167;
               } else {
-                if (input.substr(pos, 1) === "d") {
-                  var result224 = "d";
-                  pos += 1;
+                if (input.substr(pos, 8) === "datatype") {
+                  var result166 = "datatype";
+                  pos += 8;
                 } else {
-                  var result224 = null;
+                  var result166 = null;
                   if (reportMatchFailures) {
-                    matchFailed("\"d\"");
+                    matchFailed("\"datatype\"");
                   }
                 }
-                if (result224 !== null) {
-                  var result193 = result224;
+                if (result166 !== null) {
+                  var result156 = result166;
                 } else {
-                  var result193 = null;;
+                  var result156 = null;;
                 };
               }
-              if (result193 !== null) {
-                if (input.substr(pos, 1) === "A") {
-                  var result223 = "A";
-                  pos += 1;
-                } else {
-                  var result223 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"A\"");
-                  }
+              if (result156 !== null) {
+                var result157 = [];
+                var result165 = parse_WS();
+                while (result165 !== null) {
+                  result157.push(result165);
+                  var result165 = parse_WS();
                 }
-                if (result223 !== null) {
-                  var result194 = result223;
-                } else {
-                  if (input.substr(pos, 1) === "a") {
-                    var result222 = "a";
+                if (result157 !== null) {
+                  if (input.substr(pos, 1) === "(") {
+                    var result158 = "(";
                     pos += 1;
                   } else {
-                    var result222 = null;
+                    var result158 = null;
                     if (reportMatchFailures) {
-                      matchFailed("\"a\"");
+                      matchFailed("\"(\"");
                     }
                   }
-                  if (result222 !== null) {
-                    var result194 = result222;
-                  } else {
-                    var result194 = null;;
-                  };
-                }
-                if (result194 !== null) {
-                  if (input.substr(pos, 1) === "T") {
-                    var result221 = "T";
-                    pos += 1;
-                  } else {
-                    var result221 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"T\"");
+                  if (result158 !== null) {
+                    var result159 = [];
+                    var result164 = parse_WS();
+                    while (result164 !== null) {
+                      result159.push(result164);
+                      var result164 = parse_WS();
                     }
-                  }
-                  if (result221 !== null) {
-                    var result195 = result221;
-                  } else {
-                    if (input.substr(pos, 1) === "t") {
-                      var result220 = "t";
-                      pos += 1;
-                    } else {
-                      var result220 = null;
-                      if (reportMatchFailures) {
-                        matchFailed("\"t\"");
-                      }
-                    }
-                    if (result220 !== null) {
-                      var result195 = result220;
-                    } else {
-                      var result195 = null;;
-                    };
-                  }
-                  if (result195 !== null) {
-                    if (input.substr(pos, 1) === "A") {
-                      var result219 = "A";
-                      pos += 1;
-                    } else {
-                      var result219 = null;
-                      if (reportMatchFailures) {
-                        matchFailed("\"A\"");
-                      }
-                    }
-                    if (result219 !== null) {
-                      var result196 = result219;
-                    } else {
-                      if (input.substr(pos, 1) === "a") {
-                        var result218 = "a";
-                        pos += 1;
-                      } else {
-                        var result218 = null;
-                        if (reportMatchFailures) {
-                          matchFailed("\"a\"");
+                    if (result159 !== null) {
+                      var result160 = parse_ConditionalOrExpression();
+                      if (result160 !== null) {
+                        var result161 = [];
+                        var result163 = parse_WS();
+                        while (result163 !== null) {
+                          result161.push(result163);
+                          var result163 = parse_WS();
                         }
-                      }
-                      if (result218 !== null) {
-                        var result196 = result218;
-                      } else {
-                        var result196 = null;;
-                      };
-                    }
-                    if (result196 !== null) {
-                      if (input.substr(pos, 1) === "T") {
-                        var result217 = "T";
-                        pos += 1;
-                      } else {
-                        var result217 = null;
-                        if (reportMatchFailures) {
-                          matchFailed("\"T\"");
-                        }
-                      }
-                      if (result217 !== null) {
-                        var result197 = result217;
-                      } else {
-                        if (input.substr(pos, 1) === "t") {
-                          var result216 = "t";
-                          pos += 1;
-                        } else {
-                          var result216 = null;
-                          if (reportMatchFailures) {
-                            matchFailed("\"t\"");
-                          }
-                        }
-                        if (result216 !== null) {
-                          var result197 = result216;
-                        } else {
-                          var result197 = null;;
-                        };
-                      }
-                      if (result197 !== null) {
-                        if (input.substr(pos, 1) === "Y") {
-                          var result215 = "Y";
-                          pos += 1;
-                        } else {
-                          var result215 = null;
-                          if (reportMatchFailures) {
-                            matchFailed("\"Y\"");
-                          }
-                        }
-                        if (result215 !== null) {
-                          var result198 = result215;
-                        } else {
-                          if (input.substr(pos, 1) === "y") {
-                            var result214 = "y";
+                        if (result161 !== null) {
+                          if (input.substr(pos, 1) === ")") {
+                            var result162 = ")";
                             pos += 1;
                           } else {
-                            var result214 = null;
+                            var result162 = null;
                             if (reportMatchFailures) {
-                              matchFailed("\"y\"");
+                              matchFailed("\")\"");
                             }
                           }
-                          if (result214 !== null) {
-                            var result198 = result214;
+                          if (result162 !== null) {
+                            var result154 = [result156, result157, result158, result159, result160, result161, result162];
                           } else {
-                            var result198 = null;;
-                          };
-                        }
-                        if (result198 !== null) {
-                          if (input.substr(pos, 1) === "P") {
-                            var result213 = "P";
-                            pos += 1;
-                          } else {
-                            var result213 = null;
-                            if (reportMatchFailures) {
-                              matchFailed("\"P\"");
-                            }
-                          }
-                          if (result213 !== null) {
-                            var result199 = result213;
-                          } else {
-                            if (input.substr(pos, 1) === "p") {
-                              var result212 = "p";
-                              pos += 1;
-                            } else {
-                              var result212 = null;
-                              if (reportMatchFailures) {
-                                matchFailed("\"p\"");
-                              }
-                            }
-                            if (result212 !== null) {
-                              var result199 = result212;
-                            } else {
-                              var result199 = null;;
-                            };
-                          }
-                          if (result199 !== null) {
-                            if (input.substr(pos, 1) === "E") {
-                              var result211 = "E";
-                              pos += 1;
-                            } else {
-                              var result211 = null;
-                              if (reportMatchFailures) {
-                                matchFailed("\"E\"");
-                              }
-                            }
-                            if (result211 !== null) {
-                              var result200 = result211;
-                            } else {
-                              if (input.substr(pos, 1) === "e") {
-                                var result210 = "e";
-                                pos += 1;
-                              } else {
-                                var result210 = null;
-                                if (reportMatchFailures) {
-                                  matchFailed("\"e\"");
-                                }
-                              }
-                              if (result210 !== null) {
-                                var result200 = result210;
-                              } else {
-                                var result200 = null;;
-                              };
-                            }
-                            if (result200 !== null) {
-                              var result201 = [];
-                              var result209 = parse_WS();
-                              while (result209 !== null) {
-                                result201.push(result209);
-                                var result209 = parse_WS();
-                              }
-                              if (result201 !== null) {
-                                if (input.substr(pos, 1) === "(") {
-                                  var result202 = "(";
-                                  pos += 1;
-                                } else {
-                                  var result202 = null;
-                                  if (reportMatchFailures) {
-                                    matchFailed("\"(\"");
-                                  }
-                                }
-                                if (result202 !== null) {
-                                  var result203 = [];
-                                  var result208 = parse_WS();
-                                  while (result208 !== null) {
-                                    result203.push(result208);
-                                    var result208 = parse_WS();
-                                  }
-                                  if (result203 !== null) {
-                                    var result204 = parse_ConditionalOrExpression();
-                                    if (result204 !== null) {
-                                      var result205 = [];
-                                      var result207 = parse_WS();
-                                      while (result207 !== null) {
-                                        result205.push(result207);
-                                        var result207 = parse_WS();
-                                      }
-                                      if (result205 !== null) {
-                                        if (input.substr(pos, 1) === ")") {
-                                          var result206 = ")";
-                                          pos += 1;
-                                        } else {
-                                          var result206 = null;
-                                          if (reportMatchFailures) {
-                                            matchFailed("\")\"");
-                                          }
-                                        }
-                                        if (result206 !== null) {
-                                          var result191 = [result193, result194, result195, result196, result197, result198, result199, result200, result201, result202, result203, result204, result205, result206];
-                                        } else {
-                                          var result191 = null;
-                                          pos = savedPos24;
-                                        }
-                                      } else {
-                                        var result191 = null;
-                                        pos = savedPos24;
-                                      }
-                                    } else {
-                                      var result191 = null;
-                                      pos = savedPos24;
-                                    }
-                                  } else {
-                                    var result191 = null;
-                                    pos = savedPos24;
-                                  }
-                                } else {
-                                  var result191 = null;
-                                  pos = savedPos24;
-                                }
-                              } else {
-                                var result191 = null;
-                                pos = savedPos24;
-                              }
-                            } else {
-                              var result191 = null;
-                              pos = savedPos24;
-                            }
-                          } else {
-                            var result191 = null;
-                            pos = savedPos24;
+                            var result154 = null;
+                            pos = savedPos22;
                           }
                         } else {
-                          var result191 = null;
-                          pos = savedPos24;
+                          var result154 = null;
+                          pos = savedPos22;
                         }
                       } else {
-                        var result191 = null;
-                        pos = savedPos24;
+                        var result154 = null;
+                        pos = savedPos22;
                       }
                     } else {
-                      var result191 = null;
-                      pos = savedPos24;
+                      var result154 = null;
+                      pos = savedPos22;
                     }
                   } else {
-                    var result191 = null;
-                    pos = savedPos24;
+                    var result154 = null;
+                    pos = savedPos22;
                   }
                 } else {
-                  var result191 = null;
-                  pos = savedPos24;
+                  var result154 = null;
+                  pos = savedPos22;
                 }
               } else {
-                var result191 = null;
-                pos = savedPos24;
+                var result154 = null;
+                pos = savedPos22;
               }
-              var result192 = result191 !== null
+              var result155 = result154 !== null
                 ? (function(e) {
                       var ex = {};
                       ex.token = 'expression'
@@ -20351,102 +13900,102 @@ SparqlParser.parser = (function(){
                       ex.args = [e]
                 
                       return ex;
-                })(result191[11])
+                })(result154[4])
                 : null;
-              if (result192 !== null) {
-                var result190 = result192;
+              if (result155 !== null) {
+                var result153 = result155;
               } else {
-                var result190 = null;
-                pos = savedPos23;
+                var result153 = null;
+                pos = savedPos21;
               }
-              if (result190 !== null) {
-                var result0 = result190;
+              if (result153 !== null) {
+                var result0 = result153;
               } else {
-                var savedPos21 = pos;
-                var savedPos22 = pos;
+                var savedPos19 = pos;
+                var savedPos20 = pos;
                 if (input.substr(pos, 5) === "BOUND") {
-                  var result180 = "BOUND";
+                  var result143 = "BOUND";
                   pos += 5;
                 } else {
-                  var result180 = null;
+                  var result143 = null;
                   if (reportMatchFailures) {
                     matchFailed("\"BOUND\"");
                   }
                 }
-                if (result180 !== null) {
-                  var result181 = [];
-                  var result189 = parse_WS();
-                  while (result189 !== null) {
-                    result181.push(result189);
-                    var result189 = parse_WS();
+                if (result143 !== null) {
+                  var result144 = [];
+                  var result152 = parse_WS();
+                  while (result152 !== null) {
+                    result144.push(result152);
+                    var result152 = parse_WS();
                   }
-                  if (result181 !== null) {
+                  if (result144 !== null) {
                     if (input.substr(pos, 1) === "(") {
-                      var result182 = "(";
+                      var result145 = "(";
                       pos += 1;
                     } else {
-                      var result182 = null;
+                      var result145 = null;
                       if (reportMatchFailures) {
                         matchFailed("\"(\"");
                       }
                     }
-                    if (result182 !== null) {
-                      var result183 = [];
-                      var result188 = parse_WS();
-                      while (result188 !== null) {
-                        result183.push(result188);
-                        var result188 = parse_WS();
+                    if (result145 !== null) {
+                      var result146 = [];
+                      var result151 = parse_WS();
+                      while (result151 !== null) {
+                        result146.push(result151);
+                        var result151 = parse_WS();
                       }
-                      if (result183 !== null) {
-                        var result184 = parse_Var();
-                        if (result184 !== null) {
-                          var result185 = [];
-                          var result187 = parse_WS();
-                          while (result187 !== null) {
-                            result185.push(result187);
-                            var result187 = parse_WS();
+                      if (result146 !== null) {
+                        var result147 = parse_Var();
+                        if (result147 !== null) {
+                          var result148 = [];
+                          var result150 = parse_WS();
+                          while (result150 !== null) {
+                            result148.push(result150);
+                            var result150 = parse_WS();
                           }
-                          if (result185 !== null) {
+                          if (result148 !== null) {
                             if (input.substr(pos, 1) === ")") {
-                              var result186 = ")";
+                              var result149 = ")";
                               pos += 1;
                             } else {
-                              var result186 = null;
+                              var result149 = null;
                               if (reportMatchFailures) {
                                 matchFailed("\")\"");
                               }
                             }
-                            if (result186 !== null) {
-                              var result178 = [result180, result181, result182, result183, result184, result185, result186];
+                            if (result149 !== null) {
+                              var result141 = [result143, result144, result145, result146, result147, result148, result149];
                             } else {
-                              var result178 = null;
-                              pos = savedPos22;
+                              var result141 = null;
+                              pos = savedPos20;
                             }
                           } else {
-                            var result178 = null;
-                            pos = savedPos22;
+                            var result141 = null;
+                            pos = savedPos20;
                           }
                         } else {
-                          var result178 = null;
-                          pos = savedPos22;
+                          var result141 = null;
+                          pos = savedPos20;
                         }
                       } else {
-                        var result178 = null;
-                        pos = savedPos22;
+                        var result141 = null;
+                        pos = savedPos20;
                       }
                     } else {
-                      var result178 = null;
-                      pos = savedPos22;
+                      var result141 = null;
+                      pos = savedPos20;
                     }
                   } else {
-                    var result178 = null;
-                    pos = savedPos22;
+                    var result141 = null;
+                    pos = savedPos20;
                   }
                 } else {
-                  var result178 = null;
-                  pos = savedPos22;
+                  var result141 = null;
+                  pos = savedPos20;
                 }
-                var result179 = result178 !== null
+                var result142 = result141 !== null
                   ? (function(v) {
                         var ex = {};
                         ex.token = 'expression'
@@ -20455,102 +14004,102 @@ SparqlParser.parser = (function(){
                         ex.args = [v]
                   
                         return ex;
-                  })(result178[4])
+                  })(result141[4])
                   : null;
-                if (result179 !== null) {
-                  var result177 = result179;
+                if (result142 !== null) {
+                  var result140 = result142;
                 } else {
-                  var result177 = null;
-                  pos = savedPos21;
+                  var result140 = null;
+                  pos = savedPos19;
                 }
-                if (result177 !== null) {
-                  var result0 = result177;
+                if (result140 !== null) {
+                  var result0 = result140;
                 } else {
-                  var savedPos19 = pos;
-                  var savedPos20 = pos;
+                  var savedPos17 = pos;
+                  var savedPos18 = pos;
                   if (input.substr(pos, 3) === "IRI") {
-                    var result167 = "IRI";
+                    var result130 = "IRI";
                     pos += 3;
                   } else {
-                    var result167 = null;
+                    var result130 = null;
                     if (reportMatchFailures) {
                       matchFailed("\"IRI\"");
                     }
                   }
-                  if (result167 !== null) {
-                    var result168 = [];
-                    var result176 = parse_WS();
-                    while (result176 !== null) {
-                      result168.push(result176);
-                      var result176 = parse_WS();
+                  if (result130 !== null) {
+                    var result131 = [];
+                    var result139 = parse_WS();
+                    while (result139 !== null) {
+                      result131.push(result139);
+                      var result139 = parse_WS();
                     }
-                    if (result168 !== null) {
+                    if (result131 !== null) {
                       if (input.substr(pos, 1) === "(") {
-                        var result169 = "(";
+                        var result132 = "(";
                         pos += 1;
                       } else {
-                        var result169 = null;
+                        var result132 = null;
                         if (reportMatchFailures) {
                           matchFailed("\"(\"");
                         }
                       }
-                      if (result169 !== null) {
-                        var result170 = [];
-                        var result175 = parse_WS();
-                        while (result175 !== null) {
-                          result170.push(result175);
-                          var result175 = parse_WS();
+                      if (result132 !== null) {
+                        var result133 = [];
+                        var result138 = parse_WS();
+                        while (result138 !== null) {
+                          result133.push(result138);
+                          var result138 = parse_WS();
                         }
-                        if (result170 !== null) {
-                          var result171 = parse_ConditionalOrExpression();
-                          if (result171 !== null) {
-                            var result172 = [];
-                            var result174 = parse_WS();
-                            while (result174 !== null) {
-                              result172.push(result174);
-                              var result174 = parse_WS();
+                        if (result133 !== null) {
+                          var result134 = parse_ConditionalOrExpression();
+                          if (result134 !== null) {
+                            var result135 = [];
+                            var result137 = parse_WS();
+                            while (result137 !== null) {
+                              result135.push(result137);
+                              var result137 = parse_WS();
                             }
-                            if (result172 !== null) {
+                            if (result135 !== null) {
                               if (input.substr(pos, 1) === ")") {
-                                var result173 = ")";
+                                var result136 = ")";
                                 pos += 1;
                               } else {
-                                var result173 = null;
+                                var result136 = null;
                                 if (reportMatchFailures) {
                                   matchFailed("\")\"");
                                 }
                               }
-                              if (result173 !== null) {
-                                var result165 = [result167, result168, result169, result170, result171, result172, result173];
+                              if (result136 !== null) {
+                                var result128 = [result130, result131, result132, result133, result134, result135, result136];
                               } else {
-                                var result165 = null;
-                                pos = savedPos20;
+                                var result128 = null;
+                                pos = savedPos18;
                               }
                             } else {
-                              var result165 = null;
-                              pos = savedPos20;
+                              var result128 = null;
+                              pos = savedPos18;
                             }
                           } else {
-                            var result165 = null;
-                            pos = savedPos20;
+                            var result128 = null;
+                            pos = savedPos18;
                           }
                         } else {
-                          var result165 = null;
-                          pos = savedPos20;
+                          var result128 = null;
+                          pos = savedPos18;
                         }
                       } else {
-                        var result165 = null;
-                        pos = savedPos20;
+                        var result128 = null;
+                        pos = savedPos18;
                       }
                     } else {
-                      var result165 = null;
-                      pos = savedPos20;
+                      var result128 = null;
+                      pos = savedPos18;
                     }
                   } else {
-                    var result165 = null;
-                    pos = savedPos20;
+                    var result128 = null;
+                    pos = savedPos18;
                   }
-                  var result166 = result165 !== null
+                  var result129 = result128 !== null
                     ? (function(e) {
                           var ex = {};
                           ex.token = 'expression';
@@ -20559,102 +14108,102 @@ SparqlParser.parser = (function(){
                           ex.args = [e];
                     
                           return ex;
-                    })(result165[4])
+                    })(result128[4])
                     : null;
-                  if (result166 !== null) {
-                    var result164 = result166;
+                  if (result129 !== null) {
+                    var result127 = result129;
                   } else {
-                    var result164 = null;
-                    pos = savedPos19;
+                    var result127 = null;
+                    pos = savedPos17;
                   }
-                  if (result164 !== null) {
-                    var result0 = result164;
+                  if (result127 !== null) {
+                    var result0 = result127;
                   } else {
-                    var savedPos17 = pos;
-                    var savedPos18 = pos;
+                    var savedPos15 = pos;
+                    var savedPos16 = pos;
                     if (input.substr(pos, 3) === "URI") {
-                      var result154 = "URI";
+                      var result117 = "URI";
                       pos += 3;
                     } else {
-                      var result154 = null;
+                      var result117 = null;
                       if (reportMatchFailures) {
                         matchFailed("\"URI\"");
                       }
                     }
-                    if (result154 !== null) {
-                      var result155 = [];
-                      var result163 = parse_WS();
-                      while (result163 !== null) {
-                        result155.push(result163);
-                        var result163 = parse_WS();
+                    if (result117 !== null) {
+                      var result118 = [];
+                      var result126 = parse_WS();
+                      while (result126 !== null) {
+                        result118.push(result126);
+                        var result126 = parse_WS();
                       }
-                      if (result155 !== null) {
+                      if (result118 !== null) {
                         if (input.substr(pos, 1) === "(") {
-                          var result156 = "(";
+                          var result119 = "(";
                           pos += 1;
                         } else {
-                          var result156 = null;
+                          var result119 = null;
                           if (reportMatchFailures) {
                             matchFailed("\"(\"");
                           }
                         }
-                        if (result156 !== null) {
-                          var result157 = [];
-                          var result162 = parse_WS();
-                          while (result162 !== null) {
-                            result157.push(result162);
-                            var result162 = parse_WS();
+                        if (result119 !== null) {
+                          var result120 = [];
+                          var result125 = parse_WS();
+                          while (result125 !== null) {
+                            result120.push(result125);
+                            var result125 = parse_WS();
                           }
-                          if (result157 !== null) {
-                            var result158 = parse_ConditionalOrExpression();
-                            if (result158 !== null) {
-                              var result159 = [];
-                              var result161 = parse_WS();
-                              while (result161 !== null) {
-                                result159.push(result161);
-                                var result161 = parse_WS();
+                          if (result120 !== null) {
+                            var result121 = parse_ConditionalOrExpression();
+                            if (result121 !== null) {
+                              var result122 = [];
+                              var result124 = parse_WS();
+                              while (result124 !== null) {
+                                result122.push(result124);
+                                var result124 = parse_WS();
                               }
-                              if (result159 !== null) {
+                              if (result122 !== null) {
                                 if (input.substr(pos, 1) === ")") {
-                                  var result160 = ")";
+                                  var result123 = ")";
                                   pos += 1;
                                 } else {
-                                  var result160 = null;
+                                  var result123 = null;
                                   if (reportMatchFailures) {
                                     matchFailed("\")\"");
                                   }
                                 }
-                                if (result160 !== null) {
-                                  var result152 = [result154, result155, result156, result157, result158, result159, result160];
+                                if (result123 !== null) {
+                                  var result115 = [result117, result118, result119, result120, result121, result122, result123];
                                 } else {
-                                  var result152 = null;
-                                  pos = savedPos18;
+                                  var result115 = null;
+                                  pos = savedPos16;
                                 }
                               } else {
-                                var result152 = null;
-                                pos = savedPos18;
+                                var result115 = null;
+                                pos = savedPos16;
                               }
                             } else {
-                              var result152 = null;
-                              pos = savedPos18;
+                              var result115 = null;
+                              pos = savedPos16;
                             }
                           } else {
-                            var result152 = null;
-                            pos = savedPos18;
+                            var result115 = null;
+                            pos = savedPos16;
                           }
                         } else {
-                          var result152 = null;
-                          pos = savedPos18;
+                          var result115 = null;
+                          pos = savedPos16;
                         }
                       } else {
-                        var result152 = null;
-                        pos = savedPos18;
+                        var result115 = null;
+                        pos = savedPos16;
                       }
                     } else {
-                      var result152 = null;
-                      pos = savedPos18;
+                      var result115 = null;
+                      pos = savedPos16;
                     }
-                    var result153 = result152 !== null
+                    var result116 = result115 !== null
                       ? (function(e) {
                             var ex = {};
                             ex.token = 'expression';
@@ -20663,119 +14212,119 @@ SparqlParser.parser = (function(){
                             ex.args = [e];
                       
                             return ex;
-                      })(result152[4])
+                      })(result115[4])
                       : null;
-                    if (result153 !== null) {
-                      var result151 = result153;
+                    if (result116 !== null) {
+                      var result114 = result116;
                     } else {
-                      var result151 = null;
-                      pos = savedPos17;
+                      var result114 = null;
+                      pos = savedPos15;
                     }
-                    if (result151 !== null) {
-                      var result0 = result151;
+                    if (result114 !== null) {
+                      var result0 = result114;
                     } else {
-                      var savedPos14 = pos;
-                      var savedPos15 = pos;
+                      var savedPos12 = pos;
+                      var savedPos13 = pos;
                       if (input.substr(pos, 5) === "BNODE") {
-                        var result138 = "BNODE";
+                        var result101 = "BNODE";
                         pos += 5;
                       } else {
-                        var result138 = null;
+                        var result101 = null;
                         if (reportMatchFailures) {
                           matchFailed("\"BNODE\"");
                         }
                       }
-                      if (result138 !== null) {
-                        var result139 = [];
-                        var result150 = parse_WS();
-                        while (result150 !== null) {
-                          result139.push(result150);
-                          var result150 = parse_WS();
+                      if (result101 !== null) {
+                        var result102 = [];
+                        var result113 = parse_WS();
+                        while (result113 !== null) {
+                          result102.push(result113);
+                          var result113 = parse_WS();
                         }
-                        if (result139 !== null) {
-                          var savedPos16 = pos;
+                        if (result102 !== null) {
+                          var savedPos14 = pos;
                           if (input.substr(pos, 1) === "(") {
-                            var result143 = "(";
+                            var result106 = "(";
                             pos += 1;
                           } else {
-                            var result143 = null;
+                            var result106 = null;
                             if (reportMatchFailures) {
                               matchFailed("\"(\"");
                             }
                           }
-                          if (result143 !== null) {
-                            var result144 = [];
-                            var result149 = parse_WS();
-                            while (result149 !== null) {
-                              result144.push(result149);
-                              var result149 = parse_WS();
+                          if (result106 !== null) {
+                            var result107 = [];
+                            var result112 = parse_WS();
+                            while (result112 !== null) {
+                              result107.push(result112);
+                              var result112 = parse_WS();
                             }
-                            if (result144 !== null) {
-                              var result145 = parse_ConditionalOrExpression();
-                              if (result145 !== null) {
-                                var result146 = [];
-                                var result148 = parse_WS();
-                                while (result148 !== null) {
-                                  result146.push(result148);
-                                  var result148 = parse_WS();
+                            if (result107 !== null) {
+                              var result108 = parse_ConditionalOrExpression();
+                              if (result108 !== null) {
+                                var result109 = [];
+                                var result111 = parse_WS();
+                                while (result111 !== null) {
+                                  result109.push(result111);
+                                  var result111 = parse_WS();
                                 }
-                                if (result146 !== null) {
+                                if (result109 !== null) {
                                   if (input.substr(pos, 1) === ")") {
-                                    var result147 = ")";
+                                    var result110 = ")";
                                     pos += 1;
                                   } else {
-                                    var result147 = null;
+                                    var result110 = null;
                                     if (reportMatchFailures) {
                                       matchFailed("\")\"");
                                     }
                                   }
-                                  if (result147 !== null) {
-                                    var result142 = [result143, result144, result145, result146, result147];
+                                  if (result110 !== null) {
+                                    var result105 = [result106, result107, result108, result109, result110];
                                   } else {
-                                    var result142 = null;
-                                    pos = savedPos16;
+                                    var result105 = null;
+                                    pos = savedPos14;
                                   }
                                 } else {
-                                  var result142 = null;
-                                  pos = savedPos16;
+                                  var result105 = null;
+                                  pos = savedPos14;
                                 }
                               } else {
-                                var result142 = null;
-                                pos = savedPos16;
+                                var result105 = null;
+                                pos = savedPos14;
                               }
                             } else {
-                              var result142 = null;
-                              pos = savedPos16;
+                              var result105 = null;
+                              pos = savedPos14;
                             }
                           } else {
-                            var result142 = null;
-                            pos = savedPos16;
+                            var result105 = null;
+                            pos = savedPos14;
                           }
-                          if (result142 !== null) {
-                            var result140 = result142;
+                          if (result105 !== null) {
+                            var result103 = result105;
                           } else {
-                            var result141 = parse_NIL();
-                            if (result141 !== null) {
-                              var result140 = result141;
+                            var result104 = parse_NIL();
+                            if (result104 !== null) {
+                              var result103 = result104;
                             } else {
-                              var result140 = null;;
+                              var result103 = null;;
                             };
                           }
-                          if (result140 !== null) {
-                            var result136 = [result138, result139, result140];
+                          if (result103 !== null) {
+                            var result99 = [result101, result102, result103];
                           } else {
-                            var result136 = null;
-                            pos = savedPos15;
+                            var result99 = null;
+                            pos = savedPos13;
                           }
                         } else {
-                          var result136 = null;
-                          pos = savedPos15;
+                          var result99 = null;
+                          pos = savedPos13;
                         }
                       } else {
-                        var result136 = null;
-                        pos = savedPos15;
+                        var result99 = null;
+                        pos = savedPos13;
                       }
-                      var result137 = result136 !== null
+                      var result100 = result99 !== null
                         ? (function(arg) {
                               var ex = {};
                               ex.token = 'expression';
@@ -20788,52 +14337,52 @@ SparqlParser.parser = (function(){
                               }
                         
                               return ex;
-                        })(result136[2])
+                        })(result99[2])
                         : null;
-                      if (result137 !== null) {
-                        var result135 = result137;
+                      if (result100 !== null) {
+                        var result98 = result100;
                       } else {
-                        var result135 = null;
-                        pos = savedPos14;
+                        var result98 = null;
+                        pos = savedPos12;
                       }
-                      if (result135 !== null) {
-                        var result0 = result135;
+                      if (result98 !== null) {
+                        var result0 = result98;
                       } else {
-                        var savedPos12 = pos;
-                        var savedPos13 = pos;
+                        var savedPos10 = pos;
+                        var savedPos11 = pos;
                         if (input.substr(pos, 8) === "COALESCE") {
-                          var result131 = "COALESCE";
+                          var result94 = "COALESCE";
                           pos += 8;
                         } else {
-                          var result131 = null;
+                          var result94 = null;
                           if (reportMatchFailures) {
                             matchFailed("\"COALESCE\"");
                           }
                         }
-                        if (result131 !== null) {
-                          var result132 = [];
-                          var result134 = parse_WS();
-                          while (result134 !== null) {
-                            result132.push(result134);
-                            var result134 = parse_WS();
+                        if (result94 !== null) {
+                          var result95 = [];
+                          var result97 = parse_WS();
+                          while (result97 !== null) {
+                            result95.push(result97);
+                            var result97 = parse_WS();
                           }
-                          if (result132 !== null) {
-                            var result133 = parse_ExpressionList();
-                            if (result133 !== null) {
-                              var result129 = [result131, result132, result133];
+                          if (result95 !== null) {
+                            var result96 = parse_ExpressionList();
+                            if (result96 !== null) {
+                              var result92 = [result94, result95, result96];
                             } else {
-                              var result129 = null;
-                              pos = savedPos13;
+                              var result92 = null;
+                              pos = savedPos11;
                             }
                           } else {
-                            var result129 = null;
-                            pos = savedPos13;
+                            var result92 = null;
+                            pos = savedPos11;
                           }
                         } else {
-                          var result129 = null;
-                          pos = savedPos13;
+                          var result92 = null;
+                          pos = savedPos11;
                         }
-                        var result130 = result129 !== null
+                        var result93 = result92 !== null
                           ? (function(args) {
                                 var ex = {};
                                 ex.token = 'expression';
@@ -20842,186 +14391,186 @@ SparqlParser.parser = (function(){
                                 ex.args = args;
                           
                                 return ex;    
-                          })(result129[2])
+                          })(result92[2])
                           : null;
-                        if (result130 !== null) {
-                          var result128 = result130;
+                        if (result93 !== null) {
+                          var result91 = result93;
                         } else {
-                          var result128 = null;
-                          pos = savedPos12;
+                          var result91 = null;
+                          pos = savedPos10;
                         }
-                        if (result128 !== null) {
-                          var result0 = result128;
+                        if (result91 !== null) {
+                          var result0 = result91;
                         } else {
-                          var savedPos10 = pos;
-                          var savedPos11 = pos;
+                          var savedPos8 = pos;
+                          var savedPos9 = pos;
                           if (input.substr(pos, 2) === "IF") {
-                            var result106 = "IF";
+                            var result69 = "IF";
                             pos += 2;
                           } else {
-                            var result106 = null;
+                            var result69 = null;
                             if (reportMatchFailures) {
                               matchFailed("\"IF\"");
                             }
                           }
-                          if (result106 !== null) {
-                            var result107 = [];
-                            var result127 = parse_WS();
-                            while (result127 !== null) {
-                              result107.push(result127);
-                              var result127 = parse_WS();
+                          if (result69 !== null) {
+                            var result70 = [];
+                            var result90 = parse_WS();
+                            while (result90 !== null) {
+                              result70.push(result90);
+                              var result90 = parse_WS();
                             }
-                            if (result107 !== null) {
+                            if (result70 !== null) {
                               if (input.substr(pos, 1) === "(") {
-                                var result108 = "(";
+                                var result71 = "(";
                                 pos += 1;
                               } else {
-                                var result108 = null;
+                                var result71 = null;
                                 if (reportMatchFailures) {
                                   matchFailed("\"(\"");
                                 }
                               }
-                              if (result108 !== null) {
-                                var result109 = [];
-                                var result126 = parse_WS();
-                                while (result126 !== null) {
-                                  result109.push(result126);
-                                  var result126 = parse_WS();
+                              if (result71 !== null) {
+                                var result72 = [];
+                                var result89 = parse_WS();
+                                while (result89 !== null) {
+                                  result72.push(result89);
+                                  var result89 = parse_WS();
                                 }
-                                if (result109 !== null) {
-                                  var result110 = parse_ConditionalOrExpression();
-                                  if (result110 !== null) {
-                                    var result111 = [];
-                                    var result125 = parse_WS();
-                                    while (result125 !== null) {
-                                      result111.push(result125);
-                                      var result125 = parse_WS();
+                                if (result72 !== null) {
+                                  var result73 = parse_ConditionalOrExpression();
+                                  if (result73 !== null) {
+                                    var result74 = [];
+                                    var result88 = parse_WS();
+                                    while (result88 !== null) {
+                                      result74.push(result88);
+                                      var result88 = parse_WS();
                                     }
-                                    if (result111 !== null) {
+                                    if (result74 !== null) {
                                       if (input.substr(pos, 1) === ",") {
-                                        var result112 = ",";
+                                        var result75 = ",";
                                         pos += 1;
                                       } else {
-                                        var result112 = null;
+                                        var result75 = null;
                                         if (reportMatchFailures) {
                                           matchFailed("\",\"");
                                         }
                                       }
-                                      if (result112 !== null) {
-                                        var result113 = [];
-                                        var result124 = parse_WS();
-                                        while (result124 !== null) {
-                                          result113.push(result124);
-                                          var result124 = parse_WS();
+                                      if (result75 !== null) {
+                                        var result76 = [];
+                                        var result87 = parse_WS();
+                                        while (result87 !== null) {
+                                          result76.push(result87);
+                                          var result87 = parse_WS();
                                         }
-                                        if (result113 !== null) {
-                                          var result114 = parse_ConditionalOrExpression();
-                                          if (result114 !== null) {
-                                            var result115 = [];
-                                            var result123 = parse_WS();
-                                            while (result123 !== null) {
-                                              result115.push(result123);
-                                              var result123 = parse_WS();
+                                        if (result76 !== null) {
+                                          var result77 = parse_ConditionalOrExpression();
+                                          if (result77 !== null) {
+                                            var result78 = [];
+                                            var result86 = parse_WS();
+                                            while (result86 !== null) {
+                                              result78.push(result86);
+                                              var result86 = parse_WS();
                                             }
-                                            if (result115 !== null) {
+                                            if (result78 !== null) {
                                               if (input.substr(pos, 1) === ",") {
-                                                var result116 = ",";
+                                                var result79 = ",";
                                                 pos += 1;
                                               } else {
-                                                var result116 = null;
+                                                var result79 = null;
                                                 if (reportMatchFailures) {
                                                   matchFailed("\",\"");
                                                 }
                                               }
-                                              if (result116 !== null) {
-                                                var result117 = [];
-                                                var result122 = parse_WS();
-                                                while (result122 !== null) {
-                                                  result117.push(result122);
-                                                  var result122 = parse_WS();
+                                              if (result79 !== null) {
+                                                var result80 = [];
+                                                var result85 = parse_WS();
+                                                while (result85 !== null) {
+                                                  result80.push(result85);
+                                                  var result85 = parse_WS();
                                                 }
-                                                if (result117 !== null) {
-                                                  var result118 = parse_ConditionalOrExpression();
-                                                  if (result118 !== null) {
-                                                    var result119 = [];
-                                                    var result121 = parse_WS();
-                                                    while (result121 !== null) {
-                                                      result119.push(result121);
-                                                      var result121 = parse_WS();
+                                                if (result80 !== null) {
+                                                  var result81 = parse_ConditionalOrExpression();
+                                                  if (result81 !== null) {
+                                                    var result82 = [];
+                                                    var result84 = parse_WS();
+                                                    while (result84 !== null) {
+                                                      result82.push(result84);
+                                                      var result84 = parse_WS();
                                                     }
-                                                    if (result119 !== null) {
+                                                    if (result82 !== null) {
                                                       if (input.substr(pos, 1) === ")") {
-                                                        var result120 = ")";
+                                                        var result83 = ")";
                                                         pos += 1;
                                                       } else {
-                                                        var result120 = null;
+                                                        var result83 = null;
                                                         if (reportMatchFailures) {
                                                           matchFailed("\")\"");
                                                         }
                                                       }
-                                                      if (result120 !== null) {
-                                                        var result104 = [result106, result107, result108, result109, result110, result111, result112, result113, result114, result115, result116, result117, result118, result119, result120];
+                                                      if (result83 !== null) {
+                                                        var result67 = [result69, result70, result71, result72, result73, result74, result75, result76, result77, result78, result79, result80, result81, result82, result83];
                                                       } else {
-                                                        var result104 = null;
-                                                        pos = savedPos11;
+                                                        var result67 = null;
+                                                        pos = savedPos9;
                                                       }
                                                     } else {
-                                                      var result104 = null;
-                                                      pos = savedPos11;
+                                                      var result67 = null;
+                                                      pos = savedPos9;
                                                     }
                                                   } else {
-                                                    var result104 = null;
-                                                    pos = savedPos11;
+                                                    var result67 = null;
+                                                    pos = savedPos9;
                                                   }
                                                 } else {
-                                                  var result104 = null;
-                                                  pos = savedPos11;
+                                                  var result67 = null;
+                                                  pos = savedPos9;
                                                 }
                                               } else {
-                                                var result104 = null;
-                                                pos = savedPos11;
+                                                var result67 = null;
+                                                pos = savedPos9;
                                               }
                                             } else {
-                                              var result104 = null;
-                                              pos = savedPos11;
+                                              var result67 = null;
+                                              pos = savedPos9;
                                             }
                                           } else {
-                                            var result104 = null;
-                                            pos = savedPos11;
+                                            var result67 = null;
+                                            pos = savedPos9;
                                           }
                                         } else {
-                                          var result104 = null;
-                                          pos = savedPos11;
+                                          var result67 = null;
+                                          pos = savedPos9;
                                         }
                                       } else {
-                                        var result104 = null;
-                                        pos = savedPos11;
+                                        var result67 = null;
+                                        pos = savedPos9;
                                       }
                                     } else {
-                                      var result104 = null;
-                                      pos = savedPos11;
+                                      var result67 = null;
+                                      pos = savedPos9;
                                     }
                                   } else {
-                                    var result104 = null;
-                                    pos = savedPos11;
+                                    var result67 = null;
+                                    pos = savedPos9;
                                   }
                                 } else {
-                                  var result104 = null;
-                                  pos = savedPos11;
+                                  var result67 = null;
+                                  pos = savedPos9;
                                 }
                               } else {
-                                var result104 = null;
-                                pos = savedPos11;
+                                var result67 = null;
+                                pos = savedPos9;
                               }
                             } else {
-                              var result104 = null;
-                              pos = savedPos11;
+                              var result67 = null;
+                              pos = savedPos9;
                             }
                           } else {
-                            var result104 = null;
-                            pos = savedPos11;
+                            var result67 = null;
+                            pos = savedPos9;
                           }
-                          var result105 = result104 !== null
+                          var result68 = result67 !== null
                             ? (function(test, trueCond, falseCond) {
                                 var ex = {};
                                 ex.token = 'expression';
@@ -21030,102 +14579,102 @@ SparqlParser.parser = (function(){
                                 ex.args = [test,trueCond,falseCond];
                             
                                 return ex;
-                            })(result104[4], result104[8], result104[12])
+                            })(result67[4], result67[8], result67[12])
                             : null;
-                          if (result105 !== null) {
-                            var result103 = result105;
+                          if (result68 !== null) {
+                            var result66 = result68;
                           } else {
-                            var result103 = null;
-                            pos = savedPos10;
+                            var result66 = null;
+                            pos = savedPos8;
                           }
-                          if (result103 !== null) {
-                            var result0 = result103;
+                          if (result66 !== null) {
+                            var result0 = result66;
                           } else {
-                            var savedPos8 = pos;
-                            var savedPos9 = pos;
+                            var savedPos6 = pos;
+                            var savedPos7 = pos;
                             if (input.substr(pos, 9) === "ISLITERAL") {
-                              var result93 = "ISLITERAL";
+                              var result56 = "ISLITERAL";
                               pos += 9;
                             } else {
-                              var result93 = null;
+                              var result56 = null;
                               if (reportMatchFailures) {
                                 matchFailed("\"ISLITERAL\"");
                               }
                             }
-                            if (result93 !== null) {
-                              var result94 = [];
-                              var result102 = parse_WS();
-                              while (result102 !== null) {
-                                result94.push(result102);
-                                var result102 = parse_WS();
+                            if (result56 !== null) {
+                              var result57 = [];
+                              var result65 = parse_WS();
+                              while (result65 !== null) {
+                                result57.push(result65);
+                                var result65 = parse_WS();
                               }
-                              if (result94 !== null) {
+                              if (result57 !== null) {
                                 if (input.substr(pos, 1) === "(") {
-                                  var result95 = "(";
+                                  var result58 = "(";
                                   pos += 1;
                                 } else {
-                                  var result95 = null;
+                                  var result58 = null;
                                   if (reportMatchFailures) {
                                     matchFailed("\"(\"");
                                   }
                                 }
-                                if (result95 !== null) {
-                                  var result96 = [];
-                                  var result101 = parse_WS();
-                                  while (result101 !== null) {
-                                    result96.push(result101);
-                                    var result101 = parse_WS();
+                                if (result58 !== null) {
+                                  var result59 = [];
+                                  var result64 = parse_WS();
+                                  while (result64 !== null) {
+                                    result59.push(result64);
+                                    var result64 = parse_WS();
                                   }
-                                  if (result96 !== null) {
-                                    var result97 = parse_ConditionalOrExpression();
-                                    if (result97 !== null) {
-                                      var result98 = [];
-                                      var result100 = parse_WS();
-                                      while (result100 !== null) {
-                                        result98.push(result100);
-                                        var result100 = parse_WS();
+                                  if (result59 !== null) {
+                                    var result60 = parse_ConditionalOrExpression();
+                                    if (result60 !== null) {
+                                      var result61 = [];
+                                      var result63 = parse_WS();
+                                      while (result63 !== null) {
+                                        result61.push(result63);
+                                        var result63 = parse_WS();
                                       }
-                                      if (result98 !== null) {
+                                      if (result61 !== null) {
                                         if (input.substr(pos, 1) === ")") {
-                                          var result99 = ")";
+                                          var result62 = ")";
                                           pos += 1;
                                         } else {
-                                          var result99 = null;
+                                          var result62 = null;
                                           if (reportMatchFailures) {
                                             matchFailed("\")\"");
                                           }
                                         }
-                                        if (result99 !== null) {
-                                          var result91 = [result93, result94, result95, result96, result97, result98, result99];
+                                        if (result62 !== null) {
+                                          var result54 = [result56, result57, result58, result59, result60, result61, result62];
                                         } else {
-                                          var result91 = null;
-                                          pos = savedPos9;
+                                          var result54 = null;
+                                          pos = savedPos7;
                                         }
                                       } else {
-                                        var result91 = null;
-                                        pos = savedPos9;
+                                        var result54 = null;
+                                        pos = savedPos7;
                                       }
                                     } else {
-                                      var result91 = null;
-                                      pos = savedPos9;
+                                      var result54 = null;
+                                      pos = savedPos7;
                                     }
                                   } else {
-                                    var result91 = null;
-                                    pos = savedPos9;
+                                    var result54 = null;
+                                    pos = savedPos7;
                                   }
                                 } else {
-                                  var result91 = null;
-                                  pos = savedPos9;
+                                  var result54 = null;
+                                  pos = savedPos7;
                                 }
                               } else {
-                                var result91 = null;
-                                pos = savedPos9;
+                                var result54 = null;
+                                pos = savedPos7;
                               }
                             } else {
-                              var result91 = null;
-                              pos = savedPos9;
+                              var result54 = null;
+                              pos = savedPos7;
                             }
-                            var result92 = result91 !== null
+                            var result55 = result54 !== null
                               ? (function(arg) {
                                   var ex = {};
                                   ex.token = 'expression';
@@ -21134,102 +14683,102 @@ SparqlParser.parser = (function(){
                                   ex.args = [arg];
                               
                                   return ex;
-                              })(result91[4])
+                              })(result54[4])
                               : null;
-                            if (result92 !== null) {
-                              var result90 = result92;
+                            if (result55 !== null) {
+                              var result53 = result55;
                             } else {
-                              var result90 = null;
-                              pos = savedPos8;
+                              var result53 = null;
+                              pos = savedPos6;
                             }
-                            if (result90 !== null) {
-                              var result0 = result90;
+                            if (result53 !== null) {
+                              var result0 = result53;
                             } else {
-                              var savedPos6 = pos;
-                              var savedPos7 = pos;
+                              var savedPos4 = pos;
+                              var savedPos5 = pos;
                               if (input.substr(pos, 7) === "ISBLANK") {
-                                var result80 = "ISBLANK";
+                                var result43 = "ISBLANK";
                                 pos += 7;
                               } else {
-                                var result80 = null;
+                                var result43 = null;
                                 if (reportMatchFailures) {
                                   matchFailed("\"ISBLANK\"");
                                 }
                               }
-                              if (result80 !== null) {
-                                var result81 = [];
-                                var result89 = parse_WS();
-                                while (result89 !== null) {
-                                  result81.push(result89);
-                                  var result89 = parse_WS();
+                              if (result43 !== null) {
+                                var result44 = [];
+                                var result52 = parse_WS();
+                                while (result52 !== null) {
+                                  result44.push(result52);
+                                  var result52 = parse_WS();
                                 }
-                                if (result81 !== null) {
+                                if (result44 !== null) {
                                   if (input.substr(pos, 1) === "(") {
-                                    var result82 = "(";
+                                    var result45 = "(";
                                     pos += 1;
                                   } else {
-                                    var result82 = null;
+                                    var result45 = null;
                                     if (reportMatchFailures) {
                                       matchFailed("\"(\"");
                                     }
                                   }
-                                  if (result82 !== null) {
-                                    var result83 = [];
-                                    var result88 = parse_WS();
-                                    while (result88 !== null) {
-                                      result83.push(result88);
-                                      var result88 = parse_WS();
+                                  if (result45 !== null) {
+                                    var result46 = [];
+                                    var result51 = parse_WS();
+                                    while (result51 !== null) {
+                                      result46.push(result51);
+                                      var result51 = parse_WS();
                                     }
-                                    if (result83 !== null) {
-                                      var result84 = parse_ConditionalOrExpression();
-                                      if (result84 !== null) {
-                                        var result85 = [];
-                                        var result87 = parse_WS();
-                                        while (result87 !== null) {
-                                          result85.push(result87);
-                                          var result87 = parse_WS();
+                                    if (result46 !== null) {
+                                      var result47 = parse_ConditionalOrExpression();
+                                      if (result47 !== null) {
+                                        var result48 = [];
+                                        var result50 = parse_WS();
+                                        while (result50 !== null) {
+                                          result48.push(result50);
+                                          var result50 = parse_WS();
                                         }
-                                        if (result85 !== null) {
+                                        if (result48 !== null) {
                                           if (input.substr(pos, 1) === ")") {
-                                            var result86 = ")";
+                                            var result49 = ")";
                                             pos += 1;
                                           } else {
-                                            var result86 = null;
+                                            var result49 = null;
                                             if (reportMatchFailures) {
                                               matchFailed("\")\"");
                                             }
                                           }
-                                          if (result86 !== null) {
-                                            var result78 = [result80, result81, result82, result83, result84, result85, result86];
+                                          if (result49 !== null) {
+                                            var result41 = [result43, result44, result45, result46, result47, result48, result49];
                                           } else {
-                                            var result78 = null;
-                                            pos = savedPos7;
+                                            var result41 = null;
+                                            pos = savedPos5;
                                           }
                                         } else {
-                                          var result78 = null;
-                                          pos = savedPos7;
+                                          var result41 = null;
+                                          pos = savedPos5;
                                         }
                                       } else {
-                                        var result78 = null;
-                                        pos = savedPos7;
+                                        var result41 = null;
+                                        pos = savedPos5;
                                       }
                                     } else {
-                                      var result78 = null;
-                                      pos = savedPos7;
+                                      var result41 = null;
+                                      pos = savedPos5;
                                     }
                                   } else {
-                                    var result78 = null;
-                                    pos = savedPos7;
+                                    var result41 = null;
+                                    pos = savedPos5;
                                   }
                                 } else {
-                                  var result78 = null;
-                                  pos = savedPos7;
+                                  var result41 = null;
+                                  pos = savedPos5;
                                 }
                               } else {
-                                var result78 = null;
-                                pos = savedPos7;
+                                var result41 = null;
+                                pos = savedPos5;
                               }
-                              var result79 = result78 !== null
+                              var result42 = result41 !== null
                                 ? (function(arg) {
                                     var ex = {};
                                     ex.token = 'expression';
@@ -21238,144 +14787,144 @@ SparqlParser.parser = (function(){
                                     ex.args = [arg];
                                 
                                     return ex;
-                                })(result78[4])
+                                })(result41[4])
                                 : null;
-                              if (result79 !== null) {
-                                var result77 = result79;
+                              if (result42 !== null) {
+                                var result40 = result42;
                               } else {
-                                var result77 = null;
-                                pos = savedPos6;
+                                var result40 = null;
+                                pos = savedPos4;
                               }
-                              if (result77 !== null) {
-                                var result0 = result77;
+                              if (result40 !== null) {
+                                var result0 = result40;
                               } else {
-                                var savedPos4 = pos;
-                                var savedPos5 = pos;
+                                var savedPos2 = pos;
+                                var savedPos3 = pos;
                                 if (input.substr(pos, 8) === "SAMETERM") {
-                                  var result61 = "SAMETERM";
+                                  var result24 = "SAMETERM";
                                   pos += 8;
                                 } else {
-                                  var result61 = null;
+                                  var result24 = null;
                                   if (reportMatchFailures) {
                                     matchFailed("\"SAMETERM\"");
                                   }
                                 }
-                                if (result61 !== null) {
-                                  var result62 = [];
-                                  var result76 = parse_WS();
-                                  while (result76 !== null) {
-                                    result62.push(result76);
-                                    var result76 = parse_WS();
+                                if (result24 !== null) {
+                                  var result25 = [];
+                                  var result39 = parse_WS();
+                                  while (result39 !== null) {
+                                    result25.push(result39);
+                                    var result39 = parse_WS();
                                   }
-                                  if (result62 !== null) {
+                                  if (result25 !== null) {
                                     if (input.substr(pos, 1) === "(") {
-                                      var result63 = "(";
+                                      var result26 = "(";
                                       pos += 1;
                                     } else {
-                                      var result63 = null;
+                                      var result26 = null;
                                       if (reportMatchFailures) {
                                         matchFailed("\"(\"");
                                       }
                                     }
-                                    if (result63 !== null) {
-                                      var result64 = [];
-                                      var result75 = parse_WS();
-                                      while (result75 !== null) {
-                                        result64.push(result75);
-                                        var result75 = parse_WS();
+                                    if (result26 !== null) {
+                                      var result27 = [];
+                                      var result38 = parse_WS();
+                                      while (result38 !== null) {
+                                        result27.push(result38);
+                                        var result38 = parse_WS();
                                       }
-                                      if (result64 !== null) {
-                                        var result65 = parse_ConditionalOrExpression();
-                                        if (result65 !== null) {
-                                          var result66 = [];
-                                          var result74 = parse_WS();
-                                          while (result74 !== null) {
-                                            result66.push(result74);
-                                            var result74 = parse_WS();
+                                      if (result27 !== null) {
+                                        var result28 = parse_ConditionalOrExpression();
+                                        if (result28 !== null) {
+                                          var result29 = [];
+                                          var result37 = parse_WS();
+                                          while (result37 !== null) {
+                                            result29.push(result37);
+                                            var result37 = parse_WS();
                                           }
-                                          if (result66 !== null) {
+                                          if (result29 !== null) {
                                             if (input.substr(pos, 1) === ",") {
-                                              var result67 = ",";
+                                              var result30 = ",";
                                               pos += 1;
                                             } else {
-                                              var result67 = null;
+                                              var result30 = null;
                                               if (reportMatchFailures) {
                                                 matchFailed("\",\"");
                                               }
                                             }
-                                            if (result67 !== null) {
-                                              var result68 = [];
-                                              var result73 = parse_WS();
-                                              while (result73 !== null) {
-                                                result68.push(result73);
-                                                var result73 = parse_WS();
+                                            if (result30 !== null) {
+                                              var result31 = [];
+                                              var result36 = parse_WS();
+                                              while (result36 !== null) {
+                                                result31.push(result36);
+                                                var result36 = parse_WS();
                                               }
-                                              if (result68 !== null) {
-                                                var result69 = parse_ConditionalOrExpression();
-                                                if (result69 !== null) {
-                                                  var result70 = [];
-                                                  var result72 = parse_WS();
-                                                  while (result72 !== null) {
-                                                    result70.push(result72);
-                                                    var result72 = parse_WS();
+                                              if (result31 !== null) {
+                                                var result32 = parse_ConditionalOrExpression();
+                                                if (result32 !== null) {
+                                                  var result33 = [];
+                                                  var result35 = parse_WS();
+                                                  while (result35 !== null) {
+                                                    result33.push(result35);
+                                                    var result35 = parse_WS();
                                                   }
-                                                  if (result70 !== null) {
+                                                  if (result33 !== null) {
                                                     if (input.substr(pos, 1) === ")") {
-                                                      var result71 = ")";
+                                                      var result34 = ")";
                                                       pos += 1;
                                                     } else {
-                                                      var result71 = null;
+                                                      var result34 = null;
                                                       if (reportMatchFailures) {
                                                         matchFailed("\")\"");
                                                       }
                                                     }
-                                                    if (result71 !== null) {
-                                                      var result59 = [result61, result62, result63, result64, result65, result66, result67, result68, result69, result70, result71];
+                                                    if (result34 !== null) {
+                                                      var result22 = [result24, result25, result26, result27, result28, result29, result30, result31, result32, result33, result34];
                                                     } else {
-                                                      var result59 = null;
-                                                      pos = savedPos5;
+                                                      var result22 = null;
+                                                      pos = savedPos3;
                                                     }
                                                   } else {
-                                                    var result59 = null;
-                                                    pos = savedPos5;
+                                                    var result22 = null;
+                                                    pos = savedPos3;
                                                   }
                                                 } else {
-                                                  var result59 = null;
-                                                  pos = savedPos5;
+                                                  var result22 = null;
+                                                  pos = savedPos3;
                                                 }
                                               } else {
-                                                var result59 = null;
-                                                pos = savedPos5;
+                                                var result22 = null;
+                                                pos = savedPos3;
                                               }
                                             } else {
-                                              var result59 = null;
-                                              pos = savedPos5;
+                                              var result22 = null;
+                                              pos = savedPos3;
                                             }
                                           } else {
-                                            var result59 = null;
-                                            pos = savedPos5;
+                                            var result22 = null;
+                                            pos = savedPos3;
                                           }
                                         } else {
-                                          var result59 = null;
-                                          pos = savedPos5;
+                                          var result22 = null;
+                                          pos = savedPos3;
                                         }
                                       } else {
-                                        var result59 = null;
-                                        pos = savedPos5;
+                                        var result22 = null;
+                                        pos = savedPos3;
                                       }
                                     } else {
-                                      var result59 = null;
-                                      pos = savedPos5;
+                                      var result22 = null;
+                                      pos = savedPos3;
                                     }
                                   } else {
-                                    var result59 = null;
-                                    pos = savedPos5;
+                                    var result22 = null;
+                                    pos = savedPos3;
                                   }
                                 } else {
-                                  var result59 = null;
-                                  pos = savedPos5;
+                                  var result22 = null;
+                                  pos = savedPos3;
                                 }
-                                var result60 = result59 !== null
+                                var result23 = result22 !== null
                                   ? (function(e1, e2) {
                                       var ex = {};
                                       ex.token = 'expression';
@@ -21383,473 +14932,117 @@ SparqlParser.parser = (function(){
                                       ex.builtincall = 'sameterm';
                                       ex.args = [e1, e2];
                                       return ex;
-                                  })(result59[4], result59[8])
+                                  })(result22[4], result22[8])
                                   : null;
-                                if (result60 !== null) {
-                                  var result58 = result60;
+                                if (result23 !== null) {
+                                  var result21 = result23;
                                 } else {
-                                  var result58 = null;
-                                  pos = savedPos4;
+                                  var result21 = null;
+                                  pos = savedPos2;
                                 }
-                                if (result58 !== null) {
-                                  var result0 = result58;
+                                if (result21 !== null) {
+                                  var result0 = result21;
                                 } else {
-                                  var savedPos2 = pos;
-                                  var savedPos3 = pos;
-                                  if (input.substr(pos, 1) === "I") {
-                                    var result57 = "I";
-                                    pos += 1;
+                                  var savedPos0 = pos;
+                                  var savedPos1 = pos;
+                                  if (input.substr(pos, 5) === "ISURI") {
+                                    var result20 = "ISURI";
+                                    pos += 5;
                                   } else {
-                                    var result57 = null;
+                                    var result20 = null;
                                     if (reportMatchFailures) {
-                                      matchFailed("\"I\"");
+                                      matchFailed("\"ISURI\"");
                                     }
                                   }
-                                  if (result57 !== null) {
-                                    var result34 = result57;
+                                  if (result20 !== null) {
+                                    var result7 = result20;
                                   } else {
-                                    if (input.substr(pos, 1) === "i") {
-                                      var result56 = "i";
-                                      pos += 1;
+                                    if (input.substr(pos, 5) === "isuri") {
+                                      var result19 = "isuri";
+                                      pos += 5;
                                     } else {
-                                      var result56 = null;
+                                      var result19 = null;
                                       if (reportMatchFailures) {
-                                        matchFailed("\"i\"");
+                                        matchFailed("\"isuri\"");
                                       }
                                     }
-                                    if (result56 !== null) {
-                                      var result34 = result56;
+                                    if (result19 !== null) {
+                                      var result7 = result19;
                                     } else {
-                                      var result34 = null;;
+                                      if (input.substr(pos, 5) === "ISIRI") {
+                                        var result18 = "ISIRI";
+                                        pos += 5;
+                                      } else {
+                                        var result18 = null;
+                                        if (reportMatchFailures) {
+                                          matchFailed("\"ISIRI\"");
+                                        }
+                                      }
+                                      if (result18 !== null) {
+                                        var result7 = result18;
+                                      } else {
+                                        if (input.substr(pos, 5) === "isiri") {
+                                          var result17 = "isiri";
+                                          pos += 5;
+                                        } else {
+                                          var result17 = null;
+                                          if (reportMatchFailures) {
+                                            matchFailed("\"isiri\"");
+                                          }
+                                        }
+                                        if (result17 !== null) {
+                                          var result7 = result17;
+                                        } else {
+                                          var result7 = null;;
+                                        };
+                                      };
                                     };
                                   }
-                                  if (result34 !== null) {
-                                    if (input.substr(pos, 1) === "S") {
-                                      var result55 = "S";
-                                      pos += 1;
-                                    } else {
-                                      var result55 = null;
-                                      if (reportMatchFailures) {
-                                        matchFailed("\"S\"");
-                                      }
+                                  if (result7 !== null) {
+                                    var result8 = [];
+                                    var result16 = parse_WS();
+                                    while (result16 !== null) {
+                                      result8.push(result16);
+                                      var result16 = parse_WS();
                                     }
-                                    if (result55 !== null) {
-                                      var result35 = result55;
-                                    } else {
-                                      if (input.substr(pos, 1) === "s") {
-                                        var result54 = "s";
+                                    if (result8 !== null) {
+                                      if (input.substr(pos, 1) === "(") {
+                                        var result9 = "(";
                                         pos += 1;
                                       } else {
-                                        var result54 = null;
+                                        var result9 = null;
                                         if (reportMatchFailures) {
-                                          matchFailed("\"s\"");
+                                          matchFailed("\"(\"");
                                         }
                                       }
-                                      if (result54 !== null) {
-                                        var result35 = result54;
-                                      } else {
-                                        var result35 = null;;
-                                      };
-                                    }
-                                    if (result35 !== null) {
-                                      if (input.substr(pos, 1) === "U") {
-                                        var result53 = "U";
-                                        pos += 1;
-                                      } else {
-                                        var result53 = null;
-                                        if (reportMatchFailures) {
-                                          matchFailed("\"U\"");
+                                      if (result9 !== null) {
+                                        var result10 = [];
+                                        var result15 = parse_WS();
+                                        while (result15 !== null) {
+                                          result10.push(result15);
+                                          var result15 = parse_WS();
                                         }
-                                      }
-                                      if (result53 !== null) {
-                                        var result36 = result53;
-                                      } else {
-                                        if (input.substr(pos, 1) === "u") {
-                                          var result52 = "u";
-                                          pos += 1;
-                                        } else {
-                                          var result52 = null;
-                                          if (reportMatchFailures) {
-                                            matchFailed("\"u\"");
-                                          }
-                                        }
-                                        if (result52 !== null) {
-                                          var result36 = result52;
-                                        } else {
-                                          var result36 = null;;
-                                        };
-                                      }
-                                      if (result36 !== null) {
-                                        if (input.substr(pos, 1) === "R") {
-                                          var result51 = "R";
-                                          pos += 1;
-                                        } else {
-                                          var result51 = null;
-                                          if (reportMatchFailures) {
-                                            matchFailed("\"R\"");
-                                          }
-                                        }
-                                        if (result51 !== null) {
-                                          var result37 = result51;
-                                        } else {
-                                          if (input.substr(pos, 1) === "r") {
-                                            var result50 = "r";
-                                            pos += 1;
-                                          } else {
-                                            var result50 = null;
-                                            if (reportMatchFailures) {
-                                              matchFailed("\"r\"");
+                                        if (result10 !== null) {
+                                          var result11 = parse_ConditionalOrExpression();
+                                          if (result11 !== null) {
+                                            var result12 = [];
+                                            var result14 = parse_WS();
+                                            while (result14 !== null) {
+                                              result12.push(result14);
+                                              var result14 = parse_WS();
                                             }
-                                          }
-                                          if (result50 !== null) {
-                                            var result37 = result50;
-                                          } else {
-                                            var result37 = null;;
-                                          };
-                                        }
-                                        if (result37 !== null) {
-                                          if (input.substr(pos, 1) === "I") {
-                                            var result49 = "I";
-                                            pos += 1;
-                                          } else {
-                                            var result49 = null;
-                                            if (reportMatchFailures) {
-                                              matchFailed("\"I\"");
-                                            }
-                                          }
-                                          if (result49 !== null) {
-                                            var result38 = result49;
-                                          } else {
-                                            if (input.substr(pos, 1) === "i") {
-                                              var result48 = "i";
-                                              pos += 1;
-                                            } else {
-                                              var result48 = null;
-                                              if (reportMatchFailures) {
-                                                matchFailed("\"i\"");
-                                              }
-                                            }
-                                            if (result48 !== null) {
-                                              var result38 = result48;
-                                            } else {
-                                              var result38 = null;;
-                                            };
-                                          }
-                                          if (result38 !== null) {
-                                            var result39 = [];
-                                            var result47 = parse_WS();
-                                            while (result47 !== null) {
-                                              result39.push(result47);
-                                              var result47 = parse_WS();
-                                            }
-                                            if (result39 !== null) {
-                                              if (input.substr(pos, 1) === "(") {
-                                                var result40 = "(";
+                                            if (result12 !== null) {
+                                              if (input.substr(pos, 1) === ")") {
+                                                var result13 = ")";
                                                 pos += 1;
                                               } else {
-                                                var result40 = null;
+                                                var result13 = null;
                                                 if (reportMatchFailures) {
-                                                  matchFailed("\"(\"");
+                                                  matchFailed("\")\"");
                                                 }
                                               }
-                                              if (result40 !== null) {
-                                                var result41 = [];
-                                                var result46 = parse_WS();
-                                                while (result46 !== null) {
-                                                  result41.push(result46);
-                                                  var result46 = parse_WS();
-                                                }
-                                                if (result41 !== null) {
-                                                  var result42 = parse_ConditionalOrExpression();
-                                                  if (result42 !== null) {
-                                                    var result43 = [];
-                                                    var result45 = parse_WS();
-                                                    while (result45 !== null) {
-                                                      result43.push(result45);
-                                                      var result45 = parse_WS();
-                                                    }
-                                                    if (result43 !== null) {
-                                                      if (input.substr(pos, 1) === ")") {
-                                                        var result44 = ")";
-                                                        pos += 1;
-                                                      } else {
-                                                        var result44 = null;
-                                                        if (reportMatchFailures) {
-                                                          matchFailed("\")\"");
-                                                        }
-                                                      }
-                                                      if (result44 !== null) {
-                                                        var result32 = [result34, result35, result36, result37, result38, result39, result40, result41, result42, result43, result44];
-                                                      } else {
-                                                        var result32 = null;
-                                                        pos = savedPos3;
-                                                      }
-                                                    } else {
-                                                      var result32 = null;
-                                                      pos = savedPos3;
-                                                    }
-                                                  } else {
-                                                    var result32 = null;
-                                                    pos = savedPos3;
-                                                  }
-                                                } else {
-                                                  var result32 = null;
-                                                  pos = savedPos3;
-                                                }
-                                              } else {
-                                                var result32 = null;
-                                                pos = savedPos3;
-                                              }
-                                            } else {
-                                              var result32 = null;
-                                              pos = savedPos3;
-                                            }
-                                          } else {
-                                            var result32 = null;
-                                            pos = savedPos3;
-                                          }
-                                        } else {
-                                          var result32 = null;
-                                          pos = savedPos3;
-                                        }
-                                      } else {
-                                        var result32 = null;
-                                        pos = savedPos3;
-                                      }
-                                    } else {
-                                      var result32 = null;
-                                      pos = savedPos3;
-                                    }
-                                  } else {
-                                    var result32 = null;
-                                    pos = savedPos3;
-                                  }
-                                  var result33 = result32 !== null
-                                    ? (function(arg) {
-                                        var ex = {};
-                                        ex.token = 'expression';
-                                        ex.expressionType = 'builtincall';
-                                        ex.builtincall = 'isuri';
-                                        ex.args = [arg];
-                                    
-                                        return ex;
-                                    })(result32[8])
-                                    : null;
-                                  if (result33 !== null) {
-                                    var result31 = result33;
-                                  } else {
-                                    var result31 = null;
-                                    pos = savedPos2;
-                                  }
-                                  if (result31 !== null) {
-                                    var result0 = result31;
-                                  } else {
-                                    var savedPos0 = pos;
-                                    var savedPos1 = pos;
-                                    if (input.substr(pos, 1) === "I") {
-                                      var result30 = "I";
-                                      pos += 1;
-                                    } else {
-                                      var result30 = null;
-                                      if (reportMatchFailures) {
-                                        matchFailed("\"I\"");
-                                      }
-                                    }
-                                    if (result30 !== null) {
-                                      var result7 = result30;
-                                    } else {
-                                      if (input.substr(pos, 1) === "i") {
-                                        var result29 = "i";
-                                        pos += 1;
-                                      } else {
-                                        var result29 = null;
-                                        if (reportMatchFailures) {
-                                          matchFailed("\"i\"");
-                                        }
-                                      }
-                                      if (result29 !== null) {
-                                        var result7 = result29;
-                                      } else {
-                                        var result7 = null;;
-                                      };
-                                    }
-                                    if (result7 !== null) {
-                                      if (input.substr(pos, 1) === "S") {
-                                        var result28 = "S";
-                                        pos += 1;
-                                      } else {
-                                        var result28 = null;
-                                        if (reportMatchFailures) {
-                                          matchFailed("\"S\"");
-                                        }
-                                      }
-                                      if (result28 !== null) {
-                                        var result8 = result28;
-                                      } else {
-                                        if (input.substr(pos, 1) === "s") {
-                                          var result27 = "s";
-                                          pos += 1;
-                                        } else {
-                                          var result27 = null;
-                                          if (reportMatchFailures) {
-                                            matchFailed("\"s\"");
-                                          }
-                                        }
-                                        if (result27 !== null) {
-                                          var result8 = result27;
-                                        } else {
-                                          var result8 = null;;
-                                        };
-                                      }
-                                      if (result8 !== null) {
-                                        if (input.substr(pos, 1) === "I") {
-                                          var result26 = "I";
-                                          pos += 1;
-                                        } else {
-                                          var result26 = null;
-                                          if (reportMatchFailures) {
-                                            matchFailed("\"I\"");
-                                          }
-                                        }
-                                        if (result26 !== null) {
-                                          var result9 = result26;
-                                        } else {
-                                          if (input.substr(pos, 1) === "i") {
-                                            var result25 = "i";
-                                            pos += 1;
-                                          } else {
-                                            var result25 = null;
-                                            if (reportMatchFailures) {
-                                              matchFailed("\"i\"");
-                                            }
-                                          }
-                                          if (result25 !== null) {
-                                            var result9 = result25;
-                                          } else {
-                                            var result9 = null;;
-                                          };
-                                        }
-                                        if (result9 !== null) {
-                                          if (input.substr(pos, 1) === "R") {
-                                            var result24 = "R";
-                                            pos += 1;
-                                          } else {
-                                            var result24 = null;
-                                            if (reportMatchFailures) {
-                                              matchFailed("\"R\"");
-                                            }
-                                          }
-                                          if (result24 !== null) {
-                                            var result10 = result24;
-                                          } else {
-                                            if (input.substr(pos, 1) === "r") {
-                                              var result23 = "r";
-                                              pos += 1;
-                                            } else {
-                                              var result23 = null;
-                                              if (reportMatchFailures) {
-                                                matchFailed("\"r\"");
-                                              }
-                                            }
-                                            if (result23 !== null) {
-                                              var result10 = result23;
-                                            } else {
-                                              var result10 = null;;
-                                            };
-                                          }
-                                          if (result10 !== null) {
-                                            if (input.substr(pos, 1) === "I") {
-                                              var result22 = "I";
-                                              pos += 1;
-                                            } else {
-                                              var result22 = null;
-                                              if (reportMatchFailures) {
-                                                matchFailed("\"I\"");
-                                              }
-                                            }
-                                            if (result22 !== null) {
-                                              var result11 = result22;
-                                            } else {
-                                              if (input.substr(pos, 1) === "i") {
-                                                var result21 = "i";
-                                                pos += 1;
-                                              } else {
-                                                var result21 = null;
-                                                if (reportMatchFailures) {
-                                                  matchFailed("\"i\"");
-                                                }
-                                              }
-                                              if (result21 !== null) {
-                                                var result11 = result21;
-                                              } else {
-                                                var result11 = null;;
-                                              };
-                                            }
-                                            if (result11 !== null) {
-                                              var result12 = [];
-                                              var result20 = parse_WS();
-                                              while (result20 !== null) {
-                                                result12.push(result20);
-                                                var result20 = parse_WS();
-                                              }
-                                              if (result12 !== null) {
-                                                if (input.substr(pos, 1) === "(") {
-                                                  var result13 = "(";
-                                                  pos += 1;
-                                                } else {
-                                                  var result13 = null;
-                                                  if (reportMatchFailures) {
-                                                    matchFailed("\"(\"");
-                                                  }
-                                                }
-                                                if (result13 !== null) {
-                                                  var result14 = [];
-                                                  var result19 = parse_WS();
-                                                  while (result19 !== null) {
-                                                    result14.push(result19);
-                                                    var result19 = parse_WS();
-                                                  }
-                                                  if (result14 !== null) {
-                                                    var result15 = parse_ConditionalOrExpression();
-                                                    if (result15 !== null) {
-                                                      var result16 = [];
-                                                      var result18 = parse_WS();
-                                                      while (result18 !== null) {
-                                                        result16.push(result18);
-                                                        var result18 = parse_WS();
-                                                      }
-                                                      if (result16 !== null) {
-                                                        if (input.substr(pos, 1) === ")") {
-                                                          var result17 = ")";
-                                                          pos += 1;
-                                                        } else {
-                                                          var result17 = null;
-                                                          if (reportMatchFailures) {
-                                                            matchFailed("\")\"");
-                                                          }
-                                                        }
-                                                        if (result17 !== null) {
-                                                          var result5 = [result7, result8, result9, result10, result11, result12, result13, result14, result15, result16, result17];
-                                                        } else {
-                                                          var result5 = null;
-                                                          pos = savedPos1;
-                                                        }
-                                                      } else {
-                                                        var result5 = null;
-                                                        pos = savedPos1;
-                                                      }
-                                                    } else {
-                                                      var result5 = null;
-                                                      pos = savedPos1;
-                                                    }
-                                                  } else {
-                                                    var result5 = null;
-                                                    pos = savedPos1;
-                                                  }
-                                                } else {
-                                                  var result5 = null;
-                                                  pos = savedPos1;
-                                                }
+                                              if (result13 !== null) {
+                                                var result5 = [result7, result8, result9, result10, result11, result12, result13];
                                               } else {
                                                 var result5 = null;
                                                 pos = savedPos1;
@@ -21874,40 +15067,43 @@ SparqlParser.parser = (function(){
                                       var result5 = null;
                                       pos = savedPos1;
                                     }
-                                    var result6 = result5 !== null
-                                      ? (function(arg) {
-                                          var ex = {};
-                                          ex.token = 'expression';
-                                          ex.expressionType = 'builtincall';
-                                          ex.builtincall = 'isuri';
-                                          ex.args = [arg];
-                                      
-                                          return ex;
-                                      })(result5[8])
-                                      : null;
-                                    if (result6 !== null) {
-                                      var result4 = result6;
+                                  } else {
+                                    var result5 = null;
+                                    pos = savedPos1;
+                                  }
+                                  var result6 = result5 !== null
+                                    ? (function(arg) {
+                                        var ex = {};
+                                        ex.token = 'expression';
+                                        ex.expressionType = 'builtincall';
+                                        ex.builtincall = 'isuri';
+                                        ex.args = [arg];
+                                    
+                                        return ex;
+                                    })(result5[4])
+                                    : null;
+                                  if (result6 !== null) {
+                                    var result4 = result6;
+                                  } else {
+                                    var result4 = null;
+                                    pos = savedPos0;
+                                  }
+                                  if (result4 !== null) {
+                                    var result0 = result4;
+                                  } else {
+                                    var result3 = parse_RegexExpression();
+                                    if (result3 !== null) {
+                                      var result0 = result3;
                                     } else {
-                                      var result4 = null;
-                                      pos = savedPos0;
-                                    }
-                                    if (result4 !== null) {
-                                      var result0 = result4;
-                                    } else {
-                                      var result3 = parse_RegexExpression();
-                                      if (result3 !== null) {
-                                        var result0 = result3;
+                                      var result2 = parse_ExistsFunc();
+                                      if (result2 !== null) {
+                                        var result0 = result2;
                                       } else {
-                                        var result2 = parse_ExistsFunc();
-                                        if (result2 !== null) {
-                                          var result0 = result2;
+                                        var result1 = parse_NotExistsFunc();
+                                        if (result1 !== null) {
+                                          var result0 = result1;
                                         } else {
-                                          var result1 = parse_NotExistsFunc();
-                                          if (result1 !== null) {
-                                            var result0 = result1;
-                                          } else {
-                                            var result0 = null;;
-                                          };
+                                          var result0 = null;;
                                         };
                                       };
                                     };
@@ -21949,274 +15145,146 @@ SparqlParser.parser = (function(){
         reportMatchFailures = false;
         var savedPos0 = pos;
         var savedPos1 = pos;
-        if (input.substr(pos, 1) === "R") {
-          var result40 = "R";
-          pos += 1;
+        if (input.substr(pos, 5) === "REGEX") {
+          var result28 = "REGEX";
+          pos += 5;
         } else {
-          var result40 = null;
+          var result28 = null;
           if (reportMatchFailures) {
-            matchFailed("\"R\"");
+            matchFailed("\"REGEX\"");
           }
         }
-        if (result40 !== null) {
-          var result3 = result40;
+        if (result28 !== null) {
+          var result3 = result28;
         } else {
-          if (input.substr(pos, 1) === "r") {
-            var result39 = "r";
-            pos += 1;
+          if (input.substr(pos, 5) === "regex") {
+            var result27 = "regex";
+            pos += 5;
           } else {
-            var result39 = null;
+            var result27 = null;
             if (reportMatchFailures) {
-              matchFailed("\"r\"");
+              matchFailed("\"regex\"");
             }
           }
-          if (result39 !== null) {
-            var result3 = result39;
+          if (result27 !== null) {
+            var result3 = result27;
           } else {
             var result3 = null;;
           };
         }
         if (result3 !== null) {
-          if (input.substr(pos, 1) === "E") {
-            var result38 = "E";
-            pos += 1;
-          } else {
-            var result38 = null;
-            if (reportMatchFailures) {
-              matchFailed("\"E\"");
-            }
-          }
-          if (result38 !== null) {
-            var result4 = result38;
-          } else {
-            if (input.substr(pos, 1) === "e") {
-              var result37 = "e";
-              pos += 1;
-            } else {
-              var result37 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"e\"");
-              }
-            }
-            if (result37 !== null) {
-              var result4 = result37;
-            } else {
-              var result4 = null;;
-            };
+          var result4 = [];
+          var result26 = parse_WS();
+          while (result26 !== null) {
+            result4.push(result26);
+            var result26 = parse_WS();
           }
           if (result4 !== null) {
-            if (input.substr(pos, 1) === "G") {
-              var result36 = "G";
+            if (input.substr(pos, 1) === "(") {
+              var result5 = "(";
               pos += 1;
             } else {
-              var result36 = null;
+              var result5 = null;
               if (reportMatchFailures) {
-                matchFailed("\"G\"");
+                matchFailed("\"(\"");
               }
-            }
-            if (result36 !== null) {
-              var result5 = result36;
-            } else {
-              if (input.substr(pos, 1) === "g") {
-                var result35 = "g";
-                pos += 1;
-              } else {
-                var result35 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"g\"");
-                }
-              }
-              if (result35 !== null) {
-                var result5 = result35;
-              } else {
-                var result5 = null;;
-              };
             }
             if (result5 !== null) {
-              if (input.substr(pos, 1) === "E") {
-                var result34 = "E";
-                pos += 1;
-              } else {
-                var result34 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"E\"");
-                }
-              }
-              if (result34 !== null) {
-                var result6 = result34;
-              } else {
-                if (input.substr(pos, 1) === "e") {
-                  var result33 = "e";
-                  pos += 1;
-                } else {
-                  var result33 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"e\"");
-                  }
-                }
-                if (result33 !== null) {
-                  var result6 = result33;
-                } else {
-                  var result6 = null;;
-                };
+              var result6 = [];
+              var result25 = parse_WS();
+              while (result25 !== null) {
+                result6.push(result25);
+                var result25 = parse_WS();
               }
               if (result6 !== null) {
-                if (input.substr(pos, 1) === "X") {
-                  var result32 = "X";
-                  pos += 1;
-                } else {
-                  var result32 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"X\"");
-                  }
-                }
-                if (result32 !== null) {
-                  var result7 = result32;
-                } else {
-                  if (input.substr(pos, 1) === "x") {
-                    var result31 = "x";
-                    pos += 1;
-                  } else {
-                    var result31 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"x\"");
-                    }
-                  }
-                  if (result31 !== null) {
-                    var result7 = result31;
-                  } else {
-                    var result7 = null;;
-                  };
-                }
+                var result7 = parse_ConditionalOrExpression();
                 if (result7 !== null) {
                   var result8 = [];
-                  var result30 = parse_WS();
-                  while (result30 !== null) {
-                    result8.push(result30);
-                    var result30 = parse_WS();
+                  var result24 = parse_WS();
+                  while (result24 !== null) {
+                    result8.push(result24);
+                    var result24 = parse_WS();
                   }
                   if (result8 !== null) {
-                    if (input.substr(pos, 1) === "(") {
-                      var result9 = "(";
+                    if (input.substr(pos, 1) === ",") {
+                      var result9 = ",";
                       pos += 1;
                     } else {
                       var result9 = null;
                       if (reportMatchFailures) {
-                        matchFailed("\"(\"");
+                        matchFailed("\",\"");
                       }
                     }
                     if (result9 !== null) {
                       var result10 = [];
-                      var result29 = parse_WS();
-                      while (result29 !== null) {
-                        result10.push(result29);
-                        var result29 = parse_WS();
+                      var result23 = parse_WS();
+                      while (result23 !== null) {
+                        result10.push(result23);
+                        var result23 = parse_WS();
                       }
                       if (result10 !== null) {
                         var result11 = parse_ConditionalOrExpression();
                         if (result11 !== null) {
                           var result12 = [];
-                          var result28 = parse_WS();
-                          while (result28 !== null) {
-                            result12.push(result28);
-                            var result28 = parse_WS();
+                          var result22 = parse_WS();
+                          while (result22 !== null) {
+                            result12.push(result22);
+                            var result22 = parse_WS();
                           }
                           if (result12 !== null) {
+                            var savedPos2 = pos;
                             if (input.substr(pos, 1) === ",") {
-                              var result13 = ",";
+                              var result18 = ",";
                               pos += 1;
                             } else {
-                              var result13 = null;
+                              var result18 = null;
                               if (reportMatchFailures) {
                                 matchFailed("\",\"");
                               }
                             }
+                            if (result18 !== null) {
+                              var result19 = [];
+                              var result21 = parse_WS();
+                              while (result21 !== null) {
+                                result19.push(result21);
+                                var result21 = parse_WS();
+                              }
+                              if (result19 !== null) {
+                                var result20 = parse_ConditionalOrExpression();
+                                if (result20 !== null) {
+                                  var result17 = [result18, result19, result20];
+                                } else {
+                                  var result17 = null;
+                                  pos = savedPos2;
+                                }
+                              } else {
+                                var result17 = null;
+                                pos = savedPos2;
+                              }
+                            } else {
+                              var result17 = null;
+                              pos = savedPos2;
+                            }
+                            var result13 = result17 !== null ? result17 : '';
                             if (result13 !== null) {
                               var result14 = [];
-                              var result27 = parse_WS();
-                              while (result27 !== null) {
-                                result14.push(result27);
-                                var result27 = parse_WS();
+                              var result16 = parse_WS();
+                              while (result16 !== null) {
+                                result14.push(result16);
+                                var result16 = parse_WS();
                               }
                               if (result14 !== null) {
-                                var result15 = parse_ConditionalOrExpression();
+                                if (input.substr(pos, 1) === ")") {
+                                  var result15 = ")";
+                                  pos += 1;
+                                } else {
+                                  var result15 = null;
+                                  if (reportMatchFailures) {
+                                    matchFailed("\")\"");
+                                  }
+                                }
                                 if (result15 !== null) {
-                                  var result16 = [];
-                                  var result26 = parse_WS();
-                                  while (result26 !== null) {
-                                    result16.push(result26);
-                                    var result26 = parse_WS();
-                                  }
-                                  if (result16 !== null) {
-                                    var savedPos2 = pos;
-                                    if (input.substr(pos, 1) === ",") {
-                                      var result22 = ",";
-                                      pos += 1;
-                                    } else {
-                                      var result22 = null;
-                                      if (reportMatchFailures) {
-                                        matchFailed("\",\"");
-                                      }
-                                    }
-                                    if (result22 !== null) {
-                                      var result23 = [];
-                                      var result25 = parse_WS();
-                                      while (result25 !== null) {
-                                        result23.push(result25);
-                                        var result25 = parse_WS();
-                                      }
-                                      if (result23 !== null) {
-                                        var result24 = parse_ConditionalOrExpression();
-                                        if (result24 !== null) {
-                                          var result21 = [result22, result23, result24];
-                                        } else {
-                                          var result21 = null;
-                                          pos = savedPos2;
-                                        }
-                                      } else {
-                                        var result21 = null;
-                                        pos = savedPos2;
-                                      }
-                                    } else {
-                                      var result21 = null;
-                                      pos = savedPos2;
-                                    }
-                                    var result17 = result21 !== null ? result21 : '';
-                                    if (result17 !== null) {
-                                      var result18 = [];
-                                      var result20 = parse_WS();
-                                      while (result20 !== null) {
-                                        result18.push(result20);
-                                        var result20 = parse_WS();
-                                      }
-                                      if (result18 !== null) {
-                                        if (input.substr(pos, 1) === ")") {
-                                          var result19 = ")";
-                                          pos += 1;
-                                        } else {
-                                          var result19 = null;
-                                          if (reportMatchFailures) {
-                                            matchFailed("\")\"");
-                                          }
-                                        }
-                                        if (result19 !== null) {
-                                          var result1 = [result3, result4, result5, result6, result7, result8, result9, result10, result11, result12, result13, result14, result15, result16, result17, result18, result19];
-                                        } else {
-                                          var result1 = null;
-                                          pos = savedPos1;
-                                        }
-                                      } else {
-                                        var result1 = null;
-                                        pos = savedPos1;
-                                      }
-                                    } else {
-                                      var result1 = null;
-                                      pos = savedPos1;
-                                    }
-                                  } else {
-                                    var result1 = null;
-                                    pos = savedPos1;
-                                  }
+                                  var result1 = [result3, result4, result5, result6, result7, result8, result9, result10, result11, result12, result13, result14, result15];
                                 } else {
                                   var result1 = null;
                                   pos = savedPos1;
@@ -22279,7 +15347,7 @@ SparqlParser.parser = (function(){
                 regex.flags = eo[2];
           
                 return regex;
-          })(result1[8], result1[12], result1[14])
+          })(result1[4], result1[8], result1[10])
           : null;
         if (result2 !== null) {
           var result0 = result2;
@@ -22311,204 +15379,44 @@ SparqlParser.parser = (function(){
         reportMatchFailures = false;
         var savedPos0 = pos;
         var savedPos1 = pos;
-        if (input.substr(pos, 1) === "E") {
-          var result23 = "E";
-          pos += 1;
+        if (input.substr(pos, 6) === "EXISTS") {
+          var result8 = "EXISTS";
+          pos += 6;
         } else {
-          var result23 = null;
+          var result8 = null;
           if (reportMatchFailures) {
-            matchFailed("\"E\"");
+            matchFailed("\"EXISTS\"");
           }
         }
-        if (result23 !== null) {
-          var result3 = result23;
+        if (result8 !== null) {
+          var result3 = result8;
         } else {
-          if (input.substr(pos, 1) === "e") {
-            var result22 = "e";
-            pos += 1;
+          if (input.substr(pos, 6) === "exists") {
+            var result7 = "exists";
+            pos += 6;
           } else {
-            var result22 = null;
+            var result7 = null;
             if (reportMatchFailures) {
-              matchFailed("\"e\"");
+              matchFailed("\"exists\"");
             }
           }
-          if (result22 !== null) {
-            var result3 = result22;
+          if (result7 !== null) {
+            var result3 = result7;
           } else {
             var result3 = null;;
           };
         }
         if (result3 !== null) {
-          if (input.substr(pos, 1) === "X") {
-            var result21 = "X";
-            pos += 1;
-          } else {
-            var result21 = null;
-            if (reportMatchFailures) {
-              matchFailed("\"X\"");
-            }
-          }
-          if (result21 !== null) {
-            var result4 = result21;
-          } else {
-            if (input.substr(pos, 1) === "x") {
-              var result20 = "x";
-              pos += 1;
-            } else {
-              var result20 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"x\"");
-              }
-            }
-            if (result20 !== null) {
-              var result4 = result20;
-            } else {
-              var result4 = null;;
-            };
+          var result4 = [];
+          var result6 = parse_WS();
+          while (result6 !== null) {
+            result4.push(result6);
+            var result6 = parse_WS();
           }
           if (result4 !== null) {
-            if (input.substr(pos, 1) === "I") {
-              var result19 = "I";
-              pos += 1;
-            } else {
-              var result19 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"I\"");
-              }
-            }
-            if (result19 !== null) {
-              var result5 = result19;
-            } else {
-              if (input.substr(pos, 1) === "i") {
-                var result18 = "i";
-                pos += 1;
-              } else {
-                var result18 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"i\"");
-                }
-              }
-              if (result18 !== null) {
-                var result5 = result18;
-              } else {
-                var result5 = null;;
-              };
-            }
+            var result5 = parse_GroupGraphPattern();
             if (result5 !== null) {
-              if (input.substr(pos, 1) === "S") {
-                var result17 = "S";
-                pos += 1;
-              } else {
-                var result17 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"S\"");
-                }
-              }
-              if (result17 !== null) {
-                var result6 = result17;
-              } else {
-                if (input.substr(pos, 1) === "s") {
-                  var result16 = "s";
-                  pos += 1;
-                } else {
-                  var result16 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"s\"");
-                  }
-                }
-                if (result16 !== null) {
-                  var result6 = result16;
-                } else {
-                  var result6 = null;;
-                };
-              }
-              if (result6 !== null) {
-                if (input.substr(pos, 1) === "T") {
-                  var result15 = "T";
-                  pos += 1;
-                } else {
-                  var result15 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"T\"");
-                  }
-                }
-                if (result15 !== null) {
-                  var result7 = result15;
-                } else {
-                  if (input.substr(pos, 1) === "t") {
-                    var result14 = "t";
-                    pos += 1;
-                  } else {
-                    var result14 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"t\"");
-                    }
-                  }
-                  if (result14 !== null) {
-                    var result7 = result14;
-                  } else {
-                    var result7 = null;;
-                  };
-                }
-                if (result7 !== null) {
-                  if (input.substr(pos, 1) === "S") {
-                    var result13 = "S";
-                    pos += 1;
-                  } else {
-                    var result13 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"S\"");
-                    }
-                  }
-                  if (result13 !== null) {
-                    var result8 = result13;
-                  } else {
-                    if (input.substr(pos, 1) === "s") {
-                      var result12 = "s";
-                      pos += 1;
-                    } else {
-                      var result12 = null;
-                      if (reportMatchFailures) {
-                        matchFailed("\"s\"");
-                      }
-                    }
-                    if (result12 !== null) {
-                      var result8 = result12;
-                    } else {
-                      var result8 = null;;
-                    };
-                  }
-                  if (result8 !== null) {
-                    var result9 = [];
-                    var result11 = parse_WS();
-                    while (result11 !== null) {
-                      result9.push(result11);
-                      var result11 = parse_WS();
-                    }
-                    if (result9 !== null) {
-                      var result10 = parse_GroupGraphPattern();
-                      if (result10 !== null) {
-                        var result1 = [result3, result4, result5, result6, result7, result8, result9, result10];
-                      } else {
-                        var result1 = null;
-                        pos = savedPos1;
-                      }
-                    } else {
-                      var result1 = null;
-                      pos = savedPos1;
-                    }
-                  } else {
-                    var result1 = null;
-                    pos = savedPos1;
-                  }
-                } else {
-                  var result1 = null;
-                  pos = savedPos1;
-                }
-              } else {
-                var result1 = null;
-                pos = savedPos1;
-              }
+              var result1 = [result3, result4, result5];
             } else {
               var result1 = null;
               pos = savedPos1;
@@ -22530,7 +15438,7 @@ SparqlParser.parser = (function(){
               ex.args = [ggp];
           
               return ex;
-          })(result1[7])
+          })(result1[2])
           : null;
         if (result2 !== null) {
           var result0 = result2;
@@ -22562,303 +15470,79 @@ SparqlParser.parser = (function(){
         reportMatchFailures = false;
         var savedPos0 = pos;
         var savedPos1 = pos;
-        if (input.substr(pos, 1) === "N") {
-          var result34 = "N";
-          pos += 1;
+        if (input.substr(pos, 3) === "NOT") {
+          var result13 = "NOT";
+          pos += 3;
         } else {
-          var result34 = null;
+          var result13 = null;
           if (reportMatchFailures) {
-            matchFailed("\"N\"");
+            matchFailed("\"NOT\"");
           }
         }
-        if (result34 !== null) {
-          var result3 = result34;
+        if (result13 !== null) {
+          var result3 = result13;
         } else {
-          if (input.substr(pos, 1) === "n") {
-            var result33 = "n";
-            pos += 1;
+          if (input.substr(pos, 3) === "not") {
+            var result12 = "not";
+            pos += 3;
           } else {
-            var result33 = null;
+            var result12 = null;
             if (reportMatchFailures) {
-              matchFailed("\"n\"");
+              matchFailed("\"not\"");
             }
           }
-          if (result33 !== null) {
-            var result3 = result33;
+          if (result12 !== null) {
+            var result3 = result12;
           } else {
             var result3 = null;;
           };
         }
         if (result3 !== null) {
-          if (input.substr(pos, 1) === "O") {
-            var result32 = "O";
-            pos += 1;
-          } else {
-            var result32 = null;
-            if (reportMatchFailures) {
-              matchFailed("\"O\"");
-            }
-          }
-          if (result32 !== null) {
-            var result4 = result32;
-          } else {
-            if (input.substr(pos, 1) === "o") {
-              var result31 = "o";
-              pos += 1;
-            } else {
-              var result31 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"o\"");
-              }
-            }
-            if (result31 !== null) {
-              var result4 = result31;
-            } else {
-              var result4 = null;;
-            };
+          var result4 = [];
+          var result11 = parse_WS();
+          while (result11 !== null) {
+            result4.push(result11);
+            var result11 = parse_WS();
           }
           if (result4 !== null) {
-            if (input.substr(pos, 1) === "T") {
-              var result30 = "T";
-              pos += 1;
+            if (input.substr(pos, 6) === "EXISTS") {
+              var result10 = "EXISTS";
+              pos += 6;
             } else {
-              var result30 = null;
+              var result10 = null;
               if (reportMatchFailures) {
-                matchFailed("\"T\"");
+                matchFailed("\"EXISTS\"");
               }
             }
-            if (result30 !== null) {
-              var result5 = result30;
+            if (result10 !== null) {
+              var result5 = result10;
             } else {
-              if (input.substr(pos, 1) === "t") {
-                var result29 = "t";
-                pos += 1;
+              if (input.substr(pos, 6) === "exists") {
+                var result9 = "exists";
+                pos += 6;
               } else {
-                var result29 = null;
+                var result9 = null;
                 if (reportMatchFailures) {
-                  matchFailed("\"t\"");
+                  matchFailed("\"exists\"");
                 }
               }
-              if (result29 !== null) {
-                var result5 = result29;
+              if (result9 !== null) {
+                var result5 = result9;
               } else {
                 var result5 = null;;
               };
             }
             if (result5 !== null) {
               var result6 = [];
-              var result28 = parse_WS();
-              while (result28 !== null) {
-                result6.push(result28);
-                var result28 = parse_WS();
+              var result8 = parse_WS();
+              while (result8 !== null) {
+                result6.push(result8);
+                var result8 = parse_WS();
               }
               if (result6 !== null) {
-                if (input.substr(pos, 1) === "E") {
-                  var result27 = "E";
-                  pos += 1;
-                } else {
-                  var result27 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"E\"");
-                  }
-                }
-                if (result27 !== null) {
-                  var result7 = result27;
-                } else {
-                  if (input.substr(pos, 1) === "e") {
-                    var result26 = "e";
-                    pos += 1;
-                  } else {
-                    var result26 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"e\"");
-                    }
-                  }
-                  if (result26 !== null) {
-                    var result7 = result26;
-                  } else {
-                    var result7 = null;;
-                  };
-                }
+                var result7 = parse_GroupGraphPattern();
                 if (result7 !== null) {
-                  if (input.substr(pos, 1) === "X") {
-                    var result25 = "X";
-                    pos += 1;
-                  } else {
-                    var result25 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"X\"");
-                    }
-                  }
-                  if (result25 !== null) {
-                    var result8 = result25;
-                  } else {
-                    if (input.substr(pos, 1) === "x") {
-                      var result24 = "x";
-                      pos += 1;
-                    } else {
-                      var result24 = null;
-                      if (reportMatchFailures) {
-                        matchFailed("\"x\"");
-                      }
-                    }
-                    if (result24 !== null) {
-                      var result8 = result24;
-                    } else {
-                      var result8 = null;;
-                    };
-                  }
-                  if (result8 !== null) {
-                    if (input.substr(pos, 1) === "I") {
-                      var result23 = "I";
-                      pos += 1;
-                    } else {
-                      var result23 = null;
-                      if (reportMatchFailures) {
-                        matchFailed("\"I\"");
-                      }
-                    }
-                    if (result23 !== null) {
-                      var result9 = result23;
-                    } else {
-                      if (input.substr(pos, 1) === "i") {
-                        var result22 = "i";
-                        pos += 1;
-                      } else {
-                        var result22 = null;
-                        if (reportMatchFailures) {
-                          matchFailed("\"i\"");
-                        }
-                      }
-                      if (result22 !== null) {
-                        var result9 = result22;
-                      } else {
-                        var result9 = null;;
-                      };
-                    }
-                    if (result9 !== null) {
-                      if (input.substr(pos, 1) === "S") {
-                        var result21 = "S";
-                        pos += 1;
-                      } else {
-                        var result21 = null;
-                        if (reportMatchFailures) {
-                          matchFailed("\"S\"");
-                        }
-                      }
-                      if (result21 !== null) {
-                        var result10 = result21;
-                      } else {
-                        if (input.substr(pos, 1) === "s") {
-                          var result20 = "s";
-                          pos += 1;
-                        } else {
-                          var result20 = null;
-                          if (reportMatchFailures) {
-                            matchFailed("\"s\"");
-                          }
-                        }
-                        if (result20 !== null) {
-                          var result10 = result20;
-                        } else {
-                          var result10 = null;;
-                        };
-                      }
-                      if (result10 !== null) {
-                        if (input.substr(pos, 1) === "T") {
-                          var result19 = "T";
-                          pos += 1;
-                        } else {
-                          var result19 = null;
-                          if (reportMatchFailures) {
-                            matchFailed("\"T\"");
-                          }
-                        }
-                        if (result19 !== null) {
-                          var result11 = result19;
-                        } else {
-                          if (input.substr(pos, 1) === "t") {
-                            var result18 = "t";
-                            pos += 1;
-                          } else {
-                            var result18 = null;
-                            if (reportMatchFailures) {
-                              matchFailed("\"t\"");
-                            }
-                          }
-                          if (result18 !== null) {
-                            var result11 = result18;
-                          } else {
-                            var result11 = null;;
-                          };
-                        }
-                        if (result11 !== null) {
-                          if (input.substr(pos, 1) === "S") {
-                            var result17 = "S";
-                            pos += 1;
-                          } else {
-                            var result17 = null;
-                            if (reportMatchFailures) {
-                              matchFailed("\"S\"");
-                            }
-                          }
-                          if (result17 !== null) {
-                            var result12 = result17;
-                          } else {
-                            if (input.substr(pos, 1) === "s") {
-                              var result16 = "s";
-                              pos += 1;
-                            } else {
-                              var result16 = null;
-                              if (reportMatchFailures) {
-                                matchFailed("\"s\"");
-                              }
-                            }
-                            if (result16 !== null) {
-                              var result12 = result16;
-                            } else {
-                              var result12 = null;;
-                            };
-                          }
-                          if (result12 !== null) {
-                            var result13 = [];
-                            var result15 = parse_WS();
-                            while (result15 !== null) {
-                              result13.push(result15);
-                              var result15 = parse_WS();
-                            }
-                            if (result13 !== null) {
-                              var result14 = parse_GroupGraphPattern();
-                              if (result14 !== null) {
-                                var result1 = [result3, result4, result5, result6, result7, result8, result9, result10, result11, result12, result13, result14];
-                              } else {
-                                var result1 = null;
-                                pos = savedPos1;
-                              }
-                            } else {
-                              var result1 = null;
-                              pos = savedPos1;
-                            }
-                          } else {
-                            var result1 = null;
-                            pos = savedPos1;
-                          }
-                        } else {
-                          var result1 = null;
-                          pos = savedPos1;
-                        }
-                      } else {
-                        var result1 = null;
-                        pos = savedPos1;
-                      }
-                    } else {
-                      var result1 = null;
-                      pos = savedPos1;
-                    }
-                  } else {
-                    var result1 = null;
-                    pos = savedPos1;
-                  }
+                  var result1 = [result3, result4, result5, result6, result7];
                 } else {
                   var result1 = null;
                   pos = savedPos1;
@@ -22888,7 +15572,7 @@ SparqlParser.parser = (function(){
               ex.args = [ggp];
           
               return ex;
-          })(result1[11])
+          })(result1[4])
           : null;
         if (result2 !== null) {
           var result0 = result2;
@@ -22918,541 +15602,182 @@ SparqlParser.parser = (function(){
         
         var savedReportMatchFailures = reportMatchFailures;
         reportMatchFailures = false;
-        var savedPos12 = pos;
-        var savedPos13 = pos;
-        if (input.substr(pos, 1) === "C") {
-          var result263 = "C";
-          pos += 1;
+        var savedPos8 = pos;
+        var savedPos9 = pos;
+        if (input.substr(pos, 5) === "COUNT") {
+          var result117 = "COUNT";
+          pos += 5;
         } else {
-          var result263 = null;
+          var result117 = null;
           if (reportMatchFailures) {
-            matchFailed("\"C\"");
+            matchFailed("\"COUNT\"");
           }
         }
-        if (result263 !== null) {
-          var result208 = result263;
+        if (result117 !== null) {
+          var result96 = result117;
         } else {
-          if (input.substr(pos, 1) === "c") {
-            var result262 = "c";
-            pos += 1;
+          if (input.substr(pos, 5) === "count") {
+            var result116 = "count";
+            pos += 5;
           } else {
-            var result262 = null;
+            var result116 = null;
             if (reportMatchFailures) {
-              matchFailed("\"c\"");
+              matchFailed("\"count\"");
             }
           }
-          if (result262 !== null) {
-            var result208 = result262;
+          if (result116 !== null) {
+            var result96 = result116;
           } else {
-            var result208 = null;;
+            var result96 = null;;
           };
         }
-        if (result208 !== null) {
-          if (input.substr(pos, 1) === "O") {
-            var result261 = "O";
-            pos += 1;
-          } else {
-            var result261 = null;
-            if (reportMatchFailures) {
-              matchFailed("\"O\"");
-            }
+        if (result96 !== null) {
+          var result97 = [];
+          var result115 = parse_WS();
+          while (result115 !== null) {
+            result97.push(result115);
+            var result115 = parse_WS();
           }
-          if (result261 !== null) {
-            var result209 = result261;
-          } else {
-            if (input.substr(pos, 1) === "o") {
-              var result260 = "o";
+          if (result97 !== null) {
+            if (input.substr(pos, 1) === "(") {
+              var result98 = "(";
               pos += 1;
             } else {
-              var result260 = null;
+              var result98 = null;
               if (reportMatchFailures) {
-                matchFailed("\"o\"");
+                matchFailed("\"(\"");
               }
             }
-            if (result260 !== null) {
-              var result209 = result260;
-            } else {
-              var result209 = null;;
-            };
-          }
-          if (result209 !== null) {
-            if (input.substr(pos, 1) === "U") {
-              var result259 = "U";
-              pos += 1;
-            } else {
-              var result259 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"U\"");
+            if (result98 !== null) {
+              var result99 = [];
+              var result114 = parse_WS();
+              while (result114 !== null) {
+                result99.push(result114);
+                var result114 = parse_WS();
               }
-            }
-            if (result259 !== null) {
-              var result210 = result259;
-            } else {
-              if (input.substr(pos, 1) === "u") {
-                var result258 = "u";
-                pos += 1;
-              } else {
-                var result258 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"u\"");
-                }
-              }
-              if (result258 !== null) {
-                var result210 = result258;
-              } else {
-                var result210 = null;;
-              };
-            }
-            if (result210 !== null) {
-              if (input.substr(pos, 1) === "N") {
-                var result257 = "N";
-                pos += 1;
-              } else {
-                var result257 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"N\"");
-                }
-              }
-              if (result257 !== null) {
-                var result211 = result257;
-              } else {
-                if (input.substr(pos, 1) === "n") {
-                  var result256 = "n";
-                  pos += 1;
+              if (result99 !== null) {
+                if (input.substr(pos, 8) === "DISTINCT") {
+                  var result113 = "DISTINCT";
+                  pos += 8;
                 } else {
-                  var result256 = null;
+                  var result113 = null;
                   if (reportMatchFailures) {
-                    matchFailed("\"n\"");
+                    matchFailed("\"DISTINCT\"");
                   }
                 }
-                if (result256 !== null) {
-                  var result211 = result256;
+                if (result113 !== null) {
+                  var result111 = result113;
                 } else {
-                  var result211 = null;;
-                };
-              }
-              if (result211 !== null) {
-                if (input.substr(pos, 1) === "T") {
-                  var result255 = "T";
-                  pos += 1;
-                } else {
-                  var result255 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"T\"");
-                  }
-                }
-                if (result255 !== null) {
-                  var result212 = result255;
-                } else {
-                  if (input.substr(pos, 1) === "t") {
-                    var result254 = "t";
-                    pos += 1;
+                  if (input.substr(pos, 8) === "distinct") {
+                    var result112 = "distinct";
+                    pos += 8;
                   } else {
-                    var result254 = null;
+                    var result112 = null;
                     if (reportMatchFailures) {
-                      matchFailed("\"t\"");
+                      matchFailed("\"distinct\"");
                     }
                   }
-                  if (result254 !== null) {
-                    var result212 = result254;
+                  if (result112 !== null) {
+                    var result111 = result112;
                   } else {
-                    var result212 = null;;
+                    var result111 = null;;
                   };
                 }
-                if (result212 !== null) {
-                  var result213 = [];
-                  var result253 = parse_WS();
-                  while (result253 !== null) {
-                    result213.push(result253);
-                    var result253 = parse_WS();
+                var result100 = result111 !== null ? result111 : '';
+                if (result100 !== null) {
+                  var result101 = [];
+                  var result110 = parse_WS();
+                  while (result110 !== null) {
+                    result101.push(result110);
+                    var result110 = parse_WS();
                   }
-                  if (result213 !== null) {
-                    if (input.substr(pos, 1) === "(") {
-                      var result214 = "(";
+                  if (result101 !== null) {
+                    if (input.substr(pos, 1) === "*") {
+                      var result109 = "*";
                       pos += 1;
                     } else {
-                      var result214 = null;
+                      var result109 = null;
                       if (reportMatchFailures) {
-                        matchFailed("\"(\"");
+                        matchFailed("\"*\"");
                       }
                     }
-                    if (result214 !== null) {
-                      var result215 = [];
-                      var result252 = parse_WS();
-                      while (result252 !== null) {
-                        result215.push(result252);
-                        var result252 = parse_WS();
+                    if (result109 !== null) {
+                      var result102 = result109;
+                    } else {
+                      var result108 = parse_ConditionalOrExpression();
+                      if (result108 !== null) {
+                        var result102 = result108;
+                      } else {
+                        var result102 = null;;
+                      };
+                    }
+                    if (result102 !== null) {
+                      var result103 = [];
+                      var result107 = parse_WS();
+                      while (result107 !== null) {
+                        result103.push(result107);
+                        var result107 = parse_WS();
                       }
-                      if (result215 !== null) {
-                        var savedPos14 = pos;
-                        if (input.substr(pos, 1) === "D") {
-                          var result251 = "D";
+                      if (result103 !== null) {
+                        if (input.substr(pos, 1) === ")") {
+                          var result104 = ")";
                           pos += 1;
                         } else {
-                          var result251 = null;
+                          var result104 = null;
                           if (reportMatchFailures) {
-                            matchFailed("\"D\"");
+                            matchFailed("\")\"");
                           }
                         }
-                        if (result251 !== null) {
-                          var result228 = result251;
-                        } else {
-                          if (input.substr(pos, 1) === "d") {
-                            var result250 = "d";
-                            pos += 1;
-                          } else {
-                            var result250 = null;
-                            if (reportMatchFailures) {
-                              matchFailed("\"d\"");
-                            }
+                        if (result104 !== null) {
+                          var result105 = [];
+                          var result106 = parse_WS();
+                          while (result106 !== null) {
+                            result105.push(result106);
+                            var result106 = parse_WS();
                           }
-                          if (result250 !== null) {
-                            var result228 = result250;
+                          if (result105 !== null) {
+                            var result94 = [result96, result97, result98, result99, result100, result101, result102, result103, result104, result105];
                           } else {
-                            var result228 = null;;
-                          };
-                        }
-                        if (result228 !== null) {
-                          if (input.substr(pos, 1) === "I") {
-                            var result249 = "I";
-                            pos += 1;
-                          } else {
-                            var result249 = null;
-                            if (reportMatchFailures) {
-                              matchFailed("\"I\"");
-                            }
-                          }
-                          if (result249 !== null) {
-                            var result229 = result249;
-                          } else {
-                            if (input.substr(pos, 1) === "i") {
-                              var result248 = "i";
-                              pos += 1;
-                            } else {
-                              var result248 = null;
-                              if (reportMatchFailures) {
-                                matchFailed("\"i\"");
-                              }
-                            }
-                            if (result248 !== null) {
-                              var result229 = result248;
-                            } else {
-                              var result229 = null;;
-                            };
-                          }
-                          if (result229 !== null) {
-                            if (input.substr(pos, 1) === "S") {
-                              var result247 = "S";
-                              pos += 1;
-                            } else {
-                              var result247 = null;
-                              if (reportMatchFailures) {
-                                matchFailed("\"S\"");
-                              }
-                            }
-                            if (result247 !== null) {
-                              var result230 = result247;
-                            } else {
-                              if (input.substr(pos, 1) === "s") {
-                                var result246 = "s";
-                                pos += 1;
-                              } else {
-                                var result246 = null;
-                                if (reportMatchFailures) {
-                                  matchFailed("\"s\"");
-                                }
-                              }
-                              if (result246 !== null) {
-                                var result230 = result246;
-                              } else {
-                                var result230 = null;;
-                              };
-                            }
-                            if (result230 !== null) {
-                              if (input.substr(pos, 1) === "T") {
-                                var result245 = "T";
-                                pos += 1;
-                              } else {
-                                var result245 = null;
-                                if (reportMatchFailures) {
-                                  matchFailed("\"T\"");
-                                }
-                              }
-                              if (result245 !== null) {
-                                var result231 = result245;
-                              } else {
-                                if (input.substr(pos, 1) === "t") {
-                                  var result244 = "t";
-                                  pos += 1;
-                                } else {
-                                  var result244 = null;
-                                  if (reportMatchFailures) {
-                                    matchFailed("\"t\"");
-                                  }
-                                }
-                                if (result244 !== null) {
-                                  var result231 = result244;
-                                } else {
-                                  var result231 = null;;
-                                };
-                              }
-                              if (result231 !== null) {
-                                if (input.substr(pos, 1) === "I") {
-                                  var result243 = "I";
-                                  pos += 1;
-                                } else {
-                                  var result243 = null;
-                                  if (reportMatchFailures) {
-                                    matchFailed("\"I\"");
-                                  }
-                                }
-                                if (result243 !== null) {
-                                  var result232 = result243;
-                                } else {
-                                  if (input.substr(pos, 1) === "i") {
-                                    var result242 = "i";
-                                    pos += 1;
-                                  } else {
-                                    var result242 = null;
-                                    if (reportMatchFailures) {
-                                      matchFailed("\"i\"");
-                                    }
-                                  }
-                                  if (result242 !== null) {
-                                    var result232 = result242;
-                                  } else {
-                                    var result232 = null;;
-                                  };
-                                }
-                                if (result232 !== null) {
-                                  if (input.substr(pos, 1) === "N") {
-                                    var result241 = "N";
-                                    pos += 1;
-                                  } else {
-                                    var result241 = null;
-                                    if (reportMatchFailures) {
-                                      matchFailed("\"N\"");
-                                    }
-                                  }
-                                  if (result241 !== null) {
-                                    var result233 = result241;
-                                  } else {
-                                    if (input.substr(pos, 1) === "n") {
-                                      var result240 = "n";
-                                      pos += 1;
-                                    } else {
-                                      var result240 = null;
-                                      if (reportMatchFailures) {
-                                        matchFailed("\"n\"");
-                                      }
-                                    }
-                                    if (result240 !== null) {
-                                      var result233 = result240;
-                                    } else {
-                                      var result233 = null;;
-                                    };
-                                  }
-                                  if (result233 !== null) {
-                                    if (input.substr(pos, 1) === "C") {
-                                      var result239 = "C";
-                                      pos += 1;
-                                    } else {
-                                      var result239 = null;
-                                      if (reportMatchFailures) {
-                                        matchFailed("\"C\"");
-                                      }
-                                    }
-                                    if (result239 !== null) {
-                                      var result234 = result239;
-                                    } else {
-                                      if (input.substr(pos, 1) === "c") {
-                                        var result238 = "c";
-                                        pos += 1;
-                                      } else {
-                                        var result238 = null;
-                                        if (reportMatchFailures) {
-                                          matchFailed("\"c\"");
-                                        }
-                                      }
-                                      if (result238 !== null) {
-                                        var result234 = result238;
-                                      } else {
-                                        var result234 = null;;
-                                      };
-                                    }
-                                    if (result234 !== null) {
-                                      if (input.substr(pos, 1) === "T") {
-                                        var result237 = "T";
-                                        pos += 1;
-                                      } else {
-                                        var result237 = null;
-                                        if (reportMatchFailures) {
-                                          matchFailed("\"T\"");
-                                        }
-                                      }
-                                      if (result237 !== null) {
-                                        var result235 = result237;
-                                      } else {
-                                        if (input.substr(pos, 1) === "t") {
-                                          var result236 = "t";
-                                          pos += 1;
-                                        } else {
-                                          var result236 = null;
-                                          if (reportMatchFailures) {
-                                            matchFailed("\"t\"");
-                                          }
-                                        }
-                                        if (result236 !== null) {
-                                          var result235 = result236;
-                                        } else {
-                                          var result235 = null;;
-                                        };
-                                      }
-                                      if (result235 !== null) {
-                                        var result227 = [result228, result229, result230, result231, result232, result233, result234, result235];
-                                      } else {
-                                        var result227 = null;
-                                        pos = savedPos14;
-                                      }
-                                    } else {
-                                      var result227 = null;
-                                      pos = savedPos14;
-                                    }
-                                  } else {
-                                    var result227 = null;
-                                    pos = savedPos14;
-                                  }
-                                } else {
-                                  var result227 = null;
-                                  pos = savedPos14;
-                                }
-                              } else {
-                                var result227 = null;
-                                pos = savedPos14;
-                              }
-                            } else {
-                              var result227 = null;
-                              pos = savedPos14;
-                            }
-                          } else {
-                            var result227 = null;
-                            pos = savedPos14;
+                            var result94 = null;
+                            pos = savedPos9;
                           }
                         } else {
-                          var result227 = null;
-                          pos = savedPos14;
-                        }
-                        var result216 = result227 !== null ? result227 : '';
-                        if (result216 !== null) {
-                          var result217 = [];
-                          var result226 = parse_WS();
-                          while (result226 !== null) {
-                            result217.push(result226);
-                            var result226 = parse_WS();
-                          }
-                          if (result217 !== null) {
-                            if (input.substr(pos, 1) === "*") {
-                              var result225 = "*";
-                              pos += 1;
-                            } else {
-                              var result225 = null;
-                              if (reportMatchFailures) {
-                                matchFailed("\"*\"");
-                              }
-                            }
-                            if (result225 !== null) {
-                              var result218 = result225;
-                            } else {
-                              var result224 = parse_ConditionalOrExpression();
-                              if (result224 !== null) {
-                                var result218 = result224;
-                              } else {
-                                var result218 = null;;
-                              };
-                            }
-                            if (result218 !== null) {
-                              var result219 = [];
-                              var result223 = parse_WS();
-                              while (result223 !== null) {
-                                result219.push(result223);
-                                var result223 = parse_WS();
-                              }
-                              if (result219 !== null) {
-                                if (input.substr(pos, 1) === ")") {
-                                  var result220 = ")";
-                                  pos += 1;
-                                } else {
-                                  var result220 = null;
-                                  if (reportMatchFailures) {
-                                    matchFailed("\")\"");
-                                  }
-                                }
-                                if (result220 !== null) {
-                                  var result221 = [];
-                                  var result222 = parse_WS();
-                                  while (result222 !== null) {
-                                    result221.push(result222);
-                                    var result222 = parse_WS();
-                                  }
-                                  if (result221 !== null) {
-                                    var result206 = [result208, result209, result210, result211, result212, result213, result214, result215, result216, result217, result218, result219, result220, result221];
-                                  } else {
-                                    var result206 = null;
-                                    pos = savedPos13;
-                                  }
-                                } else {
-                                  var result206 = null;
-                                  pos = savedPos13;
-                                }
-                              } else {
-                                var result206 = null;
-                                pos = savedPos13;
-                              }
-                            } else {
-                              var result206 = null;
-                              pos = savedPos13;
-                            }
-                          } else {
-                            var result206 = null;
-                            pos = savedPos13;
-                          }
-                        } else {
-                          var result206 = null;
-                          pos = savedPos13;
+                          var result94 = null;
+                          pos = savedPos9;
                         }
                       } else {
-                        var result206 = null;
-                        pos = savedPos13;
+                        var result94 = null;
+                        pos = savedPos9;
                       }
                     } else {
-                      var result206 = null;
-                      pos = savedPos13;
+                      var result94 = null;
+                      pos = savedPos9;
                     }
                   } else {
-                    var result206 = null;
-                    pos = savedPos13;
+                    var result94 = null;
+                    pos = savedPos9;
                   }
                 } else {
-                  var result206 = null;
-                  pos = savedPos13;
+                  var result94 = null;
+                  pos = savedPos9;
                 }
               } else {
-                var result206 = null;
-                pos = savedPos13;
+                var result94 = null;
+                pos = savedPos9;
               }
             } else {
-              var result206 = null;
-              pos = savedPos13;
+              var result94 = null;
+              pos = savedPos9;
             }
           } else {
-            var result206 = null;
-            pos = savedPos13;
+            var result94 = null;
+            pos = savedPos9;
           }
         } else {
-          var result206 = null;
-          pos = savedPos13;
+          var result94 = null;
+          pos = savedPos9;
         }
-        var result207 = result206 !== null
+        var result95 = result94 !== null
           ? (function(d, e) {
                 exp = {};
                 exp.token = 'expression';
@@ -23463,470 +15788,175 @@ SparqlParser.parser = (function(){
           
                 return exp;
           
-            })(result206[8], result206[10])
+            })(result94[4], result94[6])
           : null;
-        if (result207 !== null) {
-          var result205 = result207;
+        if (result95 !== null) {
+          var result93 = result95;
         } else {
-          var result205 = null;
-          pos = savedPos12;
+          var result93 = null;
+          pos = savedPos8;
         }
-        if (result205 !== null) {
-          var result0 = result205;
+        if (result93 !== null) {
+          var result0 = result93;
         } else {
-          var savedPos9 = pos;
-          var savedPos10 = pos;
-          if (input.substr(pos, 1) === "S") {
-            var result204 = "S";
-            pos += 1;
+          var savedPos6 = pos;
+          var savedPos7 = pos;
+          if (input.substr(pos, 3) === "SUM") {
+            var result92 = "SUM";
+            pos += 3;
           } else {
-            var result204 = null;
+            var result92 = null;
             if (reportMatchFailures) {
-              matchFailed("\"S\"");
+              matchFailed("\"SUM\"");
             }
           }
-          if (result204 !== null) {
-            var result157 = result204;
+          if (result92 !== null) {
+            var result73 = result92;
           } else {
-            if (input.substr(pos, 1) === "s") {
-              var result203 = "s";
-              pos += 1;
+            if (input.substr(pos, 3) === "sum") {
+              var result91 = "sum";
+              pos += 3;
             } else {
-              var result203 = null;
+              var result91 = null;
               if (reportMatchFailures) {
-                matchFailed("\"s\"");
+                matchFailed("\"sum\"");
               }
             }
-            if (result203 !== null) {
-              var result157 = result203;
+            if (result91 !== null) {
+              var result73 = result91;
             } else {
-              var result157 = null;;
+              var result73 = null;;
             };
           }
-          if (result157 !== null) {
-            if (input.substr(pos, 1) === "U") {
-              var result202 = "U";
-              pos += 1;
-            } else {
-              var result202 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"U\"");
-              }
+          if (result73 !== null) {
+            var result74 = [];
+            var result90 = parse_WS();
+            while (result90 !== null) {
+              result74.push(result90);
+              var result90 = parse_WS();
             }
-            if (result202 !== null) {
-              var result158 = result202;
-            } else {
-              if (input.substr(pos, 1) === "u") {
-                var result201 = "u";
+            if (result74 !== null) {
+              if (input.substr(pos, 1) === "(") {
+                var result75 = "(";
                 pos += 1;
               } else {
-                var result201 = null;
+                var result75 = null;
                 if (reportMatchFailures) {
-                  matchFailed("\"u\"");
+                  matchFailed("\"(\"");
                 }
               }
-              if (result201 !== null) {
-                var result158 = result201;
-              } else {
-                var result158 = null;;
-              };
-            }
-            if (result158 !== null) {
-              if (input.substr(pos, 1) === "M") {
-                var result200 = "M";
-                pos += 1;
-              } else {
-                var result200 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"M\"");
+              if (result75 !== null) {
+                var result76 = [];
+                var result89 = parse_WS();
+                while (result89 !== null) {
+                  result76.push(result89);
+                  var result89 = parse_WS();
                 }
-              }
-              if (result200 !== null) {
-                var result159 = result200;
-              } else {
-                if (input.substr(pos, 1) === "m") {
-                  var result199 = "m";
-                  pos += 1;
-                } else {
-                  var result199 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"m\"");
-                  }
-                }
-                if (result199 !== null) {
-                  var result159 = result199;
-                } else {
-                  var result159 = null;;
-                };
-              }
-              if (result159 !== null) {
-                var result160 = [];
-                var result198 = parse_WS();
-                while (result198 !== null) {
-                  result160.push(result198);
-                  var result198 = parse_WS();
-                }
-                if (result160 !== null) {
-                  if (input.substr(pos, 1) === "(") {
-                    var result161 = "(";
-                    pos += 1;
+                if (result76 !== null) {
+                  if (input.substr(pos, 8) === "DISTINCT") {
+                    var result88 = "DISTINCT";
+                    pos += 8;
                   } else {
-                    var result161 = null;
+                    var result88 = null;
                     if (reportMatchFailures) {
-                      matchFailed("\"(\"");
+                      matchFailed("\"DISTINCT\"");
                     }
                   }
-                  if (result161 !== null) {
-                    var result162 = [];
-                    var result197 = parse_WS();
-                    while (result197 !== null) {
-                      result162.push(result197);
-                      var result197 = parse_WS();
+                  if (result88 !== null) {
+                    var result86 = result88;
+                  } else {
+                    if (input.substr(pos, 8) === "distinct") {
+                      var result87 = "distinct";
+                      pos += 8;
+                    } else {
+                      var result87 = null;
+                      if (reportMatchFailures) {
+                        matchFailed("\"distinct\"");
+                      }
                     }
-                    if (result162 !== null) {
-                      var savedPos11 = pos;
-                      if (input.substr(pos, 1) === "D") {
-                        var result196 = "D";
-                        pos += 1;
-                      } else {
-                        var result196 = null;
-                        if (reportMatchFailures) {
-                          matchFailed("\"D\"");
+                    if (result87 !== null) {
+                      var result86 = result87;
+                    } else {
+                      var result86 = null;;
+                    };
+                  }
+                  var result77 = result86 !== null ? result86 : '';
+                  if (result77 !== null) {
+                    var result78 = [];
+                    var result85 = parse_WS();
+                    while (result85 !== null) {
+                      result78.push(result85);
+                      var result85 = parse_WS();
+                    }
+                    if (result78 !== null) {
+                      var result79 = parse_ConditionalOrExpression();
+                      if (result79 !== null) {
+                        var result80 = [];
+                        var result84 = parse_WS();
+                        while (result84 !== null) {
+                          result80.push(result84);
+                          var result84 = parse_WS();
                         }
-                      }
-                      if (result196 !== null) {
-                        var result173 = result196;
-                      } else {
-                        if (input.substr(pos, 1) === "d") {
-                          var result195 = "d";
-                          pos += 1;
-                        } else {
-                          var result195 = null;
-                          if (reportMatchFailures) {
-                            matchFailed("\"d\"");
-                          }
-                        }
-                        if (result195 !== null) {
-                          var result173 = result195;
-                        } else {
-                          var result173 = null;;
-                        };
-                      }
-                      if (result173 !== null) {
-                        if (input.substr(pos, 1) === "I") {
-                          var result194 = "I";
-                          pos += 1;
-                        } else {
-                          var result194 = null;
-                          if (reportMatchFailures) {
-                            matchFailed("\"I\"");
-                          }
-                        }
-                        if (result194 !== null) {
-                          var result174 = result194;
-                        } else {
-                          if (input.substr(pos, 1) === "i") {
-                            var result193 = "i";
+                        if (result80 !== null) {
+                          if (input.substr(pos, 1) === ")") {
+                            var result81 = ")";
                             pos += 1;
                           } else {
-                            var result193 = null;
+                            var result81 = null;
                             if (reportMatchFailures) {
-                              matchFailed("\"i\"");
+                              matchFailed("\")\"");
                             }
                           }
-                          if (result193 !== null) {
-                            var result174 = result193;
-                          } else {
-                            var result174 = null;;
-                          };
-                        }
-                        if (result174 !== null) {
-                          if (input.substr(pos, 1) === "S") {
-                            var result192 = "S";
-                            pos += 1;
-                          } else {
-                            var result192 = null;
-                            if (reportMatchFailures) {
-                              matchFailed("\"S\"");
+                          if (result81 !== null) {
+                            var result82 = [];
+                            var result83 = parse_WS();
+                            while (result83 !== null) {
+                              result82.push(result83);
+                              var result83 = parse_WS();
                             }
-                          }
-                          if (result192 !== null) {
-                            var result175 = result192;
-                          } else {
-                            if (input.substr(pos, 1) === "s") {
-                              var result191 = "s";
-                              pos += 1;
+                            if (result82 !== null) {
+                              var result71 = [result73, result74, result75, result76, result77, result78, result79, result80, result81, result82];
                             } else {
-                              var result191 = null;
-                              if (reportMatchFailures) {
-                                matchFailed("\"s\"");
-                              }
-                            }
-                            if (result191 !== null) {
-                              var result175 = result191;
-                            } else {
-                              var result175 = null;;
-                            };
-                          }
-                          if (result175 !== null) {
-                            if (input.substr(pos, 1) === "T") {
-                              var result190 = "T";
-                              pos += 1;
-                            } else {
-                              var result190 = null;
-                              if (reportMatchFailures) {
-                                matchFailed("\"T\"");
-                              }
-                            }
-                            if (result190 !== null) {
-                              var result176 = result190;
-                            } else {
-                              if (input.substr(pos, 1) === "t") {
-                                var result189 = "t";
-                                pos += 1;
-                              } else {
-                                var result189 = null;
-                                if (reportMatchFailures) {
-                                  matchFailed("\"t\"");
-                                }
-                              }
-                              if (result189 !== null) {
-                                var result176 = result189;
-                              } else {
-                                var result176 = null;;
-                              };
-                            }
-                            if (result176 !== null) {
-                              if (input.substr(pos, 1) === "I") {
-                                var result188 = "I";
-                                pos += 1;
-                              } else {
-                                var result188 = null;
-                                if (reportMatchFailures) {
-                                  matchFailed("\"I\"");
-                                }
-                              }
-                              if (result188 !== null) {
-                                var result177 = result188;
-                              } else {
-                                if (input.substr(pos, 1) === "i") {
-                                  var result187 = "i";
-                                  pos += 1;
-                                } else {
-                                  var result187 = null;
-                                  if (reportMatchFailures) {
-                                    matchFailed("\"i\"");
-                                  }
-                                }
-                                if (result187 !== null) {
-                                  var result177 = result187;
-                                } else {
-                                  var result177 = null;;
-                                };
-                              }
-                              if (result177 !== null) {
-                                if (input.substr(pos, 1) === "N") {
-                                  var result186 = "N";
-                                  pos += 1;
-                                } else {
-                                  var result186 = null;
-                                  if (reportMatchFailures) {
-                                    matchFailed("\"N\"");
-                                  }
-                                }
-                                if (result186 !== null) {
-                                  var result178 = result186;
-                                } else {
-                                  if (input.substr(pos, 1) === "n") {
-                                    var result185 = "n";
-                                    pos += 1;
-                                  } else {
-                                    var result185 = null;
-                                    if (reportMatchFailures) {
-                                      matchFailed("\"n\"");
-                                    }
-                                  }
-                                  if (result185 !== null) {
-                                    var result178 = result185;
-                                  } else {
-                                    var result178 = null;;
-                                  };
-                                }
-                                if (result178 !== null) {
-                                  if (input.substr(pos, 1) === "C") {
-                                    var result184 = "C";
-                                    pos += 1;
-                                  } else {
-                                    var result184 = null;
-                                    if (reportMatchFailures) {
-                                      matchFailed("\"C\"");
-                                    }
-                                  }
-                                  if (result184 !== null) {
-                                    var result179 = result184;
-                                  } else {
-                                    if (input.substr(pos, 1) === "c") {
-                                      var result183 = "c";
-                                      pos += 1;
-                                    } else {
-                                      var result183 = null;
-                                      if (reportMatchFailures) {
-                                        matchFailed("\"c\"");
-                                      }
-                                    }
-                                    if (result183 !== null) {
-                                      var result179 = result183;
-                                    } else {
-                                      var result179 = null;;
-                                    };
-                                  }
-                                  if (result179 !== null) {
-                                    if (input.substr(pos, 1) === "T") {
-                                      var result182 = "T";
-                                      pos += 1;
-                                    } else {
-                                      var result182 = null;
-                                      if (reportMatchFailures) {
-                                        matchFailed("\"T\"");
-                                      }
-                                    }
-                                    if (result182 !== null) {
-                                      var result180 = result182;
-                                    } else {
-                                      if (input.substr(pos, 1) === "t") {
-                                        var result181 = "t";
-                                        pos += 1;
-                                      } else {
-                                        var result181 = null;
-                                        if (reportMatchFailures) {
-                                          matchFailed("\"t\"");
-                                        }
-                                      }
-                                      if (result181 !== null) {
-                                        var result180 = result181;
-                                      } else {
-                                        var result180 = null;;
-                                      };
-                                    }
-                                    if (result180 !== null) {
-                                      var result172 = [result173, result174, result175, result176, result177, result178, result179, result180];
-                                    } else {
-                                      var result172 = null;
-                                      pos = savedPos11;
-                                    }
-                                  } else {
-                                    var result172 = null;
-                                    pos = savedPos11;
-                                  }
-                                } else {
-                                  var result172 = null;
-                                  pos = savedPos11;
-                                }
-                              } else {
-                                var result172 = null;
-                                pos = savedPos11;
-                              }
-                            } else {
-                              var result172 = null;
-                              pos = savedPos11;
+                              var result71 = null;
+                              pos = savedPos7;
                             }
                           } else {
-                            var result172 = null;
-                            pos = savedPos11;
+                            var result71 = null;
+                            pos = savedPos7;
                           }
                         } else {
-                          var result172 = null;
-                          pos = savedPos11;
+                          var result71 = null;
+                          pos = savedPos7;
                         }
                       } else {
-                        var result172 = null;
-                        pos = savedPos11;
-                      }
-                      var result163 = result172 !== null ? result172 : '';
-                      if (result163 !== null) {
-                        var result164 = [];
-                        var result171 = parse_WS();
-                        while (result171 !== null) {
-                          result164.push(result171);
-                          var result171 = parse_WS();
-                        }
-                        if (result164 !== null) {
-                          var result165 = parse_ConditionalOrExpression();
-                          if (result165 !== null) {
-                            var result166 = [];
-                            var result170 = parse_WS();
-                            while (result170 !== null) {
-                              result166.push(result170);
-                              var result170 = parse_WS();
-                            }
-                            if (result166 !== null) {
-                              if (input.substr(pos, 1) === ")") {
-                                var result167 = ")";
-                                pos += 1;
-                              } else {
-                                var result167 = null;
-                                if (reportMatchFailures) {
-                                  matchFailed("\")\"");
-                                }
-                              }
-                              if (result167 !== null) {
-                                var result168 = [];
-                                var result169 = parse_WS();
-                                while (result169 !== null) {
-                                  result168.push(result169);
-                                  var result169 = parse_WS();
-                                }
-                                if (result168 !== null) {
-                                  var result155 = [result157, result158, result159, result160, result161, result162, result163, result164, result165, result166, result167, result168];
-                                } else {
-                                  var result155 = null;
-                                  pos = savedPos10;
-                                }
-                              } else {
-                                var result155 = null;
-                                pos = savedPos10;
-                              }
-                            } else {
-                              var result155 = null;
-                              pos = savedPos10;
-                            }
-                          } else {
-                            var result155 = null;
-                            pos = savedPos10;
-                          }
-                        } else {
-                          var result155 = null;
-                          pos = savedPos10;
-                        }
-                      } else {
-                        var result155 = null;
-                        pos = savedPos10;
+                        var result71 = null;
+                        pos = savedPos7;
                       }
                     } else {
-                      var result155 = null;
-                      pos = savedPos10;
+                      var result71 = null;
+                      pos = savedPos7;
                     }
                   } else {
-                    var result155 = null;
-                    pos = savedPos10;
+                    var result71 = null;
+                    pos = savedPos7;
                   }
                 } else {
-                  var result155 = null;
-                  pos = savedPos10;
+                  var result71 = null;
+                  pos = savedPos7;
                 }
               } else {
-                var result155 = null;
-                pos = savedPos10;
+                var result71 = null;
+                pos = savedPos7;
               }
             } else {
-              var result155 = null;
-              pos = savedPos10;
+              var result71 = null;
+              pos = savedPos7;
             }
           } else {
-            var result155 = null;
-            pos = savedPos10;
+            var result71 = null;
+            pos = savedPos7;
           }
-          var result156 = result155 !== null
+          var result72 = result71 !== null
             ? (function(d, e) {
                   exp = {};
                   exp.token = 'expression';
@@ -23937,470 +15967,175 @@ SparqlParser.parser = (function(){
             
                   return exp;
             
-              })(result155[6], result155[8])
+              })(result71[4], result71[6])
             : null;
-          if (result156 !== null) {
-            var result154 = result156;
+          if (result72 !== null) {
+            var result70 = result72;
           } else {
-            var result154 = null;
-            pos = savedPos9;
+            var result70 = null;
+            pos = savedPos6;
           }
-          if (result154 !== null) {
-            var result0 = result154;
+          if (result70 !== null) {
+            var result0 = result70;
           } else {
-            var savedPos6 = pos;
-            var savedPos7 = pos;
-            if (input.substr(pos, 1) === "M") {
-              var result153 = "M";
-              pos += 1;
+            var savedPos4 = pos;
+            var savedPos5 = pos;
+            if (input.substr(pos, 3) === "MIN") {
+              var result69 = "MIN";
+              pos += 3;
             } else {
-              var result153 = null;
+              var result69 = null;
               if (reportMatchFailures) {
-                matchFailed("\"M\"");
+                matchFailed("\"MIN\"");
               }
             }
-            if (result153 !== null) {
-              var result106 = result153;
+            if (result69 !== null) {
+              var result50 = result69;
             } else {
-              if (input.substr(pos, 1) === "m") {
-                var result152 = "m";
-                pos += 1;
+              if (input.substr(pos, 3) === "min") {
+                var result68 = "min";
+                pos += 3;
               } else {
-                var result152 = null;
+                var result68 = null;
                 if (reportMatchFailures) {
-                  matchFailed("\"m\"");
+                  matchFailed("\"min\"");
                 }
               }
-              if (result152 !== null) {
-                var result106 = result152;
+              if (result68 !== null) {
+                var result50 = result68;
               } else {
-                var result106 = null;;
+                var result50 = null;;
               };
             }
-            if (result106 !== null) {
-              if (input.substr(pos, 1) === "I") {
-                var result151 = "I";
-                pos += 1;
-              } else {
-                var result151 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"I\"");
-                }
+            if (result50 !== null) {
+              var result51 = [];
+              var result67 = parse_WS();
+              while (result67 !== null) {
+                result51.push(result67);
+                var result67 = parse_WS();
               }
-              if (result151 !== null) {
-                var result107 = result151;
-              } else {
-                if (input.substr(pos, 1) === "i") {
-                  var result150 = "i";
+              if (result51 !== null) {
+                if (input.substr(pos, 1) === "(") {
+                  var result52 = "(";
                   pos += 1;
                 } else {
-                  var result150 = null;
+                  var result52 = null;
                   if (reportMatchFailures) {
-                    matchFailed("\"i\"");
+                    matchFailed("\"(\"");
                   }
                 }
-                if (result150 !== null) {
-                  var result107 = result150;
-                } else {
-                  var result107 = null;;
-                };
-              }
-              if (result107 !== null) {
-                if (input.substr(pos, 1) === "N") {
-                  var result149 = "N";
-                  pos += 1;
-                } else {
-                  var result149 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"N\"");
+                if (result52 !== null) {
+                  var result53 = [];
+                  var result66 = parse_WS();
+                  while (result66 !== null) {
+                    result53.push(result66);
+                    var result66 = parse_WS();
                   }
-                }
-                if (result149 !== null) {
-                  var result108 = result149;
-                } else {
-                  if (input.substr(pos, 1) === "n") {
-                    var result148 = "n";
-                    pos += 1;
-                  } else {
-                    var result148 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"n\"");
-                    }
-                  }
-                  if (result148 !== null) {
-                    var result108 = result148;
-                  } else {
-                    var result108 = null;;
-                  };
-                }
-                if (result108 !== null) {
-                  var result109 = [];
-                  var result147 = parse_WS();
-                  while (result147 !== null) {
-                    result109.push(result147);
-                    var result147 = parse_WS();
-                  }
-                  if (result109 !== null) {
-                    if (input.substr(pos, 1) === "(") {
-                      var result110 = "(";
-                      pos += 1;
+                  if (result53 !== null) {
+                    if (input.substr(pos, 8) === "DISTINCT") {
+                      var result65 = "DISTINCT";
+                      pos += 8;
                     } else {
-                      var result110 = null;
+                      var result65 = null;
                       if (reportMatchFailures) {
-                        matchFailed("\"(\"");
+                        matchFailed("\"DISTINCT\"");
                       }
                     }
-                    if (result110 !== null) {
-                      var result111 = [];
-                      var result146 = parse_WS();
-                      while (result146 !== null) {
-                        result111.push(result146);
-                        var result146 = parse_WS();
+                    if (result65 !== null) {
+                      var result63 = result65;
+                    } else {
+                      if (input.substr(pos, 8) === "distinct") {
+                        var result64 = "distinct";
+                        pos += 8;
+                      } else {
+                        var result64 = null;
+                        if (reportMatchFailures) {
+                          matchFailed("\"distinct\"");
+                        }
                       }
-                      if (result111 !== null) {
-                        var savedPos8 = pos;
-                        if (input.substr(pos, 1) === "D") {
-                          var result145 = "D";
-                          pos += 1;
-                        } else {
-                          var result145 = null;
-                          if (reportMatchFailures) {
-                            matchFailed("\"D\"");
+                      if (result64 !== null) {
+                        var result63 = result64;
+                      } else {
+                        var result63 = null;;
+                      };
+                    }
+                    var result54 = result63 !== null ? result63 : '';
+                    if (result54 !== null) {
+                      var result55 = [];
+                      var result62 = parse_WS();
+                      while (result62 !== null) {
+                        result55.push(result62);
+                        var result62 = parse_WS();
+                      }
+                      if (result55 !== null) {
+                        var result56 = parse_ConditionalOrExpression();
+                        if (result56 !== null) {
+                          var result57 = [];
+                          var result61 = parse_WS();
+                          while (result61 !== null) {
+                            result57.push(result61);
+                            var result61 = parse_WS();
                           }
-                        }
-                        if (result145 !== null) {
-                          var result122 = result145;
-                        } else {
-                          if (input.substr(pos, 1) === "d") {
-                            var result144 = "d";
-                            pos += 1;
-                          } else {
-                            var result144 = null;
-                            if (reportMatchFailures) {
-                              matchFailed("\"d\"");
-                            }
-                          }
-                          if (result144 !== null) {
-                            var result122 = result144;
-                          } else {
-                            var result122 = null;;
-                          };
-                        }
-                        if (result122 !== null) {
-                          if (input.substr(pos, 1) === "I") {
-                            var result143 = "I";
-                            pos += 1;
-                          } else {
-                            var result143 = null;
-                            if (reportMatchFailures) {
-                              matchFailed("\"I\"");
-                            }
-                          }
-                          if (result143 !== null) {
-                            var result123 = result143;
-                          } else {
-                            if (input.substr(pos, 1) === "i") {
-                              var result142 = "i";
+                          if (result57 !== null) {
+                            if (input.substr(pos, 1) === ")") {
+                              var result58 = ")";
                               pos += 1;
                             } else {
-                              var result142 = null;
+                              var result58 = null;
                               if (reportMatchFailures) {
-                                matchFailed("\"i\"");
+                                matchFailed("\")\"");
                               }
                             }
-                            if (result142 !== null) {
-                              var result123 = result142;
-                            } else {
-                              var result123 = null;;
-                            };
-                          }
-                          if (result123 !== null) {
-                            if (input.substr(pos, 1) === "S") {
-                              var result141 = "S";
-                              pos += 1;
-                            } else {
-                              var result141 = null;
-                              if (reportMatchFailures) {
-                                matchFailed("\"S\"");
+                            if (result58 !== null) {
+                              var result59 = [];
+                              var result60 = parse_WS();
+                              while (result60 !== null) {
+                                result59.push(result60);
+                                var result60 = parse_WS();
                               }
-                            }
-                            if (result141 !== null) {
-                              var result124 = result141;
-                            } else {
-                              if (input.substr(pos, 1) === "s") {
-                                var result140 = "s";
-                                pos += 1;
+                              if (result59 !== null) {
+                                var result48 = [result50, result51, result52, result53, result54, result55, result56, result57, result58, result59];
                               } else {
-                                var result140 = null;
-                                if (reportMatchFailures) {
-                                  matchFailed("\"s\"");
-                                }
-                              }
-                              if (result140 !== null) {
-                                var result124 = result140;
-                              } else {
-                                var result124 = null;;
-                              };
-                            }
-                            if (result124 !== null) {
-                              if (input.substr(pos, 1) === "T") {
-                                var result139 = "T";
-                                pos += 1;
-                              } else {
-                                var result139 = null;
-                                if (reportMatchFailures) {
-                                  matchFailed("\"T\"");
-                                }
-                              }
-                              if (result139 !== null) {
-                                var result125 = result139;
-                              } else {
-                                if (input.substr(pos, 1) === "t") {
-                                  var result138 = "t";
-                                  pos += 1;
-                                } else {
-                                  var result138 = null;
-                                  if (reportMatchFailures) {
-                                    matchFailed("\"t\"");
-                                  }
-                                }
-                                if (result138 !== null) {
-                                  var result125 = result138;
-                                } else {
-                                  var result125 = null;;
-                                };
-                              }
-                              if (result125 !== null) {
-                                if (input.substr(pos, 1) === "I") {
-                                  var result137 = "I";
-                                  pos += 1;
-                                } else {
-                                  var result137 = null;
-                                  if (reportMatchFailures) {
-                                    matchFailed("\"I\"");
-                                  }
-                                }
-                                if (result137 !== null) {
-                                  var result126 = result137;
-                                } else {
-                                  if (input.substr(pos, 1) === "i") {
-                                    var result136 = "i";
-                                    pos += 1;
-                                  } else {
-                                    var result136 = null;
-                                    if (reportMatchFailures) {
-                                      matchFailed("\"i\"");
-                                    }
-                                  }
-                                  if (result136 !== null) {
-                                    var result126 = result136;
-                                  } else {
-                                    var result126 = null;;
-                                  };
-                                }
-                                if (result126 !== null) {
-                                  if (input.substr(pos, 1) === "N") {
-                                    var result135 = "N";
-                                    pos += 1;
-                                  } else {
-                                    var result135 = null;
-                                    if (reportMatchFailures) {
-                                      matchFailed("\"N\"");
-                                    }
-                                  }
-                                  if (result135 !== null) {
-                                    var result127 = result135;
-                                  } else {
-                                    if (input.substr(pos, 1) === "n") {
-                                      var result134 = "n";
-                                      pos += 1;
-                                    } else {
-                                      var result134 = null;
-                                      if (reportMatchFailures) {
-                                        matchFailed("\"n\"");
-                                      }
-                                    }
-                                    if (result134 !== null) {
-                                      var result127 = result134;
-                                    } else {
-                                      var result127 = null;;
-                                    };
-                                  }
-                                  if (result127 !== null) {
-                                    if (input.substr(pos, 1) === "C") {
-                                      var result133 = "C";
-                                      pos += 1;
-                                    } else {
-                                      var result133 = null;
-                                      if (reportMatchFailures) {
-                                        matchFailed("\"C\"");
-                                      }
-                                    }
-                                    if (result133 !== null) {
-                                      var result128 = result133;
-                                    } else {
-                                      if (input.substr(pos, 1) === "c") {
-                                        var result132 = "c";
-                                        pos += 1;
-                                      } else {
-                                        var result132 = null;
-                                        if (reportMatchFailures) {
-                                          matchFailed("\"c\"");
-                                        }
-                                      }
-                                      if (result132 !== null) {
-                                        var result128 = result132;
-                                      } else {
-                                        var result128 = null;;
-                                      };
-                                    }
-                                    if (result128 !== null) {
-                                      if (input.substr(pos, 1) === "T") {
-                                        var result131 = "T";
-                                        pos += 1;
-                                      } else {
-                                        var result131 = null;
-                                        if (reportMatchFailures) {
-                                          matchFailed("\"T\"");
-                                        }
-                                      }
-                                      if (result131 !== null) {
-                                        var result129 = result131;
-                                      } else {
-                                        if (input.substr(pos, 1) === "t") {
-                                          var result130 = "t";
-                                          pos += 1;
-                                        } else {
-                                          var result130 = null;
-                                          if (reportMatchFailures) {
-                                            matchFailed("\"t\"");
-                                          }
-                                        }
-                                        if (result130 !== null) {
-                                          var result129 = result130;
-                                        } else {
-                                          var result129 = null;;
-                                        };
-                                      }
-                                      if (result129 !== null) {
-                                        var result121 = [result122, result123, result124, result125, result126, result127, result128, result129];
-                                      } else {
-                                        var result121 = null;
-                                        pos = savedPos8;
-                                      }
-                                    } else {
-                                      var result121 = null;
-                                      pos = savedPos8;
-                                    }
-                                  } else {
-                                    var result121 = null;
-                                    pos = savedPos8;
-                                  }
-                                } else {
-                                  var result121 = null;
-                                  pos = savedPos8;
-                                }
-                              } else {
-                                var result121 = null;
-                                pos = savedPos8;
+                                var result48 = null;
+                                pos = savedPos5;
                               }
                             } else {
-                              var result121 = null;
-                              pos = savedPos8;
+                              var result48 = null;
+                              pos = savedPos5;
                             }
                           } else {
-                            var result121 = null;
-                            pos = savedPos8;
+                            var result48 = null;
+                            pos = savedPos5;
                           }
                         } else {
-                          var result121 = null;
-                          pos = savedPos8;
-                        }
-                        var result112 = result121 !== null ? result121 : '';
-                        if (result112 !== null) {
-                          var result113 = [];
-                          var result120 = parse_WS();
-                          while (result120 !== null) {
-                            result113.push(result120);
-                            var result120 = parse_WS();
-                          }
-                          if (result113 !== null) {
-                            var result114 = parse_ConditionalOrExpression();
-                            if (result114 !== null) {
-                              var result115 = [];
-                              var result119 = parse_WS();
-                              while (result119 !== null) {
-                                result115.push(result119);
-                                var result119 = parse_WS();
-                              }
-                              if (result115 !== null) {
-                                if (input.substr(pos, 1) === ")") {
-                                  var result116 = ")";
-                                  pos += 1;
-                                } else {
-                                  var result116 = null;
-                                  if (reportMatchFailures) {
-                                    matchFailed("\")\"");
-                                  }
-                                }
-                                if (result116 !== null) {
-                                  var result117 = [];
-                                  var result118 = parse_WS();
-                                  while (result118 !== null) {
-                                    result117.push(result118);
-                                    var result118 = parse_WS();
-                                  }
-                                  if (result117 !== null) {
-                                    var result104 = [result106, result107, result108, result109, result110, result111, result112, result113, result114, result115, result116, result117];
-                                  } else {
-                                    var result104 = null;
-                                    pos = savedPos7;
-                                  }
-                                } else {
-                                  var result104 = null;
-                                  pos = savedPos7;
-                                }
-                              } else {
-                                var result104 = null;
-                                pos = savedPos7;
-                              }
-                            } else {
-                              var result104 = null;
-                              pos = savedPos7;
-                            }
-                          } else {
-                            var result104 = null;
-                            pos = savedPos7;
-                          }
-                        } else {
-                          var result104 = null;
-                          pos = savedPos7;
+                          var result48 = null;
+                          pos = savedPos5;
                         }
                       } else {
-                        var result104 = null;
-                        pos = savedPos7;
+                        var result48 = null;
+                        pos = savedPos5;
                       }
                     } else {
-                      var result104 = null;
-                      pos = savedPos7;
+                      var result48 = null;
+                      pos = savedPos5;
                     }
                   } else {
-                    var result104 = null;
-                    pos = savedPos7;
+                    var result48 = null;
+                    pos = savedPos5;
                   }
                 } else {
-                  var result104 = null;
-                  pos = savedPos7;
+                  var result48 = null;
+                  pos = savedPos5;
                 }
               } else {
-                var result104 = null;
-                pos = savedPos7;
+                var result48 = null;
+                pos = savedPos5;
               }
             } else {
-              var result104 = null;
-              pos = savedPos7;
+              var result48 = null;
+              pos = savedPos5;
             }
-            var result105 = result104 !== null
+            var result49 = result48 !== null
               ? (function(d, e) {
                     exp = {};
                     exp.token = 'expression';
@@ -24411,470 +16146,175 @@ SparqlParser.parser = (function(){
               
                     return exp;
               
-                })(result104[6], result104[8])
+                })(result48[4], result48[6])
               : null;
-            if (result105 !== null) {
-              var result103 = result105;
+            if (result49 !== null) {
+              var result47 = result49;
             } else {
-              var result103 = null;
-              pos = savedPos6;
+              var result47 = null;
+              pos = savedPos4;
             }
-            if (result103 !== null) {
-              var result0 = result103;
+            if (result47 !== null) {
+              var result0 = result47;
             } else {
+              var savedPos2 = pos;
               var savedPos3 = pos;
-              var savedPos4 = pos;
-              if (input.substr(pos, 1) === "M") {
-                var result102 = "M";
-                pos += 1;
+              if (input.substr(pos, 3) === "MAX") {
+                var result46 = "MAX";
+                pos += 3;
               } else {
-                var result102 = null;
+                var result46 = null;
                 if (reportMatchFailures) {
-                  matchFailed("\"M\"");
+                  matchFailed("\"MAX\"");
                 }
               }
-              if (result102 !== null) {
-                var result55 = result102;
+              if (result46 !== null) {
+                var result27 = result46;
               } else {
-                if (input.substr(pos, 1) === "m") {
-                  var result101 = "m";
-                  pos += 1;
+                if (input.substr(pos, 3) === "max") {
+                  var result45 = "max";
+                  pos += 3;
                 } else {
-                  var result101 = null;
+                  var result45 = null;
                   if (reportMatchFailures) {
-                    matchFailed("\"m\"");
+                    matchFailed("\"max\"");
                   }
                 }
-                if (result101 !== null) {
-                  var result55 = result101;
+                if (result45 !== null) {
+                  var result27 = result45;
                 } else {
-                  var result55 = null;;
+                  var result27 = null;;
                 };
               }
-              if (result55 !== null) {
-                if (input.substr(pos, 1) === "A") {
-                  var result100 = "A";
-                  pos += 1;
-                } else {
-                  var result100 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"A\"");
-                  }
+              if (result27 !== null) {
+                var result28 = [];
+                var result44 = parse_WS();
+                while (result44 !== null) {
+                  result28.push(result44);
+                  var result44 = parse_WS();
                 }
-                if (result100 !== null) {
-                  var result56 = result100;
-                } else {
-                  if (input.substr(pos, 1) === "a") {
-                    var result99 = "a";
+                if (result28 !== null) {
+                  if (input.substr(pos, 1) === "(") {
+                    var result29 = "(";
                     pos += 1;
                   } else {
-                    var result99 = null;
+                    var result29 = null;
                     if (reportMatchFailures) {
-                      matchFailed("\"a\"");
+                      matchFailed("\"(\"");
                     }
                   }
-                  if (result99 !== null) {
-                    var result56 = result99;
-                  } else {
-                    var result56 = null;;
-                  };
-                }
-                if (result56 !== null) {
-                  if (input.substr(pos, 1) === "X") {
-                    var result98 = "X";
-                    pos += 1;
-                  } else {
-                    var result98 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"X\"");
+                  if (result29 !== null) {
+                    var result30 = [];
+                    var result43 = parse_WS();
+                    while (result43 !== null) {
+                      result30.push(result43);
+                      var result43 = parse_WS();
                     }
-                  }
-                  if (result98 !== null) {
-                    var result57 = result98;
-                  } else {
-                    if (input.substr(pos, 1) === "x") {
-                      var result97 = "x";
-                      pos += 1;
-                    } else {
-                      var result97 = null;
-                      if (reportMatchFailures) {
-                        matchFailed("\"x\"");
-                      }
-                    }
-                    if (result97 !== null) {
-                      var result57 = result97;
-                    } else {
-                      var result57 = null;;
-                    };
-                  }
-                  if (result57 !== null) {
-                    var result58 = [];
-                    var result96 = parse_WS();
-                    while (result96 !== null) {
-                      result58.push(result96);
-                      var result96 = parse_WS();
-                    }
-                    if (result58 !== null) {
-                      if (input.substr(pos, 1) === "(") {
-                        var result59 = "(";
-                        pos += 1;
+                    if (result30 !== null) {
+                      if (input.substr(pos, 8) === "DISTINCT") {
+                        var result42 = "DISTINCT";
+                        pos += 8;
                       } else {
-                        var result59 = null;
+                        var result42 = null;
                         if (reportMatchFailures) {
-                          matchFailed("\"(\"");
+                          matchFailed("\"DISTINCT\"");
                         }
                       }
-                      if (result59 !== null) {
-                        var result60 = [];
-                        var result95 = parse_WS();
-                        while (result95 !== null) {
-                          result60.push(result95);
-                          var result95 = parse_WS();
+                      if (result42 !== null) {
+                        var result40 = result42;
+                      } else {
+                        if (input.substr(pos, 8) === "distinct") {
+                          var result41 = "distinct";
+                          pos += 8;
+                        } else {
+                          var result41 = null;
+                          if (reportMatchFailures) {
+                            matchFailed("\"distinct\"");
+                          }
                         }
-                        if (result60 !== null) {
-                          var savedPos5 = pos;
-                          if (input.substr(pos, 1) === "D") {
-                            var result94 = "D";
-                            pos += 1;
-                          } else {
-                            var result94 = null;
-                            if (reportMatchFailures) {
-                              matchFailed("\"D\"");
+                        if (result41 !== null) {
+                          var result40 = result41;
+                        } else {
+                          var result40 = null;;
+                        };
+                      }
+                      var result31 = result40 !== null ? result40 : '';
+                      if (result31 !== null) {
+                        var result32 = [];
+                        var result39 = parse_WS();
+                        while (result39 !== null) {
+                          result32.push(result39);
+                          var result39 = parse_WS();
+                        }
+                        if (result32 !== null) {
+                          var result33 = parse_ConditionalOrExpression();
+                          if (result33 !== null) {
+                            var result34 = [];
+                            var result38 = parse_WS();
+                            while (result38 !== null) {
+                              result34.push(result38);
+                              var result38 = parse_WS();
                             }
-                          }
-                          if (result94 !== null) {
-                            var result71 = result94;
-                          } else {
-                            if (input.substr(pos, 1) === "d") {
-                              var result93 = "d";
-                              pos += 1;
-                            } else {
-                              var result93 = null;
-                              if (reportMatchFailures) {
-                                matchFailed("\"d\"");
-                              }
-                            }
-                            if (result93 !== null) {
-                              var result71 = result93;
-                            } else {
-                              var result71 = null;;
-                            };
-                          }
-                          if (result71 !== null) {
-                            if (input.substr(pos, 1) === "I") {
-                              var result92 = "I";
-                              pos += 1;
-                            } else {
-                              var result92 = null;
-                              if (reportMatchFailures) {
-                                matchFailed("\"I\"");
-                              }
-                            }
-                            if (result92 !== null) {
-                              var result72 = result92;
-                            } else {
-                              if (input.substr(pos, 1) === "i") {
-                                var result91 = "i";
+                            if (result34 !== null) {
+                              if (input.substr(pos, 1) === ")") {
+                                var result35 = ")";
                                 pos += 1;
                               } else {
-                                var result91 = null;
+                                var result35 = null;
                                 if (reportMatchFailures) {
-                                  matchFailed("\"i\"");
+                                  matchFailed("\")\"");
                                 }
                               }
-                              if (result91 !== null) {
-                                var result72 = result91;
-                              } else {
-                                var result72 = null;;
-                              };
-                            }
-                            if (result72 !== null) {
-                              if (input.substr(pos, 1) === "S") {
-                                var result90 = "S";
-                                pos += 1;
-                              } else {
-                                var result90 = null;
-                                if (reportMatchFailures) {
-                                  matchFailed("\"S\"");
+                              if (result35 !== null) {
+                                var result36 = [];
+                                var result37 = parse_WS();
+                                while (result37 !== null) {
+                                  result36.push(result37);
+                                  var result37 = parse_WS();
                                 }
-                              }
-                              if (result90 !== null) {
-                                var result73 = result90;
-                              } else {
-                                if (input.substr(pos, 1) === "s") {
-                                  var result89 = "s";
-                                  pos += 1;
+                                if (result36 !== null) {
+                                  var result25 = [result27, result28, result29, result30, result31, result32, result33, result34, result35, result36];
                                 } else {
-                                  var result89 = null;
-                                  if (reportMatchFailures) {
-                                    matchFailed("\"s\"");
-                                  }
-                                }
-                                if (result89 !== null) {
-                                  var result73 = result89;
-                                } else {
-                                  var result73 = null;;
-                                };
-                              }
-                              if (result73 !== null) {
-                                if (input.substr(pos, 1) === "T") {
-                                  var result88 = "T";
-                                  pos += 1;
-                                } else {
-                                  var result88 = null;
-                                  if (reportMatchFailures) {
-                                    matchFailed("\"T\"");
-                                  }
-                                }
-                                if (result88 !== null) {
-                                  var result74 = result88;
-                                } else {
-                                  if (input.substr(pos, 1) === "t") {
-                                    var result87 = "t";
-                                    pos += 1;
-                                  } else {
-                                    var result87 = null;
-                                    if (reportMatchFailures) {
-                                      matchFailed("\"t\"");
-                                    }
-                                  }
-                                  if (result87 !== null) {
-                                    var result74 = result87;
-                                  } else {
-                                    var result74 = null;;
-                                  };
-                                }
-                                if (result74 !== null) {
-                                  if (input.substr(pos, 1) === "I") {
-                                    var result86 = "I";
-                                    pos += 1;
-                                  } else {
-                                    var result86 = null;
-                                    if (reportMatchFailures) {
-                                      matchFailed("\"I\"");
-                                    }
-                                  }
-                                  if (result86 !== null) {
-                                    var result75 = result86;
-                                  } else {
-                                    if (input.substr(pos, 1) === "i") {
-                                      var result85 = "i";
-                                      pos += 1;
-                                    } else {
-                                      var result85 = null;
-                                      if (reportMatchFailures) {
-                                        matchFailed("\"i\"");
-                                      }
-                                    }
-                                    if (result85 !== null) {
-                                      var result75 = result85;
-                                    } else {
-                                      var result75 = null;;
-                                    };
-                                  }
-                                  if (result75 !== null) {
-                                    if (input.substr(pos, 1) === "N") {
-                                      var result84 = "N";
-                                      pos += 1;
-                                    } else {
-                                      var result84 = null;
-                                      if (reportMatchFailures) {
-                                        matchFailed("\"N\"");
-                                      }
-                                    }
-                                    if (result84 !== null) {
-                                      var result76 = result84;
-                                    } else {
-                                      if (input.substr(pos, 1) === "n") {
-                                        var result83 = "n";
-                                        pos += 1;
-                                      } else {
-                                        var result83 = null;
-                                        if (reportMatchFailures) {
-                                          matchFailed("\"n\"");
-                                        }
-                                      }
-                                      if (result83 !== null) {
-                                        var result76 = result83;
-                                      } else {
-                                        var result76 = null;;
-                                      };
-                                    }
-                                    if (result76 !== null) {
-                                      if (input.substr(pos, 1) === "C") {
-                                        var result82 = "C";
-                                        pos += 1;
-                                      } else {
-                                        var result82 = null;
-                                        if (reportMatchFailures) {
-                                          matchFailed("\"C\"");
-                                        }
-                                      }
-                                      if (result82 !== null) {
-                                        var result77 = result82;
-                                      } else {
-                                        if (input.substr(pos, 1) === "c") {
-                                          var result81 = "c";
-                                          pos += 1;
-                                        } else {
-                                          var result81 = null;
-                                          if (reportMatchFailures) {
-                                            matchFailed("\"c\"");
-                                          }
-                                        }
-                                        if (result81 !== null) {
-                                          var result77 = result81;
-                                        } else {
-                                          var result77 = null;;
-                                        };
-                                      }
-                                      if (result77 !== null) {
-                                        if (input.substr(pos, 1) === "T") {
-                                          var result80 = "T";
-                                          pos += 1;
-                                        } else {
-                                          var result80 = null;
-                                          if (reportMatchFailures) {
-                                            matchFailed("\"T\"");
-                                          }
-                                        }
-                                        if (result80 !== null) {
-                                          var result78 = result80;
-                                        } else {
-                                          if (input.substr(pos, 1) === "t") {
-                                            var result79 = "t";
-                                            pos += 1;
-                                          } else {
-                                            var result79 = null;
-                                            if (reportMatchFailures) {
-                                              matchFailed("\"t\"");
-                                            }
-                                          }
-                                          if (result79 !== null) {
-                                            var result78 = result79;
-                                          } else {
-                                            var result78 = null;;
-                                          };
-                                        }
-                                        if (result78 !== null) {
-                                          var result70 = [result71, result72, result73, result74, result75, result76, result77, result78];
-                                        } else {
-                                          var result70 = null;
-                                          pos = savedPos5;
-                                        }
-                                      } else {
-                                        var result70 = null;
-                                        pos = savedPos5;
-                                      }
-                                    } else {
-                                      var result70 = null;
-                                      pos = savedPos5;
-                                    }
-                                  } else {
-                                    var result70 = null;
-                                    pos = savedPos5;
-                                  }
-                                } else {
-                                  var result70 = null;
-                                  pos = savedPos5;
+                                  var result25 = null;
+                                  pos = savedPos3;
                                 }
                               } else {
-                                var result70 = null;
-                                pos = savedPos5;
+                                var result25 = null;
+                                pos = savedPos3;
                               }
                             } else {
-                              var result70 = null;
-                              pos = savedPos5;
+                              var result25 = null;
+                              pos = savedPos3;
                             }
                           } else {
-                            var result70 = null;
-                            pos = savedPos5;
-                          }
-                          var result61 = result70 !== null ? result70 : '';
-                          if (result61 !== null) {
-                            var result62 = [];
-                            var result69 = parse_WS();
-                            while (result69 !== null) {
-                              result62.push(result69);
-                              var result69 = parse_WS();
-                            }
-                            if (result62 !== null) {
-                              var result63 = parse_ConditionalOrExpression();
-                              if (result63 !== null) {
-                                var result64 = [];
-                                var result68 = parse_WS();
-                                while (result68 !== null) {
-                                  result64.push(result68);
-                                  var result68 = parse_WS();
-                                }
-                                if (result64 !== null) {
-                                  if (input.substr(pos, 1) === ")") {
-                                    var result65 = ")";
-                                    pos += 1;
-                                  } else {
-                                    var result65 = null;
-                                    if (reportMatchFailures) {
-                                      matchFailed("\")\"");
-                                    }
-                                  }
-                                  if (result65 !== null) {
-                                    var result66 = [];
-                                    var result67 = parse_WS();
-                                    while (result67 !== null) {
-                                      result66.push(result67);
-                                      var result67 = parse_WS();
-                                    }
-                                    if (result66 !== null) {
-                                      var result53 = [result55, result56, result57, result58, result59, result60, result61, result62, result63, result64, result65, result66];
-                                    } else {
-                                      var result53 = null;
-                                      pos = savedPos4;
-                                    }
-                                  } else {
-                                    var result53 = null;
-                                    pos = savedPos4;
-                                  }
-                                } else {
-                                  var result53 = null;
-                                  pos = savedPos4;
-                                }
-                              } else {
-                                var result53 = null;
-                                pos = savedPos4;
-                              }
-                            } else {
-                              var result53 = null;
-                              pos = savedPos4;
-                            }
-                          } else {
-                            var result53 = null;
-                            pos = savedPos4;
+                            var result25 = null;
+                            pos = savedPos3;
                           }
                         } else {
-                          var result53 = null;
-                          pos = savedPos4;
+                          var result25 = null;
+                          pos = savedPos3;
                         }
                       } else {
-                        var result53 = null;
-                        pos = savedPos4;
+                        var result25 = null;
+                        pos = savedPos3;
                       }
                     } else {
-                      var result53 = null;
-                      pos = savedPos4;
+                      var result25 = null;
+                      pos = savedPos3;
                     }
                   } else {
-                    var result53 = null;
-                    pos = savedPos4;
+                    var result25 = null;
+                    pos = savedPos3;
                   }
                 } else {
-                  var result53 = null;
-                  pos = savedPos4;
+                  var result25 = null;
+                  pos = savedPos3;
                 }
               } else {
-                var result53 = null;
-                pos = savedPos4;
+                var result25 = null;
+                pos = savedPos3;
               }
-              var result54 = result53 !== null
+              var result26 = result25 !== null
                 ? (function(d, e) {
                       exp = {};
                       exp.token = 'expression'
@@ -24885,429 +16325,134 @@ SparqlParser.parser = (function(){
                 
                       return exp
                 
-                  })(result53[6], result53[8])
+                  })(result25[4], result25[6])
                 : null;
-              if (result54 !== null) {
-                var result52 = result54;
+              if (result26 !== null) {
+                var result24 = result26;
               } else {
-                var result52 = null;
-                pos = savedPos3;
+                var result24 = null;
+                pos = savedPos2;
               }
-              if (result52 !== null) {
-                var result0 = result52;
+              if (result24 !== null) {
+                var result0 = result24;
               } else {
                 var savedPos0 = pos;
                 var savedPos1 = pos;
-                if (input.substr(pos, 1) === "A") {
-                  var result51 = "A";
-                  pos += 1;
+                if (input.substr(pos, 3) === "AVG") {
+                  var result23 = "AVG";
+                  pos += 3;
                 } else {
-                  var result51 = null;
+                  var result23 = null;
                   if (reportMatchFailures) {
-                    matchFailed("\"A\"");
+                    matchFailed("\"AVG\"");
                   }
                 }
-                if (result51 !== null) {
-                  var result4 = result51;
+                if (result23 !== null) {
+                  var result4 = result23;
                 } else {
-                  if (input.substr(pos, 1) === "a") {
-                    var result50 = "a";
-                    pos += 1;
+                  if (input.substr(pos, 3) === "avg") {
+                    var result22 = "avg";
+                    pos += 3;
                   } else {
-                    var result50 = null;
+                    var result22 = null;
                     if (reportMatchFailures) {
-                      matchFailed("\"a\"");
+                      matchFailed("\"avg\"");
                     }
                   }
-                  if (result50 !== null) {
-                    var result4 = result50;
+                  if (result22 !== null) {
+                    var result4 = result22;
                   } else {
                     var result4 = null;;
                   };
                 }
                 if (result4 !== null) {
-                  if (input.substr(pos, 1) === "V") {
-                    var result49 = "V";
-                    pos += 1;
-                  } else {
-                    var result49 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"V\"");
-                    }
-                  }
-                  if (result49 !== null) {
-                    var result5 = result49;
-                  } else {
-                    if (input.substr(pos, 1) === "v") {
-                      var result48 = "v";
-                      pos += 1;
-                    } else {
-                      var result48 = null;
-                      if (reportMatchFailures) {
-                        matchFailed("\"v\"");
-                      }
-                    }
-                    if (result48 !== null) {
-                      var result5 = result48;
-                    } else {
-                      var result5 = null;;
-                    };
+                  var result5 = [];
+                  var result21 = parse_WS();
+                  while (result21 !== null) {
+                    result5.push(result21);
+                    var result21 = parse_WS();
                   }
                   if (result5 !== null) {
-                    if (input.substr(pos, 1) === "G") {
-                      var result47 = "G";
+                    if (input.substr(pos, 1) === "(") {
+                      var result6 = "(";
                       pos += 1;
                     } else {
-                      var result47 = null;
+                      var result6 = null;
                       if (reportMatchFailures) {
-                        matchFailed("\"G\"");
+                        matchFailed("\"(\"");
                       }
-                    }
-                    if (result47 !== null) {
-                      var result6 = result47;
-                    } else {
-                      if (input.substr(pos, 1) === "g") {
-                        var result46 = "g";
-                        pos += 1;
-                      } else {
-                        var result46 = null;
-                        if (reportMatchFailures) {
-                          matchFailed("\"g\"");
-                        }
-                      }
-                      if (result46 !== null) {
-                        var result6 = result46;
-                      } else {
-                        var result6 = null;;
-                      };
                     }
                     if (result6 !== null) {
                       var result7 = [];
-                      var result45 = parse_WS();
-                      while (result45 !== null) {
-                        result7.push(result45);
-                        var result45 = parse_WS();
+                      var result20 = parse_WS();
+                      while (result20 !== null) {
+                        result7.push(result20);
+                        var result20 = parse_WS();
                       }
                       if (result7 !== null) {
-                        if (input.substr(pos, 1) === "(") {
-                          var result8 = "(";
-                          pos += 1;
+                        if (input.substr(pos, 8) === "DISTINCT") {
+                          var result19 = "DISTINCT";
+                          pos += 8;
                         } else {
-                          var result8 = null;
+                          var result19 = null;
                           if (reportMatchFailures) {
-                            matchFailed("\"(\"");
+                            matchFailed("\"DISTINCT\"");
                           }
                         }
+                        if (result19 !== null) {
+                          var result17 = result19;
+                        } else {
+                          if (input.substr(pos, 8) === "distinct") {
+                            var result18 = "distinct";
+                            pos += 8;
+                          } else {
+                            var result18 = null;
+                            if (reportMatchFailures) {
+                              matchFailed("\"distinct\"");
+                            }
+                          }
+                          if (result18 !== null) {
+                            var result17 = result18;
+                          } else {
+                            var result17 = null;;
+                          };
+                        }
+                        var result8 = result17 !== null ? result17 : '';
                         if (result8 !== null) {
                           var result9 = [];
-                          var result44 = parse_WS();
-                          while (result44 !== null) {
-                            result9.push(result44);
-                            var result44 = parse_WS();
+                          var result16 = parse_WS();
+                          while (result16 !== null) {
+                            result9.push(result16);
+                            var result16 = parse_WS();
                           }
                           if (result9 !== null) {
-                            var savedPos2 = pos;
-                            if (input.substr(pos, 1) === "D") {
-                              var result43 = "D";
-                              pos += 1;
-                            } else {
-                              var result43 = null;
-                              if (reportMatchFailures) {
-                                matchFailed("\"D\"");
-                              }
-                            }
-                            if (result43 !== null) {
-                              var result20 = result43;
-                            } else {
-                              if (input.substr(pos, 1) === "d") {
-                                var result42 = "d";
-                                pos += 1;
-                              } else {
-                                var result42 = null;
-                                if (reportMatchFailures) {
-                                  matchFailed("\"d\"");
-                                }
-                              }
-                              if (result42 !== null) {
-                                var result20 = result42;
-                              } else {
-                                var result20 = null;;
-                              };
-                            }
-                            if (result20 !== null) {
-                              if (input.substr(pos, 1) === "I") {
-                                var result41 = "I";
-                                pos += 1;
-                              } else {
-                                var result41 = null;
-                                if (reportMatchFailures) {
-                                  matchFailed("\"I\"");
-                                }
-                              }
-                              if (result41 !== null) {
-                                var result21 = result41;
-                              } else {
-                                if (input.substr(pos, 1) === "i") {
-                                  var result40 = "i";
-                                  pos += 1;
-                                } else {
-                                  var result40 = null;
-                                  if (reportMatchFailures) {
-                                    matchFailed("\"i\"");
-                                  }
-                                }
-                                if (result40 !== null) {
-                                  var result21 = result40;
-                                } else {
-                                  var result21 = null;;
-                                };
-                              }
-                              if (result21 !== null) {
-                                if (input.substr(pos, 1) === "S") {
-                                  var result39 = "S";
-                                  pos += 1;
-                                } else {
-                                  var result39 = null;
-                                  if (reportMatchFailures) {
-                                    matchFailed("\"S\"");
-                                  }
-                                }
-                                if (result39 !== null) {
-                                  var result22 = result39;
-                                } else {
-                                  if (input.substr(pos, 1) === "s") {
-                                    var result38 = "s";
-                                    pos += 1;
-                                  } else {
-                                    var result38 = null;
-                                    if (reportMatchFailures) {
-                                      matchFailed("\"s\"");
-                                    }
-                                  }
-                                  if (result38 !== null) {
-                                    var result22 = result38;
-                                  } else {
-                                    var result22 = null;;
-                                  };
-                                }
-                                if (result22 !== null) {
-                                  if (input.substr(pos, 1) === "T") {
-                                    var result37 = "T";
-                                    pos += 1;
-                                  } else {
-                                    var result37 = null;
-                                    if (reportMatchFailures) {
-                                      matchFailed("\"T\"");
-                                    }
-                                  }
-                                  if (result37 !== null) {
-                                    var result23 = result37;
-                                  } else {
-                                    if (input.substr(pos, 1) === "t") {
-                                      var result36 = "t";
-                                      pos += 1;
-                                    } else {
-                                      var result36 = null;
-                                      if (reportMatchFailures) {
-                                        matchFailed("\"t\"");
-                                      }
-                                    }
-                                    if (result36 !== null) {
-                                      var result23 = result36;
-                                    } else {
-                                      var result23 = null;;
-                                    };
-                                  }
-                                  if (result23 !== null) {
-                                    if (input.substr(pos, 1) === "I") {
-                                      var result35 = "I";
-                                      pos += 1;
-                                    } else {
-                                      var result35 = null;
-                                      if (reportMatchFailures) {
-                                        matchFailed("\"I\"");
-                                      }
-                                    }
-                                    if (result35 !== null) {
-                                      var result24 = result35;
-                                    } else {
-                                      if (input.substr(pos, 1) === "i") {
-                                        var result34 = "i";
-                                        pos += 1;
-                                      } else {
-                                        var result34 = null;
-                                        if (reportMatchFailures) {
-                                          matchFailed("\"i\"");
-                                        }
-                                      }
-                                      if (result34 !== null) {
-                                        var result24 = result34;
-                                      } else {
-                                        var result24 = null;;
-                                      };
-                                    }
-                                    if (result24 !== null) {
-                                      if (input.substr(pos, 1) === "N") {
-                                        var result33 = "N";
-                                        pos += 1;
-                                      } else {
-                                        var result33 = null;
-                                        if (reportMatchFailures) {
-                                          matchFailed("\"N\"");
-                                        }
-                                      }
-                                      if (result33 !== null) {
-                                        var result25 = result33;
-                                      } else {
-                                        if (input.substr(pos, 1) === "n") {
-                                          var result32 = "n";
-                                          pos += 1;
-                                        } else {
-                                          var result32 = null;
-                                          if (reportMatchFailures) {
-                                            matchFailed("\"n\"");
-                                          }
-                                        }
-                                        if (result32 !== null) {
-                                          var result25 = result32;
-                                        } else {
-                                          var result25 = null;;
-                                        };
-                                      }
-                                      if (result25 !== null) {
-                                        if (input.substr(pos, 1) === "C") {
-                                          var result31 = "C";
-                                          pos += 1;
-                                        } else {
-                                          var result31 = null;
-                                          if (reportMatchFailures) {
-                                            matchFailed("\"C\"");
-                                          }
-                                        }
-                                        if (result31 !== null) {
-                                          var result26 = result31;
-                                        } else {
-                                          if (input.substr(pos, 1) === "c") {
-                                            var result30 = "c";
-                                            pos += 1;
-                                          } else {
-                                            var result30 = null;
-                                            if (reportMatchFailures) {
-                                              matchFailed("\"c\"");
-                                            }
-                                          }
-                                          if (result30 !== null) {
-                                            var result26 = result30;
-                                          } else {
-                                            var result26 = null;;
-                                          };
-                                        }
-                                        if (result26 !== null) {
-                                          if (input.substr(pos, 1) === "T") {
-                                            var result29 = "T";
-                                            pos += 1;
-                                          } else {
-                                            var result29 = null;
-                                            if (reportMatchFailures) {
-                                              matchFailed("\"T\"");
-                                            }
-                                          }
-                                          if (result29 !== null) {
-                                            var result27 = result29;
-                                          } else {
-                                            if (input.substr(pos, 1) === "t") {
-                                              var result28 = "t";
-                                              pos += 1;
-                                            } else {
-                                              var result28 = null;
-                                              if (reportMatchFailures) {
-                                                matchFailed("\"t\"");
-                                              }
-                                            }
-                                            if (result28 !== null) {
-                                              var result27 = result28;
-                                            } else {
-                                              var result27 = null;;
-                                            };
-                                          }
-                                          if (result27 !== null) {
-                                            var result19 = [result20, result21, result22, result23, result24, result25, result26, result27];
-                                          } else {
-                                            var result19 = null;
-                                            pos = savedPos2;
-                                          }
-                                        } else {
-                                          var result19 = null;
-                                          pos = savedPos2;
-                                        }
-                                      } else {
-                                        var result19 = null;
-                                        pos = savedPos2;
-                                      }
-                                    } else {
-                                      var result19 = null;
-                                      pos = savedPos2;
-                                    }
-                                  } else {
-                                    var result19 = null;
-                                    pos = savedPos2;
-                                  }
-                                } else {
-                                  var result19 = null;
-                                  pos = savedPos2;
-                                }
-                              } else {
-                                var result19 = null;
-                                pos = savedPos2;
-                              }
-                            } else {
-                              var result19 = null;
-                              pos = savedPos2;
-                            }
-                            var result10 = result19 !== null ? result19 : '';
+                            var result10 = parse_ConditionalOrExpression();
                             if (result10 !== null) {
                               var result11 = [];
-                              var result18 = parse_WS();
-                              while (result18 !== null) {
-                                result11.push(result18);
-                                var result18 = parse_WS();
+                              var result15 = parse_WS();
+                              while (result15 !== null) {
+                                result11.push(result15);
+                                var result15 = parse_WS();
                               }
                               if (result11 !== null) {
-                                var result12 = parse_ConditionalOrExpression();
+                                if (input.substr(pos, 1) === ")") {
+                                  var result12 = ")";
+                                  pos += 1;
+                                } else {
+                                  var result12 = null;
+                                  if (reportMatchFailures) {
+                                    matchFailed("\")\"");
+                                  }
+                                }
                                 if (result12 !== null) {
                                   var result13 = [];
-                                  var result17 = parse_WS();
-                                  while (result17 !== null) {
-                                    result13.push(result17);
-                                    var result17 = parse_WS();
+                                  var result14 = parse_WS();
+                                  while (result14 !== null) {
+                                    result13.push(result14);
+                                    var result14 = parse_WS();
                                   }
                                   if (result13 !== null) {
-                                    if (input.substr(pos, 1) === ")") {
-                                      var result14 = ")";
-                                      pos += 1;
-                                    } else {
-                                      var result14 = null;
-                                      if (reportMatchFailures) {
-                                        matchFailed("\")\"");
-                                      }
-                                    }
-                                    if (result14 !== null) {
-                                      var result15 = [];
-                                      var result16 = parse_WS();
-                                      while (result16 !== null) {
-                                        result15.push(result16);
-                                        var result16 = parse_WS();
-                                      }
-                                      if (result15 !== null) {
-                                        var result2 = [result4, result5, result6, result7, result8, result9, result10, result11, result12, result13, result14, result15];
-                                      } else {
-                                        var result2 = null;
-                                        pos = savedPos1;
-                                      }
-                                    } else {
-                                      var result2 = null;
-                                      pos = savedPos1;
-                                    }
+                                    var result2 = [result4, result5, result6, result7, result8, result9, result10, result11, result12, result13];
                                   } else {
                                     var result2 = null;
                                     pos = savedPos1;
@@ -25359,7 +16504,7 @@ SparqlParser.parser = (function(){
                   
                         return exp
                   
-                    })(result2[6], result2[8])
+                    })(result2[4], result2[6])
                   : null;
                 if (result3 !== null) {
                   var result1 = result3;
@@ -25694,140 +16839,37 @@ SparqlParser.parser = (function(){
         
         var savedReportMatchFailures = reportMatchFailures;
         reportMatchFailures = false;
-        var savedPos2 = pos;
-        var savedPos3 = pos;
-        if (input.substr(pos, 1) === "T") {
-          var result33 = "T";
-          pos += 1;
+        var savedPos1 = pos;
+        if (input.substr(pos, 4) === "TRUE") {
+          var result10 = "TRUE";
+          pos += 4;
         } else {
-          var result33 = null;
+          var result10 = null;
           if (reportMatchFailures) {
-            matchFailed("\"T\"");
+            matchFailed("\"TRUE\"");
           }
         }
-        if (result33 !== null) {
-          var result22 = result33;
+        if (result10 !== null) {
+          var result7 = result10;
         } else {
-          if (input.substr(pos, 1) === "t") {
-            var result32 = "t";
-            pos += 1;
+          if (input.substr(pos, 4) === "true") {
+            var result9 = "true";
+            pos += 4;
           } else {
-            var result32 = null;
+            var result9 = null;
             if (reportMatchFailures) {
-              matchFailed("\"t\"");
+              matchFailed("\"true\"");
             }
           }
-          if (result32 !== null) {
-            var result22 = result32;
+          if (result9 !== null) {
+            var result7 = result9;
           } else {
-            var result22 = null;;
+            var result7 = null;;
           };
         }
-        if (result22 !== null) {
-          if (input.substr(pos, 1) === "R") {
-            var result31 = "R";
-            pos += 1;
-          } else {
-            var result31 = null;
-            if (reportMatchFailures) {
-              matchFailed("\"R\"");
-            }
-          }
-          if (result31 !== null) {
-            var result23 = result31;
-          } else {
-            if (input.substr(pos, 1) === "r") {
-              var result30 = "r";
-              pos += 1;
-            } else {
-              var result30 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"r\"");
-              }
-            }
-            if (result30 !== null) {
-              var result23 = result30;
-            } else {
-              var result23 = null;;
-            };
-          }
-          if (result23 !== null) {
-            if (input.substr(pos, 1) === "U") {
-              var result29 = "U";
-              pos += 1;
-            } else {
-              var result29 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"U\"");
-              }
-            }
-            if (result29 !== null) {
-              var result24 = result29;
-            } else {
-              if (input.substr(pos, 1) === "u") {
-                var result28 = "u";
-                pos += 1;
-              } else {
-                var result28 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"u\"");
-                }
-              }
-              if (result28 !== null) {
-                var result24 = result28;
-              } else {
-                var result24 = null;;
-              };
-            }
-            if (result24 !== null) {
-              if (input.substr(pos, 1) === "E") {
-                var result27 = "E";
-                pos += 1;
-              } else {
-                var result27 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"E\"");
-                }
-              }
-              if (result27 !== null) {
-                var result25 = result27;
-              } else {
-                if (input.substr(pos, 1) === "e") {
-                  var result26 = "e";
-                  pos += 1;
-                } else {
-                  var result26 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"e\"");
-                  }
-                }
-                if (result26 !== null) {
-                  var result25 = result26;
-                } else {
-                  var result25 = null;;
-                };
-              }
-              if (result25 !== null) {
-                var result20 = [result22, result23, result24, result25];
-              } else {
-                var result20 = null;
-                pos = savedPos3;
-              }
-            } else {
-              var result20 = null;
-              pos = savedPos3;
-            }
-          } else {
-            var result20 = null;
-            pos = savedPos3;
-          }
-        } else {
-          var result20 = null;
-          pos = savedPos3;
-        }
-        var result21 = result20 !== null
+        var result8 = result7 !== null
           ? (function() {
-                lit = {};
+                var lit = {};
                 lit.token = "literal";
                 lit.lang = null;
                 lit.type = "http://www.w3.org/2001/XMLSchema#boolean";
@@ -25835,181 +16877,46 @@ SparqlParser.parser = (function(){
                 return lit;
            })()
           : null;
-        if (result21 !== null) {
-          var result19 = result21;
+        if (result8 !== null) {
+          var result6 = result8;
         } else {
-          var result19 = null;
-          pos = savedPos2;
+          var result6 = null;
+          pos = savedPos1;
         }
-        if (result19 !== null) {
-          var result0 = result19;
+        if (result6 !== null) {
+          var result0 = result6;
         } else {
           var savedPos0 = pos;
-          var savedPos1 = pos;
-          if (input.substr(pos, 1) === "F") {
-            var result18 = "F";
-            pos += 1;
+          if (input.substr(pos, 5) === "FALSE") {
+            var result5 = "FALSE";
+            pos += 5;
           } else {
-            var result18 = null;
+            var result5 = null;
             if (reportMatchFailures) {
-              matchFailed("\"F\"");
+              matchFailed("\"FALSE\"");
             }
           }
-          if (result18 !== null) {
-            var result4 = result18;
+          if (result5 !== null) {
+            var result2 = result5;
           } else {
-            if (input.substr(pos, 1) === "f") {
-              var result17 = "f";
-              pos += 1;
+            if (input.substr(pos, 5) === "false") {
+              var result4 = "false";
+              pos += 5;
             } else {
-              var result17 = null;
+              var result4 = null;
               if (reportMatchFailures) {
-                matchFailed("\"f\"");
+                matchFailed("\"false\"");
               }
             }
-            if (result17 !== null) {
-              var result4 = result17;
+            if (result4 !== null) {
+              var result2 = result4;
             } else {
-              var result4 = null;;
+              var result2 = null;;
             };
-          }
-          if (result4 !== null) {
-            if (input.substr(pos, 1) === "A") {
-              var result16 = "A";
-              pos += 1;
-            } else {
-              var result16 = null;
-              if (reportMatchFailures) {
-                matchFailed("\"A\"");
-              }
-            }
-            if (result16 !== null) {
-              var result5 = result16;
-            } else {
-              if (input.substr(pos, 1) === "a") {
-                var result15 = "a";
-                pos += 1;
-              } else {
-                var result15 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"a\"");
-                }
-              }
-              if (result15 !== null) {
-                var result5 = result15;
-              } else {
-                var result5 = null;;
-              };
-            }
-            if (result5 !== null) {
-              if (input.substr(pos, 1) === "L") {
-                var result14 = "L";
-                pos += 1;
-              } else {
-                var result14 = null;
-                if (reportMatchFailures) {
-                  matchFailed("\"L\"");
-                }
-              }
-              if (result14 !== null) {
-                var result6 = result14;
-              } else {
-                if (input.substr(pos, 1) === "l") {
-                  var result13 = "l";
-                  pos += 1;
-                } else {
-                  var result13 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"l\"");
-                  }
-                }
-                if (result13 !== null) {
-                  var result6 = result13;
-                } else {
-                  var result6 = null;;
-                };
-              }
-              if (result6 !== null) {
-                if (input.substr(pos, 1) === "S") {
-                  var result12 = "S";
-                  pos += 1;
-                } else {
-                  var result12 = null;
-                  if (reportMatchFailures) {
-                    matchFailed("\"S\"");
-                  }
-                }
-                if (result12 !== null) {
-                  var result7 = result12;
-                } else {
-                  if (input.substr(pos, 1) === "s") {
-                    var result11 = "s";
-                    pos += 1;
-                  } else {
-                    var result11 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"s\"");
-                    }
-                  }
-                  if (result11 !== null) {
-                    var result7 = result11;
-                  } else {
-                    var result7 = null;;
-                  };
-                }
-                if (result7 !== null) {
-                  if (input.substr(pos, 1) === "E") {
-                    var result10 = "E";
-                    pos += 1;
-                  } else {
-                    var result10 = null;
-                    if (reportMatchFailures) {
-                      matchFailed("\"E\"");
-                    }
-                  }
-                  if (result10 !== null) {
-                    var result8 = result10;
-                  } else {
-                    if (input.substr(pos, 1) === "e") {
-                      var result9 = "e";
-                      pos += 1;
-                    } else {
-                      var result9 = null;
-                      if (reportMatchFailures) {
-                        matchFailed("\"e\"");
-                      }
-                    }
-                    if (result9 !== null) {
-                      var result8 = result9;
-                    } else {
-                      var result8 = null;;
-                    };
-                  }
-                  if (result8 !== null) {
-                    var result2 = [result4, result5, result6, result7, result8];
-                  } else {
-                    var result2 = null;
-                    pos = savedPos1;
-                  }
-                } else {
-                  var result2 = null;
-                  pos = savedPos1;
-                }
-              } else {
-                var result2 = null;
-                pos = savedPos1;
-              }
-            } else {
-              var result2 = null;
-              pos = savedPos1;
-            }
-          } else {
-            var result2 = null;
-            pos = savedPos1;
           }
           var result3 = result2 !== null
             ? (function() {
-                  lit = {};
+                  var lit = {};
                   lit.token = "literal";
                   lit.lang = null;
                   lit.type = "http://www.w3.org/2001/XMLSchema#boolean";
@@ -26863,7 +17770,7 @@ SparqlParser.parser = (function(){
         }
         var result2 = result1 !== null
           ? (function(d) {
-                lit = {};
+                var lit = {};
                 lit.token = "literal";
                 lit.lang = null;
                 lit.type = "http://www.w3.org/2001/XMLSchema#integer";
@@ -26977,7 +17884,7 @@ SparqlParser.parser = (function(){
         var result9 = result8 !== null
           ? (function(a, b, c) {
           
-                lit = {};
+                var lit = {};
                 lit.token = "literal";
                 lit.lang = null;
                 lit.type = "http://www.w3.org/2001/XMLSchema#decimal";
@@ -27044,7 +17951,7 @@ SparqlParser.parser = (function(){
           }
           var result3 = result2 !== null
             ? (function(a, b) {
-                  lit = {};
+                  var lit = {};
                   lit.token = "literal";
                   lit.lang = null;
                   lit.type = "http://www.w3.org/2001/XMLSchema#decimal";
@@ -27169,7 +18076,7 @@ SparqlParser.parser = (function(){
         }
         var result16 = result15 !== null
           ? (function(a, b, c, e) {
-                lit = {};
+                var lit = {};
                 lit.token = "literal";
                 lit.lang = null;
                 lit.type = "http://www.w3.org/2001/XMLSchema#double";
@@ -27242,7 +18149,7 @@ SparqlParser.parser = (function(){
           }
           var result9 = result8 !== null
             ? (function(a, b, c) {
-                  lit = {};
+                  var lit = {};
                   lit.token = "literal";
                   lit.lang = null;
                   lit.type = "http://www.w3.org/2001/XMLSchema#double";
@@ -27301,7 +18208,7 @@ SparqlParser.parser = (function(){
             }
             var result3 = result2 !== null
               ? (function(a, b) {
-                    lit = {};
+                    var lit = {};
                     lit.token = "literal";
                     lit.lang = null;
                     lit.type = "http://www.w3.org/2001/XMLSchema#double";

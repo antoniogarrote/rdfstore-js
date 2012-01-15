@@ -20,7 +20,7 @@ var Worker = require('webworker');
 /**
  * Version of the store
  */
-Store.VERSION = "0.5.9";
+Store.VERSION = "0.5.10";
 
 /**
  * Create a new RDFStore instance that will be
@@ -293,7 +293,7 @@ Store.Store.prototype.executeWithEnvironment = function() {
  * in the store as a RDF JS Interface Graph object.<br/>
  * <br/>
  * The function accepts as mandatory parameter a callback
- * function that will receive the returned graph.<br/>
+ * function that will receive the a success notification and the returned graph.<br/>
  * <br/>
  * Optionally, the URI of the graph can also be passed as
  * the first argument. If no graph is specified, the
@@ -330,7 +330,7 @@ Store.Store.prototype.graph = function() {
  * node URI.<br/>
  * <br/>
  * The function accepts as mandatory parameters the node URI and 
- * a callback unction that will receive the returned node.<br/>
+ * a callback unction that will receive a success notification and the returned node.<br/>
  * <br/>
  * Optionally, the URI of the graph where the node is contained 
  * can also be passed as the first argument. <br/>

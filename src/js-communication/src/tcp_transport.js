@@ -4,21 +4,32 @@ var NetworkTransport = exports.NetworkTransport;
 
 // imports
 var http = require("http");
+var https = require("https");
 var url = require("url");
 
 NetworkTransport.load = function(uri, accept, callback, redirect) {
     var redirection = redirect==null ? 3 : redirect;
-    var parts = url.parse(uri);
-    var client = http.createClient((parts.port || 80), parts.hostname);
+    var parts = url.parse(uri, true, true);
 
-    var path = parts.pathname || "/";
-    var search = parts.search || "";
+    var params = {
+	'host': parts.host,
+	'hostname': parts.hostname,
+	'method': 'GET',
+	'path': parts.path,
+	'headers': {'host':parts.hostname, 'Accept':accept}
+    };
 
-    var request = client.request('GET',path+search, {'host':parts.hostname, 'Accept':accept});
-
-    request.end();
-
-    request.on('response', function(response){
+    var client = null;
+    
+    if(parts.protocol === 'http:') {
+	params.port = (parts.port || 80),
+	client = http;
+    } else if(parts.protocol === 'https:') {
+	params.port = (parts.port || 443),
+	client = https;
+    }
+    
+    var request = client.request(params, function(response){
         var headers = response.headers;
         var data = "";
 
@@ -33,7 +44,7 @@ NetworkTransport.load = function(uri, accept, callback, redirect) {
             if(redirection == 0) {
                 callback(false, 500);
             } else {
-                var location = (headers["Location"] || headers["location"])
+                var location = (headers["Location"] || headers["location"]);
                 if(location != null) {
                     NetworkTransport.load(location, accept, callback, (redirection -1));
                 } else {
@@ -44,7 +55,13 @@ NetworkTransport.load = function(uri, accept, callback, redirect) {
             callback(false, response.statusCode);
         }
     });
-}
+
+    request.on('error', function(e) {
+	console.log('problem with request: ' + e.message);
+    });
+
+    request.end();
+};
 
 // var NetworkTransport = require("./src/tcp_transport").NetworkTransport; NetworkTransport.load("http://google.es/", function(success, data) { console.log(success); console.log(data)})
 // http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
