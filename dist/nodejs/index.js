@@ -30622,11 +30622,11 @@ QueryEngine.QueryEngine.prototype.quadCost = function(quad, queryEnv, shouldInde
     return(graph+subject+predicate+object);
 };
 
-QueryEngine.QueryEngine.prototype.denormalizeBindingsList = function(bindingsList, envOut) {
+QueryEngine.QueryEngine.prototype.denormalizeBindingsList = function(bindingsList, env) {
     var results = [];
 
     for(var i=0; i<bindingsList.length; i++) {
-        result = this.denormalizeBindings(bindingsList[i], envOut)
+        var result = this.denormalizeBindings(bindingsList[i], env)
         results.push(result);
     }
     return(results);
@@ -30669,9 +30669,9 @@ QueryEngine.QueryEngine.prototype.copyDenormalizedBindings = function(bindingsLi
     return denormList;
 };
 
-QueryEngine.QueryEngine.prototype.denormalizeBindings = function(bindings, envOut, callback) {
+QueryEngine.QueryEngine.prototype.denormalizeBindings = function(bindings, env, callback) {
     var variables = Utils.keys(bindings);
-
+    var envOut = env.outCache;
     for(var i=0; i<variables.length; i++) {
         var oid = bindings[variables[i]];
         if(oid == null) {
@@ -30681,8 +30681,11 @@ QueryEngine.QueryEngine.prototype.denormalizeBindings = function(bindings, envOu
             if(envOut[oid] != null) {
                 bindings[variables[i]] = envOut[oid];
             } else {
-                var val = this.lexicon.retrieve(oid)
+                var val = this.lexicon.retrieve(oid);
                 bindings[variables[i]] = val;
+		if(val.token === 'blank') {
+		    env.blanks[val.value] = oid;
+		}
             }
         }
     }
@@ -30749,7 +30752,7 @@ QueryEngine.QueryEngine.prototype.executeQuery = function(syntaxTree, callback, 
               if(typeof(result) === 'object' && result.denorm === true) {
                   callback(true, result['bindings']);
               } else {
-                  var result = that.denormalizeBindingsList(result, queryEnv.outCache);
+                  var result = that.denormalizeBindingsList(result, queryEnv);
                   if(result != null) {                        
                       callback(true, result);
                   } else {
@@ -30783,7 +30786,7 @@ QueryEngine.QueryEngine.prototype.executeQuery = function(syntaxTree, callback, 
         this.executeSelect(aqt, queryEnv, defaultDataset, namedDataset, function(success, result){
             if(success) {
                 if(success) {              
-                    var result = that.denormalizeBindingsList(result, queryEnv.outCache);
+                    var result = that.denormalizeBindingsList(result, queryEnv);
                     if(result != null) { 
                         var graph = new RDFJSInterface.Graph();
                             
@@ -31632,7 +31635,7 @@ QueryEngine.QueryEngine.prototype._executeModifyQuery = function(aqt, queryEnv, 
 
             that.executeSelect(aqt, queryEnv, defaultGraph, namedGraph, function(success, result) {                
                 if(success) {                    
-                    var result = that.denormalizeBindingsList(result, queryEnv.outCache);
+                    var result = that.denormalizeBindingsList(result, queryEnv);
                     if(result!=null) {
                         bindings = result;
                     } else {
@@ -32351,11 +32354,11 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.normalizeQuad = function(quad, q
             graph:graph});
 };
 
-MongodbQueryEngine.MongodbQueryEngine.prototype.denormalizeBindingsList = function(bindingsList, envOut) {
+MongodbQueryEngine.MongodbQueryEngine.prototype.denormalizeBindingsList = function(bindingsList, env) {
     var results = [];
 
     for(var i=0; i<bindingsList.length; i++) {
-        result = this.denormalizeBindings(bindingsList[i], envOut)
+        var result = this.denormalizeBindings(bindingsList[i], env);
         results.push(result);
     }
     return(results);
@@ -32473,7 +32476,8 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.retrieve = function(oid) {
     }
 };
 
-MongodbQueryEngine.MongodbQueryEngine.prototype.denormalizeBindings = function(bindings, envOut, callback) {
+MongodbQueryEngine.MongodbQueryEngine.prototype.denormalizeBindings = function(bindings, env, callback) {
+    var envOut = env.outCache;
     var variables = Utils.keys(bindings);
 
     for(var i=0; i<variables.length; i++) {
@@ -32485,8 +32489,11 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.denormalizeBindings = function(b
             if(envOut[oid] != null) {
                 bindings[variables[i]] = envOut[oid];
             } else {
-                var val = this.retrieve(oid)
+                var val = this.retrieve(oid);
                 bindings[variables[i]] = val;
+		if(val.token === 'blank') {
+		    env.blanks[val.value] = oid;
+		}
             }
         }
     }
@@ -32550,7 +32557,7 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.executeQuery = function(syntaxTr
               if(typeof(result) === 'object' && result.denorm === true) {
                   callback(true, result['bindings']);
               } else {
-                  var result = that.denormalizeBindingsList(result, queryEnv.outCache);
+                  var result = that.denormalizeBindingsList(result, queryEnv);
                   if(result != null) {                        
                       callback(true, result);
                   } else {
@@ -32584,7 +32591,7 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.executeQuery = function(syntaxTr
         this.executeSelect(aqt, queryEnv, defaultDataset, namedDataset, function(success, result){
             if(success) {
                 if(success) {              
-                    var result = that.denormalizeBindingsList(result, queryEnv.outCache);
+                    var result = that.denormalizeBindingsList(result, queryEnv);
                     if(result != null) { 
                         var graph = new RDFJSInterface.Graph();
                             
@@ -33542,7 +33549,7 @@ MongodbQueryEngine.MongodbQueryEngine.prototype._executeModifyQuery = function(a
 
             that.executeSelect(aqt, queryEnv, defaultGraph, namedGraph, function(success, result) {                
                 if(success) {
-                    var result = that.denormalizeBindingsList(result, queryEnv.outCache);
+                    var result = that.denormalizeBindingsList(result, queryEnv);
                     if(result!=null) {
                         bindings = result;
                     } else {
@@ -34918,7 +34925,7 @@ var RDFStoreClient = RDFStoreChildClient;
 /**
  * Version of the store
  */
-Store.VERSION = "0.5.10";
+Store.VERSION = "0.5.11";
 
 /**
  * Create a new RDFStore instance that will be

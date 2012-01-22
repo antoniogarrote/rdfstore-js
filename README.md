@@ -647,4 +647,4 @@ Christian Langanke
 
 ## License
 
-Licensed under the [GNU Lesser General Public License Version 3 (LGPLV3)](http://www.gnu.org/licenses/lgpl.html), copyright Antonio Garrote 2011.
+Licensed under the [GNU Lesser General Public License Version 3 (LGPLV3)](http://www.gnu.org/licenses/lgpl.html), copyright Antonio Garrote 2011-2012.

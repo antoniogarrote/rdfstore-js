@@ -20,7 +20,7 @@ var Worker = require('webworker');
 /**
  * Version of the store
  */
-Store.VERSION = "0.5.10";
+Store.VERSION = "0.5.11";
 
 /**
  * Create a new RDFStore instance that will be
