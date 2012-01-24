@@ -236,7 +236,7 @@ Server.start = function() {
 
                 if(toLoad === 'stdin') {
                     var mediaType = options['media-type'];
-                    if(mediaType == null) {
+                    if(mediaType != null) {
                         var data = "";
                         process.stdin.resume();
                         process.stdin.setEncoding('utf8');
@@ -262,7 +262,7 @@ Server.start = function() {
                 } else {
                     if(toLoad.indexOf("file:/")==0) {
                         var mediaType = options['media-type'];
-                        if(mediaType == null) {
+                        if(mediaType != null) {
                             if(dstGraph != null) {
                                 Server.store.load(mediaType, toLoad, dstGraph, function(){
                                     process.exit(0);
