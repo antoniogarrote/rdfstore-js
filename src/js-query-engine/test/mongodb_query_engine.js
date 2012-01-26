@@ -253,7 +253,7 @@ if(MongodbQueryEngine.mongodb === true) {
                                                  UNION\
                                                  { ?book dc11:title ?title .  ?book dc11:creator ?author } }",
                                                 function(success, results) {
-                                                    test.ok(results.length === 2);
+						    test.ok(results.length === 2);
 
                                                     if(results[0].author.value == "Alice") {
                                                         test.ok(results[0].title.value == "SPARQL Query Language Tutorial");

@@ -2064,7 +2064,10 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.readConfiguration = function(cal
                                     coll.find({configuration:true}).toArray(function(err, res) {
                                         if(res==null || res.length === 0) {
                                             coll.insert({blankCounter:0, configuration:true}, function(){
-                                                that.blankCounter = 0;
+                                                that.configuration = {
+						    blankCounter:0
+						};
+						that.blankCounter = 0;
                                                 callback();
                                             });
                                         } else {

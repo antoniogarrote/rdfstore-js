@@ -33917,7 +33917,10 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.readConfiguration = function(cal
                                     coll.find({configuration:true}).toArray(function(err, res) {
                                         if(res==null || res.length === 0) {
                                             coll.insert({blankCounter:0, configuration:true}, function(){
-                                                that.blankCounter = 0;
+                                                that.configuration = {
+						    blankCounter:0
+						};
+						that.blankCounter = 0;
                                                 callback();
                                             });
                                         } else {
@@ -34925,7 +34928,7 @@ var RDFStoreClient = RDFStoreChildClient;
 /**
  * Version of the store
  */
-Store.VERSION = "0.5.11";
+Store.VERSION = "0.5.12";
 
 /**
  * Create a new RDFStore instance that will be
