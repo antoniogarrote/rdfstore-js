@@ -78,7 +78,7 @@ BaseDecl "[4] BaseDecl"
   = WS* ('BASE'/'base') WS* i:IRI_REF {
       registerDefaultPrefix(i);
 
-      base = {};
+      var base = {};
       base.token = 'base';
       base.value = i;
 
@@ -93,7 +93,7 @@ PrefixDecl "[5] PrefixDecl"
 
       registerPrefix(p,l);
 
-      prefix = {};
+      var prefix = {};
       prefix.token = 'prefix';
       prefix.prefix = p;
       prefix.local = l;
@@ -173,19 +173,19 @@ prefixID
 SelectQuery "[6] SelectQuery"
   = s:SelectClause WS* gs:DatasetClause* WS* w:WhereClause WS* sm:SolutionModifier WS* BindingsClause {
 
-      var dataset = {'named':[], 'default':[]};
+      var dataset = {'named':[], 'implicit':[]};
       for(var i=0; i<gs.length; i++) {
           var g = gs[i];
           if(g.kind === 'default') {
-              dataset['default'].push(g.graph);
+              dataset['implicit'].push(g.graph);
           } else {
               dataset['named'].push(g.graph)
           }
       }
 
 
-      if(dataset['named'].length === 0 && dataset['default'].length === 0) {
-          dataset['default'].push({token:'uri', 
+      if(dataset['named'].length === 0 && dataset['implicit'].length === 0) {
+          dataset['implicit'].push({token:'uri',
                                    prefix:null, 
                                    suffix:null, 
                                    value:'https://github.com/antoniogarrote/rdfstore-js#default_graph'});
@@ -249,19 +249,19 @@ SelectClause "[8] SelectClause"
 */
 ConstructQuery "[9] ConstructQuery"
     = WS* ('CONSTRUCT'/'construct') WS* t:ConstructTemplate WS* gs:DatasetClause* WS* w:WhereClause WS* sm:SolutionModifier {
-      var dataset = {'named':[], 'default':[]};
+      var dataset = {'named':[], 'implicit':[]};
       for(var i=0; i<gs.length; i++) {
           var g = gs[i];
           if(g.kind === 'default') {
-              dataset['default'].push(g.graph);
+              dataset['implicit'].push(g.graph);
           } else {
               dataset['named'].push(g.graph)
           }
       }
 
 
-      if(dataset['named'].length === 0 && dataset['default'].length === 0) {
-          dataset['default'].push({token:'uri', 
+      if(dataset['named'].length === 0 && dataset['implicit'].length === 0) {
+          dataset['implicit'].push({token:'uri',
                                    prefix:null, 
                                    suffix:null, 
                                    value:'https://github.com/antoniogarrote/rdfstore-js#default_graph'});
@@ -298,22 +298,22 @@ DescribeQuery "[10] DescribeQuery"
 */
 AskQuery "[11] AskQuery"
     = WS* ('ASK'/'ask') WS* gs:DatasetClause* WS* w:WhereClause {
-      var dataset = {'named':[], 'default':[]};
+      var dataset = {'named':[], 'implicit':[]};
       for(var i=0; i<gs.length; i++) {
           var g = gs[i];
-          if(g.kind === 'default') {
-              dataset['default'].push(g.graph);
+          if(g.kind === 'implicit') {
+              dataset['implicit'].push(g.graph);
           } else {
               dataset['named'].push(g.graph)
           }
       }
 
 
-      if(dataset['named'].length === 0 && dataset['default'].length === 0) {
-          dataset['default'].push({token:'uri', 
-                                   prefix:null, 
-                                   suffix:null, 
-                                   value:'https://github.com/antoniogarrote/rdfstore-js#default_graph'});
+      if(dataset['named'].length === 0 && dataset['implicit'].length === 0) {
+          dataset['implicit'].push({token:'uri',
+                                    prefix:null,
+                                    suffix:null,
+                                    value:'https://github.com/antoniogarrote/rdfstore-js#default_graph'});
       }
 
       var query = {};
@@ -446,10 +446,10 @@ OrderCondition "[23] OrderCondition"
 }
 / e:( Constraint / Var ) WS* {
     if(e.token === 'var') {
-        e = { token:'expression', 
-              expressionType:'atomic',
-              primaryexpression: 'var',
-              value: e };
+        var e = { token:'expression',
+                  expressionType:'atomic',
+                  primaryexpression: 'var',
+                  value: e };
     }
     return { direction: 'ASC', expression:e };
 }
@@ -938,7 +938,7 @@ GraphPatternNotTriples "[53] GraphPatternNotTriples"
   [54]  	OptionalGraphPattern	  ::=  	'OPTIONAL' GroupGraphPattern
 */
 OptionalGraphPattern "[54] OptionalGraphPattern"
-  = WS* 'OPTIONAL' WS* v:GroupGraphPattern {
+  = WS* ('OPTIONAL'/'optional') WS* v:GroupGraphPattern {
       return { token: 'optionalgraphpattern',
                value: v }
 }
@@ -1054,7 +1054,7 @@ ArgList "[62] ArgList"
       return args;
 }
     / '(' d:('DISTINCT'/'distinct')? e:Expression es:( ',' Expression)* ')' {
-      cleanEx = [];
+      var cleanEx = [];
 
       for(var i=0; i<es.length; i++) {
           cleanEx.push(es[i][1]);
@@ -1083,7 +1083,7 @@ ExpressionList "[63] ExpressionList"
       return args;
 }
   / '(' e:Expression es:( ',' Expression)* ')' {
-      cleanEx = [];
+      var cleanEx = [];
 
       for(var i=0; i<es.length; i++) {
           cleanEx.push(es[i][1]);
@@ -1195,7 +1195,7 @@ TriplesSameSubject "[66] TriplesSameSubject"
 */
 PropertyListNotEmpty "[67] PropertyListNotEmpty"
   = v:Verb WS* ol:ObjectList rest:( WS* ';' WS* ( Verb WS* ObjectList )? )* {
-      token = {}
+      var token = {}
       token.token = 'propertylist';
       var triplesContext = [];
       var pairs = [];
@@ -1565,8 +1565,8 @@ Integer "[86] Integer"
 */
 TriplesNode "[87] TriplesNode"
   = c:Collection {
-      triplesContext = [];
-      chainSubject = [];
+      var triplesContext = [];
+      var chainSubject = [];
 
       var triple = null;
 
@@ -2200,7 +2200,7 @@ NotExistsFunc "[109] NotExistsFunc"
 */
 Aggregate "[110] Aggregate"
   =   ('COUNT'/'count') WS* '(' WS* d:('DISTINCT'/'distinct')? WS* e:('*'/Expression) WS* ')' WS* {
-      exp = {};
+      var exp = {};
       exp.token = 'expression';
       exp.expressionType = 'aggregate';
       exp.aggregateType = 'count';
@@ -2211,7 +2211,7 @@ Aggregate "[110] Aggregate"
 
   }
   / ('SUM'/'sum') WS* '(' WS* d: ('DISTINCT'/'distinct')? WS*  e:Expression WS* ')' WS* {
-      exp = {};
+      var exp = {};
       exp.token = 'expression';
       exp.expressionType = 'aggregate';
       exp.aggregateType = 'sum';
@@ -2222,7 +2222,7 @@ Aggregate "[110] Aggregate"
 
   }
   / ('MIN'/'min') WS* '(' WS* d:('DISTINCT'/'distinct')? WS* e:Expression WS* ')' WS* {
-      exp = {};
+      var exp = {};
       exp.token = 'expression';
       exp.expressionType = 'aggregate';
       exp.aggregateType = 'min';
@@ -2233,7 +2233,7 @@ Aggregate "[110] Aggregate"
 
   }
   / ('MAX'/'max') WS* '(' WS* d:('DISTINCT'/'distinct')? WS* e:Expression WS* ')' WS* {
-      exp = {};
+      var exp = {};
       exp.token = 'expression'
       exp.expressionType = 'aggregate'
       exp.aggregateType = 'max'
@@ -2244,7 +2244,7 @@ Aggregate "[110] Aggregate"
 
   }
   / ('AVG'/'avg') WS* '(' WS* d:('DISTINCT'/'distinct')? WS* e:Expression WS* ')' WS* {
-      exp = {};
+      var exp = {};
       exp.token = 'expression'
       exp.expressionType = 'aggregate'
       exp.aggregateType = 'avg'

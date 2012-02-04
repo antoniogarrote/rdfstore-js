@@ -43,7 +43,7 @@ DiskManager.NodeSchema.prototype.encode = function(node) {
     b.word32le(node.numberActives);
     b.word32le(node.level);
 
-    var i=0
+    var i = 0;
     // encoding of keys
     for(i=0; i<node.numberActives; i++) {
         b = b.put(this.encodeKey(node.keys[i].key));
@@ -103,7 +103,7 @@ DiskManager.NodeSchema.prototype.decode = function(buffer) {
     var numberActives = parsing.vars.numberActives;
     parsing.word32le('level');
 
-    var i=0
+    var i = 0;
     // decoding of keys
     for(i=0; i<this.maxNumKeys; i++) {
         parsing = parsing.buffer("key"+i, this.keyLength);
@@ -123,7 +123,7 @@ DiskManager.NodeSchema.prototype.decode = function(buffer) {
     var keys = [];
     for(i=0; i<numberActives; i++) {
         var _key = nodeComponents["key"+i];
-        var _val = nodeComponents["value"+i]
+        var _val = nodeComponents["value" + i];
         if(_key != null) {
             var key = {};
             key.key = this.decodeKey(_key);
@@ -136,7 +136,7 @@ DiskManager.NodeSchema.prototype.decode = function(buffer) {
 
     var children = [];
     for(i=0; i<numberActives+1; i++) {
-        var _child = nodeComponents["child"+i]
+        var _child = nodeComponents["child" + i];
         if(_child != null && _child != 0) {
             children.push(_child);
         }
@@ -204,13 +204,13 @@ DiskManager.Container.prototype._writeSuperBlock = function() {
     }
 };
 
-DiskManager.Container.prototype._ensureNodeKey = function(nodeOrKey) {
-    if(typeof(nodeOrKey)==='object') {
+DiskManager.Container.prototype._ensureNodeKey = function (nodeOrKey) {
+    if (typeof(nodeOrKey) === 'object') {
         this.container.readNode(nodeOrKey.nodeKey);
     } else {
         this.container.readNode(nodeOrKey);
     }
-}
+};
 
 DiskManager.Container.prototype._readSuperBlock = function() {
     var b = new Buffer(this.superBlockSize);
@@ -300,10 +300,10 @@ DiskManager.Container.prototype.deleteNode = function(node) {
     this.freeBlocksManager.release(node);
 };
 
-DiskManager.Container.prototype.updateRoot = function(node) {
+DiskManager.Container.prototype.updateRoot = function (node) {
     this.rootNode = node.nodeKey;
     this._writeSuperBlock();
-}
+};
 
 /**
  * BufferCache
@@ -313,12 +313,12 @@ DiskManager.Container.prototype.updateRoot = function(node) {
  * @param container the container where this cache
  * will be used.
  */
-DiskManager.BufferCache = function(container) {
+DiskManager.BufferCache = function (container) {
     this.cacheSize = container.cacheSize;
     this.container = container;
     this.cache = {};
     this.cacheList = [];
-}
+};
 
 DiskManager.BufferCache.prototype.fetch = function(nodeKey) {
     return this.cache[nodeKey];

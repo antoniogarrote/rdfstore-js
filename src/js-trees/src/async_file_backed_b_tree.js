@@ -42,15 +42,15 @@ Utils.extends(InMemoryAsyncBTree.Tree, AsyncFileBackedBTree.Tree);
  * Creates a new file backed memory Tree with the information passed to
  * the constructor of the object.
  */
-AsyncFileBackedBTree.Tree.prototype.init = function(callback) {
+AsyncFileBackedBTree.Tree.prototype.init = function (callback) {
     var that = this;
-    this.container.format(this.keyLength, this.valueLength, this.order,function(){
-        InMemoryAsyncBTree.Tree.call(that, that.order, function(){
+    this.container.format(this.keyLength, this.valueLength, this.order, function () {
+        InMemoryAsyncBTree.Tree.call(that, that.order, function () {
             that.comparator = that.paramscomparator;
             callback(that);
         });
     });
-}
+};
 
 
 /**
@@ -58,39 +58,39 @@ AsyncFileBackedBTree.Tree.prototype.init = function(callback) {
  *
  * Restores the BTree from the provided file path
  */
-AsyncFileBackedBTree.Tree.prototype.load = function(callback) {
+AsyncFileBackedBTree.Tree.prototype.load = function (callback) {
     var that = this;
-    this.container.load(function(){
+    this.container.load(function () {
         that.comparator = that.paramscomparator;
-        that.container.readNode(that.container.rootNode, function(node) {
+        that.container.readNode(that.container.rootNode, function (node) {
             that.root = node;
             callback(that);
         });
     });
-}
+};
 
-AsyncFileBackedBTree.Tree.prototype.close = function(callback) {
-    this.container.close(function(){
+AsyncFileBackedBTree.Tree.prototype.close = function (callback) {
+    this.container.close(function () {
         callback();
     });
-}
+};
 
 
-AsyncFileBackedBTree.Tree.prototype._diskWrite = function(node, callback) {
-    this.container.writeNode(node, function(result){
+AsyncFileBackedBTree.Tree.prototype._diskWrite = function (node, callback) {
+    this.container.writeNode(node, function (result) {
         callback(result);
     });
-}
+};
 
-AsyncFileBackedBTree.Tree.prototype._diskRead = function(nodeOrKey, callback) {
+AsyncFileBackedBTree.Tree.prototype._diskRead = function (nodeOrKey, callback) {
     var toRead = nodeOrKey;
-    if(typeof(nodeOrKey)==='object') {
+    if (typeof(nodeOrKey) === 'object') {
         toRead = nodeOrKey.nodeKey
     }
-    this.container.readNode(toRead, function(node){
+    this.container.readNode(toRead, function (node) {
         callback(node);
     });
-}
+};
 
 AsyncFileBackedBTree.Tree.prototype._diskDelete= function(node,callback) {
     this.container.deleteNode(node, function(){
@@ -98,31 +98,31 @@ AsyncFileBackedBTree.Tree.prototype._diskDelete= function(node,callback) {
     });
 };
 
-AsyncFileBackedBTree.Tree.prototype._updateRootNode = function(node, callback) {
-    this.container.updateRoot(node,function(){
+AsyncFileBackedBTree.Tree.prototype._updateRootNode = function (node, callback) {
+    this.container.updateRoot(node, function () {
         callback();
     });
-}
+};
 
 
 /**
  * A sample tree working with floats as keys and values
  */
-AsyncFileBackedBTree.AsyncFileBackedFloatFloatBTree = function(params, callback) {
+AsyncFileBackedBTree.AsyncFileBackedFloatFloatBTree = function (params, callback) {
     params.keyLength = 4;
     params.valueLength = 4;
     params.nodeSchema = DiskManager.FloatFloatNodeSchema;
-    params.comparator = function(a,b) {
-        if(a<b) {
+    params.comparator = function (a, b) {
+        if (a < b) {
             return -1;
-        } else if(a > b) {
+        } else if (a > b) {
             return 1;
         } else {
             return 0;
         }
-    }
+    };
 
     AsyncFileBackedBTree.Tree.call(this, params, callback)
-}
+};
 
 Utils.extends(AsyncFileBackedBTree.Tree, AsyncFileBackedBTree.AsyncFileBackedFloatFloatBTree);

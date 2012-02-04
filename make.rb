@@ -274,7 +274,6 @@ def process_file_for_nodejs(of, f)
       # require for YUI compressor
       line.gsub!('dataset.default', "dataset['default']")
       line.gsub!("default:[]","'default':[]")
-      line.gsub!(".while","meanwhile");
       line.gsub!("Callbacks.deleted","____TMP_DOT_DELETE____");
       line.gsub!(".delete","['delete']");
       line.gsub!("____TMP_DOT_DELETE____","Callbacks.deleted");
@@ -404,7 +403,6 @@ def process_file_for_browser(of, f)
       # require for YUI compressor
       line.gsub!('dataset.default', "dataset['default']")
       line.gsub!("default:[]","'default':[]")
-      line.gsub!(".while","meanwhile");
       line.gsub!("Callbacks.deleted","____TMP_DOT_DELETE____");
       line.gsub!(".delete","['delete']");
       line.gsub!("____TMP_DOT_DELETE____","Callbacks.deleted");
@@ -444,7 +442,6 @@ def process_file_for_browser_persistent(of, f)
       # require for YUI compressor
       line.gsub!('dataset.default', "dataset['default']")
       line.gsub!("default:[]","'default':[]")
-      line.gsub!(".while","meanwhile");
       line.gsub!("Callbacks.deleted","____TMP_DOT_DELETE____");
       line.gsub!(".delete","['delete']");
       line.gsub!("____TMP_DOT_DELETE____","Callbacks.deleted");

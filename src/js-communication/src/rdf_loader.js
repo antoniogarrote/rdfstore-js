@@ -8,33 +8,33 @@ var TurtleParser = require("./turtle_parser").TurtleParser;
 var JSONLDParser = require("./jsonld_parser").JSONLDParser;
 var Utils = require("../../js-trees/src/utils").Utils;
 
-RDFLoader.RDFLoader = function(params) {
+RDFLoader.RDFLoader = function (params) {
     this.precedences = ["text/turtle", "text/n3", "application/json"];
-    this.parsers = {"text/turtle": TurtleParser.parser, "text/n3":TurtleParser.parser, "application/json":JSONLDParser.parser};
-    if(params != null) {
-      for(var mime in params["parsers"]) {
-          this.parsers[mime] = params["parsers"][mime];
-      }
+    this.parsers = {"text/turtle":TurtleParser.parser, "text/n3":TurtleParser.parser, "application/json":JSONLDParser.parser};
+    if (params != null) {
+        for (var mime in params["parsers"]) {
+            this.parsers[mime] = params["parsers"][mime];
+        }
     }
 
-    if(params && params["precedences"] != null) {
+    if (params && params["precedences"] != null) {
         this.precedences = params["precedences"];
-        for(var mime in params["parsers"]) {
-            if(!Utils.include(this.precedences, mime)) {
+        for (var mime in params["parsers"]) {
+            if (!Utils.include(this.precedences, mime)) {
                 this.precedences.push(mime);
             }
         }
     }
 
     this.acceptHeaderValue = "";
-    for(var i=0; i<this.precedences.length; i++) {
-        if(i!=0) {
+    for (var i = 0; i < this.precedences.length; i++) {
+        if (i != 0) {
             this.acceptHeaderValue = this.acceptHeaderValue + "," + this.precedences[i];
         } else {
             this.acceptHeaderValue = this.acceptHeaderValue + this.precedences[i];
         }
     }
-}
+};
 
 RDFLoader.RDFLoader.prototype.registerParser = function(mediaType, parser) {
     this.parsers[mediaType] = parser;
@@ -64,7 +64,7 @@ RDFLoader.RDFLoader.prototype.load = function(uri, graph, callback) {
             var mime = results["headers"]["Content-Type"] || results["headers"]["content-type"];
             var data = results['data'];
             if(mime != null) {
-                mime = mime.split(";")[0]
+                mime = mime.split(";")[0];
                 for(var m in that.parsers) {
                     if(m.indexOf("/")!=-1) {
                         var mimeParts = m.split("/");
@@ -99,7 +99,7 @@ RDFLoader.RDFLoader.prototype.load = function(uri, graph, callback) {
 RDFLoader.RDFLoader.prototype.loadFromFile = function(parser, graph, uri, callback) {
     try {
         var that = this;
-        fs = require('fs');
+        var fs = require('fs');
         fs.readFile(uri.split("file:/")[1], function(err, data) {
             if(err) throw err;
             var data = data.toString('utf8');

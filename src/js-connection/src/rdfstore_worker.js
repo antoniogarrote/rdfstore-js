@@ -32,7 +32,7 @@ var Store = require(__dirname+"/./../../js-store/src/store").Store;
             }
         }
 
-        args = [argsObject];
+        var args = [argsObject];
         //console.log("in handling create");
         args.push(function(result){
             //console.log("created!!!");
@@ -104,7 +104,7 @@ var Store = require(__dirname+"/./../../js-store/src/store").Store;
                 if(msg.args[1].interfaceName != null) {
                     msg.args[1] = RDFStoreWorker.adaptJSInterface(msg.args[1]);
                 }
-                msg.args[0] = RDFStoreWorker.store.rdf.createGraph(toWrap.triples)
+                msg.args[0] = RDFStoreWorker.store.rdf.createGraph(toWrap.triples);
                 //console.log("ARGS...");
                 
                 RDFStoreWorker.store[msg.fn].apply(RDFStoreWorker.store,msg.args);

@@ -14,7 +14,7 @@ QueryPlanAsync.variablesInBGP = function(bgp) {
 
     var components =  bgp.value || bgp;
     variables  = [];
-    for(comp in components) {
+    for(var comp in components) {
         if(components[comp] && components[comp].token === "var") {
             variables.push(components[comp].value);
         } else if(components[comp] && components[comp].token === "blank") {
@@ -160,12 +160,12 @@ QueryPlanAsync.executeAndBGPsGroups = function(bgps) {
 
         var foundGroup = false;
         for(var nextGroupId in groupVars) {
-            groupVar = groupVars[nextGroupId];
+            var groupVar = groupVars[nextGroupId];
             for(var j=0; j<vars.length; j++) {
                 var thisVar = "/"+vars[j]+"/";
                 if(groupVar.indexOf(thisVar) != -1) {
                     groups[nextGroupId].push(bgp);
-                    groupVars[nextGroupId] = groupVar+(vars.join("/"))+"/"
+                    groupVars[nextGroupId] = groupVar + (vars.join("/")) + "/";
                     foundGroup = true;
                     break;
                 }
@@ -530,12 +530,12 @@ QueryPlanAsync.executeBGPDatasets = function(bgp, dataset, queryEngine, queryEnv
 
     if(bgp.graph == null) {
         //union through all default graph(s)
-        Utils.repeat(0, dataset.default.length, function(k, env) {
+        Utils.repeat(0, dataset.implicit.length, function(k, env) {
             var floop = arguments.callee;
-            if(duplicates[dataset.default[env._i].oid] == null) {
-                duplicates[dataset.default[env._i].oid] = true;
+            if(duplicates[dataset.implicit[env._i].oid] == null) {
+                duplicates[dataset.implicit[env._i].oid] = true;
                 env.acum = env.acum || [];
-                bgp.graph = dataset.default[env._i];//.oid
+                bgp.graph = dataset.implicit[env._i];//.oid
                 queryEngine.rangeQuery(bgp, queryEnv, function(succes, results){
                     if(results != null) {
                         results = QueryPlanAsync.buildBindingsFromRange(results, bgp);
@@ -761,8 +761,6 @@ QueryPlanAsync.joinBindings2 = function(bindingVars, bindingsa, bindingsb) {
                 } else {
                     tmp = tmp[variableValue];
                 }
-            } else {
-                continue;
             }
         }
     }
@@ -850,12 +848,12 @@ QueryPlanAsync.unionBindings = function(bindingsa, bindingsb) {
     return bindingsa.concat(bindingsb);
 };
 
-QueryPlanAsync.unionManyBindings = function(bindingLists) {
+QueryPlanAsync.unionManyBindings = function (bindingLists) {
     var acum = [];
-    for(var i=0; i<bindingLists.length; i++) {
+    for (var i = 0; i < bindingLists.length; i++) {
         var bindings = bindingLists[i];
         acum = QueryPlanAsync.unionBindings(acum, bindings);
     }
 
     return acum;
-}
+};

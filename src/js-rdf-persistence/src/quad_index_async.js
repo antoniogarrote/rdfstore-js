@@ -7,49 +7,49 @@ var BaseTree = require("./../../js-trees/src/in_memory_async_b_tree").InMemoryAs
 var Utils = require("./../../js-trees/src/utils").Utils;
 var QuadIndexCommon = require("./quad_index_common").QuadIndexCommon;
 
-QuadIndex.Tree = function(params,callback) {
-    if(arguments != 0) {
+QuadIndex.Tree = function (params, callback) {
+    if (arguments != 0) {
         this.componentOrder = params.componentOrder;
 
         // @todo change this if using the file backed implementation
-        BaseTree.Tree.call(this, params.order, function(tree){
-            tree.comparator = function(a,b) {
-                for(var i=0; i< tree.componentOrder.length; i++) {
+        BaseTree.Tree.call(this, params.order, function (tree) {
+            tree.comparator = function (a, b) {
+                for (var i = 0; i < tree.componentOrder.length; i++) {
                     var component = tree.componentOrder[i];
 
                     var vala = a[component];
                     var valb = b[component];
 
-                    if(vala < valb) {
+                    if (vala < valb) {
                         return -1;
-                    } else if(vala > valb) {
+                    } else if (vala > valb) {
                         return 1;
                     }
                 }
 
                 return 0;
-            }
+            };
 
-            tree.rangeComparator = function(a,b) {
-                for(var i=0; i<tree.componentOrder.length; i++) {
+            tree.rangeComparator = function (a, b) {
+                for (var i = 0; i < tree.componentOrder.length; i++) {
                     var component = tree.componentOrder[i];
-                    if(b[component] == null || a[component]==null) {
+                    if (b[component] == null || a[component] == null) {
                         return 0;
                     } else {
-                        if(a[component] < b[component] ) {
+                        if (a[component] < b[component]) {
                             return -1
-                        } else if(a[component] > b[component]) {
+                        } else if (a[component] > b[component]) {
                             return 1
                         }
                     }
                 }
 
                 return 0;
-            }
+            };
             callback(tree);
         });
     }
-}
+};
 
 Utils.extends(BaseTree.Tree, QuadIndex.Tree);
 
@@ -65,16 +65,16 @@ QuadIndex.Tree.prototype.search = function(quad, callback) {
     }, true); // true -> check exists : hack only present in the inMemoryAsyncBTree implementation
 };
 
-QuadIndex.Tree.prototype.range = function(pattern, callback) {
-    this._rangeTraverse(this,this.root, pattern, callback);
-}
+QuadIndex.Tree.prototype.range = function (pattern, callback) {
+    this._rangeTraverse(this, this.root, pattern, callback);
+};
 
 QuadIndex.Tree.prototype._rangeTraverse = function(tree,node, pattern, callback) {
     var patternKey  = pattern.key;
     var acum = [];
     var pendingNodes = [node];
 
-    Utils.while(pendingNodes.length > 0, function(k,em){
+    Utils.meanwhile(pendingNodes.length > 0, function(k,em){
         var mainLoopf = arguments.callee;
         var node = pendingNodes.shift();
         var idxMin = 0;
@@ -99,7 +99,7 @@ QuadIndex.Tree.prototype._rangeTraverse = function(tree,node, pattern, callback)
             tree._diskRead(node.children[idxMin], function(childNode){
                 pendingNodes.push(childNode);
 
-                Utils.while(true,
+                Utils.meanwhile(true,
                             function(kk,e){
                                 var loopf = arguments.callee;
                                 if(e.idxMax < node.numberActives && tree.rangeComparator(node.keys[e.idxMax].key,patternKey) === 0) {

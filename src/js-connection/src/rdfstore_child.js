@@ -32,7 +32,7 @@ RDFStoreChild.handleCreate = function(argsObject, cb) {
         }
     }
 
-    args = [argsObject];
+    var args = [argsObject];
     //console.log("in handling create");
     args.push(function(result){
         //console.log("created!!!");
@@ -104,7 +104,7 @@ RDFStoreChild.receive = function(packet) {
             if(msg.args[1].interfaceName != null) {
                 msg.args[1] = RDFStoreChild.adaptJSInterface(msg.args[1]);
             }
-            msg.args[0] = RDFStoreChild.store.rdf.createGraph(toWrap.triples)
+            msg.args[0] = RDFStoreChild.store.rdf.createGraph(toWrap.triples);
             //console.log("ARGS...");
             
             RDFStoreChild.store[msg.fn].apply(RDFStoreChild.store,msg.args);

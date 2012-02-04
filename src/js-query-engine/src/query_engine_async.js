@@ -230,9 +230,9 @@ QueryEngine.QueryEngine.prototype.removeDefaultGraphBindings = function(bindings
     for(var i=0; i<dataset.named.length; i++) {
         namedDatasetsMap[dataset.named[i].oid] = true;
     }
-    for(i=0; i<dataset.default.length; i++) {
-        if(namedDatasetsMap[dataset.default[i].oid] == null) {
-            onlyDefaultDatasets.push(dataset.default[i].oid);
+    for(i=0; i<dataset.implicit.length; i++) {
+        if(namedDatasetsMap[dataset.implicit[i].oid] == null) {
+            onlyDefaultDatasets.push(dataset.implicit[i].oid);
         }
     }
     var acum = [];
@@ -658,16 +658,16 @@ QueryEngine.QueryEngine.prototype.executeSelect = function(unit, env, defaultDat
         var that = this;
 
         if(defaultDataset != null || namedDataset != null) {
-            dataset.default = defaultDataset || [];
+            dataset.implicit = defaultDataset || [];
             dataset.named   = namedDataset || [];
         } 
 
-        if(dataset.default != null && dataset.default.length === 0 && dataset.named !=null && dataset.named.length === 0) {
+        if(dataset.implicit != null && dataset.implicit.length === 0 && dataset.named !=null && dataset.named.length === 0) {
             // We add the default graph to the default merged graph
-            dataset.default.push(this.lexicon.defaultGraphUriTerm);
+            dataset.implicit.push(this.lexicon.defaultGraphUriTerm);
         }
 
-        if (that.normalizeDatasets(dataset.default.concat(dataset.named), env) != null) {
+        if (that.normalizeDatasets(dataset.implicit.concat(dataset.named), env) != null) {
             that.executeSelectUnit(projection, dataset, unit.pattern, env, function(success, result){
                 if(success) {
                     // detect single group
@@ -691,7 +691,7 @@ QueryEngine.QueryEngine.prototype.executeSelect = function(unit, env, defaultDat
                             var foundError = false;
                             
                             for(var i=0; i<groupedBindings.length; i++) {
-                                var resultingBindings = that.aggregateBindings(projection, groupedBindings[i], env)
+                                var resultingBindings = that.aggregateBindings(projection, groupedBindings[i], env);
                                 aggregatedBindings.push(resultingBindings);
                             }
                             callback(true, {'bindings': aggregatedBindings, 'denorm':true});
@@ -699,11 +699,11 @@ QueryEngine.QueryEngine.prototype.executeSelect = function(unit, env, defaultDat
                             callback(false, "Incompatible Group and Projection variables");
                         }
                     } else {
-                        var orderedBindings = that.applyOrderBy(order, result, env)
+                        var orderedBindings = that.applyOrderBy(order, result, env);
                         var projectedBindings = that.projectBindings(projection, orderedBindings);
-                        modifiedBindings = that.applyModifier(modifier, projectedBindings);
+                        var modifiedBindings = that.applyModifier(modifier, projectedBindings);
                         var limitedBindings  = that.applyLimitOffset(offset, limit, modifiedBindings);
-                        filteredBindings = that.removeDefaultGraphBindings(limitedBindings, dataset);
+                        var filteredBindings = that.removeDefaultGraphBindings(limitedBindings, dataset);
                                 
                         callback(true, filteredBindings);
                     }
@@ -972,8 +972,8 @@ QueryEngine.QueryEngine.prototype.executeLEFT_JOIN = function(projection, datase
                     vars.push(p);
                 }
             }
-            acum = [];
-            duplicates = {};
+            var acum = [];
+            var duplicates = {};
             for(var i=0; i<bindings.length; i++) {
                 if(bindings[i]["__nullify__"] === true) {
                     for(var j=0; j<vars.length; j++) {
@@ -1059,7 +1059,7 @@ QueryEngine.QueryEngine.prototype.rangeQuery = function(quad, queryEnv, callback
     //console.log("BEFORE:");
     //console.log("QUAD:");
     //console.log(quad);
-    var key = that.normalizeQuad(quad, queryEnv, false)
+    var key = that.normalizeQuad(quad, queryEnv, false);
     if(key != null) {
         //console.log("RANGE QUERY:")
         //console.log(success);
@@ -1177,7 +1177,7 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
                 var oid = that.lexicon.registerLiteral(quad.subject.literal || quad.subject.value);
                 subject = oid;                    
             } else {
-                var oid = that.lexicon.registerBlank(quad.subject.blank || quad.subject.value)
+                var oid = that.lexicon.registerBlank(quad.subject.blank || quad.subject.value);
                 subject = oid;
             }
 
@@ -1189,7 +1189,7 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
                 var oid = that.lexicon.registerLiteral(quad.predicate.literal || quad.predicate.value);
                 predicate = oid;                    
             } else {
-                var oid = that.lexicon.registerBlank(quad.predicate.blank || quad.predicate.value)
+                var oid = that.lexicon.registerBlank(quad.predicate.blank || quad.predicate.value);
                 predicate = oid;
             }
 
@@ -1201,7 +1201,7 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
                 var oid = that.lexicon.registerLiteral(quad.object.literal || quad.object.value);
                 object = oid;                    
             } else {
-                var oid = that.lexicon.registerBlank(quad.object.blank || quad.object.value)
+                var oid = that.lexicon.registerBlank(quad.object.blank || quad.object.value);
                 object = oid;
             }
 
@@ -1215,7 +1215,7 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
                 var oid = that.lexicon.registerLiteral(quad.graph.literal || quad.graph.value);
                 graph = oid;                    
             } else {
-                var oid = that.lexicon.registerBlank(quad.graph.blank || quad.graph.value)
+                var oid = that.lexicon.registerBlank(quad.graph.blank || quad.graph.value);
                 graph = oid;
             }
 
@@ -1385,7 +1385,7 @@ QueryEngine.QueryEngine.prototype._executeModifyQuery = function(aqt, queryEnv, 
 
 QueryEngine.QueryEngine.prototype._executeQuadInsert = function(quad, queryEnv, callback) {
     var that = this;
-    var normalized = this.normalizeQuad(quad, queryEnv, true)
+    var normalized = this.normalizeQuad(quad, queryEnv, true);
     if(normalized != null) {
         var key = new QuadIndexCommon.NodeKey(normalized);
         that.backend.search(key,function(result) {

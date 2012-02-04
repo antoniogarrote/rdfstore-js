@@ -49,7 +49,7 @@ if(!!Worker) {
     };
 
     RDFStoreClient.RDFStoreClient.prototype.receive = function(packet) {
-        event = packet.data || packet;
+        var event = packet.data || packet;
         //console.log("RECEIVED SOMETHING");
         if(event.fn === 'workerRequest:NetworkTransport:load') {
             var that = this;
@@ -217,12 +217,12 @@ if(!!Worker) {
     };
 
     RDFStoreClient.RDFStoreClient.prototype.setPrefix = function(prefix, uri) {
-        this.rdf.setPrefix(prefix, uri)
+        this.rdf.setPrefix(prefix, uri);
         this.connection.postMessage({'fn':'rdf/setPrefix', 'args':[prefix, uri], 'callback':null})
     };
 
     RDFStoreClient.RDFStoreClient.prototype.setDefaultPrefix = function(uri) {
-        this.rdf.setDefaultPrefix(uri)
+        this.rdf.setDefaultPrefix(uri);
         this.connection.postMessage({'fn':'rdf/setDefaultPrefix', 'args':[uri], 'callback':null})
     };
 
@@ -434,7 +434,7 @@ if(!!Worker) {
             if(success) {
                 var triple;
                 for(var i=0; i<graphs.length; i++) {
-                    graph = graphs[i]
+                    var graph = graphs[i];
                     graphs[i] = that.adaptJSInterface(graph);
                 }                
                 callback(success, graphs);

@@ -242,9 +242,9 @@ QueryEngine.QueryEngine.prototype.removeDefaultGraphBindings = function(bindings
     for(var i=0; i<dataset.named.length; i++) {
         namedDatasetsMap[dataset.named[i].oid] = true;
     }
-    for(i=0; i<dataset.default.length; i++) {
-        if(namedDatasetsMap[dataset.default[i].oid] == null) {
-            onlyDefaultDatasets.push(dataset.default[i].oid);
+    for(i=0; i<dataset.implicit.length; i++) {
+        if(namedDatasetsMap[dataset.implicit[i].oid] == null) {
+            onlyDefaultDatasets.push(dataset.implicit[i].oid);
         }
     }
     var acum = [];
@@ -290,7 +290,6 @@ QueryEngine.QueryEngine.prototype.projectBindings = function(projection, results
     if(projection[0].kind === '*') {
         return results;
     } else {
-        var toProject = [];
         var projectedResults = [];
 
         for(var i=0; i<results.length; i++) {
@@ -424,7 +423,7 @@ QueryEngine.QueryEngine.prototype.normalizeQuad = function(quad, queryEnv, shoul
     if(quad.graph == null) {
         graph = 0; // default graph
     } else {
-        oid = this.normalizeTerm(quad.graph, queryEnv, shouldIndex)
+        oid = this.normalizeTerm(quad.graph, queryEnv, shouldIndex);
         if(oid!=null) {
             graph = oid;
             if(shouldIndex === true && quad.graph.token!='var')
@@ -466,7 +465,6 @@ QueryEngine.QueryEngine.prototype.quadCost = function(quad, queryEnv, shouldInde
     var predicate  = null;
     var object     = null;
     var graph      = null;
-    var oid;
 
     if(quad.graph == null) {
         graph = (this.lexicon.oidCounter/4)
@@ -485,7 +483,7 @@ QueryEngine.QueryEngine.prototype.denormalizeBindingsList = function(bindingsLis
     var results = [];
 
     for(var i=0; i<bindingsList.length; i++) {
-        var result = this.denormalizeBindings(bindingsList[i], env)
+        var result = this.denormalizeBindings(bindingsList[i], env);
         results.push(result);
     }
     return(results);
@@ -715,16 +713,16 @@ QueryEngine.QueryEngine.prototype.executeSelect = function(unit, env, defaultDat
         var that = this;
 
         if(defaultDataset != null || namedDataset != null) {
-            dataset.default = defaultDataset || [];
+            dataset.implicit = defaultDataset || [];
             dataset.named   = namedDataset || [];
         } 
 
-        if(dataset.default != null && dataset.default.length === 0 && dataset.named !=null && dataset.named.length === 0) {
+        if(dataset.implicit != null && dataset.implicit.length === 0 && dataset.named !=null && dataset.named.length === 0) {
             // We add the default graph to the default merged graph
-            dataset.default.push(this.lexicon.defaultGraphUriTerm);
+            dataset.implicit.push(this.lexicon.defaultGraphUriTerm);
         }
 
-        if (that.normalizeDatasets(dataset.default.concat(dataset.named), env) != null) {
+        if (that.normalizeDatasets(dataset.implicit.concat(dataset.named), env) != null) {
             var result = that.executeSelectUnit(projection, dataset, unit.pattern, env);
             if(result != null) {
                 // detect single group
@@ -748,7 +746,7 @@ QueryEngine.QueryEngine.prototype.executeSelect = function(unit, env, defaultDat
                         var foundError = false;
                             
                         for(var i=0; i<groupedBindings.length; i++) {
-                            var resultingBindings = that.aggregateBindings(projection, groupedBindings[i], dataset, env)
+                            var resultingBindings = that.aggregateBindings(projection, groupedBindings[i], dataset, env);
                             aggregatedBindings.push(resultingBindings);
                         }
                         callback(true, {'bindings': aggregatedBindings, 'denorm':true});
@@ -756,11 +754,11 @@ QueryEngine.QueryEngine.prototype.executeSelect = function(unit, env, defaultDat
                         callback(false, "Incompatible Group and Projection variables");
                     }
                 } else {
-                    var orderedBindings = that.applyOrderBy(order, result, dataset, env)
+                    var orderedBindings = that.applyOrderBy(order, result, dataset, env);
                     var projectedBindings = that.projectBindings(projection, orderedBindings, dataset);
-                    modifiedBindings = that.applyModifier(modifier, projectedBindings);
+                    var modifiedBindings = that.applyModifier(modifier, projectedBindings);
                     var limitedBindings  = that.applyLimitOffset(offset, limit, modifiedBindings);
-                    filteredBindings = that.removeDefaultGraphBindings(limitedBindings, dataset);
+                    var filteredBindings = that.removeDefaultGraphBindings(limitedBindings, dataset);
                     
                     callback(true, filteredBindings);
                 }
@@ -1329,70 +1327,123 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
 
     for(var i=0; i<quads.length; i++) {
         quad = quads[i];
-
+	
         // subject
         if(quad.subject['uri'] || quad.subject.token === 'uri') {
             oid = this.lexicon.registerUri(quad.subject.uri || quad.subject.value);
+	    if(quad.subject.uri != null) {
+		quad.subject = {'token': 'uri', 'value': quad.subject.uri};
+		delete quad.subject['uri'];
+	    }
             subject = oid;
         } else if(quad.subject['literal'] || quad.subject.token === 'literal') {
             oid = this.lexicon.registerLiteral(quad.subject.literal || quad.subject.value);
+	    if(quad.subject.literal != null) {
+		quad.subject = this.lexicon.parseLiteral(quad.subject.literal);
+		delete quad.subject['literal'];
+	    }
             subject = oid;                    
         } else {
             maybeBlankOid = blanks[quad.subject.blank || quad.subject.value];
             if(maybeBlankOid == null) {
-                maybeBlankOid = this.lexicon.registerBlank(quad.subject.blank || quad.subject.value)
+                maybeBlankOid = this.lexicon.registerBlank(quad.subject.blank || quad.subject.value);
                 blanks[(quad.subject.blank || quad.subject.value)] = maybeBlankOid;
             }
+	    if(quad.subject.token == null) {
+		quad.subject.token = 'blank';
+		quad.subject.value = quad.subject.blank;
+		delete quad.subject['blank'];
+	    }
             subject = maybeBlankOid;
         }
 
         // predicate
         if(quad.predicate['uri'] || quad.predicate.token === 'uri') {
             oid = this.lexicon.registerUri(quad.predicate.uri || quad.predicate.value);
+	    if(quad.predicate.uri != null) {
+		quad.predicate = {'token': 'uri', 'value': quad.predicate.uri};
+		delete quad.subject['uri'];
+	    }
             predicate = oid;
         } else if(quad.predicate['literal'] || quad.predicate.token === 'literal') {
             oid = this.lexicon.registerLiteral(quad.predicate.literal || quad.predicate.value);
+	    if(quad.predicate.literal != null) {
+		quad.predicate = this.lexicon.parseLiteral(quad.predicate.literal);
+		delete quad.predicate['literal'];
+	    }
             predicate = oid;                    
         } else {
             maybeBlankOid = blanks[quad.predicate.blank || quad.predicate.value];
             if(maybeBlankOid == null) {
-                maybeBlankOid = this.lexicon.registerBlank(quad.predicate.blank || quad.predicate.value)
+                maybeBlankOid = this.lexicon.registerBlank(quad.predicate.blank || quad.predicate.value);
                 blanks[(quad.predicate.blank || quad.predicate.value)] = maybeBlankOid;
             }
+	    if(quad.predicate.token == null) {
+		quad.predicate.token = 'blank';
+		quad.predicate.value = quad.predicate.blank;
+		delete quad.predicate['blank'];
+	    }
             predicate = maybeBlankOid;
         }
 
         // object
         if(quad.object['uri'] || quad.object.token === 'uri') {
             oid = this.lexicon.registerUri(quad.object.uri || quad.object.value);
+	    if(quad.object.uri != null) {
+		quad.object = {'token': 'uri', 'value': quad.object.uri};
+		delete quad.subject['uri'];
+	    }
             object = oid;
         } else if(quad.object['literal'] || quad.object.token === 'literal') {
             oid = this.lexicon.registerLiteral(quad.object.literal || quad.object.value);
+	    if(quad.object.literal != null) {
+		quad.object = this.lexicon.parseLiteral(quad.object.literal);
+		delete quad.object['literal'];
+	    }
             object = oid;                    
         } else {
             maybeBlankOid = blanks[quad.object.blank || quad.object.value];
             if(maybeBlankOid == null) {
-                maybeBlankOid = this.lexicon.registerBlank(quad.object.blank || quad.object.value)
+                maybeBlankOid = this.lexicon.registerBlank(quad.object.blank || quad.object.value);
                 blanks[(quad.object.blank || quad.object.value)] = maybeBlankOid;
             }
+	    if(quad.object.token == null) {
+		quad.object.token = 'blank';
+		quad.object.value = quad.object.blank;
+		delete quad.object['blank'];
+	    }
+
             object = maybeBlankOid;
         }
 
         // graph
         if(quad.graph['uri'] || quad.graph.token === 'uri') {
             oid = this.lexicon.registerUri(quad.graph.uri || quad.graph.value);
+	    if(quad.graph.uri != null) {
+		quad.graph = {'token': 'uri', 'value': quad.graph.uri};
+		delete quad.subject['uri'];
+	    }
             this.lexicon.registerGraph(oid);
             graph = oid;
 
         } else if(quad.graph['literal'] || quad.graph.token === 'literal') {
             oid = this.lexicon.registerLiteral(quad.graph.literal || quad.graph.value);
+	    if(quad.predicate.literal != null) {
+		quad.predicate = this.lexicon.parseLiteral(quad.predicate.literal);
+		delete quad.predicate['literal'];
+	    }
             graph = oid;                    
         } else {
             maybeBlankOid = blanks[quad.graph.blank || quad.graph.value];
             if(maybeBlankOid == null) {
-                maybeBlankOid = this.lexicon.registerBlank(quad.graph.blank || quad.graph.value)
+                maybeBlankOid = this.lexicon.registerBlank(quad.graph.blank || quad.graph.value);
                 blanks[(quad.graph.blank || quad.graph.value)] = maybeBlankOid;
             }
+	    if(quad.graph.token == null) {
+		quad.graph.token = 'blank';
+		quad.graph.value = quad.graph.blank;
+		delete quad.graph['blank'];
+	    }
             graph = maybeBlankOid;
         }
 
@@ -1404,7 +1455,7 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
 
         var result = this.backend.search(key);
         if(!result) {
-            result = this.backend.index(key)
+            result = this.backend.index(key);
             if(result == true){
                 if(this.eventsOnBatchLoad)
                     this.callbacksBackend.nextGraphModification(Callbacks.added, [originalQuad,quad]);
@@ -1428,7 +1479,7 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
             if(callback)
                 callback(false, null);
         }
-    }
+    };
 
     if(this.eventsOnBatchLoad) {
         this.callbacksBackend.endGraphModification(function(){
@@ -1439,20 +1490,20 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
     }
         
     if(success) {
-        return counter
+        return counter;
     } else {
         return null;
     }
 };
 
 // @modified dp
-QueryEngine.QueryEngine.prototype.computeCosts = function(quads, env) {
-    for(var i=0; i<quads.length; i++) {
-        quads[i]['_cost'] = this.quadCost(quads[i],env);
+QueryEngine.QueryEngine.prototype.computeCosts = function (quads, env) {
+    for (var i = 0; i < quads.length; i++) {
+        quads[i]['_cost'] = this.quadCost(quads[i], env);
     }
 
     return quads;
-}
+};
 
 // Low level operations for update queries
 

@@ -741,7 +741,7 @@ jsonld.toTriples = function(input, graph, callback)
             for(var i2 in obj)
             {
                 var obji2 = obj[i2];
-		if(p === '@type') {
+		if(p === '@type' || p === 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type') {
 		    p = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type';
                     obji2 = {'token':'uri', 'value':obji2};		    
                 } else if(typeof(obji2) === 'string') {

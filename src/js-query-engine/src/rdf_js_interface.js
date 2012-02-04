@@ -168,28 +168,62 @@ RDFJSInterface.Profile.prototype.setTerm = function(term, iri) {
 };
 
 // RDF environemnt
-RDFJSInterface.RDFEnvironment  = function(){
+RDFJSInterface.RDFEnvironment = function () {
     this.blankNodeCounter = 0;
     var that = this;
     this.filters = {
-        s: function(s) { return function(t) { return t.subject.equals(s); }; },
-        p: function(p) { return function(t) { return t.predicate.equals(p); }; },
-        o: function(o) { return function(t) { return t.object.equals(o); }; },
-        sp: function(s,p) { return function(t) { return t.subject.equals(s) && t.predicate.equals(p); }; },
-        so: function(s,o) { return function(t) { return t.subject.equals(s) && t.object.equals(o); }; },
-        po: function(p,o) { return function(t) { return t.predicate.equals(p) && t.object.equals(o); }; },
-        spo: function(s,p,o) { return function(t) { return t.subject.equals(s) && t.predicate.equals(p) && t.object.equals(o); }; },
-        describes: function(v) { return function(t) { return t.subject.equals(v) || t.object.equals(v); }; },
-        type: function(o) {
-            var type = that.resolve("rdf:type"); 
-            return function(t) { return t.predicate.equals(type) && t.object.equals(o); };
+        s:function (s) {
+            return function (t) {
+                return t.subject.equals(s);
+            };
+        },
+        p:function (p) {
+            return function (t) {
+                return t.predicate.equals(p);
+            };
+        },
+        o:function (o) {
+            return function (t) {
+                return t.object.equals(o);
+            };
+        },
+        sp:function (s, p) {
+            return function (t) {
+                return t.subject.equals(s) && t.predicate.equals(p);
+            };
+        },
+        so:function (s, o) {
+            return function (t) {
+                return t.subject.equals(s) && t.object.equals(o);
+            };
+        },
+        po:function (p, o) {
+            return function (t) {
+                return t.predicate.equals(p) && t.object.equals(o);
+            };
+        },
+        spo:function (s, p, o) {
+            return function (t) {
+                return t.subject.equals(s) && t.predicate.equals(p) && t.object.equals(o);
+            };
+        },
+        describes:function (v) {
+            return function (t) {
+                return t.subject.equals(v) || t.object.equals(v);
+            };
+        },
+        type:function (o) {
+            var type = that.resolve("rdf:type");
+            return function (t) {
+                return t.predicate.equals(type) && t.object.equals(o);
+            };
         }
     };
 
-    for(var p in RDFJSInterface.defaultContext) {
+    for (var p in RDFJSInterface.defaultContext) {
         this.prefixes.set(p, RDFJSInterface.defaultContext[p]);
     }
-}
+};
 Utils.extends(RDFJSInterface.Profile,RDFJSInterface.RDFEnvironment);
 
 RDFJSInterface.RDFEnvironment.prototype.createBlankNode = function() {
@@ -427,26 +461,26 @@ RDFJSInterface.Graph.prototype.add = function(triple) {
     return this;
 };
 
-RDFJSInterface.Graph.prototype.addAction = function(tripleAction, run) {
+RDFJSInterface.Graph.prototype.addAction = function (tripleAction, run) {
     this.actions.push(tripleAction);
-    if(run == true) {
-        for(var i=0; i<this.triples.length; i++) {
+    if (run == true) {
+        for (var i = 0; i < this.triples.length; i++) {
             this.triples[i] = tripleAction(this.triples[i]);
         }
     }
 
     return this;
-}
+};
 
-RDFJSInterface.Graph.prototype.addAll = function(graph) {
+RDFJSInterface.Graph.prototype.addAll = function (graph) {
     var newTriples = graph.toArray();
-    for(var i=0; i<newTriples.length; i++) {
+    for (var i = 0; i < newTriples.length; i++) {
         this.add(newTriples[i]);
     }
 
 
     return this;
-}
+};
 
 RDFJSInterface.Graph.prototype.remove = function(triple) {
     var toRemove = null;
@@ -547,7 +581,6 @@ RDFJSInterface.Graph.prototype.match = function(subject, predicate, object, limi
 };
 
 RDFJSInterface.Graph.prototype.removeMatches = function(subject, predicate, object) {
-    var matched = [];
     var toRemove = [];
     for(var i=0; i<this.triples.length; i++) {
         var triple = this.triples[i];

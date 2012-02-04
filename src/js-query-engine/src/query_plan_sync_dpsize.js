@@ -11,7 +11,7 @@ QueryPlanDPSize.variablesInBGP = function(bgp) {
 
     var components =  bgp.value || bgp;
     variables  = [];
-    for(comp in components) {
+    for(var comp in components) {
         if(components[comp] && components[comp].token === "var") {
             variables.push(components[comp].value);
         } else if(components[comp] && components[comp].token === "blank") {
@@ -82,12 +82,12 @@ QueryPlanDPSize.executeAndBGPsGroups = function(bgps) {
 
         var foundGroup = false;
         for(var nextGroupId in groupVars) {
-            groupVar = groupVars[nextGroupId];
+            var groupVar = groupVars[nextGroupId];
             for(var j=0; j<vars.length; j++) {
                 var thisVar = "/"+vars[j]+"/";
                 if(groupVar.indexOf(thisVar) != -1) {
                     groups[nextGroupId].push(bgp);
-                    groupVars[nextGroupId] = groupVar+(vars.join("/"))+"/"
+                    groupVars[nextGroupId] = groupVar + (vars.join("/")) + "/";
                     foundGroup = true;
                     break;
                 }
@@ -388,10 +388,10 @@ QueryPlanDPSize.executeBGPDatasets = function(bgp, dataset, queryEngine, queryEn
     if(bgp.graph == null) {
         //union through all default graph(s)
         var acum = [];
-        for(var i=0; i<dataset.default.length; i++) {
-            if(duplicates[dataset.default[i].oid] == null) {
-                duplicates[dataset.default[i].oid] = true;
-                bgp.graph = dataset.default[i];//.oid
+        for(var i=0; i<dataset.implicit.length; i++) {
+            if(duplicates[dataset.implicit[i].oid] == null) {
+                duplicates[dataset.implicit[i].oid] = true;
+                bgp.graph = dataset.implicit[i];//.oid
                 var results = queryEngine.rangeQuery(bgp, queryEnv);
                 results = QueryPlanDPSize.buildBindingsFromRange(results, bgp);
                 acum.push(results);
@@ -550,8 +550,6 @@ QueryPlanDPSize.joinBindings2 = function(bindingVars, bindingsa, bindingsb) {
                 } else {
                     tmp = tmp[variableValue];
                 }
-            } else {
-                continue;
             }
         }
     }

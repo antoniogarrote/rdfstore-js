@@ -20,7 +20,7 @@ var Worker = require('webworker');
 /**
  * Version of the store
  */
-Store.VERSION = "0.5.12";
+Store.VERSION = "0.5.13";
 
 /**
  * Create a new RDFStore instance that will be
@@ -487,6 +487,7 @@ Store.Store.prototype.stopObservingQuery = function(query) {
  * @param {Function} event listener function that will be notified when a change occurs
  */
 Store.Store.prototype.subscribe = function(s, p, o, g, callback) {
+    var that = this;
     var adapterCb = function(event,triples){
         var acum = [];
         var queryEnv = {blanks:{}, outCache:{}};
@@ -494,9 +495,9 @@ Store.Store.prototype.subscribe = function(s, p, o, g, callback) {
 
         for(var i=0; i<triples.length; i++) {
             var triple = triples[i];
-            var s = RDFJSInterface.buildRDFResource(triple.subject,bindings,this.engine,queryEnv);
-            var p = RDFJSInterface.buildRDFResource(triple.predicate,bindings,this.engine,queryEnv);
-            var o = RDFJSInterface.buildRDFResource(triple.object,bindings,this.engine,queryEnv);
+            var s = RDFJSInterface.buildRDFResource(triple.subject,bindings,that.engine,queryEnv);
+            var p = RDFJSInterface.buildRDFResource(triple.predicate,bindings,that.engine,queryEnv);
+            var o = RDFJSInterface.buildRDFResource(triple.object,bindings,that.engine,queryEnv);
             if(s!=null && p!=null && o!=null) {
                 triple = new RDFJSInterface.Triple(s,p,o);
                 acum.push(triple);

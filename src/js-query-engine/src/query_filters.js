@@ -188,7 +188,7 @@ QueryFilters.runAggregator = function(aggregator, bindingsGroup, queryEngine, da
                     return min;
                 }
             } else if(aggregator.expression.aggregateType === 'count') {
-                var distinct = {}
+                var distinct = {};
                 var count = 0;
                 if(aggregator.expression.expression === '*') {
                     if(aggregator.expression.distinct != null && aggregator.expression.distinct != '') {
@@ -223,7 +223,7 @@ QueryFilters.runAggregator = function(aggregator, bindingsGroup, queryEngine, da
 
                 return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#integer", value:''+count};
             } else if(aggregator.expression.aggregateType === 'avg') {
-                var distinct = {}
+                var distinct = {};
                 var aggregated = {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#integer", value:'0'};
                 var count = 0;
                 for(var i=0; i< bindingsGroup.length; i++) {
@@ -252,7 +252,7 @@ QueryFilters.runAggregator = function(aggregator, bindingsGroup, queryEngine, da
                 result.value = ''+result.value;
                 return result;
             } else if(aggregator.expression.aggregateType === 'sum') {
-                var distinct = {}
+                var distinct = {};
                 var aggregated = {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#integer", value:'0'};
                 for(var i=0; i< bindingsGroup.length; i++) {
                     var bindings = bindingsGroup[i];
@@ -528,68 +528,68 @@ QueryFilters.isXsdType = function(type, val) {
     }
 };
 
-QueryFilters.ebv = function(term) {
-    if(term == null || QueryFilters.isEbvError(term)) {
+QueryFilters.ebv = function (term) {
+    if (term == null || QueryFilters.isEbvError(term)) {
         return QueryFilters.ebvError();
     } else {
-        if(term.token && term.token === 'literal') {
-          if(term.type == "http://www.w3.org/2001/XMLSchema#integer" ||
-             term.type == "http://www.w3.org/2001/XMLSchema#decimal" ||
-             term.type == "http://www.w3.org/2001/XMLSchema#double" ||
-             term.type == "http://www.w3.org/2001/XMLSchema#nonPositiveInteger" ||
-             term.type == "http://www.w3.org/2001/XMLSchema#negativeInteger" ||
-             term.type == "http://www.w3.org/2001/XMLSchema#long" ||
-             term.type == "http://www.w3.org/2001/XMLSchema#int" ||
-             term.type == "http://www.w3.org/2001/XMLSchema#short" ||
-             term.type == "http://www.w3.org/2001/XMLSchema#byte" ||
-             term.type == "http://www.w3.org/2001/XMLSchema#nonNegativeInteger" ||
-             term.type == "http://www.w3.org/2001/XMLSchema#unsignedLong" ||
-             term.type == "http://www.w3.org/2001/XMLSchema#unsignedInt" ||
-             term.type == "http://www.w3.org/2001/XMLSchema#unsignedShort" ||
-             term.type == "http://www.w3.org/2001/XMLSchema#unsignedByte" ||
-             term.type == "http://www.w3.org/2001/XMLSchema#positiveInteger" ) {
-              var tmp = parseFloat(term.value);
-              if(isNaN(tmp)) {
-                  return false;
-              } else {
-                  return parseFloat(term.value) != 0;
-              }
-          } else if(term.type === "http://www.w3.org/2001/XMLSchema#boolean"){
-              return (term.value === 'true' || term.value === true || term.value === 'True');
-          } else if(term.type === "http://www.w3.org/2001/XMLSchema#string"){
-              return term.value != "";
-          } else if(term.type === "http://www.w3.org/2001/XMLSchema#dateTime"){
-              return (new Date(term.value)) != null;
-          } else if(QueryFilters.isEbvError(term)) {
-              return term;
-          } else if(term.type == null) {
-              if( term.value != "") {
-                  return true;
-              } else {
-                  return false;
-              }
-          } else {
-              return QueryFilters.ebvError();
-          }
+        if (term.token && term.token === 'literal') {
+            if (term.type == "http://www.w3.org/2001/XMLSchema#integer" ||
+                term.type == "http://www.w3.org/2001/XMLSchema#decimal" ||
+                term.type == "http://www.w3.org/2001/XMLSchema#double" ||
+                term.type == "http://www.w3.org/2001/XMLSchema#nonPositiveInteger" ||
+                term.type == "http://www.w3.org/2001/XMLSchema#negativeInteger" ||
+                term.type == "http://www.w3.org/2001/XMLSchema#long" ||
+                term.type == "http://www.w3.org/2001/XMLSchema#int" ||
+                term.type == "http://www.w3.org/2001/XMLSchema#short" ||
+                term.type == "http://www.w3.org/2001/XMLSchema#byte" ||
+                term.type == "http://www.w3.org/2001/XMLSchema#nonNegativeInteger" ||
+                term.type == "http://www.w3.org/2001/XMLSchema#unsignedLong" ||
+                term.type == "http://www.w3.org/2001/XMLSchema#unsignedInt" ||
+                term.type == "http://www.w3.org/2001/XMLSchema#unsignedShort" ||
+                term.type == "http://www.w3.org/2001/XMLSchema#unsignedByte" ||
+                term.type == "http://www.w3.org/2001/XMLSchema#positiveInteger") {
+                var tmp = parseFloat(term.value);
+                if (isNaN(tmp)) {
+                    return false;
+                } else {
+                    return parseFloat(term.value) != 0;
+                }
+            } else if (term.type === "http://www.w3.org/2001/XMLSchema#boolean") {
+                return (term.value === 'true' || term.value === true || term.value === 'True');
+            } else if (term.type === "http://www.w3.org/2001/XMLSchema#string") {
+                return term.value != "";
+            } else if (term.type === "http://www.w3.org/2001/XMLSchema#dateTime") {
+                return (new Date(term.value)) != null;
+            } else if (QueryFilters.isEbvError(term)) {
+                return term;
+            } else if (term.type == null) {
+                if (term.value != "") {
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                return QueryFilters.ebvError();
+            }
         } else {
             return term.value === true;
         }
     }
-}
+};
 
 
 QueryFilters.ebvTrue = function() {
-    val = {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#boolean", value:true};
+    var val = {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#boolean", value:true};
     return val;
 };
 
 QueryFilters.ebvFalse = function() {
-    val = {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#boolean", value:false};
+    var val = {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#boolean", value:false};
     return val;
 };
 
 QueryFilters.ebvError = function() {
-    val = {token: 'literal', type:"https://github.com/antoniogarrote/js-tools/types#error", value:null};
+    var val = {token: 'literal', type:"https://github.com/antoniogarrote/js-tools/types#error", value:null};
     return val;
 };
 
@@ -603,17 +603,17 @@ QueryFilters.isEbvError = function(term) {
     }
 };
 
-QueryFilters.ebvBoolean = function(bool) {    
-    if(QueryFilters.isEbvError(bool)) {
+QueryFilters.ebvBoolean = function (bool) {
+    if (QueryFilters.isEbvError(bool)) {
         return bool;
     } else {
-      if(bool === true) {
-          return QueryFilters.ebvTrue();
-      } else {
-          return QueryFilters.ebvFalse();
-      }
+        if (bool === true) {
+            return QueryFilters.ebvTrue();
+        } else {
+            return QueryFilters.ebvFalse();
+        }
     }
-}
+};
 
 
 QueryFilters.runRelationalFilter = function(filterExpr, op1, op2, bindings, queryEngine, dataset, env) {
@@ -886,7 +886,7 @@ QueryFilters.runEqualityFunction = function(op1, op2, bindings, queryEngine, dat
             return QueryFilters.ebvFalse();
         }
 
-        var comp = Utils.compareDateComponents(op1.value, op2.value)
+        var comp = Utils.compareDateComponents(op1.value, op2.value);
         if(comp != null) {
             if(comp == 0) {
                 return QueryFilters.ebvTrue();
@@ -925,7 +925,7 @@ QueryFilters.runGtFunction = function(op1, op2, bindings) {
             return QueryFilters.ebvFalse();
         }
 
-        var comp = Utils.compareDateComponents(op1.value, op2.value)
+        var comp = Utils.compareDateComponents(op1.value, op2.value);
         if(comp != null) {
             if(comp == 1) {
                 return QueryFilters.ebvTrue();
@@ -994,7 +994,7 @@ QueryFilters.runLtFunction = function(op1, op2, bindings) {
             return QueryFilters.ebvFalse();
         }
 
-        var comp = Utils.compareDateComponents(op1.value, op2.value)
+        var comp = Utils.compareDateComponents(op1.value, op2.value);
         if(comp != null) {
             if(comp == -1) {
                 return QueryFilters.ebvTrue();
@@ -1032,7 +1032,7 @@ QueryFilters.runGtEqFunction = function(op1, op2, bindings) {
             return QueryFilters.ebvFalse();
         }
 
-        var comp = Utils.compareDateComponents(op1.value, op2.value)
+        var comp = Utils.compareDateComponents(op1.value, op2.value);
         if(comp != null) {
             if(comp != -1) {
                 return QueryFilters.ebvTrue();
@@ -1071,7 +1071,7 @@ QueryFilters.runLtEqFunction = function(op1, op2, bindings) {
             return QueryFilters.ebvFalse();
         }
 
-        var comp = Utils.compareDateComponents(op1.value, op2.value)
+        var comp = Utils.compareDateComponents(op1.value, op2.value);
         if(comp != null) {
             if(comp != 1) {
                 return QueryFilters.ebvTrue();

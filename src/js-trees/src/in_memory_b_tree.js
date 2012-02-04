@@ -50,9 +50,9 @@ InMemoryBTree.Tree = function(order) {
  *
  * @returns the new alloacted node
  */
-InMemoryBTree.Tree.prototype._allocateNode = function() {
+InMemoryBTree.Tree.prototype._allocateNode = function () {
     return new InMemoryBTree.Node();
-}
+};
 
 /**
  * _diskWrite
@@ -286,7 +286,7 @@ InMemoryBTree.Tree.prototype._insertNonFull = function(node,key,data) {
         idx--;
     }
 
-    node.keys[idx+1] = {key: key, data:data}
+    node.keys[idx + 1] = {key:key, data:data};
     node.numberActives++;
     this._diskWrite(node);
 };
@@ -473,36 +473,36 @@ InMemoryBTree.Tree.prototype.delete = function(key) {
  * @param i Index of the key in the parent
  * @param position left, or right
  */
-InMemoryBTree.Tree.prototype._moveKey = function(parent,i,position) {
+InMemoryBTree.Tree.prototype._moveKey = function (parent, i, position) {
 
-    if(position===right) {
+    if (position === right) {
         i--;
     }
 
     //var lchild = parent.children[i-1];
     var lchild = this._diskRead(parent.children[i]);
-    var rchild = this._diskRead(parent.children[i+1]);
+    var rchild = this._diskRead(parent.children[i + 1]);
 
 
-    if(position == left) {
+    if (position == left) {
         lchild.keys[lchild.numberActives] = parent.keys[i];
-        lchild.children[lchild.numberActives+1] = rchild.children[0];
+        lchild.children[lchild.numberActives + 1] = rchild.children[0];
         rchild.children[0] = null;
         lchild.numberActives++;
 
         parent.keys[i] = rchild.keys[0];
 
-        for(var _i=1; _i<rchild.numberActives; _i++) {
-            rchild.keys[_i-1] = rchild.keys[_i];
-            rchild.children[_i-1] = rchild.children[_i];
+        for (var _i = 1; _i < rchild.numberActives; _i++) {
+            rchild.keys[_i - 1] = rchild.keys[_i];
+            rchild.children[_i - 1] = rchild.children[_i];
         }
-        rchild.children[rchild.numberActives-1] = rchild.children[rchild.numberActives];
+        rchild.children[rchild.numberActives - 1] = rchild.children[rchild.numberActives];
         rchild.numberActives--;
     } else {
-        rchild.children[rchild.numberActives+1] = rchild.children[rchild.numberActives];
-        for(var _i=rchild.numberActives; _i>0; _i--) {
-            rchild.children[_i] = rchild.children[_i-1];
-            rchild.keys[_i] = rchild.keys[_i-1];
+        rchild.children[rchild.numberActives + 1] = rchild.children[rchild.numberActives];
+        for (var _i = rchild.numberActives; _i > 0; _i--) {
+            rchild.children[_i] = rchild.children[_i - 1];
+            rchild.keys[_i] = rchild.keys[_i - 1];
         }
         rchild.keys[0] = null;
         rchild.children[0] = null;
@@ -512,15 +512,15 @@ InMemoryBTree.Tree.prototype._moveKey = function(parent,i,position) {
         rchild.numberActives++;
 
         lchild.children[lchild.numberActives] = null;
-        parent.keys[i] = lchild.keys[lchild.numberActives-1];
-        lchild.keys[lchild.numberActives-1] = null;
+        parent.keys[i] = lchild.keys[lchild.numberActives - 1];
+        lchild.keys[lchild.numberActives - 1] = null;
         lchild.numberActives--;
     }
 
     this._diskWrite(lchild);
     this._diskWrite(rchild);
     this._diskWrite(parent);
-}
+};
 
 /**
  * _mergeSiblings
@@ -531,17 +531,17 @@ InMemoryBTree.Tree.prototype._moveKey = function(parent,i,position) {
  * @param parent the node whose children will be merged
  * @param i Index of the key in the parent pointing to the nodes to merge
  */
-InMemoryBTree.Tree.prototype._mergeSiblings = function(parent,index,pos) {
-    var i,j;
+InMemoryBTree.Tree.prototype._mergeSiblings = function (parent, index, pos) {
+    var i, j;
     var n1, n2;
 
     if (index === (parent.numberActives)) {
         index--;
-	n1 = this._diskRead(parent.children[parent.numberActives - 1]);
-	n2 = this._diskRead(parent.children[parent.numberActives]);
+        n1 = this._diskRead(parent.children[parent.numberActives - 1]);
+        n2 = this._diskRead(parent.children[parent.numberActives]);
     } else {
         n1 = this._diskRead(parent.children[index]);
-	n2 = this._diskRead(parent.children[index + 1]);
+        n2 = this._diskRead(parent.children[index + 1]);
     }
 
     //Merge the current node with the left node
@@ -549,45 +549,45 @@ InMemoryBTree.Tree.prototype._mergeSiblings = function(parent,index,pos) {
     newNode.isLeaf = n1.isLeaf;
     newNode.level = n1.level;
 
-    for(j=0; j<this.order-1; j++) {
-	newNode.keys[j] = n1.keys[j];
-	newNode.children[j] = n1.children[j];
+    for (j = 0; j < this.order - 1; j++) {
+        newNode.keys[j] = n1.keys[j];
+        newNode.children[j] = n1.children[j];
     }
 
-    newNode.keys[this.order-1] = parent.keys[index];
-    newNode.children[this.order-1] = n1.children[this.order-1];
+    newNode.keys[this.order - 1] = parent.keys[index];
+    newNode.children[this.order - 1] = n1.children[this.order - 1];
 
-    for(j=0; j<this.order-1; j++) {
-	newNode.keys[j+this.order] = n2.keys[j];
-	newNode.children[j+this.order] = n2.children[j];
+    for (j = 0; j < this.order - 1; j++) {
+        newNode.keys[j + this.order] = n2.keys[j];
+        newNode.children[j + this.order] = n2.children[j];
     }
-    newNode.children[2*this.order-1] = n2.children[this.order-1];
+    newNode.children[2 * this.order - 1] = n2.children[this.order - 1];
 
     parent.children[index] = newNode;
 
-    for(j=index; j<parent.numberActives;j++) {
-	parent.keys[j] = parent.keys[j+1];
-	parent.children[j+1] = parent.children[j+2];
+    for (j = index; j < parent.numberActives; j++) {
+        parent.keys[j] = parent.keys[j + 1];
+        parent.children[j + 1] = parent.children[j + 2];
     }
 
-    newNode.numberActives = n1.numberActives + n2.numberActives+1;
+    newNode.numberActives = n1.numberActives + n2.numberActives + 1;
     parent.numberActives--;
 
-    for(i=parent.numberActives; i<2*this.order-1; i++) {
-	parent.keys[i] = null;
+    for (i = parent.numberActives; i < 2 * this.order - 1; i++) {
+        parent.keys[i] = null;
     }
 
     if (parent.numberActives === 0 && this.root === parent) {
-	this.root = newNode;
-	if(newNode.level) {
-	    newNode.isLeaf = false;
-	} else {
-	    newNode.isLeaf = true;
+        this.root = newNode;
+        if (newNode.level) {
+            newNode.isLeaf = false;
+        } else {
+            newNode.isLeaf = true;
         }
     }
 
     this._diskWrite(newNode);
-    if(this.root === newNode) {
+    if (this.root === newNode) {
         this._updateRootNode(this.root);
     }
     this._diskWrite(parent);
@@ -595,7 +595,7 @@ InMemoryBTree.Tree.prototype._mergeSiblings = function(parent,index,pos) {
     this._diskDelete(n2);
 
     return newNode;
-}
+};
 
 /**
  * _deleteKeyFromNode
@@ -606,22 +606,23 @@ InMemoryBTree.Tree.prototype._mergeSiblings = function(parent,index,pos) {
  * @param index The index of the key that will be deletd.
  * @return true if the key can be deleted, false otherwise
  */
-InMemoryBTree.Tree.prototype._deleteKeyFromNode = function(node,index) {
-    var keysMax = (2*this.order)-1;
-    if(node.numberActives < keysMax) {
+InMemoryBTree.Tree.prototype._deleteKeyFromNode = function (node, index) {
+    var keysMax = (2 * this.order) - 1;
+    if (node.numberActives < keysMax) {
         keysMax = node.numberActives;
-    };
+    }
+    ;
 
     var i;
 
-    if(node.isLeaf === false) {
-	return false;
+    if (node.isLeaf === false) {
+        return false;
     }
 
     var key = node.keys[index];
 
-    for(i=index; i<keysMax-1; i++) {
-	node.keys[i] = node.keys[i+1];
+    for (i = index; i < keysMax - 1; i++) {
+        node.keys[i] = node.keys[i + 1];
     }
 
     // cleaning invalid reference
@@ -632,27 +633,27 @@ InMemoryBTree.Tree.prototype._deleteKeyFromNode = function(node,index) {
     this._diskWrite(node);
 
     return true;
-}
+};
 
-InMemoryBTree.Tree.prototype._mergeNodes = function(n1, key, n2) {
+InMemoryBTree.Tree.prototype._mergeNodes = function (n1, key, n2) {
     var newNode;
     var i;
 
     newNode = this._allocateNode();
     newNode.isLeaf = true;
 
-    for(i=0; i<n1.numberActives; i++) {
-	newNode.keys[i]   = n1.keys[i];
-        newNode.children[i]   = n1.children[i];
+    for (i = 0; i < n1.numberActives; i++) {
+        newNode.keys[i] = n1.keys[i];
+        newNode.children[i] = n1.children[i];
     }
     newNode.children[n1.numberActives] = n1.children[n1.numberActives];
     newNode.keys[n1.numberActives] = key;
 
-    for(i=0; i<n2.numberActives; i++) {
-	newNode.keys[i+n1.numberActives+1] = n2.keys[i];
-        newNode.children[i+n1.numberActives+1] = n2.children[i];
+    for (i = 0; i < n2.numberActives; i++) {
+        newNode.keys[i + n1.numberActives + 1] = n2.keys[i];
+        newNode.children[i + n1.numberActives + 1] = n2.children[i];
     }
-    newNode.children[(2*this.order)-1] = n2.children[n2.numberActives];
+    newNode.children[(2 * this.order) - 1] = n2.children[n2.numberActives];
 
     newNode.numberActives = n1.numberActives + n2.numberActives + 1;
     newNode.isLeaf = n1.isLeaf;
@@ -663,7 +664,7 @@ InMemoryBTree.Tree.prototype._mergeNodes = function(n1, key, n2) {
     // @todo
     // delte old nodes from disk
     return newNode;
-}
+};
 
 /**
  * audit
@@ -671,16 +672,16 @@ InMemoryBTree.Tree.prototype._mergeNodes = function(n1, key, n2) {
  * Checks that the tree data structure is
  * valid.
  */
-InMemoryBTree.Tree.prototype.audit = function(showOutput) {
+InMemoryBTree.Tree.prototype.audit = function (showOutput) {
     var errors = [];
     var alreadySeen = [];
     var that = this;
 
-    var foundInArray = function(data) {
-        for(var i=0; i<alreadySeen.length; i++) {
-            if(that.comparator(alreadySeen[i],data)===0) {
+    var foundInArray = function (data) {
+        for (var i = 0; i < alreadySeen.length; i++) {
+            if (that.comparator(alreadySeen[i], data) === 0) {
                 var error = " !!! duplicated key " + data;
-                if(showOutput===true) {
+                if (showOutput === true) {
                     console.log(error);
                 }
                 errors.push(error);
@@ -690,25 +691,25 @@ InMemoryBTree.Tree.prototype.audit = function(showOutput) {
 
     var length = null;
     var that = this;
-    this.walkNodes(function(n) {
-        if(showOutput === true) {
-          console.log("--- Node at "+ n.level + " level");
-          console.log(" - leaf? " + n.isLeaf);
-          console.log(" - num actives? " + n.numberActives);
-          console.log(" - keys: ");
+    this.walkNodes(function (n) {
+        if (showOutput === true) {
+            console.log("--- Node at " + n.level + " level");
+            console.log(" - leaf? " + n.isLeaf);
+            console.log(" - num actives? " + n.numberActives);
+            console.log(" - keys: ");
         }
-        for(var i = n.numberActives ; i<n.keys.length; i++) {
-            if(n.keys[i] != null) {
-                if(showOutput===true) {
+        for (var i = n.numberActives; i < n.keys.length; i++) {
+            if (n.keys[i] != null) {
+                if (showOutput === true) {
                     console.log(" * warning : redundant key data");
                     errors.push(" * warning : redundant key data");
                 }
             }
         }
 
-        for(var i = n.numberActives+1 ; i<n.children.length; i++) {
-            if(n.children[i] != null) {
-                if(showOutput===true) {
+        for (var i = n.numberActives + 1; i < n.children.length; i++) {
+            if (n.children[i] != null) {
+                if (showOutput === true) {
                     console.log(" * warning : redundant children data");
                     errors.push(" * warning : redundant key data");
                 }
@@ -716,46 +717,46 @@ InMemoryBTree.Tree.prototype.audit = function(showOutput) {
         }
 
 
-        if(n.isLeaf === false) {
-          for(var i=0; i<n.numberActives; i++) {
-              var maxLeft = that._diskRead(n.children[i]).keys[that._diskRead(n.children[i]).numberActives -1 ].key
-              var minRight = that._diskRead(n.children[i+1]).keys[0].key
-              if(showOutput===true) {
-                  console.log("   "+n.keys[i].key + "(" + maxLeft + "," + minRight+ ")");
-              }
-              if(that.comparator(n.keys[i].key,maxLeft)===-1) {
-                  var error = " !!! value max left " + maxLeft + " > key " + n.keys[i].key;
-                  if(showOutput===true) {
-                      console.log(error);
-                  }
-                  errors.push(error);
-              }
-              if(that.comparator(n.keys[i].key,minRight)===1) {
-                  var error = " !!! value min right " + minRight + " < key " + n.keys[i].key;
-                  if(showOutput===true) {
-                      console.log(error);
-                  }
-                  errors.push(error);
-              }
+        if (n.isLeaf === false) {
+            for (var i = 0; i < n.numberActives; i++) {
+                var maxLeft = that._diskRead(n.children[i]).keys[that._diskRead(n.children[i]).numberActives - 1 ].key;
+                var minRight = that._diskRead(n.children[i + 1]).keys[0].key;
+                if (showOutput === true) {
+                    console.log("   " + n.keys[i].key + "(" + maxLeft + "," + minRight + ")");
+                }
+                if (that.comparator(n.keys[i].key, maxLeft) === -1) {
+                    var error = " !!! value max left " + maxLeft + " > key " + n.keys[i].key;
+                    if (showOutput === true) {
+                        console.log(error);
+                    }
+                    errors.push(error);
+                }
+                if (that.comparator(n.keys[i].key, minRight) === 1) {
+                    var error = " !!! value min right " + minRight + " < key " + n.keys[i].key;
+                    if (showOutput === true) {
+                        console.log(error);
+                    }
+                    errors.push(error);
+                }
 
-              foundInArray(n.keys[i].key);
-              alreadySeen.push(n.keys[i].key);
-          }
+                foundInArray(n.keys[i].key);
+                alreadySeen.push(n.keys[i].key);
+            }
         } else {
-            if(length === null) {
+            if (length === null) {
                 length = n.level;
             } else {
-                if(length != n.level) {
+                if (length != n.level) {
                     var error = " !!! Leaf node with wrong level value";
-                    if(showOutput===true) {
+                    if (showOutput === true) {
                         console.log(error);
                     }
                     errors.push(error);
                 }
             }
-            for(var i=0 ; i<n.numberActives; i++) {
-                if(showOutput===true) {
-                    console.log(" "+n.keys[i].key);
+            for (var i = 0; i < n.numberActives; i++) {
+                if (showOutput === true) {
+                    console.log(" " + n.keys[i].key);
                 }
                 foundInArray(n.keys[i].key);
                 alreadySeen.push(n.keys[i].key);
@@ -763,16 +764,16 @@ InMemoryBTree.Tree.prototype.audit = function(showOutput) {
             }
         }
 
-        if(n != that.root) {
-            if(n.numberActives > ((2*that.order) -1)) {
-                if(showOutput===true) {
+        if (n != that.root) {
+            if (n.numberActives > ((2 * that.order) - 1)) {
+                if (showOutput === true) {
                     var error = " !!!! MAX num keys restriction violated ";
                 }
                 console.log(error);
                 errors.push(error);
             }
-            if(n.numberActives < (that.order -1)) {
-                if(showOutput===true) {
+            if (n.numberActives < (that.order - 1)) {
+                if (showOutput === true) {
                     var error = " !!!! MIN num keys restriction violated ";
                 }
                 console.log(error);
@@ -783,7 +784,7 @@ InMemoryBTree.Tree.prototype.audit = function(showOutput) {
     });
 
     return errors;
-}
+};
 
 /**
  *  _getMaxKeyPos
@@ -791,27 +792,27 @@ InMemoryBTree.Tree.prototype.audit = function(showOutput) {
  *  Used to get the position of the MAX key within the subtree
  *  @return An object containing the key and position of the key
  */
-InMemoryBTree.Tree.prototype._getMaxKeyPos = function(node) {
+InMemoryBTree.Tree.prototype._getMaxKeyPos = function (node) {
     var node_pos = {};
 
-    while(true) {
-	if(node === null) {
-	    break;
-	}
+    while (true) {
+        if (node === null) {
+            break;
+        }
 
-	if(node.isLeaf === true) {
-	    node_pos.node  = node;
-	    node_pos.index = node.numberActives - 1;
-	    return node_pos;
-	} else {
-	    node_pos.node  = node;
-	    node_pos.index = node.numberActives - 1;
-	    node = this._diskRead(node.children[node.numberActives]);
-	}
+        if (node.isLeaf === true) {
+            node_pos.node = node;
+            node_pos.index = node.numberActives - 1;
+            return node_pos;
+        } else {
+            node_pos.node = node;
+            node_pos.index = node.numberActives - 1;
+            node = this._diskRead(node.children[node.numberActives]);
+        }
     }
 
     return node_pos;
-}
+};
 
 /**
  *  _getMinKeyPos
@@ -819,27 +820,27 @@ InMemoryBTree.Tree.prototype._getMaxKeyPos = function(node) {
  *  Used to get the position of the MAX key within the subtree
  *  @return An object containing the key and position of the key
  */
-InMemoryBTree.Tree.prototype._getMinKeyPos = function(node) {
+InMemoryBTree.Tree.prototype._getMinKeyPos = function (node) {
     var node_pos = {};
 
-    while(true) {
-	if(node === null) {
-	    break;
-	}
+    while (true) {
+        if (node === null) {
+            break;
+        }
 
-	if(node.isLeaf === true) {
-	    node_pos.node  = node;
-	    node_pos.index = 0;
-	    return node_pos;
-	} else {
-	    node_pos.node  = node;
-	    node_pos.index = 0;
-	    node = this._diskRead(node.children[0]);
-	}
+        if (node.isLeaf === true) {
+            node_pos.node = node;
+            node_pos.index = 0;
+            return node_pos;
+        } else {
+            node_pos.node = node;
+            node_pos.index = 0;
+            node = this._diskRead(node.children[0]);
+        }
     }
 
     return node_pos;
-}
+};
 
 
 /**

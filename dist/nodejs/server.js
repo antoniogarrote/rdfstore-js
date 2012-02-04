@@ -236,7 +236,7 @@ Server.start = function() {
 
                 if(toLoad === 'stdin') {
                     var mediaType = options['media-type'];
-                    if(mediaType == null) {
+                    if(mediaType != null) {
                         var data = "";
                         process.stdin.resume();
                         process.stdin.setEncoding('utf8');
@@ -262,7 +262,7 @@ Server.start = function() {
                 } else {
                     if(toLoad.indexOf("file:/")==0) {
                         var mediaType = options['media-type'];
-                        if(mediaType == null) {
+                        if(mediaType != null) {
                             if(dstGraph != null) {
                                 Server.store.load(mediaType, toLoad, dstGraph, function(){
                                     process.exit(0);
@@ -321,10 +321,10 @@ Server.mediaTypes = function(request) {
 /**
  * Escapes XML chars
  */
-Server.xmlEncode = function(data) {
-    return data.replace(/\&/g,'&'+'amp;').replace(/</g,'&'+'lt;')
-        .replace(/>/g,'&'+'gt;').replace(/\'/g,'&'+'apos;').replace(/\"/g,'&'+'quot;');
-}
+Server.xmlEncode = function (data) {
+    return data.replace(/\&/g, '&' + 'amp;').replace(/</g, '&' + 'lt;')
+        .replace(/>/g, '&' + 'gt;').replace(/\'/g, '&' + 'apos;').replace(/\"/g, '&' + 'quot;');
+};
 
 /**
  * Adds a coercion annotation to a json-ld object
@@ -493,7 +493,6 @@ Server.routeRequest = function(options) {
                 req.data = data;
 
                 var handler = null;
-                var components = null;
 
                 for(var path in routes) {
                     var handlerString = routes[path];
@@ -662,7 +661,7 @@ Server.buildResponseBindings = function(mediaTypes, bindings, res) {
                 if(result[p].token === 'uri') {
                     nextResult = nextResult+"<uri>"+result[p].value+"</uri>";
                 } else if(result[p].token === 'literal') {
-                    nextResult = nextResult+"<literal";
+                    nextResult = nextResult+"<literal>";
                     if(result[p].lang != null ) {
                         nextResult = nextResult + ' xml:lang="'+result[p].lang+'" ';
                     }
@@ -673,7 +672,7 @@ Server.buildResponseBindings = function(mediaTypes, bindings, res) {
                 } else {
                     nextResult = nextResult+"<bnode>"+result[p].value+"</bnode>";
                 }
-                nextResult + nextResult+'</binding>';
+                nextResult = nextResult+'</binding>';
             }
 
             nextResult = nextResult+'</result>';
@@ -681,7 +680,7 @@ Server.buildResponseBindings = function(mediaTypes, bindings, res) {
         }
         results = results + '</results>';
 
-        var head = '<head>'
+        var head = '<head>';
         for(var varName in varNames) {
             head = head + '<variable name="'+Server.xmlEncode(varName)+'"/>';
         }

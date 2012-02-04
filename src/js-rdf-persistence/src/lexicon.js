@@ -10,7 +10,7 @@ var QuadIndexCommon = require("./quad_index_common").QuadIndexCommon;
  */
 
 
-Lexicon.Lexicon = function(callback, _name){
+Lexicon.Lexicon = function(callback){
     this.uriToOID = {};
     this.OIDToUri = {};
 
@@ -57,7 +57,7 @@ Lexicon.Lexicon.prototype.registerUri = function(uri) {
     if(uri === this.defaultGraphUri) {
         return(this.defaultGraphOid);
     } else if(this.uriToOID[uri] == null){
-        var oid = this.oidCounter
+        var oid = this.oidCounter;
         var oidStr = 'u'+oid;
         this.oidCounter++;
 
@@ -143,23 +143,23 @@ Lexicon.Lexicon.prototype.registerLiteral = function(literal) {
     }
 };
 
-Lexicon.Lexicon.prototype.resolveLiteral = function(literal) {
+Lexicon.Lexicon.prototype.resolveLiteral = function (literal) {
     var oidCounter = this.literalToOID[literal];
-    if(oidCounter != null ) {
-        return(oidCounter[0]); 
+    if (oidCounter != null) {
+        return(oidCounter[0]);
     } else {
-        return(-1); 
+        return(-1);
     }
-}
+};
 
-Lexicon.Lexicon.prototype.resolveLiteralCost = function(literal) {
+Lexicon.Lexicon.prototype.resolveLiteralCost = function (literal) {
     var oidCounter = this.literalToOID[literal];
-    if(oidCounter != null ) {
-        return(oidCounter[1]); 
+    if (oidCounter != null) {
+        return(oidCounter[1]);
     } else {
-        return(0); 
+        return(0);
     }
-}
+};
 
 
 Lexicon.Lexicon.prototype.parseLiteral = function(literalString) {
@@ -241,63 +241,63 @@ Lexicon.Lexicon.prototype.clear = function() {
     this.OIDToBlank = {};
 };
 
-Lexicon.Lexicon.prototype.unregister = function(quad, key) {
+Lexicon.Lexicon.prototype.unregister = function (quad, key) {
     try {
         this.unregisterTerm(quad.subject.token, key.subject);
         this.unregisterTerm(quad.predicate.token, key.predicate);
         this.unregisterTerm(quad.object.token, key.object);
-        if(quad.graph!=null) {
-            this.unregisterTerm(quad.graph.token, key.graph); 
+        if (quad.graph != null) {
+            this.unregisterTerm(quad.graph.token, key.graph);
         }
         return(true);
-    } catch(e) {
+    } catch (e) {
         console.log("Error unregistering quad");
         console.log(e.message);
         return(false);
     }
-}
+};
 
-Lexicon.Lexicon.prototype.unregisterTerm = function(kind, oid) {
-    if(kind === 'uri') {
-        if(oid != this.defaultGraphOid) {
-            var oidStr = 'u'+oid;
+Lexicon.Lexicon.prototype.unregisterTerm = function (kind, oid) {
+    if (kind === 'uri') {
+        if (oid != this.defaultGraphOid) {
+            var oidStr = 'u' + oid;
             var uri = this.OIDToUri[oidStr];     // = uri;
             var oidCounter = this.uriToOID[uri]; // =[oid, 0];
-            
+
             var counter = oidCounter[1];
-            if(""+oidCounter[0] === ""+oid) {
-                if(counter === 0) {
+            if ("" + oidCounter[0] === "" + oid) {
+                if (counter === 0) {
                     delete this.OIDToUri[oidStr];
                     delete this.uriToOID[uri];
                     // delete the graph oid from known graphs
                     // in case this URI is a graph identifier
                     delete this.knownGraphs[oid];
                 } else {
-                    this.uriToOID[uri] = [oid, counter-1];
+                    this.uriToOID[uri] = [oid, counter - 1];
                 }
             } else {
-                throw("Not matching OID : "+oid+" vs "+ oidCounter[0]);
+                throw("Not matching OID : " + oid + " vs " + oidCounter[0]);
             }
         }
-    } else if(kind === 'literal') {
+    } else if (kind === 'literal') {
         this.oidCounter++;
-        var oidStr     =  'l'+ oid;
-        var literal    = this.OIDToLiteral[oidStr];  // = literal;
+        var oidStr = 'l' + oid;
+        var literal = this.OIDToLiteral[oidStr];  // = literal;
         var oidCounter = this.literalToOID[literal]; // = [oid, 0];
-        
+
         var counter = oidCounter[1];
-        if(""+oidCounter[0] === ""+oid) {
-            if(counter === 0) {
+        if ("" + oidCounter[0] === "" + oid) {
+            if (counter === 0) {
                 delete this.OIDToLiteral[oidStr];
                 delete this.literalToOID[literal];
             } else {
-                this.literalToOID[literal] = [oid, counter-1];
+                this.literalToOID[literal] = [oid, counter - 1];
             }
         } else {
-            throw("Not matching OID : "+oid+" vs "+ oidCounter[0]);
+            throw("Not matching OID : " + oid + " vs " + oidCounter[0]);
         }
 
-    } else if(kind === 'blank') {
-        delete this.OIDToBlank[""+oid];
+    } else if (kind === 'blank') {
+        delete this.OIDToBlank["" + oid];
     }
-}
+};

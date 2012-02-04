@@ -286,9 +286,9 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.removeDefaultGraphBindings = fun
     for(var i=0; i<dataset.named.length; i++) {
         namedDatasetsMap[dataset.named[i].oid] = true;
     }
-    for(i=0; i<dataset.default.length; i++) {
-        if(namedDatasetsMap[dataset.default[i].oid] == null) {
-            onlyDefaultDatasets.push(dataset.default[i].oid);
+    for(i=0; i<dataset.implicit.length; i++) {
+        if(namedDatasetsMap[dataset.implicit[i].oid] == null) {
+            onlyDefaultDatasets.push(dataset.implicit[i].oid);
         }
     }
     var acum = [];
@@ -334,7 +334,6 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.projectBindings = function(proje
     if(projection[0].kind === '*'){
         return results;
     } else {
-        var toProject = [];
         var projectedResults = [];
 
         for(var i=0; i<results.length; i++) {
@@ -464,7 +463,7 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.normalizeQuad = function(quad, q
     if(quad.graph == null) {
         graph = this.defaultGraphOid;
     } else {
-        oid = this.normalizeTerm(quad.graph, queryEnv, shouldIndex)
+        oid = this.normalizeTerm(quad.graph, queryEnv, shouldIndex);
         if(oid!=null) {
             graph = oid;
             //if(shouldIndex === true)
@@ -822,16 +821,16 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.executeSelect = function(unit, e
         var that = this;
 
         if(defaultDataset != null || namedDataset != null) {
-            dataset.default = defaultDataset || [];
+            dataset.implicit = defaultDataset || [];
             dataset.named   = namedDataset || [];
         } 
 
-        if(dataset.default != null && dataset.default.length === 0 && dataset.named !=null && dataset.named.length === 0) {
-            // We add the default graph to the default merged graph
-            dataset.default.push(this.defaultGraphUriTerm);
+        if(dataset.implicit != null && dataset.implicit.length === 0 && dataset.named !=null && dataset.named.length === 0) {
+            // We add the implicit graph to the implicit merged graph
+            dataset.implicit.push(this.defaultGraphUriTerm);
         }
 
-        if (that.normalizeDatasets(dataset.default.concat(dataset.named), env) != null) {
+        if (that.normalizeDatasets(dataset.implicit.concat(dataset.named), env) != null) {
             that.executeSelectUnit(projection, dataset, unit.pattern, env, function(success, result){
                 if(success) {
                     // detect single group
@@ -855,7 +854,7 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.executeSelect = function(unit, e
                             var foundError = false;
                             
                             for(var i=0; i<groupedBindings.length; i++) {
-                                var resultingBindings = that.aggregateBindings(projection, groupedBindings[i], dataset, env)
+                                var resultingBindings = that.aggregateBindings(projection, groupedBindings[i], dataset, env);
                                 aggregatedBindings.push(resultingBindings);
                             }
                             callback(true, {'bindings': aggregatedBindings, 'denorm':true});
@@ -863,11 +862,11 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.executeSelect = function(unit, e
                             callback(false, "Incompatible Group and Projection variables");
                         }
                     } else {
-                        var orderedBindings = that.applyOrderBy(order, result, dataset, env)
+                        var orderedBindings = that.applyOrderBy(order, result, dataset, env);
                         var projectedBindings = that.projectBindings(projection, orderedBindings);
-                        modifiedBindings = that.applyModifier(modifier, projectedBindings);
+                        var modifiedBindings = that.applyModifier(modifier, projectedBindings);
                         var limitedBindings  = that.applyLimitOffset(offset, limit, modifiedBindings);
-                        filteredBindings = that.removeDefaultGraphBindings(limitedBindings, dataset);
+                        var filteredBindings = that.removeDefaultGraphBindings(limitedBindings, dataset);
                                 
                         callback(true, filteredBindings);
                     }
@@ -1144,7 +1143,7 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.executeZeroOrMorePath = function
 	    k((e.initial == true || e.pending.length !== 0),floop,e);
 	};
 
-	Utils.while((data.initial == true || data.pending.length !== 0),
+	Utils.meanwhile((data.initial == true || data.pending.length !== 0),
 		    function(k,e) {
 			var floop = arguments.callee;
 			//console.log("-- Iteration");
@@ -1298,8 +1297,8 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.executeLEFT_JOIN = function(proj
                     vars.push(p);
                 }
             }
-            acum = [];
-            duplicates = {};
+            var acum = [];
+            var duplicates = {};
             for(var i=0; i<bindings.length; i++) {
                 if(bindings[i]["__nullify__"] === true) {
                     for(var j=0; j<vars.length; j++) {
@@ -1539,9 +1538,17 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.batchLoad = function(quads, call
             // subject
             if(quad.subject['uri'] || quad.subject.token === 'uri') {
                 oid = that.registerUri(quad.subject.uri || quad.subject.value);
+		if(quad.subject.uri != null) {
+		    quad.subject = {'token': 'uri', 'value': quad.subject.uri};
+		    delete quad.subject['uri'];
+		}
                 subject = oid;
             } else if(quad.subject['literal'] || quad.subject.token === 'literal') {
                 oid = that.registerLiteral(quad.subject.literal || quad.subject.value);
+		if(quad.subject.literal != null) {
+		    quad.subject = this.lexicon.parseLiteral(quad.subject.literal);
+		    delete quad.subject['literal'];
+		}
                 subject = oid;                    
             } else {
                 maybeBlankOid = blanks[quad.subject.blank || quad.subject.value];
@@ -1552,15 +1559,28 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.batchLoad = function(quads, call
 
                     blanks[(quad.subject.blank || quad.subject.value)] = maybeBlankOid;
                 }
+		if(quad.subject.token == null) {
+		    quad.subject.token = 'blank';
+		    quad.subject.value = quad.subject.blank;
+		    delete quad.subject['blank'];
+		}
                 subject = maybeBlankOid;
             }
 
             // predicate
             if(quad.predicate['uri'] || quad.predicate.token === 'uri') {
                 oid = that.registerUri(quad.predicate.uri || quad.predicate.value);
+		if(quad.predicate.uri != null) {
+		    quad.predicate = {'token': 'uri', 'value': quad.predicate.uri};
+		    delete quad.subject['uri'];
+		}
                 predicate = oid;
             } else if(quad.predicate['literal'] || quad.predicate.token === 'literal') {
                 oid = that.registerLiteral(quad.predicate.literal || quad.predicate.value);
+		if(quad.predicate.literal != null) {
+		    quad.predicate = this.lexicon.parseLiteral(quad.predicate.literal);
+		    delete quad.predicate['literal'];
+		}
                 predicate = oid;                    
             } else {
                 maybeBlankOid = blanks[quad.predicate.blank || quad.predicate.value];
@@ -1571,16 +1591,29 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.batchLoad = function(quads, call
 
                     blanks[(quad.predicate.blank || quad.predicate.value)] = maybeBlankOid;
                 }
+		if(quad.predicate.token == null) {
+		    quad.predicate.token = 'blank';
+		    quad.predicate.value = quad.predicate.blank;
+		    delete quad.predicate['blank'];
+		}
                 predicate = maybeBlankOid;
             }
 
             // object
             if(quad.object['uri'] || quad.object.token === 'uri') {
                 oid = that.registerUri(quad.object.uri || quad.object.value);
-                object = oid;
+                if(quad.object.uri != null) {
+		    quad.object = {'token': 'uri', 'value': quad.object.uri};
+		    delete quad.subject['uri'];
+		}
+		object = oid;
             } else if(quad.object['literal'] || quad.object.token === 'literal') {
                 oid = that.registerLiteral(quad.object.literal || quad.object.value);
-                object = oid;                    
+                if(quad.object.literal != null) {
+		    quad.object = that.lexicon.parseLiteral(quad.object.literal);
+		    delete quad.object['literal'];
+		}
+		object = oid;                    
             } else {
                 maybeBlankOid = blanks[quad.object.blank || quad.object.value];
                 if(maybeBlankOid == null) {
@@ -1590,6 +1623,11 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.batchLoad = function(quads, call
 
                     blanks[(quad.object.blank || quad.object.value)] = maybeBlankOid;
                 }
+		if(quad.object.token == null) {
+		    quad.object.token = 'blank';
+		    quad.object.value = quad.object.blank;
+		    delete quad.object['blank'];
+		}
                 object = maybeBlankOid;
             }
 
@@ -1597,11 +1635,19 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.batchLoad = function(quads, call
             if(quad.graph['uri'] || quad.graph.token === 'uri') {
                 oid = that.registerUri(quad.graph.uri || quad.graph.value);
                 //that.registerGraph(oid);
-                graph = oid;
+                if(quad.graph.uri != null) {
+		    quad.graph = {'token': 'uri', 'value': quad.graph.uri};
+		    delete quad.subject['uri'];
+		}
+		graph = oid;
                 
             } else if(quad.graph['literal'] || quad.graph.token === 'literal') {
                 oid = that.registerLiteral(quad.graph.literal || quad.graph.value);
-                graph = oid;                    
+                if(quad.predicate.literal != null) {
+		    quad.predicate = this.lexicon.parseLiteral(quad.predicate.literal);
+		    delete quad.predicate['literal'];
+		}
+		graph = oid;                    
             } else {
                 maybeBlankOid = blanks[quad.graph.blank || quad.graph.value];
                 if(maybeBlankOid == null) {
@@ -1611,6 +1657,11 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.batchLoad = function(quads, call
 
                     blanks[(quad.graph.blank || quad.graph.value)] = maybeBlankOid;
                 }
+		if(quad.graph.token == null) {
+		    quad.graph.token = 'blank';
+		    quad.graph.value = quad.graph.blank;
+		    delete quad.graph['blank'];
+		}
                 graph = maybeBlankOid;
             }
 
@@ -1796,7 +1847,7 @@ MongodbQueryEngine.MongodbQueryEngine.prototype._executeModifyQuery = function(a
 
 MongodbQueryEngine.MongodbQueryEngine.prototype._executeQuadInsert = function(quad, queryEnv, callback) {
     var that = this;
-    var normalized = this.normalizeQuad(quad, queryEnv, true)
+    var normalized = this.normalizeQuad(quad, queryEnv, true);
     if(normalized != null) {
         that.search(normalized,function(result) {
             if(result){

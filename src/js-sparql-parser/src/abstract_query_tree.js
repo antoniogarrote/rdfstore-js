@@ -12,12 +12,12 @@ var Utils = require("./../../js-trees/src/utils").Utils;
  * Based on <http://www.w3.org/2001/sw/DataAccess/rq23/rq24-algebra.html>
  * W3C's note
  */
-AbstractQueryTree.AbstractQueryTree = function(params) {
+AbstractQueryTree.AbstractQueryTree = function() {
 };
 
 AbstractQueryTree.AbstractQueryTree.prototype.parseQueryString = function(query_string) {
-    var syntaxTree  = SparqlParser.parser.parse(query_string);
-    return syntaxTree;
+    //noinspection UnnecessaryLocalVariableJS,UnnecessaryLocalVariableJS
+    return SparqlParser.parser.parse(query_string);
 };
 
 AbstractQueryTree.AbstractQueryTree.prototype.parseExecutableUnit = function(executableUnit) {
@@ -95,7 +95,7 @@ AbstractQueryTree.AbstractQueryTree.prototype.build = function(node, env) {
 };
 
 AbstractQueryTree.translatePathExpressionsInBGP = function(bgp, env) {
-    var pathExpression,nextTriple,beforeToLink;
+    var pathExpression;
     var before = [], rest, bottomJoin;
     for(var i=0; i<bgp.value.length; i++) {
 	if(bgp.value[i].predicate && bgp.value[i].predicate.token === 'path') {
@@ -135,7 +135,6 @@ AbstractQueryTree.translatePathExpressionsInBGP = function(bgp, env) {
 			}
 		    } else if(bgpTransformed.y.token === 'var' && bgpTransformed.y.value.indexOf("fresh:")===0) {
 			//console.log("ADDING EXTRA PATTERN 2)");
-			var from, to;
 			for(var j=0; j<bgp.value.length; j++) {
 		   	    //console.log(bgp.value[j]);
 		   	    if(bgp.value[j].subject && bgp.value[j].subject.token === 'var' && bgp.value[j].subject.value === bgpTransformed.y.value) {

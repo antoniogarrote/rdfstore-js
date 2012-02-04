@@ -125,11 +125,16 @@ Callbacks.CallbacksBackend.prototype.dispatchNotifications = function(notificati
         var callback = this.callbacksMap[callbackId];
         var deleted = notificationsMap[callbackId][Callbacks['deleted']];
         if(deleted!=null) {
-            callback(Callbacks['deleted'],deleted);
+            try {
+                callback(Callbacks['deleted'],deleted);
+            }catch(e){}
         }
         for(var event in notificationsMap[callbackId]) {
             if(event!=Callbacks['deleted']) {
-                callback(event, notificationsMap[callbackId][event]);
+                try{
+                    callback(event, notificationsMap[callbackId][event]);
+                }catch(e){}
+
             }
         }
     }
@@ -274,7 +279,7 @@ Callbacks.CallbacksBackend.prototype._indexForPattern = function(pattern) {
         }
     }
     
-    return 'SPOG' // If no other match, we return the most generic index
+    return 'SPOG'; // If no other match, we return the most generic index
 };
 
 Callbacks.CallbacksBackend.prototype.observeNode = function() {
@@ -303,7 +308,9 @@ Callbacks.CallbacksBackend.prototype.observeNode = function() {
             var observer = function(event, triples){
                 if(event === 'eventsFlushed' && mustFlush ) {
                     mustFlush = false;
-                    callback(node);
+                    try {
+                        callback(node);
+                    }catch(e){}
                 } else if(event !== 'eventsFlushed') {
                     mustFlush = true;
                     for(var i = 0; i<triples.length; i++) {
@@ -325,7 +332,10 @@ Callbacks.CallbacksBackend.prototype.observeNode = function() {
             that.observersMap[callback] = observer;
             that.subscribeEmpty(Callbacks['eventsFlushed'], observer);
             that.subscribe(uri,null,null,null,observer,function(){
-                callback(node);
+                try {
+                    callback(node);
+                }catch(e){}
+
                 if(doneCallback)
                     doneCallback(true)
             });
@@ -463,7 +473,9 @@ Callbacks.CallbacksBackend.prototype.dispatchQueries = function(callback) {
                          that.engine.execute(query, 
                                              function(success, results){
                                                  if(success) {
-                                                     queryCallback(results);
+                                                     try{
+                                                         queryCallback(results);
+                                                     } catch(e){}
                                                  } else {
                                                      console.log("ERROR executing query callback "+results);
                                                  }

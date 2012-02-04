@@ -14,7 +14,7 @@ QueryPlan.variablesInBGP = function(bgp) {
 
     var components =  bgp.value || bgp;
     var variables  = [];
-    for(comp in components) {
+    for(var comp in components) {
         if(components[comp] && components[comp].token === "var") {
             variables.push(components[comp].value);
         } else if(components[comp] && components[comp].token === "blank") {
@@ -68,7 +68,7 @@ QueryPlan.buildBushyJoinTreeBase = function(pairs, dataset, queryEngine, queryEn
         var pair = pairs[i];
         var bgpa = pair[0];
         var bgpb = pair[1];
-        results = QueryPlan.executeAndBGP(bgpa,bgpb, dataset, queryEngine, queryEnv);
+        var results = QueryPlan.executeAndBGP(bgpa,bgpb, dataset, queryEngine, queryEnv);
         if(results!=null) {
             acum.push(results);
 
@@ -159,15 +159,16 @@ QueryPlan.executeBGPDatasets = function(bgp, dataset, queryEngine, queryEnv) {
     if(bgp.graph == null) {
         //union through all default graph(s)
         var acum = [];
-        for(var i=0; i<dataset.default.length; i++) {
-            if(duplicates[dataset.default[i].oid] == null) {
-                duplicates[dataset.default[i].oid] = true;
-                bgp.graph = dataset.default[i];//.oid
+        for (var i = 0; i < dataset.implicit.length; i++) {
+            if (duplicates[dataset.implicit[i].oid] == null) {
+                duplicates[dataset.implicit[i].oid] = true;
+                bgp.graph = dataset.implicit[i];//.oid
                 var results = queryEngine.rangeQuery(bgp, queryEnv);
                 results = QueryPlan.buildBindingsFromRange(results, bgp);
                 acum.push(results);
             }
         }
+        ;
         var acumBindings = QueryPlan.unionManyBindings(acum);
         return acumBindings;
     } else if(bgp.graph.token === 'var') {

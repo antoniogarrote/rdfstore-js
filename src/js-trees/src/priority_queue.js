@@ -16,12 +16,11 @@ PriorityQueue.PriorityQueue = function(options) {
     var sortStyle;
     var maxSize = options.maxSize || 10;
 
-    var prioritySortLow = function(a, b) {
+    //noinspection UnnecessaryLocalVariableJS
+    sortStyle = function(a, b) {
         return store[b].priority - store[a].priority;
     };
 
-
-    sortStyle = prioritySortLow;
 
     /**
      * @private
@@ -44,7 +43,7 @@ PriorityQueue.PriorityQueue = function(options) {
                 if(store[pointer] == null) {
                     delete store[contents[0]];
                     contents[0] = pointer;
-                    priority = (store[contents[contents.length - 1]].priority) - 1;
+                    var priority = (store[contents[contents.length - 1]].priority) - 1;
                     store[pointer] = {object: object, priority: priority};
                     sorted = false;
                 } else {
@@ -56,7 +55,7 @@ PriorityQueue.PriorityQueue = function(options) {
                 contents.push(pointer);
                 store[pointer] = {object: object, priority: 1000};
             } else  {
-                priority = (store[contents[contents.length - 1]].priority) - 1
+                priority = (store[contents[contents.length - 1]].priority) - 1;
                 if(store[pointer] == null) {
                     store[pointer] = {object: object, priority: priority};
                     contents.push(pointer);
@@ -90,7 +89,7 @@ PriorityQueue.PriorityQueue = function(options) {
                 if(!sorted) {
                     sort();
                 }
-                priority = (store[contents[contents.length - 1]].priority) - 1;
+                var priority = (store[contents[contents.length - 1]].priority) - 1;
                 store[pointer].priority = priority;
                 sorted = false;
                 return obj.object;

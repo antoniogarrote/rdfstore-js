@@ -40,16 +40,15 @@ QuadIndexCommon.NodeKey.prototype.comparator = function(keyPattern) {
  *
  * A pattern with some variable components
  */
-QuadIndexCommon.Pattern = function(components) {
+QuadIndexCommon.Pattern = function (components) {
     this.subject = components.subject;
     this.predicate = components.predicate;
     this.object = components.object;
     this.graph = components.graph;
     this.indexKey = [];
 
-    this.keyComponents = {}
+    this.keyComponents = {};
 
-    var ks,ko,kp;
     var order = [];
     var indif = [];
     var components = ['subject', 'predicate', 'object', 'graph'];
@@ -58,8 +57,8 @@ QuadIndexCommon.Pattern = function(components) {
     // inserted in the lexicon.
     // OIDs retrieved from the lexicon *are* numbers so
     // they can be told apart from variables (strings)
-    for(var i=0; i<components.length; i++) {
-        if(typeof(this[components[i]]) === 'string') {
+    for (var i = 0; i < components.length; i++) {
+        if (typeof(this[components[i]]) === 'string') {
             indif.push(components[i]);
             this.keyComponents[components[i]] = null;
         } else {
@@ -71,4 +70,4 @@ QuadIndexCommon.Pattern = function(components) {
 
     this.order = order.concat(indif);
     this.key = new QuadIndexCommon.NodeKey(this.keyComponents, this.order);
-}
+};

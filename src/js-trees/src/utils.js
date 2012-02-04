@@ -75,7 +75,7 @@ Utils.repeat = function(c,max,floop,fend,env) {
 };
 
 
-Utils.while = function(c,floop,fend,env) {
+Utils.meanwhile = function(c,floop,fend,env) {
     if(arguments.length===3) { env = {}; }
 
     if(env['_stack_counter'] == null) {
@@ -86,10 +86,10 @@ Utils.while = function(c,floop,fend,env) {
         floop(function(c,floop,env){
             if(env['_stack_counter'] % 40 == 39) {
                 env['_stack_counter'] = env['_stack_counter'] + 1;
-                setTimeout(function(){ Utils.while(c, floop, fend, env); }, 0);
+                setTimeout(function(){ Utils.neanwhile(c, floop, fend, env); }, 0);
             } else {
                 env['_stack_counter'] = env['_stack_counter'] + 1;
-                Utils.while(c, floop, fend, env);
+                Utils.meanwhile(c, floop, fend, env);
             }
         },env);
     } else {
@@ -120,7 +120,6 @@ Utils.partition = function(c, n) {
     }
     
     var groups = [];
-    var groupCounter = rem;
     for(var i=0; i<c.length; i++) {
         currentGroup.push(c[i]);
         if(currentGroup.length % n == 0) {
@@ -162,23 +161,45 @@ Utils.parseStrictISO8601 = function (str) {
     var offset = 0;
     var date = new Date(d[1], 0, 1);
 
-    if (d[3]) { date.setMonth(d[3] - 1); } else { throw "missing ISO8061 component" }
-    if (d[5]) { date.setDate(d[5]);  } else { throw "missing ISO8061 component" }
-    if (d[7]) { date.setHours(d[7]);  } else { throw "missing ISO8061 component" }
-    if (d[8]) { date.setMinutes(d[8]);  } else { throw "missing ISO8061 component" }
-    if (d[10]) { date.setSeconds(d[10]);  } else { throw "missing ISO8061 component" }
-    if (d[12]) { date.setMilliseconds(Number("0." + d[12]) * 1000); }
+    if (d[3]) {
+        date.setMonth(d[3] - 1);
+    } else {
+        throw "missing ISO8061 component"
+    }
+    if (d[5]) {
+        date.setDate(d[5]);
+    } else {
+        throw "missing ISO8061 component"
+    }
+    if (d[7]) {
+        date.setHours(d[7]);
+    } else {
+        throw "missing ISO8061 component"
+    }
+    if (d[8]) {
+        date.setMinutes(d[8]);
+    } else {
+        throw "missing ISO8061 component"
+    }
+    if (d[10]) {
+        date.setSeconds(d[10]);
+    } else {
+        throw "missing ISO8061 component"
+    }
+    if (d[12]) {
+        date.setMilliseconds(Number("0." + d[12]) * 1000);
+    }
     if (d[14]) {
         offset = (Number(d[16]) * 60) + Number(d[17]);
         offset *= ((d[15] == '-') ? 1 : -1);
     }
 
     offset -= date.getTimezoneOffset();
-    time = (Number(date) + (offset * 60 * 1000));
+    var time = (Number(date) + (offset * 60 * 1000));
     var toReturn = new Date();
     toReturn.setTime(Number(time));
     return toReturn;
-}
+};
 
 
 Utils.parseISO8601 = function (str) {
@@ -202,7 +223,7 @@ Utils.parseISO8601 = function (str) {
     }
 
     offset -= date.getTimezoneOffset();
-    time = (Number(date) + (offset * 60 * 1000));
+    var time = (Number(date) + (offset * 60 * 1000));
     var toReturn = new Date();
     toReturn.setTime(Number(time));
     return toReturn;
@@ -250,8 +271,8 @@ Utils.compareDateComponents = function(stra,strb) {
 
     if((a.timezone == null && b.timezone == null) ||
        (a.timezone != null && b.timezone != null)) {        
-        da = Utils.parseISO8601(stra);
-        db = Utils.parseISO8601(strb);
+        var da = Utils.parseISO8601(stra);
+        var db = Utils.parseISO8601(strb);
         
         if(da.getTime() == db.getTime()) {
             return 0;
@@ -263,8 +284,8 @@ Utils.compareDateComponents = function(stra,strb) {
     } else if (a.timezone != null && b.timezone == null){
         da = Utils.parseISO8601(stra);
         db = Utils.parseISO8601(strb);
-        ta = da.getTime();
-        tb = db.getTime();
+        var ta = da.getTime();
+        var tb = db.getTime();
 
         var offset = 14*60*60;
 
@@ -384,18 +405,18 @@ Utils.lexicalFormTerm = function(term, ns) {
     }
 };
 
-Utils.normalizeUnicodeLiterals = function(string) {
+Utils.normalizeUnicodeLiterals = function (string) {
     var escapedUnicode = string.match(/\\u[0-9abcdefABCDEF]{4,4}/g) || [];
     var dups = {};
-    for(var i=0; i<escapedUnicode.length; i++) {
-        if(dups[escapedUnicode[i]] == null) {
+    for (var i = 0; i < escapedUnicode.length; i++) {
+        if (dups[escapedUnicode[i]] == null) {
             dups[escapedUnicode[i]] = true;
-            string = string.replace(new RegExp("\\"+escapedUnicode[i],"g"), eval("'"+escapedUnicode[i]+"'"));
+            string = string.replace(new RegExp("\\" + escapedUnicode[i], "g"), eval("'" + escapedUnicode[i] + "'"));
         }
     }
 
     return string;
-}
+};
 
 Utils.hashTerm = function(term) {
     try {
@@ -406,7 +427,7 @@ Utils.hashTerm = function(term) {
       } else if(term.token === 'blank') {
           return "b"+term.value;
       } else if(term.token === 'literal') {
-          l = "l"+term.value;
+          var l = "l"+term.value;
           l = l + (term.type || "");
           l = l + (term.lang || "");        
    

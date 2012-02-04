@@ -38,11 +38,11 @@ Utils.extends(InMemoryBTree.Tree, FileBackedBTree.Tree);
  * Creates a new file backed memory Tree with the information passed to
  * the constructor of the object.
  */
-FileBackedBTree.Tree.prototype.init = function() {
+FileBackedBTree.Tree.prototype.init = function () {
     this.container.format(this.keyLength, this.valueLength, this.order);
     InMemoryBTree.Tree.call(this, this.order);
     this.comparator = this.paramscomparator;
-}
+};
 
 
 /**
@@ -50,56 +50,56 @@ FileBackedBTree.Tree.prototype.init = function() {
  *
  * Restores the BTree from the provided file path
  */
-FileBackedBTree.Tree.prototype.load = function() {
+FileBackedBTree.Tree.prototype.load = function () {
     this.container.load();
     this.comparator = this.paramscomparator;
     this.root = this.container.readNode(this.container.rootNode);
-}
+};
 
-FileBackedBTree.Tree.prototype.close = function() {
+FileBackedBTree.Tree.prototype.close = function () {
     this.container.close();
-}
+};
 
 
-FileBackedBTree.Tree.prototype._diskWrite = function(node) {
+FileBackedBTree.Tree.prototype._diskWrite = function (node) {
     this.container.writeNode(node);
-}
+};
 
-FileBackedBTree.Tree.prototype._diskRead = function(nodeOrKey) {
-    if(typeof(nodeOrKey)==='object') {
+FileBackedBTree.Tree.prototype._diskRead = function (nodeOrKey) {
+    if (typeof(nodeOrKey) === 'object') {
         return this.container.readNode(nodeOrKey.nodeKey);
     } else {
         return this.container.readNode(nodeOrKey);
     }
-}
+};
 
 FileBackedBTree.Tree.prototype._diskDelete= function(node) {
     this.container.deleteNode(node);
 };
 
-FileBackedBTree.Tree.prototype._updateRootNode = function(node) {
+FileBackedBTree.Tree.prototype._updateRootNode = function (node) {
     this.container.updateRoot(node);
-}
+};
 
 
 /**
  * A sample tree working with floats as keys and values
  */
-FileBackedBTree.FileBackedFloatFloatBTree = function(params) {
+FileBackedBTree.FileBackedFloatFloatBTree = function (params) {
     params.keyLength = 4;
     params.valueLength = 4;
     params.nodeSchema = DiskManager.FloatFloatNodeSchema;
-    params.comparator = function(a,b) {
-        if(a<b) {
+    params.comparator = function (a, b) {
+        if (a < b) {
             return -1;
-        } else if(a > b) {
+        } else if (a > b) {
             return 1;
         } else {
             return 0;
         }
-    }
+    };
 
     FileBackedBTree.Tree.call(this, params)
-}
+};
 
 Utils.extends(FileBackedBTree.Tree, FileBackedBTree.FileBackedFloatFloatBTree);

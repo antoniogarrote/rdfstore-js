@@ -91,17 +91,17 @@ AsyncDiskManager.Container.prototype._writeSuperBlock = function(callback) {
     });
 };
 
-AsyncDiskManager.Container.prototype._ensureNodeKey = function(nodeOrKey, callback) {
-    if(typeof(nodeOrKey)==='object') {
-        this.container.readNode(nodeOrKey.nodeKey, function(res){
+AsyncDiskManager.Container.prototype._ensureNodeKey = function (nodeOrKey, callback) {
+    if (typeof(nodeOrKey) === 'object') {
+        this.container.readNode(nodeOrKey.nodeKey, function (res) {
             callback(res);
         });
     } else {
-        this.container.readNode(nodeOrKey, function(res){
+        this.container.readNode(nodeOrKey, function (res) {
             callback(res);
         });
     }
-}
+};
 
 AsyncDiskManager.Container.prototype._readSuperBlock = function(callback) {
     var b = new Buffer(this.superBlockSize);
@@ -154,7 +154,6 @@ AsyncDiskManager.Container.prototype._readFreeBlock = function(position, callbac
 };
 
 AsyncDiskManager.Container.prototype.writeNode = function(node, callback) {
-    var position = node.nodeKey;
     var that = this;
     var position = this.endPosition;
 
@@ -210,12 +209,12 @@ AsyncDiskManager.Container.prototype.deleteNode = function(node, callback) {
     });
 };
 
-AsyncDiskManager.Container.prototype.updateRoot = function(node, callback) {
+AsyncDiskManager.Container.prototype.updateRoot = function (node, callback) {
     this.rootNode = node.nodeKey;
-    this._writeSuperBlock(function(){
+    this._writeSuperBlock(function () {
         callback();
     });
-}
+};
 
 
 
@@ -238,10 +237,10 @@ AsyncDiskManager.FreeBlocksManager.prototype.init = function(callback) {
     var nextPointer = this.container.freeNodePointer;
     this.__init(nextPointer, this, callback);
 };
-AsyncDiskManager.FreeBlocksManager.prototype.__init = function(nextPointer, tree, callback) {
-    if(nextPointer != 0 && tree.freeBlocksCache.length < tree.container.cacheSize) {
+AsyncDiskManager.FreeBlocksManager.prototype.__init = function (nextPointer, tree, callback) {
+    if (nextPointer != 0 && tree.freeBlocksCache.length < tree.container.cacheSize) {
         var that = tree;
-        container._readFreeBlock(nextPointer, function(freeBlock){
+        container._readFreeBlock(nextPointer, function (freeBlock) {
             nextPointer = freeBlock.nextPointer;
             that.freeBlocksCache.push(freeBlock);
             tree.__init(nextPointer, tree, callback);
@@ -250,7 +249,7 @@ AsyncDiskManager.FreeBlocksManager.prototype.__init = function(nextPointer, tree
         callback();
     }
 
-}
+};
 
 
 AsyncDiskManager.FreeBlocksManager.prototype.next = function(callback) {

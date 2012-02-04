@@ -66,27 +66,27 @@ WebLocalStorageLexicon.Lexicon.prototype.updateAfterWrite = function() {
     this.storage.setItem(this.pointer("oidCounter"),""+this.oidCounter);
 };
 
-WebLocalStorageLexicon.Lexicon.prototype.pointer = function(hashName,val){
-    if(hashName=="uriToOID") {
+WebLocalStorageLexicon.Lexicon.prototype.pointer = function (hashName, val) {
+    if (hashName == "uriToOID") {
         hashName = "uo";
-    } else if(hashName == "OIDToUri") {
+    } else if (hashName == "OIDToUri") {
         hashName = "ou";
-    } else if(hashName == "literalToOID") {
+    } else if (hashName == "literalToOID") {
         hashName = "lo";
-    } else if(hashName == "OIDToLiteral") {
+    } else if (hashName == "OIDToLiteral") {
         hashName = "ok";
-    } else if(hashName == "blankToOID") {
+    } else if (hashName == "blankToOID") {
         hashName = "bo";
-    } else if(hashName == "OIDToBlank") {
+    } else if (hashName == "OIDToBlank") {
         hashName = "ob";
     }
 
-    if(val==null) {
-        return this.name+"_l_"+hashName;
+    if (val == null) {
+        return this.name + "_l_" + hashName;
     } else {
-        return this.name+"_l_"+hashName+"_"+val;
+        return this.name + "_l_" + hashName + "_" + val;
     }
-}
+};
 
 WebLocalStorageLexicon.Lexicon.prototype.clear = function() {
     this.uriToOID = {};
@@ -139,15 +139,15 @@ WebLocalStorageLexicon.Lexicon.prototype.registerUri = function(uri) {
     } else if(this.uriToOID[uri] == null){
         var fromStorage = this.storage.getItem(this.pointer("uriToOID",uri));
         if(fromStorage == null) {
-            var oid = this.oidCounter
+            var oid = this.oidCounter;
             var oidStr = 'u'+oid;
             this.oidCounter++;
 
             this.uriToOID[uri] =[oid, 0];
             this.OIDToUri[oidStr] = uri;
 
-            this.storage.setItem(this.pointer("uriToOID",uri),oid+":"+0)
-            this.storage.setItem(this.pointer("OIDToUri",oidStr),uri)
+            this.storage.setItem(this.pointer("uriToOID", uri), oid + ":" + 0);
+            this.storage.setItem(this.pointer("OIDToUri", oidStr), uri);
             return(oid);
         } else {
             var parts = fromStorage.split(":");
@@ -260,34 +260,34 @@ WebLocalStorageLexicon.Lexicon.prototype.registerLiteral = function(literal) {
     }
 };
 
-WebLocalStorageLexicon.Lexicon.prototype.resolveLiteral = function(literal) {
+WebLocalStorageLexicon.Lexicon.prototype.resolveLiteral = function (literal) {
     var oidCounter = this.literalToOID[literal];
-    if(oidCounter != null ) {
-        return(oidCounter[0]); 
+    if (oidCounter != null) {
+        return(oidCounter[0]);
     } else {
-        fromStorage = this.storage.getItem(this.pointer("literalToOID",literal));
-        if(fromStorage!=null) {
+        var fromStorage = this.storage.getItem(this.pointer("literalToOID", literal));
+        if (fromStorage != null) {
             oidCounter = fromStorage.split(":");
             var oid = parseInt(oidCounter[0]);
             var counter = parseInt(oidCounter[1]);
-            var oidStr =  'l'+ oid;
+            var oidStr = 'l' + oid;
             this.literalToOID[literal] = [oid, counter];
-            this.OIDToLiteral[oidStr] =  literal;
+            this.OIDToLiteral[oidStr] = literal;
             return(oid);
         } else {
-            return(-1); 
+            return(-1);
         }
     }
-}
+};
 
-WebLocalStorageLexicon.Lexicon.prototype.resolveLiteralCost = function(literal) {
+WebLocalStorageLexicon.Lexicon.prototype.resolveLiteralCost = function (literal) {
     var oidCounter = this.literalToOID[literal];
-    if(oidCounter != null ) {
-        return(oidCounter[1]); 
+    if (oidCounter != null) {
+        return(oidCounter[1]);
     } else {
-        return(0); 
+        return(0);
     }
-}
+};
 
 WebLocalStorageLexicon.Lexicon.prototype.parseLiteral = function(literalString) {
     var parts = literalString.lastIndexOf("@");
@@ -385,63 +385,63 @@ WebLocalStorageLexicon.Lexicon.prototype.retrieve = function(oid) {
 };
 
 
-WebLocalStorageLexicon.Lexicon.prototype.unregister = function(quad, key) {
+WebLocalStorageLexicon.Lexicon.prototype.unregister = function (quad, key) {
     try {
         this.unregisterTerm(quad.subject.token, key.subject);
         this.unregisterTerm(quad.predicate.token, key.predicate);
         this.unregisterTerm(quad.object.token, key.object);
-        if(quad.graph!=null) {
-            this.unregisterTerm(quad.graph.token, key.graph); 
+        if (quad.graph != null) {
+            this.unregisterTerm(quad.graph.token, key.graph);
         }
         return(true);
-    } catch(e) {
+    } catch (e) {
         console.log("Error unregistering quad");
         console.log(e.message);
         return(false);
     }
-}
+};
 
-WebLocalStorageLexicon.Lexicon.prototype.unregisterTerm = function(kind, oid) {
-    if(kind === 'uri') {
-        if(oid != this.defaultGraphOid) {
-            var oidStr = 'u'+oid;
+WebLocalStorageLexicon.Lexicon.prototype.unregisterTerm = function (kind, oid) {
+    if (kind === 'uri') {
+        if (oid != this.defaultGraphOid) {
+            var oidStr = 'u' + oid;
             var uri = this.OIDToUri[oidStr];     // = uri;
             var oidCounter = this.uriToOID[uri]; // =[oid, 0];
-            
+
             var counter = oidCounter[1];
-            if(""+oidCounter[0] === ""+oid) {
-                if(counter === 0) {
+            if ("" + oidCounter[0] === "" + oid) {
+                if (counter === 0) {
                     delete this.OIDToUri[oidStr];
                     delete this.uriToOID[uri];
                     // delete the graph oid from known graphs
                     // in case this URI is a graph identifier
                     delete this.knownGraphs[oid];
                 } else {
-                    this.uriToOID[uri] = [oid, counter-1];
+                    this.uriToOID[uri] = [oid, counter - 1];
                 }
             } else {
-                throw("Not matching OID : "+oid+" vs "+ oidCounter[0]);
+                throw("Not matching OID : " + oid + " vs " + oidCounter[0]);
             }
         }
-    } else if(kind === 'literal') {
+    } else if (kind === 'literal') {
         this.oidCounter++;
-        var oidStr     =  'l'+ oid;
-        var literal    = this.OIDToLiteral[oidStr];  // = literal;
+        var oidStr = 'l' + oid;
+        var literal = this.OIDToLiteral[oidStr];  // = literal;
         var oidCounter = this.literalToOID[literal]; // = [oid, 0];
-        
+
         var counter = oidCounter[1];
-        if(""+oidCounter[0] === ""+oid) {
-            if(counter === 0) {
+        if ("" + oidCounter[0] === "" + oid) {
+            if (counter === 0) {
                 delete this.OIDToLiteral[oidStr];
                 delete this.literalToOID[literal];
             } else {
-                this.literalToOID[literal] = [oid, counter-1];
+                this.literalToOID[literal] = [oid, counter - 1];
             }
         } else {
-            throw("Not matching OID : "+oid+" vs "+ oidCounter[0]);
+            throw("Not matching OID : " + oid + " vs " + oidCounter[0]);
         }
 
-    } else if(kind === 'blank') {
-        delete this.OIDToBlank[""+oid];
+    } else if (kind === 'blank') {
+        delete this.OIDToBlank["" + oid];
     }
-}
+};

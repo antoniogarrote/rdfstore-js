@@ -32,7 +32,7 @@ RDFStoreChildClient.RDFStoreClient = function(path_to_store_script, args, cb) {
 };
 
 RDFStoreChildClient.RDFStoreClient.prototype.receive = function(packet) {
-    event = packet.data || packet;
+    var event = packet.data || packet;
     if(event.fn === 'workerRequest:NetworkTransport:load') {
         var that = this;
         var workerCallback = event['callback'];
@@ -199,12 +199,12 @@ RDFStoreChildClient.RDFStoreClient.prototype.node = function() {
 };
 
 RDFStoreChildClient.RDFStoreClient.prototype.setPrefix = function(prefix, uri) {
-    this.rdf.setPrefix(prefix, uri)
+    this.rdf.setPrefix(prefix, uri);
     this.connection.send({'fn':'rdf/setPrefix', 'args':[prefix, uri], 'callback':null})
 };
 
 RDFStoreChildClient.RDFStoreClient.prototype.setDefaultPrefix = function(uri) {
-    this.rdf.setDefaultPrefix(uri)
+    this.rdf.setDefaultPrefix(uri);
     this.connection.send({'fn':'rdf/setDefaultPrefix', 'args':[uri], 'callback':null})
 };
 
@@ -416,7 +416,7 @@ RDFStoreChildClient.RDFStoreClient.prototype.registeredGraphs = function(callbac
         if(success) {
             var triple;
             for(var i=0; i<graphs.length; i++) {
-                graph = graphs[i]
+                var graph = graphs[i];
                 graphs[i] = that.adaptJSInterface(graph);
             }                
             callback(success, graphs);

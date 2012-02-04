@@ -15,36 +15,36 @@ QuadIndex.Tree = function(params,callback) {
         // @todo change this if using the file backed implementation
         BaseTree.Tree.call(this, params.order, params['name'], params['persistent'], params['cacheMaxSize']);
 
-        this.comparator = function(a,b) {
-            for(var i=0; i< this.componentOrder.length; i++) {
+        this.comparator = function (a, b) {
+            for (var i = 0; i < this.componentOrder.length; i++) {
                 var component = this.componentOrder[i];
                 var vala = a[component];
                 var valb = b[component];
-                if(vala < valb) {
+                if (vala < valb) {
                     return -1;
-                } else if(vala > valb) {
+                } else if (vala > valb) {
                     return 1;
                 }
             }
             return 0;
-        }
+        };
 
-        this.rangeComparator = function(a,b) {
-            for(var i=0; i<this.componentOrder.length; i++) {
+        this.rangeComparator = function (a, b) {
+            for (var i = 0; i < this.componentOrder.length; i++) {
                 var component = this.componentOrder[i];
-                if(b[component] == null || a[component]==null) {
+                if (b[component] == null || a[component] == null) {
                     return 0;
                 } else {
-                    if(a[component] < b[component] ) {
+                    if (a[component] < b[component]) {
                         return -1
-                    } else if(a[component] > b[component]) {
+                    } else if (a[component] > b[component]) {
                         return 1
                     }
                 }
             }
-            
+
             return 0;
-        }
+        };
 
         if(callback!=null) {
             callback(this);
@@ -65,24 +65,24 @@ QuadIndex.Tree.prototype.insert = function(quad, callback) {
 QuadIndex.Tree.prototype.search = function(quad, callback) {
     var result = BaseTree.Tree.prototype.search.call(this, quad, true); // true -> check exists : not present in all the b-tree implementations, check first.
     if(callback)
-        callback(result)
+        callback(result);
 
     return result;
 };
 
-QuadIndex.Tree.prototype.range = function(pattern, callback) {
+QuadIndex.Tree.prototype.range = function (pattern, callback) {
     var result = null;
-    if(typeof(this.root)==='string') {
-        result = this._rangeTraverse(this,this._diskRead(this.root), pattern);        
+    if (typeof(this.root) === 'string') {
+        result = this._rangeTraverse(this, this._diskRead(this.root), pattern);
     } else {
-        result = this._rangeTraverse(this,this.root, pattern);
+        result = this._rangeTraverse(this, this.root, pattern);
     }
 
-    if(callback)
+    if (callback)
         callback(result);
 
     return result;
-}
+};
 
 QuadIndex.Tree.prototype._rangeTraverse = function(tree,node, pattern) {
     var patternKey  = pattern.key;
@@ -105,7 +105,7 @@ QuadIndex.Tree.prototype._rangeTraverse = function(tree,node, pattern) {
             }
 
         } else {
-            var pointer = node.children[idxMin]
+            var pointer = node.children[idxMin];
             var childNode = tree._diskRead(pointer);
             pendingNodes.push(childNode);
 
