@@ -34623,29 +34623,35 @@ Callbacks.CallbacksBackend.prototype._searchQueriesInIndex = function(index, ord
 Callbacks.CallbacksBackend.prototype.dispatchQueries = function(callback) {
     var that = this;
     var floop, query, queryId, queryCallback;
+    var toDispatchMap = {};
+
     Utils.repeat(0, this.matchedQueries.length,
-                 function(k, env){
-                     floop = arguments.callee;
-                     queryId = that.matchedQueries[env._i];
-                     query = that.queriesMap[queryId];
-                     queryCallback = that.queriesCallbacksMap[queryId];
-                     Utils.recur(function(){
-                         that.engine.execute(query, 
-                                             function(success, results){
-                                                 if(success) {
-                                                     try{
-                                                         queryCallback(results);
-                                                     } catch(e){}
-                                                 } else {
-                                                     console.log("ERROR executing query callback "+results);
-                                                 }
-                                                 k(floop,env);
-                                             });
-                     });
-                 },
-                 function(env) {
-                     callback();
-                 });
+        function(k, env){
+            floop = arguments.callee;
+            queryId = that.matchedQueries[env._i];
+            // avoid duplicate notifications
+            if(toDispatchMap[queryId] == null) {
+                toDispatchMap[queryId] = true;
+                query = that.queriesMap[queryId];
+                queryCallback = that.queriesCallbacksMap[queryId];
+                Utils.recur(function(){
+                    that.engine.execute(query,
+                        function(success, results){
+                            if(success) {
+                                try{
+                                    queryCallback(results);
+                                }catch(e){}
+                            }
+                            k(floop,env);
+                        });
+                });
+            } else {
+                k(floop,env);
+            }
+        },
+        function(env) {
+            callback();
+        });
 };
 
 // end of ./src/js-query-engine/src/callbacks.js 
