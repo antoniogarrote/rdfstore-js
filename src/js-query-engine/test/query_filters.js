@@ -94,7 +94,7 @@ exports.filterTest1 = function(test){
                                            <http://example/book2> <http://example.com/vocab#pages> 100 }', function(result){
                                                
                                                engine.execute('SELECT ?title { ?title <http://example.com/vocab#pages> ?pages . FILTER(?pages>150) }', function(success, result){
-                                                   test.ok(result[0].title.value === "http://example/book1")
+                                                   test.ok(result[0].title.value === "http://example/book1");
                                                    test.done();
                                                });
 

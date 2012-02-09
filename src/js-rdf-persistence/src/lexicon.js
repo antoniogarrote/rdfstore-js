@@ -170,7 +170,7 @@ Lexicon.Lexicon.prototype.parseLiteral = function(literalString) {
         return {token: "literal", value:value, lang:lang};
     }
 
-    var parts = literalString.lastIndexOf("^^");
+    parts = literalString.lastIndexOf("^^");
     if(parts!=-1 && literalString[parts-1]==='"' && literalString[parts+2] === '<' && literalString[literalString.length-1] === '>') {
         var value = literalString.substring(1,parts-1);
         var type = literalString.substring(parts+3, literalString.length-1);
@@ -178,7 +178,11 @@ Lexicon.Lexicon.prototype.parseLiteral = function(literalString) {
         return {token: "literal", value:value, type:type};
     }
 
-    var value = literalString.substring(1,literalString.length-1);
+    var value = literalString;
+    if(literalString[0]==="\"" && literalString[literalString.length-1] === "\"") {
+	value = literalString.substring(1,literalString.length-1);	
+    }
+
     return {token:"literal", value:value};
 };
 

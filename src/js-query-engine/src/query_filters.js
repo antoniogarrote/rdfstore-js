@@ -481,7 +481,7 @@ QueryFilters.isDouble = function(val) {
 QueryFilters.isNumeric = function(val) {
     if(val == null) {
         return false;
-    }
+    }    
     if(val.token === 'literal') {
         if(val.type == "http://www.w3.org/2001/XMLSchema#integer" ||
            val.type == "http://www.w3.org/2001/XMLSchema#decimal" ||
