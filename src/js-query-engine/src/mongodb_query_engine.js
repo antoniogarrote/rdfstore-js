@@ -1608,6 +1608,16 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.batchLoad = function(quads, call
 		}
 		object = oid;
             } else if(quad.object['literal'] || quad.object.token === 'literal') {
+		if(quad.object.token === 'literal') {
+		    if(quad.object.type != null) {
+			quad.object.value = '"'+quad.object.value+'"^^<'+quad.object.type+'>';
+		    } else if(quad.object.lang != null) {
+			quad.object.value = '"'+quad.object.value+'"@'+quad.object.lang;		    
+		    } else {
+			quad.object.value = '"'+quad.object.value+'"';
+		    }
+		}
+
                 oid = that.registerLiteral(quad.object.literal || quad.object.value);
                 if(quad.object.literal != null) {
 		    quad.object = that.lexicon.parseLiteral(quad.object.literal);

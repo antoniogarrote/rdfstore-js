@@ -248,25 +248,25 @@ end
 
 def process_file_for_nodejs(of, f)
   f.each_line do |line|
-    if (line =~ /exports\.[a-zA-Z]+ *= *\{ *\};/) == 0
+    if (line =~ /exports\.[a-zA-Z0-9]+ *= *\{ *\};/) == 0
       puts " * modifying: #{line} -> #{line.split("exports.")[1]}"
       of << ("var "+line.split("exports.")[1])
     elsif (line =~/var QueryPlan = require/) == 0
       puts " * modifying #{line} -> var QueryPlan = QueryPlanDPSize;"
       of << "var QueryPlan = QueryPlanDPSize;";
-    elsif (line =~ /var RDFStoreClient *= *require\(['\"]{1,1}[a-zA-Z_\.\/-]*['\"]{1,1}\)\./) == 0
+    elsif (line =~ /var RDFStoreClient *= *require\(['\"]{1,1}[a-zA-Z0-9_\.\/-]*['\"]{1,1}\)\./) == 0
       puts " * writing right RDFStoreClient"
       tree = line.split(".")[-1];
       of << "var RDFStoreClient = RDFStoreChildClient;"
-    elsif (line =~ /var *([a-zA-Z]+) *= *exports\.\1;/) == 0
+    elsif (line =~ /var *([a-zA-Z0-9]+) *= *exports\.\1;/) == 0
       puts " * ignoring: #{line}"
     elsif (line =~ /var Worker *= *require/) == 0
       puts " * ignoring: #{line}"
-    elsif (line =~ /var *([a-zA-Z]+) *= *require\(['\"]{1,1}[a-zA-Z_\.\/-]*['\"]{1,1}\)\.\1;/) == 0
+    elsif (line =~ /var *([a-zA-Z0-9]+) *= *require\(['\"]{1,1}[a-zA-Z0-9_\.\/-]*['\"]{1,1}\)\.\1;/) == 0
       puts " * ignoring: #{line}"
-    elsif (line =~ /var *([a-zA-Z]+) *= *require\(__dirname\+['\"]{1,1}[a-zA-Z_\.\/-]*['\"]{1,1}\)\.\1;/) == 0
+    elsif (line =~ /var *([a-zA-Z0-9]+) *= *require\(__dirname\+['\"]{1,1}[a-zA-Z0-9_\.\/-]*['\"]{1,1}\)\.\1;/) == 0
       puts " * ignoring: #{line}"
-    elsif (line =~ /var BaseTree *= *require\(['\"]{1,1}[a-zA-Z_\.\/-]*['\"]{1,1}\)\./) == 0
+    elsif (line =~ /var BaseTree *= *require\(['\"]{1,1}[a-zA-Z0-9_\.\/-]*['\"]{1,1}\)\./) == 0
       puts " * writing right MemoryTree"
       tree = line.split(".")[-1];
       of << "var BaseTree = #{tree}"
@@ -379,7 +379,7 @@ end
 
 def process_file_for_browser(of, f) 
   f.each_line do |line|
-    if (line =~ /exports\.[a-zA-Z]+ *= *\{ *\};/) == 0
+    if (line =~ /exports\.[a-zA-Z0-9]+ *= *\{ *\};/) == 0
       puts " * modifying: #{line} -> var #{line.split("exports.")[1]}"
       of << "var #{line.split('exports.')[1]}"
     elsif (line =~/var QueryPlan = require/) == 0
@@ -387,15 +387,15 @@ def process_file_for_browser(of, f)
     elsif (line =~ /var QueryEngine = require/) == 0
       # Replace the line we are ignoring
       of << "var MongodbQueryEngine = { MongodbQueryEngine: function(){ throw 'MongoDB backend not supported in the browser version' } };\n"
-    elsif (line =~ /var *([a-zA-Z]+) *= *exports\.\1;/) == 0
+    elsif (line =~ /var *([a-zA-Z0-9]+) *= *exports\.\1;/) == 0
       puts " * ignoring: #{line}"
-    elsif (line =~ /var *([a-zA-Z]+) *= *require\(['\"]{1,1}[a-zA-Z_\.\/-]*['\"]{1,1}\)\.\1;/) == 0
+    elsif (line =~ /var *([a-zA-Z0-9]+) *= *require\(['\"]{1,1}[a-zA-Z0-9_\.\/-]*['\"]{1,1}\)\.\1;/) == 0
       puts " * ignoring: #{line}"
-    elsif (line =~ /var *([a-zA-Z]+) *= *require\(__dirname\+['\"]{1,1}[a-zA-Z_\.\/-]*['\"]{1,1}\)\.\1;/) == 0
+    elsif (line =~ /var *([a-zA-Z0-9]+) *= *require\(__dirname\+['\"]{1,1}[a-zA-Z0-9_\.\/-]*['\"]{1,1}\)\.\1;/) == 0
       puts " * ignoring: #{line}"
-    elsif (line =~ /var *([a-zA-Z]+) *= *require\(['\"]webworker[\"']\);/)
+    elsif (line =~ /var *([a-zA-Z0-9]+) *= *require\(['\"]webworker[\"']\);/)
       puts " * ignoring require for NodeJS WebWorkers: #{line}"  
-    elsif (line =~ /var BaseTree *= *require\(['\"]{1,1}[a-zA-Z_\.\/-]*['\"]{1,1}\)\./) == 0
+    elsif (line =~ /var BaseTree *= *require\(['\"]{1,1}[a-zA-Z0-9_\.\/-]*['\"]{1,1}\)\./) == 0
       puts " * writing right MemoryTree"
       tree = line.split(".")[-1];
       of << "var BaseTree = #{tree}"
@@ -416,7 +416,7 @@ end
 
 def process_file_for_browser_persistent(of, f) 
   f.each_line do |line|
-    if (line =~ /exports\.[a-zA-Z]+ *= *\{ *\};/) == 0
+    if (line =~ /exports\.[a-zA-Z0-9]+ *= *\{ *\};/) == 0
       puts " * modifying: #{line} -> var #{line.split("exports.")[1]}"
       of << "var #{line.split('exports.')[1]}"
     elsif (line =~/var QueryPlan = require/) == 0
@@ -424,19 +424,19 @@ def process_file_for_browser_persistent(of, f)
     elsif (line =~ /var QueryEngine = require/) == 0
       # Replace the line we are ignoring
       of << "var MongodbQueryEngine = { MongodbQueryEngine: function(){ throw 'MongoDB backend not supported in the browser version' } };\n"
-    elsif (line =~ /var BaseTree *= *require\(['\"]{1,1}[a-zA-Z_\.\/-]*['\"]{1,1}\)\./) == 0
+    elsif (line =~ /var BaseTree *= *require\(['\"]{1,1}[a-zA-Z0-9_\.\/-]*['\"]{1,1}\)\./) == 0
       puts " * writing Persistent Memory Tree"
       of << "var BaseTree = WebLocalStorageBTree;"
-    elsif (line =~ /var Lexicon *= *require\(['\"]{1,1}[a-zA-Z_\.\/-]*['\"]{1,1}\)\./) == 0
+    elsif (line =~ /var Lexicon *= *require\(['\"]{1,1}[a-zA-Z0-9_\.\/-]*['\"]{1,1}\)\./) == 0
       puts " * writing Persistent Lexicon"
       of << "var Lexicon = WebLocalStorageLexicon;"
-    elsif (line =~ /var *([a-zA-Z]+) *= *exports\.\1;/) == 0
+    elsif (line =~ /var *([a-zA-Z0-9]+) *= *exports\.\1;/) == 0
       puts " * ignoring: #{line}"
-    elsif (line =~ /var *([a-zA-Z]+) *= *require\(['\"]{1,1}[a-zA-Z_\.\/-]*['\"]{1,1}\)\.\1;/) == 0
+    elsif (line =~ /var *([a-zA-Z0-9]+) *= *require\(['\"]{1,1}[a-zA-Z0-9_\.\/-]*['\"]{1,1}\)\.\1;/) == 0
       puts " * ignoring: #{line}"
-    elsif (line =~ /var *([a-zA-Z]+) *= *require\(__dirname\+['\"]{1,1}[a-zA-Z_\.\/-]*['\"]{1,1}\)\.\1;/) == 0
+    elsif (line =~ /var *([a-zA-Z0-9]+) *= *require\(__dirname\+['\"]{1,1}[a-zA-Z0-9_\.\/-]*['\"]{1,1}\)\.\1;/) == 0
       puts " * ignoring: #{line}"
-    elsif (line =~ /var *([a-zA-Z]+) *= *require\(['\"]webworker[\"']\);/)
+    elsif (line =~ /var *([a-zA-Z0-9]+) *= *require\(['\"]webworker[\"']\);/)
       puts " * ignoring require for NodeJS WebWorkers: #{line}"  
     else
       # require for YUI compressor
@@ -570,7 +570,7 @@ else
   elsif ARGV[0] == "test_min"
     test_minimized
   elsif ARGV[0] == "tests"
-    exec "#{NODEUNIT} ./src/js-trees/tests/* ./src/js-store/test/* ./src/js-sparql-parser/test/* ./src/js-rdf-persistence/test/* ./src/js-query-engine/test/* ./src/js-communication/test/* ./src/js-connection/tests/*"
+    exec "#{NODEUNIT} ./src/js-trees/tests/*.js ./src/js-store/test/*.js ./src/js-sparql-parser/test/*.js ./src/js-rdf-persistence/test/*.js ./src/js-query-engine/test/*.js ./src/js-communication/test/*.js ./src/js-connection/tests/*.js"
   else
     puts "Unknown configuration: #{ARGV[0]}"
     puts "USAGE make.rb [nodejs | browser | browser_persistent | rdf_interface_api | tests | test_min]"

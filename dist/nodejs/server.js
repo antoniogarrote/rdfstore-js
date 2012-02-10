@@ -223,7 +223,7 @@ Server.start = function() {
             });
         } else if(command === 'clear') {
             options['store-overwrite'] = 'true';
-            console.log(options);
+            //console.log(options);
             Server.startStore(options,function(){
                 process.exit(0);
             });

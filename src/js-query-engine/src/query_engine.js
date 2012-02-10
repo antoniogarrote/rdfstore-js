@@ -1395,6 +1395,15 @@ QueryEngine.QueryEngine.prototype.batchLoad = function(quads, callback) {
 	    }
             object = oid;
         } else if(quad.object['literal'] || quad.object.token === 'literal') {
+	    if(quad.object.token === 'literal') {
+		if(quad.object.type != null) {
+		    quad.object.value = '"'+quad.object.value+'"^^<'+quad.object.type+'>';
+		} else if(quad.object.lang != null) {
+		    quad.object.value = '"'+quad.object.value+'"@'+quad.object.lang;		    
+		} else {
+		    quad.object.value = '"'+quad.object.value+'"';
+		}
+	    }
             oid = this.lexicon.registerLiteral(quad.object.literal || quad.object.value);
 	    if(quad.object.literal != null) {
 		quad.object = this.lexicon.parseLiteral(quad.object.literal);

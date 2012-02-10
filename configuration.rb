@@ -16,7 +16,7 @@ BUILD_CONFIGURATION = {
                  "./src/js-communication/src/rdf_loader.js",
                  "./src/js-sparql-parser/src/abstract_query_tree.js",
                  "./src/js-sparql-parser/src/sparql_parser.js",
-                 "./src/js-communication/src/turtle_parser.js",
+                 "./src/js-communication/src/n3_parser.js",
                  "./src/js-query-engine/src/rdf_js_interface.js",
                  "./src/js-query-engine/src/query_filters.js",
                  #"./src/js-query-engine/src/query_plan.js",
@@ -47,7 +47,7 @@ BUILD_CONFIGURATION = {
                  "./src/js-communication/src/rdf_loader.js",
                  "./src/js-sparql-parser/src/abstract_query_tree.js",
                  "./src/js-sparql-parser/src/sparql_parser.js",
-                 "./src/js-communication/src/turtle_parser.js",
+                 "./src/js-communication/src/n3_parser.js",
                  "./src/js-query-engine/src/rdf_js_interface.js",
                  "./src/js-query-engine/src/query_filters.js",
                  #"./src/js-query-engine/src/query_plan.js",
@@ -74,7 +74,7 @@ BUILD_CONFIGURATION = {
                  "./src/js-communication/src/rdf_loader.js",
                  "./src/js-sparql-parser/src/abstract_query_tree.js",
                  "./src/js-sparql-parser/src/sparql_parser.js",
-                 "./src/js-communication/src/turtle_parser.js",
+                 "./src/js-communication/src/n3_parser.js",
                  "./src/js-query-engine/src/rdf_js_interface.js",
                  "./src/js-query-engine/src/query_filters.js",
                  "./src/js-query-engine/src/query_plan_sync_dpsize.js",
@@ -88,7 +88,7 @@ BUILD_CONFIGURATION = {
                 ],
     :package => {
       :name    => "rdfstore",
-      :version => "0.5.13",
+      :version => "0.6.0",
       :description => "RDF graph store supporting the SPARQL query language",
       :keywords => ["RDF", "SPARQL", "graph", "store"],
       :author  => {
@@ -118,7 +118,7 @@ BUILD_CONFIGURATION = {
                 ],
     :package => {
       :name    => "rdf_js_interface",
-      :version => "0.5.13",
+      :version => "0.6.0",
       :description => "Implementation of W3C's RDF Interfaces API",
       :keywords => ["RDF"],
       :author  => {

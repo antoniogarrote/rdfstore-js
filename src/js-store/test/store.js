@@ -1,5 +1,5 @@
 var Store = require("./../src/store").Store;
-var TurtleParser = require("./../../js-communication/src/turtle_parser").TurtleParser;
+var N3Parser = require("./../../js-communication/src/n3_parser").N3Parser;
 
 exports.testIntegration1 = function(test){
     new Store.Store({name:'test', overwrite:true}, function(store){
@@ -475,12 +475,12 @@ exports.testLoad1 = function(test) {
     });
 };
 
-
 exports.testLoad2 = function(test) {
     Store.create(function(store) {
         store.load('remote', 'http://dbpedia.org/resource/Tim_Berners-Lee', function(success, result) {
             store.node('http://dbpedia.org/resource/Tim_Berners-Lee', function(success, graph){
                 test.ok(success);
+		var tmp = graph.toArray();
                 var results = graph.filter(store.rdf.filters.type(store.rdf.resolve("foaf:Person")));
                 test.ok(results.toArray().length === 1);
                 test.done();
@@ -489,7 +489,6 @@ exports.testLoad2 = function(test) {
     });
 };
 
-
 exports.testLoad3 = function(test) {
     Store.create({name:'test', overwrite:true},function(store) {
         
@@ -497,7 +496,7 @@ exports.testLoad3 = function(test) {
 
         var graph = store.rdf.createGraph();
 
-        input = "_:a <http://test.com/p1> 'test'. _:a <http://test.com/p2> 'test2'. _:b <http://test.com/p1> 'test' .";
+        input = '_:a <http://test.com/p1> "test". _:a <http://test.com/p2> "test2". _:b <http://test.com/p1> "test" .';
         store.load("text/n3", input, "ex:test", function(success, results){
             store.execute("select ?s { GRAPH <http://example.org/examples/test> { ?s ?p ?o } }", function(success, results) {
                 test.ok(success);
@@ -678,7 +677,7 @@ exports.testExport1 = function(test) {
                     n3 = n3 + triple.toString();
                 });
 
-                var result = TurtleParser.parser.parse(n3);
+                var result = N3Parser.parser.parse(n3);
                 test.ok(result.length > 0);
 
                 // an easier way

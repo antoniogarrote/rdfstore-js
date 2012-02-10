@@ -607,8 +607,8 @@ this.suite_store.testLoad3 = function(test) {
 
         var graph = store.rdf.createGraph();
 
-        input = "_:a <http://test.com/p1> 'test'. _:a <http://test.com/p2> 'test2'. _:b <http://test.com/p1> 'test' .";
-        store.load("text/n3", input, "ex:test", function(success, results){
+        input = '_:a <http://test.com/p1> "test". _:a <http://test.com/p2> "test2". _:b <http://test.com/p1> "test" .';
+                store.load("text/n3", input, "ex:test", function(success, results){
             store.execute("select ?s { GRAPH <http://example.org/examples/test> { ?s ?p ?o } }", function(success, results) {
                 test.ok(success);
 
