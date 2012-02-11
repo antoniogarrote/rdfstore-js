@@ -1,37 +1,4 @@
-var MicrographQL = require("./../src/MicrographQL").MicrographQL;
-var Micrograph = require("./../src/MicrographQL").Micrograph;
-var mg = Micrograph;
-var AbstractQueryTree = require("./../../js-sparql-parser/src/abstract_query_tree").AbstractQueryTree;
-
-var sys = null;
-try {
-    sys = require("util");
-} catch(e) {
-    sys = require("sys");
-}
-
-var aqt = new AbstractQueryTree.AbstractQueryTree();
-
-exports.bgp1 = function(test) {
-    var pattern = MicrographQL.parseQuery({name: "john"});
-    var parsedQuery = aqt.parseQueryString("SELECT ?id0 ?id0p ?id0o { ?id0 <name> \"john\" ; ?id0p ?id0o . }");
-    test.ok(pattern.varsMap['id0'] === 'id0');
-    test.ok(sys.inspect(pattern.query,true,20) == sys.inspect(parsedQuery,true,20));
-    test.done();
-
-};
-
-exports.bgp2 = function(test) {
-    MicrographQL.counter = 0;
-    var pattern = MicrographQL.parseQuery({name: "john", friend: {name: "mary"}});
-
-    var parsedQuery = aqt.parseQueryString("SELECT ?id0 ?id1 { ?id0 <name> \"john\" ; ?id0p ?id0o . ?id0 <friend> ?id1 . ?id1 <name> <mary> ; ?id1p ?id1o }");
-    test.ok(pattern.varsMap['id0'] === 'id0');
-    test.ok(pattern.varsMap['id1'] === 'id1');
-    test.ok(pattern.query.units[0].pattern.patterns.length === parsedQuery.units[0].pattern.patterns.length);
-    test.done();
-
-};
+var mg = require("./../src/micrograph").Micrograph;
 
 exports.parseTriples1 = function(test) {
     var data = {
@@ -50,8 +17,6 @@ exports.parseTriples1 = function(test) {
 	    }
 	]
     };
-
-    var result = MicrographQL.parseJSON(data);
 
     var bookCounter = 0;
     var books = {};
@@ -98,7 +63,6 @@ exports.bgpExecution1 = function(test) {
 			      counter++;
 			      test.ok(result.name.length === 2);
 			      test.ok(result.age === 26);
-			      result;
 			  }).
 			  execute(function(results) {
 			      test.ok(results.length === 1);
@@ -582,5 +546,145 @@ exports.limitOffset = function(test) {
 			});
 		});
 	});
+    });
+};
+
+exports.saveTest = function(test) {
+    var data = {
+	$type: 'Person',
+	name: 'Ludwig',
+	surname: 'Wittgenstein',
+	birthplace: 'Wien'
+    };
+
+    var bookCounter = 0;
+    var books = {};
+    var other = 0;
+
+    mg.create(function(g) {
+	g.save(data, function(lw){
+
+	    var book1 = {$type: 'Book',
+			 title: 'Philosophical Investigations',
+			 pages: 320};
+	    var book2 = {$type: 'Book',
+			 title: 'Tractatus Logico-Philosophicus',
+			 pages: 120};
+
+	    lw.author = book1;
+	    g.save(lw);
+
+	    lw.author = book2
+	    g.save(lw);
+
+
+	    lw.author = {};
+	    g.where(lw).execute(function(result){
+
+		test.ok(result.length == 1);
+		result = result[0];
+		test.ok(result.$id == lw.$id);
+		lw = result;
+		test.ok(lw.author.length === 2);
+
+		var books = {};
+		for(var i=0; i<lw.author.length; i++) {
+		    books[lw.author[i].title] = true;
+		}
+
+		test.ok(books["Tractatus Logico-Philosophicus"]);
+		test.ok(books["Philosophical Investigations"]);
+		
+		test.done();
+	    });
+	});
+    });
+};
+
+/*
+exports.inverseProperties = function(test) {
+    mg.create(function(g) {
+	g.save([{$type: 'Person',
+		 name: 'Ludwig',
+		 surname: 'Wittgenstein',
+		 birthplace: 'Wien'},
+	        {$type: 'Book',
+		 title: 'The Open Society and its Enemies',
+		 author: 'Karl Popper',
+		 pages: 510}], 
+	       function(lw){
+		   g.save({$type: 'Book',
+			   title: 'Philosophical Investigations',
+			   pages: 320,
+			   author$in: lw.$id}).
+		       save({$type: 'Book',
+			     title: 'Tractatus Logico-Philosophicus',
+			     pages: 120,
+			     author$in: lw.$id}).
+		       where({$type: 'Book',
+			      author$in: lw.$id}).
+		       execute(function(books){
+			   var titles = {};
+			   for(var i=0; i<books.length; i++) {
+			       console.log(books[i]);
+			       titles[books[i].title] = true;
+			   }
+			   test.ok(titles["Tractatus Logico-Philosophicus"]);
+			   test.ok(titles["Philosophical Investigations"]);
+			   test.done();
+		       });
+	       });
+    });
+};
+*/
+
+exports.performance = function(test) {
+    var nodes = [];
+
+    var maxNodes = 2000;
+    console.log("genereting");
+    for(var i=0; i<maxNodes; i++) {
+	var node = {
+	    $type: 'parent',
+	    name: "node"+i,
+	    value: Math.random(),
+	    id: "id"+i
+	};
+
+	for(var j=0; j<Math.round(Math.random() * 100 % 10); j++) {
+	    links = node.links || []
+	    node.links = links
+	    id = Math.round(Math.random() * (maxNodes*10) % maxNodes)
+	    links.push({link:'link'+j});
+	}
+
+	nodes.push(node);
+    }
+
+    console.log("registering");
+    console.log(nodes.length);
+
+    var counter = 0;
+    mg.create(function(g) {
+	console.log("created");
+	try {
+	g.load(nodes, function() {
+	    console.log("LOADED");
+	    var before = (new Date()).getTime()
+	    g.where({$type:'parent', links:{}}).
+		each(function(node){
+		    counter++;
+		}).
+		execute(function(){
+		    var after = (new Date()).getTime()
+		    console.log("GOT "+counter);
+		    console.log("TOOK "+(after - before)+" millisecs");
+		    test.done();
+		});
+	});
+	}catch(e) {
+	    console.log("EXCEPTION!");
+	    console.log(e);
+	}
     });
 };
