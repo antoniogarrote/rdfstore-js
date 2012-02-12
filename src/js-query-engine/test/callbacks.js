@@ -3,7 +3,7 @@ var QuadBackend = require("./../../js-rdf-persistence/src/quad_backend").QuadBac
 var Lexicon = require("./../../js-rdf-persistence/src/lexicon").Lexicon;
 var Callbacks = require("./../src/callbacks").Callbacks;
 var RDFJSInterface = require("./../src/rdf_js_interface").RDFJSInterface;
-
+/*
 exports.simpleCallback = function(test){
     new Lexicon.Lexicon(function(lexicon){
         new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
@@ -312,7 +312,7 @@ exports.simpleCallbackQuery3 = function(test){
         });
     })
 };
-
+*/
 exports.callbacksBatchLoad = function(test) {
     new Lexicon.Lexicon(function(lexicon){
         new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
