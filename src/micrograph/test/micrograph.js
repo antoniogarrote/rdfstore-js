@@ -65,6 +65,7 @@ exports.bgpExecution1 = function(test) {
 			      test.ok(result.age === 26);
 			  }).
 			  execute(function(results) {
+			      console.log(results);
 			      test.ok(results.length === 1);
 			      test.ok(counter === 1);
 			      test.done();
@@ -581,6 +582,9 @@ exports.saveTest = function(test) {
 	    lw.author = {};
 	    g.where(lw).execute(function(result){
 
+		console.log("----");
+		console.log(result);
+
 		test.ok(result.length == 1);
 		result = result[0];
 		test.ok(result.$id == lw.$id);
@@ -589,6 +593,7 @@ exports.saveTest = function(test) {
 
 		var books = {};
 		for(var i=0; i<lw.author.length; i++) {
+		    console.log(lw.author[i]);
 		    books[lw.author[i].title] = true;
 		}
 
@@ -601,7 +606,7 @@ exports.saveTest = function(test) {
     });
 };
 
-/*
+
 exports.inverseProperties = function(test) {
     mg.create(function(g) {
 	g.save([{$type: 'Person',
@@ -636,26 +641,29 @@ exports.inverseProperties = function(test) {
 	       });
     });
 };
-*/
 
+
+/*
 exports.performance = function(test) {
     var nodes = [];
 
-    var maxNodes = 2000;
+    var maxNodes = 3000;
     console.log("genereting");
     for(var i=0; i<maxNodes; i++) {
 	var node = {
-	    $type: 'parent',
+	    $type: 'Parent',
 	    name: "node"+i,
 	    value: Math.random(),
-	    id: "id"+i
+	    $id: "id"+i
 	};
 
-	for(var j=0; j<Math.round(Math.random() * 100 % 10); j++) {
+	for(var j=0; j<1; j++) {
+        //for(var j=0; j<Math.round(Math.random() * 100 % 10); j++) {
 	    links = node.links || []
 	    node.links = links
 	    id = Math.round(Math.random() * (maxNodes*10) % maxNodes)
-	    links.push({link:'link'+j});
+	    links.push({$id:'link'+i+":"+j,
+		        $type: 'Link'});
 	}
 
 	nodes.push(node);
@@ -671,8 +679,15 @@ exports.performance = function(test) {
 	g.load(nodes, function() {
 	    console.log("LOADED");
 	    var before = (new Date()).getTime()
-	    g.where({$type:'parent', links:{}}).
+	    //g.engine.execute("select ?s ?l { ?l <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> \"Link\" . ?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> \"Parent\" . ?s <links> ?l}",
+	    // 	      function(success, results) {
+	    // 		  console.log(success);
+	    // 		  console.log(results);
+	    // 		  console.log("====================");
+	    g.where({$type:'Parent', 
+		     links:{$type: 'Link'}}).
 		each(function(node){
+		    console.log(node);
 		    counter++;
 		}).
 		execute(function(){
@@ -681,10 +696,13 @@ exports.performance = function(test) {
 		    console.log("TOOK "+(after - before)+" millisecs");
 		    test.done();
 		});
-	});
+
+		      });
+	    //});
 	}catch(e) {
 	    console.log("EXCEPTION!");
 	    console.log(e);
 	}
     });
 };
+*/

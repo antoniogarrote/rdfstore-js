@@ -114,10 +114,15 @@ Micrograph.prototype.load = function() {
 	    }
 	    var quads;
 	    var that = this;
+
 	    //Utils.repeat(0,data.length, function(k,env) {
 	    // 	var floop = arguments.callee;
 	    for(var i=0; i<data.length; i++) {
 		quads = MicrographQL.parseJSON(data[i],graph);
+
+		//console.log("LOAD");
+		//console.log(quads);
+
 		that.engine.batchLoad(quads,function(){ 
 		    //k(floop,env); 
 		});

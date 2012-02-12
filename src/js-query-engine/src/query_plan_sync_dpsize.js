@@ -102,6 +102,7 @@ QueryPlanDPSize.executeAndBGPsGroups = function(bgps) {
 		toJoin[nextGroupId] = true;
 	    } else {
 		newGroups[nextGroupId] = groups[nextGroupId];
+
 		newGroupVars[nextGroupId] = groupVars[nextGroupId];
 	    }
         }
@@ -114,6 +115,7 @@ QueryPlanDPSize.executeAndBGPsGroups = function(bgps) {
 	    var acumGroups = [];
 	    var acumId = "";
 	    var acumVars = "";
+
 	    for(var gid in toJoin) {
 		acumId = acumId+gid;
 		acumGroups = acumGroups.concat(groups[gid]);
@@ -287,6 +289,7 @@ QueryPlanDPSize.executeAndBGPsDPSize = function(allBgps, dataset, queryEngine, e
                                 var p2 = bestPlans[rightPlan.i]; //QueryPlanDPSize.bestPlan(rightPlan, bestPlans);
 
                                 var currPlan = QueryPlanDPSize.createJoinTree(p1,p2);
+
                                 if(!cache[currPlan.i]) {
                                     cache[currPlan.i] = true;
 
@@ -324,14 +327,19 @@ QueryPlanDPSize.executeAndBGPsDPSize = function(allBgps, dataset, queryEngine, e
 
     for(var g=0; g<groupResults.length; g++) {
         var tree = groupResults[g];
-
         var result = QueryPlanDPSize.executeBushyTree(tree, dataset, queryEngine, env);
         if(acum == null) {
             acum = result;
         } else {
+	    //console.log("\n\n\nJOINING");
+	    //console.log(acum);
+	    //console.log(result);
             acum = QueryPlanDPSize.crossProductBindings(acum, result);
         }
     };
+
+    //console.log("ACUM");
+    //console.log(acum);
 
     return acum;
 };
@@ -359,6 +367,7 @@ QueryPlanDPSize.executeBGPDatasets = function(bgp, dataset, queryEngine, queryEn
             }
         }
         var acumBindings = QueryPlanDPSize.unionManyBindings(acum);
+
         return acumBindings;
     } else if(bgp.graph.token === 'var') {
         // union through all named datasets

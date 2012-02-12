@@ -120,178 +120,166 @@ MicrographQuery.prototype.execute = function(callback) {
     var that = this;
     if(this.kind === "all") {
 	//console.log(sys.inspect(this.query, true, 20));
+	var counter = 0;
 	this.store.execute(this.query, function(success, results) {
-	    console.log(results.length);
+	    //console.log(results);
+	    //console.log("results : "+results.length);
+	    if(MicrographQL.isUri(that.varsMap[that.topLevel]) && results.length>0) {
+		// if the top level is a URI, not retrieved in the results,
+		// and there are results, we add the node to one result
+		// bindings to force retrieval of data
+		results[0][that.topLevel] = that.varsMap[that.topLevel];
+	    }
+
+	    var pushed = {};
+	    var processed = {};
+
 	    if(success) {
-		var acum = {};
-		var toExpand = {};
-		var topLevel = [];
-		var addedToTopLevel = {};
-		var result, id, node, object, idp, isIDProperty, predicate, isTopLevel;	
+		var nodes = {};
+		var disambiguations = {};
+		var toReturn = [];
 		for(var i=0; i<results.length; i++) {
 		    result = results[i];
 		    for(var p in result) {
 			isTopLevel = false;
-			isIDProperty = false;
-			idp = that.varsMap[p];
-			if(MicrographQL.isUri(idp)) {
-			    id = idp;
-			    isIDProperty = true;
-			    if(p === that.topLevel) {
-				isTopLevel = true;
-			    }
+			var idp = that.varsMap[p];
 
-			} else {
-			    if(idp != that.varsMap[idp]) {
-				// the URI was given in the query, not retrieved in results
-				id = that.varsMap[idp]
-				node = acum[id] || {};
-				node['$id'] = id.split(MicrographQL.base_uri)[1];
-			    } else {
-				// the subject was a variable in the query, retrieve it from the query results
-				id = result[idp].value;
-				node = acum[id] || {};
-			    }
-
-			    if(idp === p) {
-				isIDProperty = true;
-			    }
-
-			    if(idp === that.topLevel) {
-				isTopLevel = true;
-			    }
-			}
+			if(idp == p)
+			    idp = results[i][p].value;
 
 
-			acum[id] = node;
+			if(p === that.topLevel)
+			    isTopLevel = true;
 
-			// check inverse links here
-			// Check if the object is an inverse linked object
-			if(that.inverseMap[idp] != null) {
-			    for(var invProp in that.inverseMap[idp]) {
-				var invLinkedTo = that.inverseMap[idp][invProp];
-				if(results[i][invLinkedTo] != null) {
-				    invLinkedTo = results[i][invLinkedTo];
-				}
+			var id = idp.split(MicrographQL.base_uri)[1];
+			if(processed[id] == null) {
+			    var node = nodes[id]
+			    node = node || {'$id': id};
+			    nodes[id] = node;
+			    if(MicrographQL.isUri(idp)) {
+				//console.log(sys.inspect(MicrographQL.singleNodeQuery(idp, 'p', 'o'), true,20));
+				that.store.execute(MicrographQL.singleNodeQuery(idp, 'p', 'o'), function(success, resultsNode){
+				    processed[id] = true;
+				    counter++;
 
-				var invLinkedNode = acum[invLinkedTo] || {};
-				invLinkedNode['$id'] = invLinkedTo;
-				acum[invLinkedTo] = invLinkedNode;
-				if(node[invProp] == null) {
-				    node[invProp] = invLinkedNode;
-				} else if(node[invProp].constructor === Array) {
-				    node[invProp].push(invLinkedNode);
-				} else {
-				    node[invProp] = [node[invProp], invLinkedNode];
-				}
-			    }
-			    var predProp = predicate.split(MicrographQL.base_uri)[1];
-			    if(that.inverseMap[object['$id']][predProp])
-				object[predProp+'$in'] = node;
-			}
+				    nodeDisambiguations = disambiguations[id] || {};
+				    disambiguations[id] = nodeDisambiguations;
 
-
-			if(isTopLevel && addedToTopLevel[id] == null) {
-			    topLevel.push(node);
-			    addedToTopLevel[id] = true;
-			}
-
-			if(isIDProperty) {
-			    // this is subject
-			    node['$id'] = id.split(MicrographQL.base_uri)[1];
-			} else {
-			    object = result[idp+"o"];
-			    var related;
-			    if(object.token === "uri") {
-				related = acum[object.value] || {};
-				acum[object.value] = related;
-				related['$id'] = object.value.split(MicrographQL.base_uri)[1];
-				object = related;
-			    } else {
-				if(object.type === "http://www.w3.org/2001/XMLSchema#float") {
-				    object = parseFloat(object.value)
-				} else if(object.type === "http://www.w3.org/2001/XMLSchema#boolean") {
-				    object = (object.value === "true") ? true : false;
-				} else if(object.type === "http://www.w3.org/2001/XMLSchema#dateTime") {
-				    object = Utils.parseISO8601(object.value);
-				} else {
-				    object = object.value;
-				}
-			    }
-			    predicate = result[idp+"p"].value;
-			    if(predicate === "http://www.w3.org/1999/02/22-rdf-syntax-ns#type") {
-				predicate = "$type";
-			    }
-			    
-			    if(node[predicate] == null) {
-				node[predicate] = object;
-			    } else {
-				var map = node[predicate];
-				if(typeof(map) === "object" && map['$id'] == null) {
-				    // there is already a  map and is not a URI ref
-				    if(typeof(object) == "object") {
-					map[object['$id']] = object;
-				    } else {
-					map[object] = object;
-				    }
-				    toExpand[id] = true;
-				} else if(typeof(map) === "object") {
-				    if(typeof(object) != "object" || map['$id'] != object['$id']) { 
-					node[predicate] = {};
-					node[predicate][map['$id']] = map;
-					// the value is a object with URI ref
-					if(typeof(object) == "object") {
-					    node[predicate][object['$id']] = object;
+				    var obj = null;
+				    for(var i=0; i<resultsNode.length; i++) {
+					var obj = resultsNode[i]['o'];
+					if(obj.token === 'uri') {
+					    var oid = obj.value.split(MicrographQL.base_uri)[1];
+					    var linked  = nodes[oid] || {};
+					    linked['$id'] = oid;
+					    nodes[oid] = linked;
+					    obj = linked;
 					} else {
-					    node[predicate][object] = object;
+					    obj = MicrographQL.literalToJS(obj);
 					}
-					toExpand[id] = true;
-				    }
-				} else {
-				    if(map != object) {
-					node[predicate] = {};
-					node[predicate][map] = map;
-					if(typeof(object) == "object") {
-					    node[predicate][object['$id']] = object;
+
+					var pred = resultsNode[i]['p'].value;
+					if(pred === "http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
+					    pred = '$type';
+
+					if(node[pred] && node[pred].constructor === Array) {
+					    if(typeof(obj) === 'object' && obj['$id'] && nodeDisambiguations[pred][obj['$id']] == null) {
+						nodeDisambiguations[pred][obj['$id']] = true;
+						node[pred].push(obj);
+					    } else if(typeof(obj) !== 'object' && obj.constructor === Date && nodeDisambiguations[pred]['date:'+obj.getTime()] == null) {
+						nodeDisambiguations[pred]['date:'+obj.getTime()] = true;
+						node[pred].push(obj);
+					    } else if(nodeDisambiguations[pred][obj] == null) {
+						nodeDisambiguations[pred][obj] = true;
+						node[pred].push(obj);
+					    }
+					} else if(node[pred]) {
+					    if(typeof(node[pred]) === 'object' && node[pred]['$id'] != null) {
+						if(typeof(obj) === 'object' && obj['$id'] != null) {
+						    if(node[pred]['$id'] != obj['$id']) {
+							node[pred] = [node[pred],obj];
+							nodeDisambiguations[pred] = {};
+							nodeDisambiguations[pred][node[pred][0]['$id']] = true;
+							nodeDisambiguations[pred][node[pred][1]['$id']] = true;
+						    }
+						} else {
+						    nodeDisambiguations[pred] = {};
+						    nodeDisambiguations[pred][node[pred]['$id']] = true;
+						    if(typeof(obj) === 'object') {
+							nodeDisambiguations[pred]['date:'+obj.getTime()] = true;
+						    } else {
+							nodeDisambiguations[pred][obj] = true;
+						    }
+						    node[pred] = [node[pred],obj];
+						}
+					    } else if(typeof(node[pred]) === 'object') {
+						if(typeof(obj) === 'object' && obj['$id'] == null) {
+						    if(node[pred].getTime() !== obj.getTime()) {
+							node[pred] = [node[pred],obj];
+							nodeDisambiguations[pred] = {};
+							nodeDisambiguations[pred]['date:'+node[pred][0].getTime()] = true;
+							nodeDisambiguations[pred]['date:'+node[pred][1].getTime()] = true;
+						    }
+						} else {
+						    nodeDisambiguations[pred] = {};
+						    nodeDisambiguations[pred]['date:'+node[pred].getTime()] = true;
+						    if(typeof(obj) === 'object') {
+							nodeDisambiguations[pred][obj['$id']] = true;
+						    } else {
+							nodeDisambiguations[pred][obj] = true;
+						    }
+						    node[pred] = [node[pred],obj];
+						}
+					    } else {
+						if(typeof(obj) !== 'object') {
+						    if(obj != node[pred]) {
+							nodeDisambiguations[pred] = {};
+							nodeDisambiguations[pred][obj] = true;
+							nodeDisambiguations[pred][node[pred]] = true;
+							node[pred] = [node[pred],obj];
+						    }
+						} else {
+						    nodeDisambiguations[pred] = {};
+						    nodeDisambiguations[pred][node[pred]] = true;
+
+						    if(obj['$id'] == null) {
+							nodeDisambiguations[pred][obj['$id']] = true;						    
+						    } else {
+							nodeDisambiguations[pred]['date:'+obj.getTime()] = true;						    
+						    }
+						    node[pred] = [node[pred],obj];
+						}
+					    }
 					} else {
-					    node[predicate][object] = object;
+					    node[pred] = obj;
 					}
-					toExpand[id] = true;				    
 				    }
-				}
+
+				    if(isTopLevel && pushed[node['$id']] == null) {
+					toReturn.push(node);
+					pushed[node['$id']] = true;
+				    }
+				});
 			    }
 			}
 		    }
 		}
 
-
-		// expand collections
-		for(var p in toExpand) {
-		    var nodeToExpand = acum[p];
-		    for(var p2 in nodeToExpand) {
-			if(typeof(nodeToExpand[p2]) === "object" && nodeToExpand[p2]['$id'] == null) {
-			    var collection = [];
-			    for(var p3 in nodeToExpand[p2]) {
-				collection.push(nodeToExpand[p2][p3]);
-			    }
-			    nodeToExpand[p2] = collection;
-			}
-		    }
-		}
-		
-		// return top level results
-		var toReturn = [];
 		if(that.filter != null) {
-		    Utils.repeat(0,topLevel.length, function(k,env) {
+		    var filtered = [];
+		    var filteredResult;
+		    Utils.repeat(0,toReturn.length, function(k,env) {
 			var floop = arguments.callee;
-			var result = topLevel[env._i];
-			toReturn.push(that.filter(result));
+			var result = toReturn[env._i];
+			filteredResult = that.filter(result) || result;
+			if(filtered !== false)
+			   filtered.push(filteredResult);
 			k(floop,env);
 		    }, function(env) {
-			callback(toReturn); 
+			callback(filtered); 
 		    });
 		} else {	
-		    callback(topLevel);
+		    callback(toReturn);
 		}
 	    } else {
 		if(that.onErrorCallback) {

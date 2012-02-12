@@ -23,9 +23,21 @@ MicrographQL.prefix = "mql";
 
 MicrographQL.counter = 0;
 
+MicrographQL.filterNames = {'$eq':true, '$lt':true, '$gt':true, '$neq':true, '$lteq':true, '$gteq':true, '$not':true, '$like':true, '$and':true, '$or':true};
+
 MicrographQL.newContext = function(isQuery) {
     return {variables: [], isQuery:isQuery, quads:[], varsMap: {}, 
 	    filtersMap: {}, inverseMap:{}};
+};
+
+MicrographQL.isFilter = function(val) {
+    if(typeof(val) !== 'object' || val.constructor === Array) {
+	return false;
+    } else {
+	for(var p in val) {
+	    return MicrographQL.filterNames[p] || false;
+	}
+    }
 };
 
 MicrographQL.parseFilter = function(predicate, filterVariable, expression) {
@@ -210,12 +222,14 @@ MicrographQL.parseBGP = function(expression, context, topLevel, graph) {
 	context.varsMap[nextVariable] = nextVariable;
     }
 
+
     if(topLevel)
 	context.topLevel = nextVariable;
 
     
-    var predicate, object, result, linked, linkedId, inverseLinks, linkedProp;
+    var predicate, object, result, linked, linkedId, inverseLinks, linkedProp, detectEmpty = true;
     for(var p in expression) {
+	detectEmpty = false;
 	if(expression[p] != null) {
 	    if(p!=='$id') {
 		if(p.indexOf("$in") == (p.length-3) && p.indexOf("$in") !== -1) {
@@ -262,19 +276,7 @@ MicrographQL.parseBGP = function(expression, context, topLevel, graph) {
 		    predicate = MicrographQL.parseURI(predicateUri);
 
 		    // check if the object is a filter
-		    var isFilter = false;
-		    var propsCounter = 0;
-		    if(typeof(expression[p]) === 'object' && 
-		       expression[p].constructor !== Array &&
-		       expression[p]['$id'] == null) {
-			for(var prop in expression[p]) {
-			    propsCounter++;
-			    isFilter = (prop[0] === '$' && prop[0] !== '$id');
-			}
-			isFilter = isFilter && propsCounter === 1;
-		    } else {
-			isFilter = false;
-		    }
+		    var isFilter = MicrographQL.isFilter(expression[p]);
 
 		    // process the object
 		    if(isFilter) {
@@ -282,7 +284,7 @@ MicrographQL.parseBGP = function(expression, context, topLevel, graph) {
 			filterCounter++;
 			var variableToken = {'token':'var', 'value': filterVariable};
 			var filterString = MicrographQL.parseFilter(predicate,variableToken, expression[p]);
-			context.variables.push(variableToken);
+			//context.variables.push(variableToken);
 			context.varsMap[filterVariable] = nextVariable;
 			context.filtersMap[filterVariable] = filterString;
 			var quad = {'subject':subject, 'predicate':predicate, 'object':variableToken};
@@ -332,22 +334,59 @@ MicrographQL.parseBGP = function(expression, context, topLevel, graph) {
 	}
     }
 
-    if(context.isQuery) {
-	// @todo What to do if we don't wan to recover all the properties?
-	// how can we retrieve the objects with value and associate them to
-	// the results?
-	// (maybe saving a copy of the property before executing the query?)
-	predicate = {'token':'var', 'value':nextVariable+'p'};
-	object = {'token':'var', 'value':nextVariable+'o'};
-	context.variables.push(predicate);
-	context.variables.push(object);
-	context.varsMap[predicate.value] = nextVariable;
-	context.varsMap[object.value] = nextVariable;
-	var quad = {'subject':subject, 'predicate':predicate, 'object':object};
-	if(graph != null)
-	    quad['graph'] = graph;
+    if(detectEmpty) {
+	var quad = {'subject':subject, 
+		    'predicate':{'token':'var', 'value':nextVariable+"p"}, 
+		    'object':{'token':'var', 'value':nextVariable+"o"}};
 	quads.push(quad);
     }
-
     return [subject, quads];
 };
+
+
+MicrographQL.singleNodeQuery = function(id, predVar, objVar) {
+    return { units: 
+	     [ { modifier: '',
+		 group: '',
+		 pattern: 
+		 { filters: [],
+		   token: 'groupgraphpattern',
+		   patterns: 
+		   [ { triplesContext: 
+		       [ { subject: {token: 'uri', value: id},
+			   predicate: {token:'var', value:predVar},
+			   object: {token:'var', value:objVar}}],
+		       token: 'basicgraphpattern' }] },
+		 kind: 'select',
+		 projection: 
+		 [ { value: { value: predVar, token: 'var' },
+		     kind: 'var',
+		     token: 'variable' },
+		   { value: { value: objVar, token: 'var' },
+		     kind: 'var',
+		     token: 'variable' } ],
+		 dataset: 
+		 { implicit: 
+		   [ { value: 'https://github.com/antoniogarrote/rdfstore-js#default_graph',
+		       prefix: null,
+		       token: 'uri',
+		       suffix: null } ],
+		   named: [] },
+		 token: 'executableunit' }],
+	     prologue: { token: 'prologue', prefixes: [], base: '' },
+	     kind: 'query',
+	     token: 'query' }
+};
+
+MicrographQL.literalToJS = function(object) {
+    if(object.type === "http://www.w3.org/2001/XMLSchema#float") {
+	object = parseFloat(object.value)
+    } else if(object.type === "http://www.w3.org/2001/XMLSchema#boolean") {
+	object = (object.value === "true") ? true : false;
+    } else if(object.type === "http://www.w3.org/2001/XMLSchema#dateTime") {
+	object = Utils.parseISO8601(object.value);
+    } else {
+	object = object.value;
+    }
+    return object;
+}

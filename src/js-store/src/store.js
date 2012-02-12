@@ -241,7 +241,7 @@ Store.Store.prototype.execute = function() {
      
         if(arguments.length === 1) {
             queryString = arguments[0];
-            var callback = function(){};
+            callback = function(){};
         } else if(arguments.length === 2) {
             queryString = arguments[0];
             callback = arguments [1];

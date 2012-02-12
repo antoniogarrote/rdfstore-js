@@ -602,6 +602,7 @@ QueryEngine.QueryEngine.prototype.executeQuery = function(syntaxTree, callback, 
     // retrieval queries can only have 1 executable unit
     var aqt = that.abstractQueryTree.parseExecutableUnit(units[0]);
 
+
     // can be anything else but a select???
     if(aqt.kind === 'select') {
       this.executeSelect(aqt, queryEnv, defaultDataset, namedDataset, function(success, result){
@@ -1231,17 +1232,10 @@ QueryEngine.QueryEngine.prototype.executeJOIN = function(projection, dataset, pa
 
 QueryEngine.QueryEngine.prototype.rangeQuery = function(quad, queryEnv) {
     var that = this;
-    //console.log("BEFORE:");
-    //console.log("QUAD:");
-    //console.log(quad);
     var key = that.normalizeQuad(quad, queryEnv, false);
     if(key != null) {
-        //console.log("RANGE QUERY:")
-        //console.log(key);
-        //console.log(new QuadIndexCommon.Pattern(key));
+	//console.log(new QuadIndexCommon.Pattern(key));
         var quads = that.backend.range(new QuadIndexCommon.Pattern(key));
-        //console.log("retrieved");
-        //console.log(quads)
         if(quads == null || quads.length == 0) {
             return [];
         } else {
