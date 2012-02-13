@@ -229,9 +229,9 @@ MicrographQL.parseBGP = function(expression, context, topLevel, graph) {
     
     var predicate, object, result, linked, linkedId, inverseLinks, linkedProp, detectEmpty = true;
     for(var p in expression) {
-	detectEmpty = false;
 	if(expression[p] != null) {
 	    if(p!=='$id') {
+		detectEmpty = false;
 		if(p.indexOf("$in") == (p.length-3) && p.indexOf("$in") !== -1) {
 
 		    // rewrite inverse properties
@@ -241,16 +241,16 @@ MicrographQL.parseBGP = function(expression, context, topLevel, graph) {
 		    // this could also be $this eventually
 		    if(typeof(expression[p]) === "string")
 			linked = {'$id': expression[p]};
-		    expression[p] = linked
+		    expression[p] = linked;
 
-		    var idInverseMap;
+		    var idInverseMap, invLinkedId;
 		    if(subject.token === 'uri') {
 			invLinkedId = expression['$id'];
 			idInverseMap = invLinkedId;
 		    } else {
 			// unknown ID for this node, it is a variable
 			invLinkedId = subject;			
-			idInverseMap = invLinkedId.value
+			idInverseMap = invLinkedId.value;
 		    }
 
 		    linked[linkedProp] = {'$id':invLinkedId};
@@ -352,7 +352,7 @@ MicrographQL.parseBGP = function(expression, context, topLevel, graph) {
 	    var quad = {'subject':subject, 
 			'predicate':{'token':'var', 'value':nextVariable+"p"}, 
 			'object':{'token':'var', 'value':nextVariable+"o"}};
-	    quads.push(quad)
+	    quads.push(quad);
 	}
     }
     return [subject, quads];

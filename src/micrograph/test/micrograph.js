@@ -659,7 +659,7 @@ exports.inverseProperties = function(test) {
     });
 };
 
-exports.remove = function(test) {
+exports.remove1 = function(test) {
     mg.create(function(g) {
 	g.save([{$type: 'Person',
 		 name: 'Ludwig',
@@ -683,22 +683,128 @@ exports.remove = function(test) {
 		       where({$type: 'Book'}).
 		       all(function(books){
 			   test.ok(books.length === 3);
-			   console.log("\n\n\nREMOVING!!!\n\n\n");
 			   g.where({title: g._t}).
-			       remove(function(res) {
-				   console.log("RESULTS HERE");
-				   console.log(res);
+                               remove(function(res) {
 				   test.ok(res);
 			       }).
 			       where({$type: 'Book'}).
+			       each(function(book) {
+				   test.ok(book.$id != null);
+				   test.ok(book.pages != null);
+				   test.ok(book.$type === 'Book');
+				   test.ok(book.title == null);
+			       }).
 			       all(function(books){
-				   console.log("RESULTS");
-				   console.log(books);
-				   test.ok(books.length === 1);
+				   test.ok(books.length === 3);
 				   test.done();
 			       });
 		       });
 	       });
+    });
+};
+
+exports.remove2 = function(test) {
+    mg.create(function(g) {
+	g.save([{$type: 'Person',
+		 name: 'Ludwig',
+		 surname: 'Wittgenstein',
+		 birthplace: 'Wien'},
+		{$type: 'Person',
+		 name:'Karl',
+		 surname: 'Popper'}]).
+	    where({surname: 'Popper'}).
+            remove(function(res) {
+		test.ok(res);
+	    }).
+	    where({$type: 'Person'}).
+	    each(function(person) {
+		if(person.name === 'Karl') {
+		    test.ok(person.surname == null);
+		} else {
+		    test.ok(person.surname === 'Wittgenstein');
+		}
+	    }).
+	    all(function(people){
+		test.ok(people.length === 2);
+		test.done();
+	    });
+    });
+};
+
+exports.remove3 = function(test) {
+    mg.create(function(g) {
+	g.save([{$type: 'Person',
+		 name: 'Ludwig',
+		 surname: 'Wittgenstein',
+		 birthplace: 'Wien'},
+		{$type: 'Person',
+		 name:'Karl',
+		 surname: 'Popper'}]).
+	    where({surname: 'Popper'}).
+            removeNodes(function(removed) {
+		test.ok(removed === 1);
+	    }).
+	    where({$type: 'Person'}).
+	    each(function(person) {
+		test.ok(person.surname === 'Wittgenstein');
+	    }).
+	    all(function(people){
+		test.ok(people.length === 1);
+		test.done();
+	    });
+    });
+};
+
+exports.remove4 = function(test) {
+    mg.create(function(g) {
+	g.save({$type: 'Person',
+		name: 'Ludwig',
+		surname: 'Wittgenstein',
+		birthplace: 'Wien',
+	        author: [{$type: 'Book',
+			  title: 'Tractatus Logico-Philosophicus'},
+			 {$type: 'Book',
+			  title: 'Philosophical Investigations'}]}).
+	    where({title: 'Philosophical Investigations'}).
+            removeNodes(function(removed) {
+		test.ok(removed === 1);
+	    }).
+	    where({author: {}}).
+	    all(function(authors){
+		test.ok(authors.length === 1);
+		test.ok(authors[0].author.title === "Tractatus Logico-Philosophicus");		
+		test.done();
+	    });
+    });
+};
+
+
+exports.remove5 = function(test) {
+    mg.create(function(g) {
+	g.save([{$type: 'Person',
+		 name: 'Ludwig',
+		 surname: 'Wittgenstein',
+		 birthplace: 'Wien',
+	         author: [{$type: 'Book',
+			   title: 'Tractatus Logico-Philosophicus'},
+			  {$type: 'Book',
+			   title: 'Philosophical Investigations'}]},
+		{$type: 'Person',
+		 name: 'Karl',
+		 surname: 'Popper',
+		 author: {$type: 'Book',
+			  title: 'The Open Society and its Enemies'}}]).
+	    where({author$in: {surname: 'Wittgenstein'}}).
+            removeNodes(function(removed) {
+		test.ok(removed === 2);
+	    }).
+	    where({author$in: {}}).
+	    all(function(authored){
+		test.ok(authored.length === 1);
+		test.ok(authored[0].title === 'The Open Society and its Enemies');
+		test.ok(authored[0].author$in.surname === "Popper");		
+		test.done();
+	    });
     });
 };
 

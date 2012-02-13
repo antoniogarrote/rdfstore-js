@@ -67,24 +67,28 @@ MicrographQuery.prototype.remove = function(callback) {
     return this.store;
 };
 
+
+MicrographQuery.prototype.removeNodes = function(callback) {
+    this.kind = 'removeNodes';
+    this._parseModifyNodes(this.template, callback);
+    return this.store;
+};
 // protected inner methods
 
 MicrographQuery.prototype._executeUpdate = function(callback) {
-    console.log(sys.inspect(this.query, true, 20));
-    var pattern = this._parseModify(this.template);
+    var pattern;
+    pattern = this._parseModify(this.template);
     this.query = pattern.query;
     this.varsMap = pattern.varsMap;
     this.topLevel = pattern.topLevel;
     this.subject = pattern.subject;
     this.inverseMap = pattern.inverseMap;
-    console.log(sys.inspect(this.query, true, 20));
+    //console.log(sys.inspect(this.query, true, 20));
     this.store.execute(this.query,function(success, results){
-	console.log("RESULT");
-	console.log(success);
-	console.log(results);
-	callback(success);
+	if(callback)
+	    callback(success);
     });
-}
+};
 
 MicrographQuery.prototype._executeQuery = function(callback) {
     var pattern = this._parseQuery(this.template);
@@ -234,7 +238,6 @@ MicrographQuery.prototype._executeQuery = function(callback) {
 			    }
 
 			    if(MicrographQL.isUri(idp)) {
-				//console.log(sys.inspect(MicrographQL.singleNodeQuery(idp, 'p', 'o'), true,20));
 				that.store.execute(MicrographQL.singleNodeQuery(idp, 'p', 'o'), function(success, resultsNode){
 				    processed[id] = true;
 				    counter++;
@@ -428,12 +431,7 @@ MicrographQuery.prototype._parseQuery = function(object) {
 
 MicrographQuery.prototype._parseModify = function(object) {
     var context = MicrographQL.newContext(true);
-    console.log("BGP VALUE");
-    console.log(object);
     var result = MicrographQL.parseBGP(object, context, true);
-    console.log("PARSED");
-    console.log(result);
-    console.log("-------");
     var subject = result[0];
 
     var filters = [{'token': 'filter',
@@ -445,8 +443,7 @@ MicrographQuery.prototype._parseModify = function(object) {
 	filters[0].value.operands.push(context.filtersMap[v]);
 
 
-    var quads = context.quads.concat(result[1]);
-
+    var quads = context.quads.concat(result[1]);	
 
     var unit =  {'kind':'modify',
 		 'with': null,
@@ -479,4 +476,66 @@ MicrographQuery.prototype._parseModify = function(object) {
 	    'topLevel': context.topLevel,
 	    'subject': subject,
 	    'inverseMap': context.inverseMap};		 
+};
+
+MicrographQuery.prototype._parseModifyNodes = function(object, callback) {
+    this.kind = 'all';
+    var that = this;
+    var counter = 0;
+    this._executeQuery(function(result) {
+	var nextVariable = MicrographQL.nextVariable();
+	for(var i=0; i<result.length; i++) {
+
+	    that.template = {'$id': result[i].$id};
+	    that.kind = 'removeNode';
+	    that._executeUpdate(function(result){
+
+		var subject = {'token':'uri', 'value':MicrographQL.base_uri+that.template['$id']};
+
+		if(result===true)
+		    counter++;
+
+		var pattern = that._modifyQuery([{'subject': subject,
+						  'predicate': {'token':'var', 'value':nextVariable+'pout'},
+						  'object': {'token':'var', 'value':nextVariable+'oout'}}]);
+
+		that.store.execute(pattern.query, function(success,res) {});
+
+		pattern = that._modifyQuery([{'subject': {'token':'var', 'value':nextVariable+'sin'},
+					      'predicate': {'token':'var', 'value':nextVariable+'pin'},
+					      'object': subject}]);
+
+		that.store.execute(pattern.query, function(success,res) {});
+
+	    })
+	};
+    });
+
+    if(callback)
+	callback(counter);
+};
+
+MicrographQuery.prototype._modifyQuery = function(quads) {
+
+    var filters = [{'token': 'filter',
+		    'value':{'token':'expression',
+			     'expressionType': 'conditionaland',
+			     'operands':[]}}];
+
+    var unit =  {'kind':'modify',
+		 'with': null,
+		 'using': null,
+		 'pattern':{'filters':[],
+			    'token':'groupgraphpattern',
+			    'patterns':
+			    [{'token':'basicgraphpattern',
+			      'triplesContext': quads}]},
+		 'delete': quads};
+
+    var prologue =  { base: '', prefixes: [], token: 'prologue' };
+
+    return {'query':{ 'prologue': prologue,
+		      'kind': 'update',
+		      'token': 'query',
+		      'units':[unit]}};		 
 };
