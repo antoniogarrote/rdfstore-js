@@ -29,7 +29,7 @@ rdfstore-js is a pure Javascript implementation of a RDF graph store with suppor
       });
     })
 
-rdfstore-js can be executed in a web browser or can be included as a library in a node.js application. It can also be executed as a stand-alone SPARQL end-point accepting SPARQL RDF Protocol HTTP requests.
+rdfstore-js can be executed in a web browser or can be included as a library in a node.js application. It can also be executed as a stand-alone SPARQL end-point accepting SPARQL RDF Protocol HTTP requests. Go to the bottom of this page to find some application examples using the library.
 
 The current implementation is far from complete but it already passes all the test cases for the SPARQL 1.0 query language and supports data manipulation operations from the SPARQL 1.1/Update version of the language.
 
@@ -618,6 +618,21 @@ The module declares a new property 'RDFJSInterface' in the 'window' object point
                                 rdf.createNamedNode("rdf:type"),
                                 rdf.createNamedNode("http://test.com/MyClass") ));
     ...
+
+##Related libraries and examples
+
+There are some other libraries we have developed and that can be used with rdfstore-js to make it easier to build JS applicatons using RDF and linked data:
+
+ - [SemanticKO](https://github.com/antoniogarrote/semantic-ko) and extension for [Knockoutjs](http://knockoutjs.com/) that make possible to establish bidirectional bindings between the DOM tree and the RDF graph. It also includes some other utilities for building single page JS applications on top of the RDF graph stored by rdfstore-js.
+ - [JSON-LD Macros](https://github.com/antoniogarrote/json-ld-macros) a library for describing transformations of JSON APIs into JSON-LD so it can be imported into rdfstore-js.
+
+We have also built some demo applications used to test the store:
+
+ - [Geek Talk](http://antoniogarrote.com/geektalk/) a web client aggregating information for a Github's project from different data APIs like Twitter, HackerNews or StackOverflow ([github](https://github.com/antoniogarrote/geektalk).)
+ - [social.rdf](http://antoniogarrote.com/social/stream) a personal linked data server collecting one user's information from different social web sites ([github](https://github.com/antoniogarrote/social.rdf)).
+ - [social.rdf vis](http://antoniogarrote.com/vis/) an example of how to use rdfstore-js with a data visualization library like [d3.js](http://mbostock.github.com/d3/).
+ - [SemanticKO examples](http://antoniogarrote.github.com/semantic-ko/index.html) a collection of interactive examples of SemanticKO
+ - [JSON-LD Macros example](http://antoniogarrote.github.com/json-ld-macros/) a small interactive example of how to use JSON-LD Macros to build data transformations.
 
 ##Reusable modules. 
 
