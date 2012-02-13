@@ -38,7 +38,7 @@ exports.parseTriples1 = function(test) {
 		onError(function(reason){
 		    test.ok(false);
 		}).
-		execute(function(){
+		all(function(){
 		    test.ok(books["Tractatus Logico-Philosophicus"]);
 		    test.ok(books["Philosophical Investigations"]);
 		    test.ok(bookCounter == 2);
@@ -64,7 +64,7 @@ exports.bgpExecution1 = function(test) {
 			      test.ok(result.name.length === 2);
 			      test.ok(result.age === 26);
 			  }).
-			  execute(function(results) {
+			  all(function(results) {
 			      console.log(results);
 			      test.ok(results.length === 1);
 			      test.ok(counter === 1);
@@ -112,7 +112,7 @@ exports.filters1 = function(test) {
 		onError(function(reason){
 		    test.ok(false);
 		}).
-		execute(function(){
+		all(function(){
 		    test.ok(books["Tractatus Logico-Philosophicus"]);
 		    test.ok(bookCounter == 1);
 		    test.ok(other == 0);
@@ -161,7 +161,7 @@ exports.filters2 = function(test) {
 		onError(function(reason){
 		    test.ok(false);
 		}).
-		execute(function(){
+		all(function(){
 		    test.ok(books["Philosophical Investigations"]);
 		    test.ok(bookCounter == 1);
 		    test.ok(other == 0);
@@ -210,7 +210,7 @@ exports.filters3 = function(test) {
 		onError(function(reason){
 		    test.ok(false);
 		}).
-		execute(function(){
+		all(function(){
 		    test.ok(books["Tractatus Logico-Philosophicus"]);
 		    test.ok(bookCounter == 1);
 		    test.ok(other == 0);
@@ -259,7 +259,7 @@ exports.filters4 = function(test) {
 		onError(function(reason){
 		    test.ok(false);
 		}).
-		execute(function(){
+		all(function(){
 		    test.ok(books["Tractatus Logico-Philosophicus"]);
 		    test.ok(bookCounter == 1);
 		    test.ok(other == 0);
@@ -307,7 +307,7 @@ exports.filters5 = function(test) {
 		onError(function(reason){
 		    test.ok(false);
 		}).
-		execute(function(){
+		all(function(){
 		    test.ok(books["Tractatus Logico-Philosophicus"]);
 		    test.ok(bookCounter == 1);
 		    test.ok(other == 0);
@@ -356,7 +356,7 @@ exports.filters6 = function(test) {
 		onError(function(reason){
 		    test.ok(false);
 		}).
-		execute(function(){
+		all(function(){
 		    test.ok(books["Philosophical Investigations"]);
 		    test.ok(bookCounter == 1);
 		    test.ok(other == 0);
@@ -404,7 +404,7 @@ exports.filters7 = function(test) {
 		onError(function(reason){
 		    test.ok(false);
 		}).
-		execute(function(){
+		all(function(){
 		    test.ok(books["Tractatus Logico-Philosophicus"]);
 		    test.ok(bookCounter == 1);
 		    test.ok(other == 0);
@@ -452,7 +452,7 @@ exports.filters8 = function(test) {
 		onError(function(reason){
 		    test.ok(false);
 		}).
-		execute(function(){
+		all(function(){
 		    test.ok(books["Tractatus Logico-Philosophicus"]);
 		    test.ok(books["Philosophical Investigations"]);
 		    test.ok(bookCounter == 2);
@@ -501,13 +501,13 @@ exports.filters9 = function(test) {
 		onError(function(reason){
 		    test.ok(false);
 		}).
-		execute(function(){
+		all(function(){
 		    test.ok(books["Tractatus Logico-Philosophicus"]);
 		    test.ok(books["Philosophical Investigations"]);
 		    test.ok(bookCounter == 2);
 		    test.ok(other == 0);
 		    g.where({pages:{$and:[{$gt:1000},{$lt:10}]}}).
-			execute(function(res) {
+			all(function(res) {
 			    test.ok(res.length === 0);
 			    test.done();
 			});
@@ -530,13 +530,13 @@ exports.limitOffset = function(test) {
     mg.create(function(g) {
 	g.load(data,function() {
 	    g.where({}).order('a').offset(0).limit(2).
-		execute(function(nodes){
+		all(function(nodes){
 		    test.ok(nodes[0].a === 1);
 		    test.ok(nodes[1].a === 2);
 		    test.ok(nodes.length === 2);
 
 		    g.where({}).order('a').offset(2).limit(4).
-			execute(function(nodes) {
+			all(function(nodes) {
 			    test.ok(nodes[0].a === 3);
 			    test.ok(nodes[1].a === 4);
 			    test.ok(nodes[2].a === 5);
@@ -575,15 +575,15 @@ exports.saveTest = function(test) {
 	    lw.author = book1;
 	    g.save(lw);
 
-	    lw.author = book2
+	    lw.author = book2;
 	    g.save(lw);
 
 
 	    lw.author = {};
-	    g.where(lw).execute(function(result){
+	    g.where(lw).all(function(result){
 
-		console.log("----");
-		console.log(result);
+		//console.log("----");
+		//console.log(result);
 
 		test.ok(result.length == 1);
 		result = result[0];
@@ -593,7 +593,7 @@ exports.saveTest = function(test) {
 
 		var books = {};
 		for(var i=0; i<lw.author.length; i++) {
-		    console.log(lw.author[i]);
+		    //console.log(lw.author[i]);
 		    books[lw.author[i].title] = true;
 		}
 
@@ -606,37 +606,97 @@ exports.saveTest = function(test) {
     });
 };
 
-
 exports.inverseProperties = function(test) {
     mg.create(function(g) {
+	// saving a Person
 	g.save([{$type: 'Person',
 		 name: 'Ludwig',
 		 surname: 'Wittgenstein',
-		 birthplace: 'Wien'},
-	        {$type: 'Book',
-		 title: 'The Open Society and its Enemies',
-		 author: 'Karl Popper',
-		 pages: 510}], 
-	       function(lw){
+		 birthplace: 'Wien'}], 	       
+	       function(lw){		   
+		   // saving some books
 		   g.save({$type: 'Book',
-			   title: 'Philosophical Investigations',
-			   pages: 320,
-			   author$in: lw.$id}).
+			   title: 'The Open Society and its Enemies',
+			   // Popper is included as author here
+			   author$in: {$type: 'Person',
+				       name:'Karl',
+				       surname: 'Popper'},
+			   pages: 510}).
+		       save({$type: 'Book',
+			     title: 'Philosophical Investigations',
+			     pages: 320,
+			     author$in: lw.$id}).
 		       save({$type: 'Book',
 			     title: 'Tractatus Logico-Philosophicus',
 			     pages: 120,
 			     author$in: lw.$id}).
+		       // all books written by something whose name is not Wittgenstein
 		       where({$type: 'Book',
-			      author$in: lw.$id}).
-		       execute(function(books){
+			      author$in: 
+			      {surname: {$neq: 'Wittgenstein'}}}).
+		       all(function(books){
 			   var titles = {};
 			   for(var i=0; i<books.length; i++) {
-			       console.log(books[i]);
 			       titles[books[i].title] = true;
 			   }
-			   test.ok(titles["Tractatus Logico-Philosophicus"]);
-			   test.ok(titles["Philosophical Investigations"]);
-			   test.done();
+			   test.ok(titles["The Open Society and its Enemies"]);
+
+			   titles = {};
+			   // All books written by Wittgenstein
+			   g.where({surname: 'Wittgenstein',
+				    author: {}}).
+			       each(function(wittgenstein){
+				   for(var i=0; i<wittgenstein.author.length; i++)
+				       titles[wittgenstein.author[i].title] = true;				   
+			       }).
+			       all(function(){
+				   test.ok(titles["Philosophical Investigations"]);
+				   test.ok(titles["Tractatus Logico-Philosophicus"]);
+				   test.done();
+			       });
+		       });
+	       });
+    });
+};
+
+exports.remove = function(test) {
+    mg.create(function(g) {
+	g.save([{$type: 'Person',
+		 name: 'Ludwig',
+		 surname: 'Wittgenstein',
+		 birthplace: 'Wien'}], 	       
+	       function(lw){		   
+		   g.save({$type: 'Book',
+			   title: 'The Open Society and its Enemies',
+			   author$in: {$type: 'Person',
+				       name:'Karl',
+				       surname: 'Popper'},
+			   pages: 510}).
+		       save({$type: 'Book',
+			     title: 'Philosophical Investigations',
+			     pages: 320,
+			     author$in: lw.$id}).
+		       save({$type: 'Book',
+			     title: 'Tractatus Logico-Philosophicus',
+			     pages: 120,
+			     author$in: lw.$id}).
+		       where({$type: 'Book'}).
+		       all(function(books){
+			   test.ok(books.length === 3);
+			   console.log("\n\n\nREMOVING!!!\n\n\n");
+			   g.where({title: g._t}).
+			       remove(function(res) {
+				   console.log("RESULTS HERE");
+				   console.log(res);
+				   test.ok(res);
+			       }).
+			       where({$type: 'Book'}).
+			       all(function(books){
+				   console.log("RESULTS");
+				   console.log(books);
+				   test.ok(books.length === 1);
+				   test.done();
+			       });
 		       });
 	       });
     });

@@ -15,6 +15,11 @@ var Micrograph = function(options, callback) {
 
     var that = this;
 
+    for(var i=0; i<Micrograph.vars.length; i++) {
+	this['_'+Micrograph.vars[i]] = this._(Micrograph.vars[i]);
+    }
+
+
     new Lexicon.Lexicon(function(lexicon){
         if(options['overwrite'] === true) {
             // delete lexicon values
@@ -47,6 +52,7 @@ var Micrograph = function(options, callback) {
 };
 exports.Micrograph = Micrograph;
 
+Micrograph.vars = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'];
 
 Micrograph.create = function() {
     var callback, options;
@@ -67,14 +73,19 @@ Micrograph.create = function() {
 
 Micrograph.prototype.execute = function(query, callback) {
     this.engine.execute(query,callback);
-
 };
 
+
+
+
 Micrograph.prototype.where = function(query) {
-    var queryObj = this._parseQuery(query);
+    var queryObj =  new MicrographQuery(query);
     queryObj.setStore(this);
-    queryObj.setKind('all');
     return queryObj;
+};
+
+Micrograph.prototype._ = function(varName) {
+    return {'token': 'var', 'value':varName };
 };
 
 Micrograph.prototype.load = function() {
@@ -158,55 +169,12 @@ Micrograph.prototype.save = function(json,cb) {
     return this;
 };
 
-Micrograph.prototype._parseQuery = function(object) {
-    var context = MicrographQL.newContext(true);
-    var result = MicrographQL.parseBGP(object, context, true);
-    var subject = result[0];
-
-    var filters = [{'token': 'filter',
-		    'value':{'token':'expression',
-			     'expressionType': 'conditionaland',
-			     'operands':[]}}];
-
-    for(var v in context.filtersMap)
-	filters[0].value.operands.push(context.filtersMap[v]);
-
-
-    var quads = context.quads.concat(result[1]);
-
-
-    var unit =  {'kind':'select',
-		 'modifier':'',
-		 'group': '',
-		 'token':'executableunit',
-		 'pattern':{'filters':[],
-			    'token':'groupgraphpattern',
-			    'patterns':
-			    [{'token':'basicgraphpattern',
-			      'triplesContext': quads}]}};
-
-    if(filters[0].value.operands.length > 0)
-	unit.pattern.filters = filters;
-   
-    var prologue =  { base: '', prefixes: [], token: 'prologue' };
-
-    var projection = [];
-    for(var i=0; i<context.variables.length; i++)
-	projection.push({'kind':'var', 'token':'variable', 'value':context.variables[i]});
-
-    var dataset = {'named':[], 'implicit':[{suffix: null, prefix: null, 'token':'uri', 'value':'https://github.com/antoniogarrote/rdfstore-js#default_graph'}]};
-    
-    unit['projection'] = projection;
-    unit['dataset'] = dataset;
-
-
-    return new MicrographQuery({'query':{ 'prologue': prologue,
-					  'kind': 'query',
-					  'token': 'query',
-					  'units':[unit]},
-				'varsMap': context.varsMap,
-			        'topLevel': context.topLevel,
-			        'subject': subject,
-			        'inverseMap': context.inverseMap});
-		 
+/*
+Micrograph.prototype.remove = function(query) {
+    console.log("REMOVING!");
+    var queryObj = this._parseModify(query);
+    queryObj.setStore(this);
+    queryObj.setKind('delete');
+    return queryObj;
 };
+*/

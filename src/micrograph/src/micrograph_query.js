@@ -9,18 +9,14 @@ try {
 }
 
 // Query object
-exports.MicrographQuery = function(pattern) {
-    this.query = pattern.query;
-    this.varsMap = pattern.varsMap;
-    this.topLevel = pattern.topLevel;
-    this.subject = pattern.subject;
-    this.inverseMap = pattern.inverseMap;
+exports.MicrographQuery = function(template) {
+    this.template = template;
     this.filter = null;
 };
 var MicrographQuery = exports.MicrographQuery;
 
 MicrographQuery.prototype.setKind = function(kind) {
-    this.kind = "all";
+    this.kind = kind;
     return this;
 };
 
@@ -59,7 +55,44 @@ MicrographQuery.prototype.order = function(order) {
     return this;
 }
 
-MicrographQuery.prototype.execute = function(callback) {
+MicrographQuery.prototype.all = function(callback) {
+    this.kind = 'all';
+    this._executeQuery(callback);
+    return this.store;
+};
+
+MicrographQuery.prototype.remove = function(callback) {
+    this.kind = 'remove';
+    this._executeUpdate(callback);
+    return this.store;
+};
+
+// protected inner methods
+
+MicrographQuery.prototype._executeUpdate = function(callback) {
+    console.log(sys.inspect(this.query, true, 20));
+    var pattern = this._parseModify(this.template);
+    this.query = pattern.query;
+    this.varsMap = pattern.varsMap;
+    this.topLevel = pattern.topLevel;
+    this.subject = pattern.subject;
+    this.inverseMap = pattern.inverseMap;
+    console.log(sys.inspect(this.query, true, 20));
+    this.store.execute(this.query,function(success, results){
+	console.log("RESULT");
+	console.log(success);
+	console.log(results);
+	callback(success);
+    });
+}
+
+MicrographQuery.prototype._executeQuery = function(callback) {
+    var pattern = this._parseQuery(this.template);
+    this.query = pattern.query;
+    this.varsMap = pattern.varsMap;
+    this.topLevel = pattern.topLevel;
+    this.subject = pattern.subject;
+    this.inverseMap = pattern.inverseMap;
 
     // Final processing of query
     var quads = this.query.units[0].pattern.patterns[0].triplesContext;
@@ -122,7 +155,6 @@ MicrographQuery.prototype.execute = function(callback) {
 	//console.log(sys.inspect(this.query, true, 20));
 	var counter = 0;
 	this.store.execute(this.query, function(success, results) {
-	    //console.log(results);
 	    //console.log("results : "+results.length);
 	    if(MicrographQL.isUri(that.varsMap[that.topLevel]) && results.length>0) {
 		// if the top level is a URI, not retrieved in the results,
@@ -133,11 +165,14 @@ MicrographQuery.prototype.execute = function(callback) {
 
 	    var pushed = {};
 	    var processed = {};
+	    var ignore = {};
 
 	    if(success) {
 		var nodes = {};
 		var disambiguations = {};
 		var toReturn = [];
+		var result, isTopLevel, nodeDisambiguations;
+		
 		for(var i=0; i<results.length; i++) {
 		    result = results[i];
 		    for(var p in result) {
@@ -153,9 +188,51 @@ MicrographQuery.prototype.execute = function(callback) {
 
 			var id = idp.split(MicrographQL.base_uri)[1];
 			if(processed[id] == null) {
-			    var node = nodes[id]
+			    var node = nodes[id];
 			    node = node || {'$id': id};
 			    nodes[id] = node;
+			    
+			    toIgnore = ignore[id] || {};
+			    ignore[id] = toIgnore;
+
+			    var invLinks = that.inverseMap[id] || that.inverseMap[p];
+			    if(invLinks) {
+				for(var linkedProp in invLinks) {
+				    if(invLinks[linkedProp].length === 1) {
+					var linkedObjId = results[i][that.varsMap[invLinks[linkedProp][0]]];
+					if(linkedObjId != null) {
+					    // this is a variable resolved to a URI in the bindings results
+					    linkedObjId = linkedObjId.value.split(MicrographQL.base_uri)[1];
+					} else {
+					    linkedObjId = invLinks[linkedProp][0];
+					}
+
+					var linkedNode = nodes[linkedObjId] || {'$id': linkedObjId};
+					var toIgnore = ignore[linkedObjId] || {};
+					ignore[linkedObjId] = toIgnore;
+					toIgnore[linkedProp] = true;
+					delete linkedNode[linkedProp];
+
+					nodes[linkedObjId] = linkedNode;
+					node[linkedProp+"$in"] = linkedNode;
+				    } else {
+					node[linkedProp+"$in"] = [];
+					for(var i=0; i< invLinks[linkedProp].length; i++) {
+
+					    var linkedNode = nodes[linkedObjId] || {'$id': linkedObjId};
+					    var toIgnore = ignore[linkedObjId] || {};					  
+					    ignore[linkedObjId] = toIgnore;
+					    toIgnore[linkedProp] = true;
+					    delete linkedNode[linkedProp];
+
+					    var linkedObjId = that.varsMap[invLinks[linkedProp][0]] || invLinks[linkedProp][0];
+					    var linkedNode = nodes[linkedObjId] || {'$id': linkedObjId};
+					    nodes[linkedObjId].push(linkedNode);
+					}
+				    }
+				}
+			    }
+
 			    if(MicrographQL.isUri(idp)) {
 				//console.log(sys.inspect(MicrographQL.singleNodeQuery(idp, 'p', 'o'), true,20));
 				that.store.execute(MicrographQL.singleNodeQuery(idp, 'p', 'o'), function(success, resultsNode){
@@ -181,6 +258,9 @@ MicrographQuery.prototype.execute = function(callback) {
 					var pred = resultsNode[i]['p'].value;
 					if(pred === "http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
 					    pred = '$type';
+
+					if(toIgnore[pred])
+					    continue;
 
 					if(node[pred] && node[pred].constructor === Array) {
 					    if(typeof(obj) === 'object' && obj['$id'] && nodeDisambiguations[pred][obj['$id']] == null) {
@@ -273,7 +353,7 @@ MicrographQuery.prototype.execute = function(callback) {
 			var result = toReturn[env._i];
 			filteredResult = that.filter(result) || result;
 			if(filtered !== false)
-			   filtered.push(filteredResult);
+			    filtered.push(filteredResult);
 			k(floop,env);
 		    }, function(env) {
 			callback(filtered); 
@@ -290,5 +370,113 @@ MicrographQuery.prototype.execute = function(callback) {
 	    }
 	});
     }
+}
+
+MicrographQuery.prototype._parseQuery = function(object) {
+    var context = MicrographQL.newContext(true);
+    var result = MicrographQL.parseBGP(object, context, true);
+    var subject = result[0];
+
+    var filters = [{'token': 'filter',
+		    'value':{'token':'expression',
+			     'expressionType': 'conditionaland',
+			     'operands':[]}}];
+
+    for(var v in context.filtersMap)
+	filters[0].value.operands.push(context.filtersMap[v]);
+
+
+    var quads = context.quads.concat(result[1]);
+
+
+    var unit =  {'kind':'select',
+		 'modifier':'',
+		 'group': '',
+		 'token':'executableunit',
+		 'pattern':{'filters':[],
+			    'token':'groupgraphpattern',
+			    'patterns':
+			    [{'token':'basicgraphpattern',
+			      'triplesContext': quads}]}};
+
+    if(filters[0].value.operands.length > 0)
+	unit.pattern.filters = filters;
+   
+    var prologue =  { base: '', prefixes: [], token: 'prologue' };
+
+    var projection = [];
+    for(var i=0; i<context.variables.length; i++)
+	projection.push({'kind':'var', 'token':'variable', 'value':context.variables[i]});
+
+    var dataset = {'named':[], 'implicit':[{suffix: null, prefix: null, 'token':'uri', 'value':'https://github.com/antoniogarrote/rdfstore-js#default_graph'}]};
+    
+    unit['projection'] = projection;
+    unit['dataset'] = dataset;
+
+
+    return {'query':{ 'prologue': prologue,
+		      'kind': 'query',
+		      'token': 'query',
+		      'units':[unit]},
+	    'varsMap': context.varsMap,
+	    'topLevel': context.topLevel,
+	    'subject': subject,
+	    'inverseMap': context.inverseMap};
+		 
 };
 
+
+MicrographQuery.prototype._parseModify = function(object) {
+    var context = MicrographQL.newContext(true);
+    console.log("BGP VALUE");
+    console.log(object);
+    var result = MicrographQL.parseBGP(object, context, true);
+    console.log("PARSED");
+    console.log(result);
+    console.log("-------");
+    var subject = result[0];
+
+    var filters = [{'token': 'filter',
+		    'value':{'token':'expression',
+			     'expressionType': 'conditionaland',
+			     'operands':[]}}];
+
+    for(var v in context.filtersMap)
+	filters[0].value.operands.push(context.filtersMap[v]);
+
+
+    var quads = context.quads.concat(result[1]);
+
+
+    var unit =  {'kind':'modify',
+		 'with': null,
+		 'using': null,
+		 'pattern':{'filters':[],
+			    'token':'groupgraphpattern',
+			    'patterns':
+			    [{'token':'basicgraphpattern',
+			      'triplesContext': quads}]},
+		 'delete': quads};
+
+    if(filters[0].value.operands.length > 0)
+	unit.pattern.filters = filters;
+   
+    var prologue =  { base: '', prefixes: [], token: 'prologue' };
+
+    var projection = [];
+    for(var i=0; i<context.variables.length; i++)
+	projection.push({'kind':'var', 'token':'variable', 'value':context.variables[i]});
+
+    //var dataset = {'named':[], 'implicit':[{suffix: null, prefix: null, 'token':'uri', 'value':'https://github.com/antoniogarrote/rdfstore-js#default_graph'}]};
+    //unit['dataset'] = dataset;
+
+
+    return {'query':{ 'prologue': prologue,
+		      'kind': 'update',
+		      'token': 'query',
+		      'units':[unit]},
+	    'varsMap': context.varsMap,
+	    'topLevel': context.topLevel,
+	    'subject': subject,
+	    'inverseMap': context.inverseMap};		 
+};

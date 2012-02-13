@@ -246,9 +246,9 @@ MicrographQL.parseBGP = function(expression, context, topLevel, graph) {
 		    var idInverseMap;
 		    if(subject.token === 'uri') {
 			invLinkedId = expression['$id'];
-			idInverseMap = linkedId
+			idInverseMap = invLinkedId;
 		    } else {
-			// unknown ID for this node, it is a variables
+			// unknown ID for this node, it is a variable
 			invLinkedId = subject;			
 			idInverseMap = invLinkedId.value
 		    }
@@ -256,13 +256,15 @@ MicrographQL.parseBGP = function(expression, context, topLevel, graph) {
 		    linked[linkedProp] = {'$id':invLinkedId};
 		    result = MicrographQL.parseBGP(linked, context, false, graph);
 
-		    inverseLinks = context.inverseMap[invLinkedId.value] || {};
-		    context.inverseMap[invLinkedId.value] = inverseLinks;
+		    inverseLinks = context.inverseMap[idInverseMap] || {};
+		    context.inverseMap[idInverseMap] = inverseLinks;
 
+		    var linked = inverseLinks[linkedProp] || [];
+		    inverseLinks[linkedProp] = linked;
 		    if(result[0].token === 'uri') {
-			inverseLinks[linkedProp] = result[0].value.split(MicrographQL.base_uri)[1];
+			linked.push(result[0].value.split(MicrographQL.base_uri)[1]);
 		    } else {
-			inverseLinks[linkedProp] = result[0].value;
+			linked.push(result[0].value);
 		    }
 
 		    context.quads = context.quads.concat(result[1]);
@@ -291,6 +293,17 @@ MicrographQL.parseBGP = function(expression, context, topLevel, graph) {
 			if(graph != null)
 			    quad['graph'] = graph;
 			quads.push(quad);
+		    } else if(typeof(expression[p]) === 'object' && expression[p]['token'] === 'var') {
+			object = expression[p];
+			if(context.varsMap[expression] == null) {
+			    context.varsMap[expression] = true;
+			    context.variables.push(object);
+			}
+			var quad = {'subject':subject, 'predicate':predicate, 'object':object};
+			if(graph != null)
+			    quad['graph'] = graph;
+			quads.push(quad);
+
 		    } else if(typeof(expression[p]) === 'string' || 
 			      (typeof(expression[p]) === 'object' && expression[p].constructor === Date) || 
 			      typeof(expression[p]) === 'number' ||
@@ -335,10 +348,12 @@ MicrographQL.parseBGP = function(expression, context, topLevel, graph) {
     }
 
     if(detectEmpty) {
-	var quad = {'subject':subject, 
-		    'predicate':{'token':'var', 'value':nextVariable+"p"}, 
-		    'object':{'token':'var', 'value':nextVariable+"o"}};
-	quads.push(quad);
+	if(topLevel)  {
+	    var quad = {'subject':subject, 
+			'predicate':{'token':'var', 'value':nextVariable+"p"}, 
+			'object':{'token':'var', 'value':nextVariable+"o"}};
+	    quads.push(quad)
+	}
     }
     return [subject, quads];
 };
