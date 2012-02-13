@@ -633,7 +633,7 @@ We have also built some demo applications used to test the store:
  - [social.rdf vis](http://antoniogarrote.com/vis/) an example of how to use rdfstore-js with a data visualization library like [d3.js](http://mbostock.github.com/d3/).
  - [SemanticKO examples](http://antoniogarrote.github.com/semantic-ko/index.html) a collection of interactive examples of SemanticKO
  - [JSON-LD Macros example](http://antoniogarrote.github.com/json-ld-macros/) a small interactive example of how to use JSON-LD Macros to build data transformations.
-
+ - [Node.js WebID demo](https://github.com/antoniogarrote/NodeJS-WebID-demo).
 ##Reusable modules. 
 
 rdfstore-js is built from a collection of general purpose modules. Some of these modules can be easily extracted from the library and used on their own.
