@@ -88,7 +88,7 @@ BUILD_CONFIGURATION = {
                 ],
     :package => {
       :name    => "rdfstore",
-      :version => "0.6.1",
+      :version => "0.6.2",
       :description => "RDF graph store supporting the SPARQL query language",
       :keywords => ["RDF", "SPARQL", "graph", "store"],
       :author  => {
