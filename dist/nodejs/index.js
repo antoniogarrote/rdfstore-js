@@ -33568,6 +33568,13 @@ MongodbQueryEngine.MongodbQueryEngine = function(params) {
 
     this.lexicon = this;
     this.backend = this;
+    this.auth;
+
+    if(server.indexOf("@") != -1)  {
+	this.auth = server.split("@")[0];
+	this.auth = this.auth.split(":");
+	server = server.split("@")[1];
+    }
 
     this.client = new mongodb.Db(mongoDBName, new mongodb.Server(server,port,mongoOptions));
     this.defaultGraphOid = "u:https://github.com/antoniogarrote/rdfstore-js#default_graph";
@@ -33593,7 +33600,13 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.collection = function(collection
     };
     if(this.client.state === 'notConnected' || this.client.state === 'disconnected') {
         this.client.open(function(err, p_client) {
-            _collection();
+	    if(that.auth!=null) {
+		that.client.authenticate(that.auth[0],that.auth[1], function(err,res){
+		    _collection();		
+		});
+	    } else {
+		_collection();
+	    }
         });
     } else {
         _collection();
@@ -36699,7 +36712,7 @@ var RDFStoreClient = RDFStoreChildClient;
 /**
  * Version of the store
  */
-Store.VERSION = "0.6.1";
+Store.VERSION = "0.6.2";
 
 /**
  * Create a new RDFStore instance that will be
