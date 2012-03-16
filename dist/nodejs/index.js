@@ -36712,7 +36712,7 @@ var RDFStoreClient = RDFStoreChildClient;
 /**
  * Version of the store
  */
-Store.VERSION = "0.6.2";
+Store.VERSION = "0.6.3";
 
 /**
  * Create a new RDFStore instance that will be

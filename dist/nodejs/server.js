@@ -661,7 +661,7 @@ Server.buildResponseBindings = function(mediaTypes, bindings, res) {
                 if(result[p].token === 'uri') {
                     nextResult = nextResult+"<uri>"+result[p].value+"</uri>";
                 } else if(result[p].token === 'literal') {
-                    nextResult = nextResult+"<literal>";
+                    nextResult = nextResult+"<literal ";
                     if(result[p].lang != null ) {
                         nextResult = nextResult + ' xml:lang="'+result[p].lang+'" ';
                     }
