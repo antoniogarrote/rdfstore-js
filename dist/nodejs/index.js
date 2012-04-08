@@ -26197,6 +26197,14 @@ var TabulatorN3Parser = function() {
     N3Parser.sym = function(uri) { return new N3Parser.Symbol(uri); };
 
     N3Parser.Formula.prototype.literal = function(val, lang, dt) {
+	if(dt != null && dt.value != null && dt.value.indexOf("http://") === -1) {
+	    for(var ns in this.namespaces) {
+		if(dt.value.indexOf(ns) === 0) {
+		    dt.value = this.namespaces[ns]+(dt.value.split(ns+":")[1]);
+		    break;
+		}
+	    }
+	}
 	return new N3Parser.Literal(''+val, lang, dt)
     }
     N3Parser.lit = N3Parser.Formula.prototype.literal;

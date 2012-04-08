@@ -621,7 +621,6 @@ if(MongodbQueryEngine.mongodb === true) {
                            GRAPH <http://example/addresses> { ?s ?p ?o } }\
                            ORDER BY ?s ?p", function(success, results){
 
-                               console.log(results);
                                test.ok(success === true);
 
                                test.ok(results[0].s.value === "http://example/president25");
@@ -1673,7 +1672,6 @@ if(MongodbQueryEngine.mongodb === true) {
                                     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> \
                                     PREFIX  xsd: <http://www.w3.org/2001/XMLSchema#> \
                                     SELECT ?domain { :actors rdfs:domain/owl:unionOf/rdf:rest*/rdf:first ?domain } ORDER BY ?domain', function(success, results){
-					console.log(results);
 					test.done();
 				    });
 		});

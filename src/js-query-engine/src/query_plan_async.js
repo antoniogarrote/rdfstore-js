@@ -492,6 +492,7 @@ QueryPlanAsync.executeBGPDatasets = function(bgp, dataset, queryEngine, queryEnv
 
     if(bgp.graph == null) {
         //union through all default graph(s)
+	var successAcum = true;
         Utils.repeat(0, dataset.implicit.length, function(k, env) {
             var floop = arguments.callee;
             if(duplicates[dataset.implicit[env._i].oid] == null) {
@@ -499,6 +500,7 @@ QueryPlanAsync.executeBGPDatasets = function(bgp, dataset, queryEngine, queryEnv
                 env.acum = env.acum || [];
                 bgp.graph = dataset.implicit[env._i];//.oid
                 queryEngine.rangeQuery(bgp, queryEnv, function(succes, results){
+		    successAcum = successAcum && succes;
                     if(results != null) {
                         results = QueryPlanAsync.buildBindingsFromRange(results, bgp);
                         env.acum.push(results);
@@ -512,7 +514,10 @@ QueryPlanAsync.executeBGPDatasets = function(bgp, dataset, queryEngine, queryEnv
             }
         }, function(env){
             var acumBindings = QueryPlanAsync.unionManyBindings(env.acum||[]);
-            callback(true, acumBindings);
+	    if(successAcum)
+		callback(true, acumBindings);
+	    else
+		callback(false, "Error retrieving bindings from the backend layer");
         });
     } else if(bgp.graph.token === 'var') {
         var graphVar = bgp.graph.value;
@@ -526,7 +531,7 @@ QueryPlanAsync.executeBGPDatasets = function(bgp, dataset, queryEngine, queryEnv
                 bgp.graph = dataset.named[env._i];//.oid
                  
                 queryEngine.rangeQuery(bgp, queryEnv, function(success, results) {
-                    if(results != null) {
+                    if(success && results != null) {
                         results = QueryPlanAsync.buildBindingsFromRange(results, bgp);
                         // add the graph bound variable to the result 
                         for(var i=0; i< results.length; i++) {

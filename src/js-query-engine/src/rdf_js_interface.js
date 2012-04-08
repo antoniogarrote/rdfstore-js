@@ -392,7 +392,7 @@ RDFJSInterface.Literal.prototype.toNT = function() {
 
 RDFJSInterface.Literal.prototype.valueOf = function() {
     return QueryFilters.effectiveTypeValue({token: 'literal', 
-                                            type: this.type, 
+                                            type: (this.type || this.datatype), 
                                             value: this.nominalValue, 
                                             language: this.language});
 };
