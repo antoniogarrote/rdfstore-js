@@ -26178,6 +26178,14 @@ var TabulatorN3Parser = function() {
     N3Parser.sym = function(uri) { return new N3Parser.Symbol(uri); };
 
     N3Parser.Formula.prototype.literal = function(val, lang, dt) {
+	if(dt != null && dt.value != null && dt.value.indexOf("http://") === -1) {
+	    for(var ns in this.namespaces) {
+		if(dt.value.indexOf(ns) === 0) {
+		    dt.value = this.namespaces[ns]+(dt.value.split(ns+":")[1]);
+		    break;
+		}
+	    }
+	}
 	return new N3Parser.Literal(''+val, lang, dt)
     }
     N3Parser.lit = N3Parser.Formula.prototype.literal;
@@ -28335,7 +28343,7 @@ RDFJSInterface.Literal.prototype.toNT = function() {
 
 RDFJSInterface.Literal.prototype.valueOf = function() {
     return QueryFilters.effectiveTypeValue({token: 'literal', 
-                                            type: this.type, 
+                                            type: (this.type || this.datatype), 
                                             value: this.nominalValue, 
                                             language: this.language});
 };
@@ -33680,7 +33688,7 @@ var MongodbQueryEngine = { MongodbQueryEngine: function(){ throw 'MongoDB backen
 /**
  * Version of the store
  */
-Store.VERSION = "0.6.3";
+Store.VERSION = "0.6.4";
 
 /**
  * Create a new RDFStore instance that will be

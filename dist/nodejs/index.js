@@ -28362,7 +28362,7 @@ RDFJSInterface.Literal.prototype.toNT = function() {
 
 RDFJSInterface.Literal.prototype.valueOf = function() {
     return QueryFilters.effectiveTypeValue({token: 'literal', 
-                                            type: this.type, 
+                                            type: (this.type || this.datatype), 
                                             value: this.nominalValue, 
                                             language: this.language});
 };
@@ -31459,6 +31459,7 @@ QueryPlanAsync.executeBGPDatasets = function(bgp, dataset, queryEngine, queryEnv
 
     if(bgp.graph == null) {
         //union through all default graph(s)
+	var successAcum = true;
         Utils.repeat(0, dataset.implicit.length, function(k, env) {
             var floop = arguments.callee;
             if(duplicates[dataset.implicit[env._i].oid] == null) {
@@ -31466,6 +31467,7 @@ QueryPlanAsync.executeBGPDatasets = function(bgp, dataset, queryEngine, queryEnv
                 env.acum = env.acum || [];
                 bgp.graph = dataset.implicit[env._i];//.oid
                 queryEngine.rangeQuery(bgp, queryEnv, function(succes, results){
+		    successAcum = successAcum && succes;
                     if(results != null) {
                         results = QueryPlanAsync.buildBindingsFromRange(results, bgp);
                         env.acum.push(results);
@@ -31479,7 +31481,10 @@ QueryPlanAsync.executeBGPDatasets = function(bgp, dataset, queryEngine, queryEnv
             }
         }, function(env){
             var acumBindings = QueryPlanAsync.unionManyBindings(env.acum||[]);
-            callback(true, acumBindings);
+	    if(successAcum)
+		callback(true, acumBindings);
+	    else
+		callback(false, "Error retrieving bindings from the backend layer");
         });
     } else if(bgp.graph.token === 'var') {
         var graphVar = bgp.graph.value;
@@ -31493,7 +31498,7 @@ QueryPlanAsync.executeBGPDatasets = function(bgp, dataset, queryEngine, queryEnv
                 bgp.graph = dataset.named[env._i];//.oid
                  
                 queryEngine.rangeQuery(bgp, queryEnv, function(success, results) {
-                    if(results != null) {
+                    if(success && results != null) {
                         results = QueryPlanAsync.buildBindingsFromRange(results, bgp);
                         // add the graph bound variable to the result 
                         for(var i=0; i< results.length; i++) {
@@ -33603,21 +33608,28 @@ MongodbQueryEngine.MongodbQueryEngine = function(params) {
 // Utils
 MongodbQueryEngine.MongodbQueryEngine.prototype.collection = function(collection, f) {
     var that = this;
-    var _collection = function() {
-        that.client.collection(collection, f);
+    var _collection = function(err) {
+	if(err)
+	    f(true, "MongoDB connection error");
+	else
+            that.client.collection(collection, f);
     };
     if(this.client.state === 'notConnected' || this.client.state === 'disconnected') {
         this.client.open(function(err, p_client) {
-	    if(that.auth!=null) {
-		that.client.authenticate(that.auth[0],that.auth[1], function(err,res){
-		    _collection();		
-		});
+	    if(err) {
+		_collection(err);
 	    } else {
-		_collection();
+		if(that.auth!=null) {
+		    that.client.authenticate(that.auth[0],that.auth[1], function(err,res){
+			_collection(err);		
+		    });
+		} else {
+		    _collection(false);
+		}
 	    }
         });
     } else {
-        _collection();
+        _collection(false);
     }
 
 };
@@ -34995,7 +35007,9 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.rangeQuery = function(quad, quer
         that.range(new MongodbQueryEngine.Pattern(key),function(quads){
             //console.log("retrieved");
             //console.log(quads)
-            if(quads == null || quads.length == 0) {
+	    if(quads == null) {
+		callback(false, "Error in backend connection, range scan failed");
+	    } else if (quads.length == 0) {
                 callback(true, []);
             } else {
                 callback(true, quads);
@@ -35565,13 +35579,17 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.range = function(pattern, callba
     }
     
     this.collection('quads', function(err,coll) {
-        coll.find(doc).toArray(function(err,res){
-            if(err) {
-                callback(null);
-            } else {
-                callback(res);
-            }
-        });
+	if(!err) {
+            coll.find(doc).toArray(function(err,res){
+		if(err) {
+                    callback(null);
+		} else {
+                    callback(res);
+		}
+            });
+	} else {
+	    callback(null);
+	}
     });
 };
 
@@ -35681,35 +35699,39 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.updateBlankCounter = function(ca
 MongodbQueryEngine.MongodbQueryEngine.prototype.readConfiguration = function(callback) {
     var that = this;
     this.collection('quads',function(err,coll) {
-        coll.ensureIndex({subject:1, predicate:1, object:1, graph:1},{unique:1},function(){
-            coll.ensureIndex({graph:1, predicate:1},function(){
-                coll.ensureIndex({object:1,graph:1,subject:1},function(){
-                    coll.ensureIndex({predicate:1,object:1,graph:1},function(){
-                        coll.ensureIndex({graph:1,subject:1,predicate:1},function(){
-                            coll.ensureIndex({object:1,subject:1},function(){
-                                that.collection('store_configuration', function(err,coll) {
-                                    coll.find({configuration:true}).toArray(function(err, res) {
-                                        if(res==null || res.length === 0) {
-                                            coll.insert({blankCounter:0, configuration:true}, function(){
-                                                that.configuration = {
-						    blankCounter:0
-						};
-						that.blankCounter = 0;
-                                                callback();
-                                            });
-                                        } else {
-                                            that.configuration = res[0];
-                                            that.blankCounter = that.configuration.blankCounter;
-                                            callback();
-                                        }
+	if(err) {
+	    throw coll;
+	} else {
+            coll.ensureIndex({subject:1, predicate:1, object:1, graph:1},{unique:1},function(){
+		coll.ensureIndex({graph:1, predicate:1},function(){
+                    coll.ensureIndex({object:1,graph:1,subject:1},function(){
+			coll.ensureIndex({predicate:1,object:1,graph:1},function(){
+                            coll.ensureIndex({graph:1,subject:1,predicate:1},function(){
+				coll.ensureIndex({object:1,subject:1},function(){
+                                    that.collection('store_configuration', function(err,coll) {
+					coll.find({configuration:true}).toArray(function(err, res) {
+                                            if(res==null || res.length === 0) {
+						coll.insert({blankCounter:0, configuration:true}, function(){
+                                                    that.configuration = {
+							blankCounter:0
+						    };
+						    that.blankCounter = 0;
+                                                    callback();
+						});
+                                            } else {
+						that.configuration = res[0];
+						that.blankCounter = that.configuration.blankCounter;
+						callback();
+                                            }
+					});
                                     });
-                                });
+				});
                             });
-                        });
+			});
                     });
-                });
+		});
             });
-        });
+	}
     });
 };
 
@@ -36720,7 +36742,7 @@ var RDFStoreClient = RDFStoreChildClient;
 /**
  * Version of the store
  */
-Store.VERSION = "0.6.3";
+Store.VERSION = "0.6.4";
 
 /**
  * Create a new RDFStore instance that will be
