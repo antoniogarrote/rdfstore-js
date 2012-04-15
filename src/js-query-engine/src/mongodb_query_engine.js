@@ -15,7 +15,7 @@ var mongodb = require('mongodb');
 MongodbQueryEngine.mongodb = true;
 
 MongodbQueryEngine.MongodbQueryEngine = function(params) {
-    var params = params || {};
+    params = params || {};
     var server = params['mongoDomain'] || '127.0.0.1';
     var port = params['mongoPort'] || 27017;
     var mongoOptions = params['mongoOptions'] || {};
@@ -45,6 +45,14 @@ MongodbQueryEngine.MongodbQueryEngine = function(params) {
     this.abstractQueryTree = new AbstractQueryTree.AbstractQueryTree();
     this.rdfLoader = new RDFLoader.RDFLoader(params['communication']);
     this.callbacksBackend = new Callbacks.CallbacksBackend(this);
+};
+
+MongodbQueryEngine.MongodbQueryEngine.prototype.close = function(cb) {
+    var that = this;
+    this.client.close(function(){
+	that.client = null;
+	cb();
+    });
 };
 
 // Utils

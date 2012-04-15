@@ -15,7 +15,9 @@ if(MongodbQueryEngine.mongodb === true) {
                         test.ok(result[0]['s'].value === 'http://example/book3');
                         test.ok(result[0]['p'].value === 'http://example.com/vocab#title');
                         test.ok(result[0]['o'].value  === 'http://test.com/example');
-                        test.done(); 
+			engine.close(function() {
+                            test.done(); 
+			});
                     });
                 });
             });
@@ -55,7 +57,9 @@ if(MongodbQueryEngine.mongodb === true) {
                         test.ok(false);
                     }
 
-                    test.done(); 
+		    engine.close(function() {
+                        test.done(); 
+		    });
                 });
             });
             });
@@ -91,7 +95,9 @@ if(MongodbQueryEngine.mongodb === true) {
                             test.ok(false);
                         }
                         
-                        test.done(); 
+			engine.close(function() {
+                            test.done(); 
+			});
                     });
                 });
             });
@@ -112,7 +118,9 @@ if(MongodbQueryEngine.mongodb === true) {
                     test.ok(result.length === 1);
                     
                     result[0]['s'].value === "http://example/book3";
-                    test.done(); 
+		    engine.close(function() {
+                        test.done(); 
+		    });
                 });
             });
         });
@@ -147,7 +155,9 @@ if(MongodbQueryEngine.mongodb === true) {
                         }
                     }
 
-                    test.done();
+		    engine.close(function() {
+                        test.done(); 
+		    });
                 });
             });
         });
@@ -182,7 +192,10 @@ if(MongodbQueryEngine.mongodb === true) {
                                test.ok(titles[1], 'SPARQL (updated)');
                                test.ok(titles[2], 'SPARQL Protocol Tutorial');
                                test.ok(titles[3], 'SPARQL Query Language Tutorial');
-                               test.done();
+
+			       engine.close(function() {
+				   test.done(); 
+			       });
                            });
                       });
             });
@@ -226,7 +239,10 @@ if(MongodbQueryEngine.mongodb === true) {
                                                     test.ok(xs[1]=='SPARQL Query Language Tutorial');
                                                     test.ok(ys[0]=='SPARQL (updated)');
                                                     test.ok(ys[1]=='SPARQL Protocol Tutorial');
-                                                    test.done();
+
+						    engine.close(function() {
+							test.done(); 
+						    });
                                                 });
                              });
         });
@@ -265,7 +281,10 @@ if(MongodbQueryEngine.mongodb === true) {
                                                         test.ok(results[0].author.value == "Bob");
                                                         test.ok(results[0].title.value == "SPARQL Protocol Tutorial");
                                                     }
-                                                    test.done();
+
+						    engine.close(function() {
+							test.done(); 
+						    });
                                                 });
                              });
         });
@@ -293,7 +312,10 @@ if(MongodbQueryEngine.mongodb === true) {
                                                         test.ok(results[i].book.token == 'blank');
                                                         test.ok(results[i].book.value != null);
                                                     }
-                                                    test.done();
+
+						    engine.close(function() {
+							test.done(); 
+						    });
                                                 });
                              });
         });
@@ -337,7 +359,10 @@ if(MongodbQueryEngine.mongodb === true) {
                                                        test.ok(results[0].nameY.value === 'Clare');                                                       
                                                        test.ok(results[0].nickY.value === 'CT');                                                       
                                                    }
-                                                   test.done();
+
+						    engine.close(function() {
+							test.done(); 
+						    });
                                                });
                             });
         });
@@ -364,7 +389,10 @@ if(MongodbQueryEngine.mongodb === true) {
                                                function(success, results) {
                                                    test.ok(results.length === 1);
                                                    test.ok(results[0].name.value === 'Alice');
-                                                   test.done();
+
+						    engine.close(function() {
+							test.done(); 
+						    });
                                                });
                             });
         });
@@ -392,7 +420,9 @@ if(MongodbQueryEngine.mongodb === true) {
                                                    test.ok(results.length === 2);
                                                    test.ok(results[0].name.value === 'Alice');
                                                    test.ok(results[1].name.value === 'Alice');
-                                                   test.done();
+						   engine.close(function() {
+						       test.done(); 
+						   });
                                                });
                             });
         });
@@ -420,7 +450,9 @@ if(MongodbQueryEngine.mongodb === true) {
                                                    test.ok(results[0].name.value === 'Alice');
                                                    test.ok(results[1].name.value === 'Bob');
                                                    test.ok(results[2].name.value === 'Marie');
-                                                   test.done();
+						    engine.close(function() {
+							test.done(); 
+						    });
                                                });
                             });
         });
@@ -449,7 +481,9 @@ if(MongodbQueryEngine.mongodb === true) {
                                                    test.ok(results[0].name.value === 'Marie');
                                                    test.ok(results[1].name.value === 'Bob');
                                                    test.ok(results[2].name.value === 'Alice');
-                                                   test.done();
+						   engine.close(function() {
+						       test.done(); 
+						   });
                                                });
                             });
         });
@@ -478,7 +512,9 @@ if(MongodbQueryEngine.mongodb === true) {
                                                    test.ok(results[0].mbox.value === 'mailto:alice@example.com');
                                                    test.ok(results[1].mbox.value === 'mailto:bob@example.com');
                                                    test.ok(results[2].mbox.value === 'mailto:marie@example.com');
-                                                   test.done();
+						   engine.close(function() {
+						       test.done(); 
+						   });
                                                });
                             });
         });
@@ -507,7 +543,9 @@ if(MongodbQueryEngine.mongodb === true) {
                                                    test.ok(results[0].name.value === 'Alice');
                                                    test.ok(results[1].name.value === 'Marie');
                                                    test.ok(results[2].name.value === 'Bob');
-                                                   test.done();
+						   engine.close(function() {
+						       test.done(); 
+						   });
                                                });
                             });
         });
@@ -533,7 +571,9 @@ if(MongodbQueryEngine.mongodb === true) {
                         engine.execute('SELECT * { ?s ?p ?o }', function(success, result){
                             test.ok(success === true );
                             test.ok(result.length === 0);
-                            test.done(); 
+			    engine.close(function() {
+				test.done(); 
+			    });
                         });
                     });
                 });
@@ -582,7 +622,10 @@ if(MongodbQueryEngine.mongodb === true) {
                                     test.ok(result[0]['p'].value === 'http://example.com/vocab#title');
                                     test.ok(result[0]['o'].value  === 'http://test.com/example');
 
-                                        test.done(); 
+                                        engine.close(function() {
+					    test.done(); 
+					});
+ 
                                     });
                                 });
                             });
@@ -638,7 +681,10 @@ if(MongodbQueryEngine.mongodb === true) {
                                test.ok(results[4].o.value === "Clinton");
                                test.ok(results[5].o.value === "William");
 
-                               test.done();
+                               engine.close(function() {
+				   test.done(); 
+			       });
+
                                
                     })
                 });
@@ -686,7 +732,10 @@ if(MongodbQueryEngine.mongodb === true) {
                                test.ok(results[4].o.value === "Clinton");
                                test.ok(results[5].o.value === "William");
 
-                               test.done();
+                               engine.close(function() {
+				   test.done(); 
+			       });
+
                                
                     })
                 });
@@ -732,7 +781,10 @@ if(MongodbQueryEngine.mongodb === true) {
                                test.ok(results[2].s.value === "http://example/president42");
                                test.ok(results[2].o.value === "William");
 
-                               test.done();
+                               engine.close(function() {
+				   test.done(); 
+			       });
+
                                
                     })
                 });
@@ -769,7 +821,10 @@ if(MongodbQueryEngine.mongodb === true) {
                            ORDER BY ?s ?p", function(success, results){
                                test.ok(success === true);
                                test.ok(results.length === 3);
-                               test.done();
+                               engine.close(function() {
+				   test.done(); 
+			       });
+
                                
                     })
                 });
@@ -795,7 +850,10 @@ if(MongodbQueryEngine.mongodb === true) {
                     test.ok(results.length === 2);
                     test.ok(results[0].t.value === "http://example/s1");
                     test.ok(results[1].t.value === "http://example/s2");
-                    test.done();
+                    engine.close(function() {
+			test.done(); 
+		    });
+
                 });
             });
         });
@@ -832,7 +890,10 @@ if(MongodbQueryEngine.mongodb === true) {
                    engine.execute("SELECT * { GRAPH <http://example/president25> { ?s ?p ?o } }", function(success, results) {
 
                        test.ok(results.length === 2);
-                       test.done();
+                       engine.close(function() {
+			   test.done(); 
+		       });
+
 
                    });
                });
@@ -883,7 +944,10 @@ if(MongodbQueryEngine.mongodb === true) {
                    engine.execute("SELECT * { GRAPH <http://example/president25> { ?s ?p ?o } }", function(success, results) {
 
                        test.ok(results.length === 2);
-                       test.done();
+                       engine.close(function() {
+			   test.done(); 
+		       });
+
 
                    });
                });
@@ -937,7 +1001,10 @@ if(MongodbQueryEngine.mongodb === true) {
                    engine.execute("SELECT * { GRAPH <http://example/president25> { ?s ?p ?o } }", function(success, results) {
 
                        test.ok(results.length === 0);
-                       test.done();
+                       engine.close(function() {
+			   test.done(); 
+		       });
+
 
                    });
                });
@@ -991,7 +1058,10 @@ if(MongodbQueryEngine.mongodb === true) {
                        var graphs = engine.registeredGraphs(true,function(graphs){
                            test.ok(success);
                            test.ok(graphs.length === 0);
-                           test.done();
+                           engine.close(function() {
+			       test.done(); 
+			   });
+
                        });
                    });
                });
@@ -1012,7 +1082,10 @@ if(MongodbQueryEngine.mongodb === true) {
             engine.execute('CREATE GRAPH <a>', function(result){
                 test.ok(result===true);
 
-                test.done();
+                engine.close(function() {
+		    test.done(); 
+		});
+
             });
 
         });
@@ -1048,7 +1121,10 @@ if(MongodbQueryEngine.mongodb === true) {
                    engine.execute("SELECT * { GRAPH <http://example/president25> { ?s ?p ?o } }", function(success, results) {
 
                        test.ok(results.length === 2);
-                       test.done();
+                       engine.close(function() {
+			   test.done(); 
+		       });
+
 
                    });
                });
@@ -1099,7 +1175,10 @@ if(MongodbQueryEngine.mongodb === true) {
                    engine.execute("SELECT * { GRAPH <http://example/president25> { ?s ?p ?o } }", function(success, results) {
 
                        test.ok(results.length === 2);
-                       test.done();
+                       engine.close(function() {
+			   test.done(); 
+		       });
+
 
                    });
                });
@@ -1153,7 +1232,10 @@ if(MongodbQueryEngine.mongodb === true) {
                    engine.execute("SELECT * { GRAPH <http://example/president25> { ?s ?p ?o } }", function(success, results) {
 
                        test.ok(results.length === 0);
-                       test.done();
+                       engine.close(function() {
+			   test.done(); 
+		       });
+
 
                    });
                });
@@ -1210,7 +1292,10 @@ if(MongodbQueryEngine.mongodb === true) {
                        var graphs = engine.registeredGraphs(true,function(graphs){
                            test.ok(success);
                            test.ok(graphs.length === 0);
-                           test.done();
+                           engine.close(function() {
+			       test.done(); 
+			   });
+
                        });
                    });
                });
@@ -1246,7 +1331,10 @@ if(MongodbQueryEngine.mongodb === true) {
                            ORDER BY ?s ?p", function(success, results){
                                test.ok(success === true);
                                test.ok(results.length === 3);
-                               test.done();
+                               engine.close(function() {
+				   test.done(); 
+			       });
+
                                
                     })
                 });
@@ -1272,7 +1360,10 @@ if(MongodbQueryEngine.mongodb === true) {
                     test.ok(results.length===2);
                     test.ok(results[0].maxv.value==='9')
                     test.ok(results[1].maxv.value==='2')
-                    test.done();
+                    engine.close(function() {
+			test.done(); 
+		    });
+
                 });
             });
         });
@@ -1297,7 +1388,10 @@ if(MongodbQueryEngine.mongodb === true) {
                     test.ok(results.length===2);
                     test.ok(results[0].maxv.value==='1')
                     test.ok(results[1].maxv.value==='0')
-                    test.done();
+                    engine.close(function() {
+			test.done(); 
+		    });
+
                 });
             });
         });
@@ -1324,7 +1418,10 @@ if(MongodbQueryEngine.mongodb === true) {
                     test.ok(results[0].count.value==='3')
                     test.ok(results[1].count.value==='2')
 
-                    test.done();
+                    engine.close(function() {
+			test.done(); 
+		    });
+
                 });
             });
         });
@@ -1350,7 +1447,10 @@ if(MongodbQueryEngine.mongodb === true) {
                     test.ok(results[0].count.value==='2')
                     test.ok(results[1].count.value==='2')
 
-                    test.done();
+                    engine.close(function() {
+			test.done(); 
+		    });
+
                 });
             });
         });
@@ -1376,7 +1476,10 @@ if(MongodbQueryEngine.mongodb === true) {
                     test.ok(results[0].avg.value==='2')
                     test.ok(results[1].avg.value==='6')
 
-                    test.done();
+                    engine.close(function() {
+			test.done(); 
+		    });
+
                 });
             });
         });
@@ -1400,7 +1503,10 @@ if(MongodbQueryEngine.mongodb === true) {
                     test.ok(results.length===2);
                     test.ok(results[0].avg.value==='2.5')
                     test.ok(results[1].avg.value==='6')
-                    test.done();
+                    engine.close(function() {
+			test.done(); 
+		    });
+
                 });
             });
         });
@@ -1427,7 +1533,10 @@ if(MongodbQueryEngine.mongodb === true) {
                     test.ok(results[0].avg.value==='4')
                     test.ok(results[1].avg.value==='12')
 
-                    test.done();
+                    engine.close(function() {
+			test.done(); 
+		    });
+
                 });
             });
         });
@@ -1451,7 +1560,10 @@ if(MongodbQueryEngine.mongodb === true) {
                     test.ok(results.length===2);
                     test.ok(results[0].avg.value==='5.5')
                     test.ok(results[1].avg.value==='12')
-                    test.done();
+                    engine.close(function() {
+			test.done(); 
+		    });
+
                 });
             });
         });
@@ -1487,7 +1599,10 @@ if(MongodbQueryEngine.mongodb === true) {
 		       test.ok(acum[1] === 'http://example/s2');
 		       test.ok(acum[2] === 'http://example/s3');
 		       test.ok(acum[3] === 'http://example/s4');
-		       test.done();
+		       engine.close(function() {
+			   test.done(); 
+		       });
+
 		   });
 	       });
 	   });
@@ -1523,7 +1638,10 @@ if(MongodbQueryEngine.mongodb === true) {
 		       test.ok(acum[0] === '2')
 		       test.ok(acum[1] === '3')
 		       test.ok(acum[2] === '4')
-		       test.done();
+		       engine.close(function() {
+			   test.done(); 
+		       });
+
 		   });
 	       });
 	   });
@@ -1549,7 +1667,10 @@ if(MongodbQueryEngine.mongodb === true) {
 		   engine.execute('PREFIX : <http://example/> SELECT ?data {  :s1 :rest/:restNonExistent*/:first ?data }', function(success, results){
 		       test.ok(results.length === 1);
 		       test.ok(results[0].data.value === '2');
-		    test.done();
+		       engine.close(function() {
+			   test.done(); 
+		       });
+
 		   });
 	       });
 	   });
@@ -1575,7 +1696,10 @@ if(MongodbQueryEngine.mongodb === true) {
 	       engine.execute(query, function(success, result){
 		   engine.execute('PREFIX : <http://example/> SELECT ?data {  :s1 :rest*/:first ?data }', function(success, results){
 		       test.ok(results.length === 4);
-		       test.done();
+		       engine.close(function() {
+			   test.done(); 
+		       });
+
 		   });
 	       });
 	   });
@@ -1601,7 +1725,10 @@ if(MongodbQueryEngine.mongodb === true) {
 	       engine.execute(query, function(success, result){
 		   engine.execute('PREFIX : <http://example/> SELECT ?data {  :list :elems/:rest* ?data }', function(success, results){
 		       test.ok(results.length === 4);
-		       test.done();
+		       engine.close(function() {
+			   test.done(); 
+		       });
+
 		   });
 	       });
 	   });
@@ -1630,7 +1757,10 @@ if(MongodbQueryEngine.mongodb === true) {
 		       for(var i=0; i<acum.length; i++) {
 			   test.ok(acum[i] === ''+(i+1));
 		       }
-		       test.done();
+		       engine.close(function() {
+			   test.done(); 
+		       });
+
 		   });
 	       });
 	   });
@@ -1672,7 +1802,10 @@ if(MongodbQueryEngine.mongodb === true) {
                                     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> \
                                     PREFIX  xsd: <http://www.w3.org/2001/XMLSchema#> \
                                     SELECT ?domain { :actors rdfs:domain/owl:unionOf/rdf:rest*/rdf:first ?domain } ORDER BY ?domain', function(success, results){
-					test.done();
+					engine.close(function() {
+					    test.done(); 
+					});
+
 				    });
 		});
 	    });
@@ -1697,7 +1830,10 @@ if(MongodbQueryEngine.mongodb === true) {
 	       engine.execute(query, function(success, result){
 		   engine.execute('PREFIX : <http://example/> SELECT ?data {  :s1 :rest/:restNonExistent+/:first ?data }', function(success, results){
 		       test.ok(results.length === 0);
-		       test.done();
+		       engine.close(function() {
+			   test.done(); 
+		       });
+
 		   });
 	       });
 	   });
@@ -1722,7 +1858,10 @@ if(MongodbQueryEngine.mongodb === true) {
 	       engine.execute(query, function(success, result){
 		   engine.execute('PREFIX : <http://example/> SELECT ?data {  :s1 :rest/:rest+/:first ?data }', function(success, results){
 		       test.ok(results.length === 2);
-		       test.done();
+		       engine.close(function() {
+			   test.done(); 
+		       });
+
 		   });
 	       });
 	   });
@@ -1758,7 +1897,10 @@ if(MongodbQueryEngine.mongodb === true) {
 		       } else {
 			   test.ok(false);
 		       }
-                       test.done();
+                       engine.close(function() {
+			   test.done(); 
+		       });
+
                    });
                });
            });

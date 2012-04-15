@@ -11,7 +11,7 @@ exports.testIntegration1 = function(test){
                 test.ok(results[0].p.value === "http://example.com/vocab#title");
                 test.ok(results[0].o.value === "http://test.com/example");
 
-                test.done();
+                store.close(function(){ test.done() });
             });
         });
     });
@@ -27,7 +27,7 @@ exports.testIntegration2 = function(test){
                 test.ok(results[0].p.value === "http://example.com/vocab#title");
                 test.ok(results[0].o.value === "http://test.com/example");
 
-                test.done();
+                store.close(function(){ test.done() });
             });
         });
     });
@@ -66,7 +66,7 @@ exports.testGraph1 = function(test) {
                 test.ok(resultsObject.toArray().length === 1);
                 test.ok((resultsObject.toArray().length + resultsSubject.toArray().length) === resultsCount);
 
-                test.done();
+                store.close(function(){ test.done() });
             });
         });
     });
@@ -112,7 +112,7 @@ exports.testGraph2 = function(test) {
                 store.graph("http://example.org/people/alice", function(succes, results) {
 
                     test.ok(results.toArray().length === 4);
-                    test.done();
+                    store.close(function(){ test.done() });
                 });
             });
         });
@@ -143,7 +143,7 @@ exports.testSubject1 = function(test) {
         store.execute(query, function(success, results) {
             store.node("http://example.org/people/alice", function(succes, graph){
                 test.ok(graph.toArray().length === 4);
-                test.done();
+                store.close(function(){ test.done() });
             });
         });
     });
@@ -189,7 +189,7 @@ exports.testSubject2 = function(test) {
                 store.node("http://example.org/people/alice", "http://example.org/people/alice", function(success, results) {
 
                     test.ok(results.toArray().length === 4);
-                    test.done();
+                    store.close(function(){ test.done() });
                 });
             });
         });
@@ -238,7 +238,7 @@ exports.testPrefixes = function(test) {
                 store.node("ex:alice", "ex:alice", function(success, results) {
 
                     test.ok(results.toArray().length === 4);
-                    test.done();
+                    store.close(function(){ test.done() });
                 });
             });
         });
@@ -287,7 +287,7 @@ exports.testDefaultPrefix = function(test) {
                 store.node(":alice", ":alice", function(success, results) {
 
                     test.ok(results.toArray().length === 4);
-                    test.done();
+                    store.close(function(){ test.done() });
                 });
             });
         });
@@ -314,7 +314,7 @@ exports.testInsert1 = function(test) {
 
             store.node("ex:Alice", function(success, graph) {
                 test.ok(graph.toArray().length === 2);
-                test.done();
+                store.close(function(){ test.done() });
             });
             
         });
@@ -340,7 +340,7 @@ exports.testInsert2 = function(test) {
 
             store.node("ex:Alice", "ex:alice", function(success, graph) {
                 test.ok(graph.toArray().length === 2);
-                test.done();
+                store.close(function(){ test.done() });
             });
             
         });
@@ -369,7 +369,7 @@ exports.testDelete1 = function(test) {
                 store.delete(graph, function(success, result) {
                     store.node("ex:Alice", function(success, graph){
                         test.ok(graph.toArray().length === 0);
-                        test.done();
+                        store.close(function(){ test.done() });
                     })
                 });
 
@@ -401,7 +401,7 @@ exports.testDelete2 = function(test) {
                 store.delete(graph, "ex:alice", function(success, result) {
                     store.node("ex:Alice", function(success, graph){
                         test.ok(graph.toArray().length === 0);
-                        test.done();
+                        store.close(function(){ test.done() });
                     })
                 });
 
@@ -433,7 +433,7 @@ exports.testClear = function(test) {
                 store.clear("ex:alice", function(success, result) {
                     store.node("ex:Alice", function(success, graph){
                         test.ok(graph.toArray().length === 0);
-                        test.done();
+                        store.close(function(){ test.done() });
                     });
                 });
 
@@ -468,7 +468,7 @@ exports.testLoad1 = function(test) {
         store.load("application/json", input, "ex:test", function(success, results){
               store.node("ex:john_smith", "ex:test", function(success, graph) {
                   test.ok(graph.toArray().length === 3);
-                  test.done();
+                  store.close(function(){ test.done() });
             });
 
         });
@@ -483,7 +483,7 @@ exports.testLoad2 = function(test) {
 		var tmp = graph.toArray();
                 var results = graph.filter(store.rdf.filters.type(store.rdf.resolve("foaf:Person")));
                 test.ok(results.toArray().length === 1);
-                test.done();
+                store.close(function(){ test.done() });
             });
         });
     });
@@ -513,7 +513,7 @@ exports.testLoad3 = function(test) {
                 }
 
                 test.ok(counter === 2);
-                test.done();
+                store.close(function(){ test.done() });
             });
         });
     });
@@ -538,7 +538,7 @@ exports.testEventsAPI1 = function(test){
                     test.ok(graph.toArray().length === 1);
                     store.stopObservingNode(observerFn);
                     store.execute('INSERT DATA {  <http://example/book> <http://example.com/vocab#title2> <http://test.com/example3> }');                    
-                    test.done();
+                    store.close(function(){ test.done() });
                 } else if(counter === 3) {
                     test.ok(false);
                 }
@@ -566,7 +566,7 @@ exports.testEventsAPI2 = function(test){
                     test.ok(graph.toArray().length === 1);
                     store.stopObservingNode(observerFn);
                     store.execute('INSERT DATA { GRAPH <http://example/graph> { <http://example/book> <http://example.com/vocab#title2> <http://test.com/example3> } }');                    
-                    test.done();
+                    store.close(function(){ test.done() });
                 } else if(counter === 3) {
                     test.ok(false);
                 }
@@ -607,7 +607,7 @@ exports.testEventsAPI3 = function(test){
                                           <http://example/book> <http://example.com/vocab#title3> <http://test.com/example3> }', function(){
                 store.execute('DELETE DATA {  <http://example/book> <http://example.com/vocab#title2> <http://test.com/example2> }',function(){
                     store.execute('INSERT DATA {  <http://example/book> <http://example.com/vocab#title2> <http://test.com/example3> }', function(){
-                        test.done();
+                        store.close(function(){ test.done() });
                     });                    
                 });
             });
@@ -658,7 +658,7 @@ exports.testRegisteredGraph = function(test) {
                 values.sort();
                 test.ok(values[0] === 'http://example.org/people/alice');
                 test.ok(values[1] === 'http://example.org/people/bob');
-                test.done();
+                store.close(function(){ test.done() });
             });
         });
         });
@@ -683,7 +683,7 @@ exports.testExport1 = function(test) {
                 // an easier way
                 test.ok(graph.toNT() == n3);
 
-                test.done();
+                store.close(function(){ test.done() });
 
             });
         });
@@ -704,7 +704,7 @@ exports.testDefaultPrefixes = function(test){
                     test.ok(success === true);
                     test.ok(results.length === 1);
                     test.ok(results[0].name.value === "Celia");
-                    test.done();
+                    store.close(function(){ test.done() });
                 });
             });
         });
@@ -722,7 +722,7 @@ exports.testDuplicatedInsert = function(test) {
                     test.ok(results[0].p.value === "http://example.com/vocab#title");
                     test.ok(results[0].o.value === "http://test.com/example");
                     
-                    test.done();
+                    store.close(function(){ test.done() });
                 });
             });
         });
@@ -739,7 +739,7 @@ exports.testDuplicatedParsing = function(test) {
                     test.ok(success === true);
                     test.ok(results.length === 1);
                     test.ok(results[0].s.value === 'http://test.com/me');
-                    test.done();
+                    store.close(function(){ test.done() });
                 });
             });
         });
@@ -793,7 +793,7 @@ exports.testConstructBlankNodes = function(test) {
                 }
 
                 test.ok(numDistinctBlankSujects === 1);
-                test.done();
+                store.close(function(){ test.done() });
             });
         });
     });

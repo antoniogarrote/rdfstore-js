@@ -28415,6 +28415,7 @@ RDFJSInterface.Graph = function() {
     this.triples = [];
     this.duplicates = {};
     this.actions = [];
+    this.length = 0;
 };
 
 RDFJSInterface.Graph.prototype.add = function(triple) {
@@ -28428,6 +28429,7 @@ RDFJSInterface.Graph.prototype.add = function(triple) {
         this.triples.push(triple);
     }
 
+    this.length = this.triples.length;
     return this;
 };
 
@@ -28448,7 +28450,7 @@ RDFJSInterface.Graph.prototype.addAll = function (graph) {
         this.add(newTriples[i]);
     }
 
-
+    this.length = this.triples.length;
     return this;
 };
 
@@ -28467,6 +28469,7 @@ RDFJSInterface.Graph.prototype.remove = function(triple) {
         this.triples.splice(toRemove,1);
     }
 
+    this.length = this.triples.length;
     return this;
 };
 
@@ -28514,16 +28517,9 @@ RDFJSInterface.Graph.prototype.forEach = function(f) {
 
 RDFJSInterface.Graph.prototype.merge = function(g) {
     var newGraph = new RDFJSInterface.Graph();
-    for(var i=0; i<this.triples; i++) {
-        var triple = this.triples[i];
-        newGraph.add(triple);
-    }
-
-    for(var i=0; i<triples.length; i++) {
-        var triple = triples[i];
-        this.add(triple);
-    }
-
+    for(var i=0; i<this.triples.length; i++)
+        newGraph.add(this.triples[i]);
+    
     return newGraph;
 };
 
@@ -33573,7 +33569,7 @@ var mongodb = require('mongodb');
 MongodbQueryEngine.mongodb = true;
 
 MongodbQueryEngine.MongodbQueryEngine = function(params) {
-    var params = params || {};
+    params = params || {};
     var server = params['mongoDomain'] || '127.0.0.1';
     var port = params['mongoPort'] || 27017;
     var mongoOptions = params['mongoOptions'] || {};
@@ -33603,6 +33599,14 @@ MongodbQueryEngine.MongodbQueryEngine = function(params) {
     this.abstractQueryTree = new AbstractQueryTree.AbstractQueryTree();
     this.rdfLoader = new RDFLoader.RDFLoader(params['communication']);
     this.callbacksBackend = new Callbacks.CallbacksBackend(this);
+};
+
+MongodbQueryEngine.MongodbQueryEngine.prototype.close = function(cb) {
+    var that = this;
+    this.client.close(function(){
+	that.client = null;
+	cb();
+    });
 };
 
 // Utils
@@ -36742,7 +36746,7 @@ var RDFStoreClient = RDFStoreChildClient;
 /**
  * Version of the store
  */
-Store.VERSION = "0.6.4";
+Store.VERSION = "0.6.5";
 
 /**
  * Create a new RDFStore instance that will be
@@ -37654,6 +37658,19 @@ Store.Store.prototype.setNetworkTransport = function(networkTransportImpl) {
     NetworkTransport = networkTransportImpl;
 };
 
+
+/**
+ * Clean-up function releasing all temporary resources held by the
+ * store instance.
+ */
+Store.Store.prototype.close = function(cb) {
+    if(cb == null)
+	cb = function(){};
+    if(this.engine.close)
+	this.engine.close(cb);
+    else
+	cb();
+};
 // end of ./src/js-store/src/store.js 
 // imports
 RDFStoreChild = {};

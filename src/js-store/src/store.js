@@ -20,7 +20,7 @@ var Worker = require('webworker');
 /**
  * Version of the store
  */
-Store.VERSION = "0.6.4";
+Store.VERSION = "0.6.5";
 
 /**
  * Create a new RDFStore instance that will be
@@ -930,4 +930,18 @@ Store.Store.prototype.getNetworkTransport = function() {
  */
 Store.Store.prototype.setNetworkTransport = function(networkTransportImpl) {
     NetworkTransport = networkTransportImpl;
+};
+
+
+/**
+ * Clean-up function releasing all temporary resources held by the
+ * store instance.
+ */
+Store.Store.prototype.close = function(cb) {
+    if(cb == null)
+	cb = function(){};
+    if(this.engine.close)
+	this.engine.close(cb);
+    else
+	cb();
 };

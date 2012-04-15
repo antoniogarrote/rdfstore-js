@@ -445,6 +445,7 @@ RDFJSInterface.Graph = function() {
     this.triples = [];
     this.duplicates = {};
     this.actions = [];
+    this.length = 0;
 };
 
 RDFJSInterface.Graph.prototype.add = function(triple) {
@@ -458,6 +459,7 @@ RDFJSInterface.Graph.prototype.add = function(triple) {
         this.triples.push(triple);
     }
 
+    this.length = this.triples.length;
     return this;
 };
 
@@ -478,7 +480,7 @@ RDFJSInterface.Graph.prototype.addAll = function (graph) {
         this.add(newTriples[i]);
     }
 
-
+    this.length = this.triples.length;
     return this;
 };
 
@@ -497,6 +499,7 @@ RDFJSInterface.Graph.prototype.remove = function(triple) {
         this.triples.splice(toRemove,1);
     }
 
+    this.length = this.triples.length;
     return this;
 };
 
@@ -544,16 +547,9 @@ RDFJSInterface.Graph.prototype.forEach = function(f) {
 
 RDFJSInterface.Graph.prototype.merge = function(g) {
     var newGraph = new RDFJSInterface.Graph();
-    for(var i=0; i<this.triples; i++) {
-        var triple = this.triples[i];
-        newGraph.add(triple);
-    }
-
-    for(var i=0; i<triples.length; i++) {
-        var triple = triples[i];
-        this.add(triple);
-    }
-
+    for(var i=0; i<this.triples.length; i++)
+        newGraph.add(this.triples[i]);
+    
     return newGraph;
 };
 

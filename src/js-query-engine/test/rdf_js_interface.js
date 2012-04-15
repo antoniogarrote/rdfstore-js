@@ -36,6 +36,7 @@ exports.testFilters = function(test) {
                                   ?s ?p ?o .\
                                 }', function(success, graph){
                                     test.ok(success === true);
+				    test.ok(graph.length === 9);
 
                                     var rdf = RDFJSInterface.rdf;
 
@@ -88,6 +89,7 @@ exports.testActions = function(test) {
                                 rdf.createNamedNode(rdf.resolve("foaf:knows")),
                                 rdf.createNamedNode(rdf.resolve("ex:Bob")) ));;
 
+    test.ok(graph.length === 2);
     var triples = graph.match(null, rdf.createNamedNode(rdf.resolve("foaf:name")), null).toArray();
     test.ok(triples.length === 1);
     test.ok(triples[0].object.valueOf() === "Alice");

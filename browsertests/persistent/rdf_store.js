@@ -28961,6 +28961,7 @@ RDFJSInterface.Graph = function() {
     this.triples = [];
     this.duplicates = {};
     this.actions = [];
+    this.length = 0;
 };
 
 RDFJSInterface.Graph.prototype.add = function(triple) {
@@ -28974,6 +28975,7 @@ RDFJSInterface.Graph.prototype.add = function(triple) {
         this.triples.push(triple);
     }
 
+    this.length = this.triples.length;
     return this;
 };
 
@@ -28994,7 +28996,7 @@ RDFJSInterface.Graph.prototype.addAll = function (graph) {
         this.add(newTriples[i]);
     }
 
-
+    this.length = this.triples.length;
     return this;
 };
 
@@ -29013,6 +29015,7 @@ RDFJSInterface.Graph.prototype.remove = function(triple) {
         this.triples.splice(toRemove,1);
     }
 
+    this.length = this.triples.length;
     return this;
 };
 
@@ -29060,16 +29063,9 @@ RDFJSInterface.Graph.prototype.forEach = function(f) {
 
 RDFJSInterface.Graph.prototype.merge = function(g) {
     var newGraph = new RDFJSInterface.Graph();
-    for(var i=0; i<this.triples; i++) {
-        var triple = this.triples[i];
-        newGraph.add(triple);
-    }
-
-    for(var i=0; i<triples.length; i++) {
-        var triple = triples[i];
-        this.add(triple);
-    }
-
+    for(var i=0; i<this.triples.length; i++)
+        newGraph.add(this.triples[i]);
+    
     return newGraph;
 };
 
@@ -34253,7 +34249,7 @@ var Lexicon = WebLocalStorageLexicon;
 /**
  * Version of the store
  */
-Store.VERSION = "0.6.4";
+Store.VERSION = "0.6.5";
 
 /**
  * Create a new RDFStore instance that will be
@@ -35165,6 +35161,19 @@ Store.Store.prototype.setNetworkTransport = function(networkTransportImpl) {
     NetworkTransport = networkTransportImpl;
 };
 
+
+/**
+ * Clean-up function releasing all temporary resources held by the
+ * store instance.
+ */
+Store.Store.prototype.close = function(cb) {
+    if(cb == null)
+	cb = function(){};
+    if(this.engine.close)
+	this.engine.close(cb);
+    else
+	cb();
+};
 // end of ./src/js-store/src/store.js 
 // imports
     RDFStoreWorker = {};
