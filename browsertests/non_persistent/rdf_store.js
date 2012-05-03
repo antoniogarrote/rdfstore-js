@@ -30739,11 +30739,18 @@ QueryPlanDPSize.buildBindingsFromRange = function(results, bgp) {
       for(var i=0; i<results.length; i++) {
           var binding = {};
           var result  = results[i];
+	  var duplicated = false;
           for(var comp in bindings) {
               var value = result[comp];
-              binding[bindings[comp]] = value;
+	      if(binding[bindings[comp]] == null || binding[bindings[comp]] === value) {
+		  binding[bindings[comp]] = value;
+	      } else {
+		  duplicated = true;
+		  break;
+	      }
           }
-          resultsBindings.push(binding);
+	  if(!duplicated)
+              resultsBindings.push(binding);
       }
     }
 
@@ -33684,7 +33691,7 @@ var MongodbQueryEngine = { MongodbQueryEngine: function(){ throw 'MongoDB backen
 /**
  * Version of the store
  */
-Store.VERSION = "0.6.5";
+Store.VERSION = "0.6.6";
 
 /**
  * Create a new RDFStore instance that will be

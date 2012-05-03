@@ -602,14 +602,23 @@ QueryPlanAsync.buildBindingsFromRange = function(results, bgp) {
 
     var resultsBindings =[];
 
-    for(var i=0; i<results.length; i++) {
-        var binding = {};
-        var result  = results[i];
-        for(var comp in bindings) {
-            var value = result[comp];
-            binding[bindings[comp]] = value;
-        }
-        resultsBindings.push(binding);
+    if(results!=null) {
+      for(var i=0; i<results.length; i++) {
+          var binding = {};
+          var result  = results[i];
+	  var duplicated = false;
+          for(var comp in bindings) {
+              var value = result[comp];
+	      if(binding[bindings[comp]] == null || bindings[bindings[comp]] === value) {
+		  binding[bindings[comp]] = value;
+	      } else {
+		  duplicated = true;
+		  break;
+	      }
+          }
+	  if(!duplicated)
+              resultsBindings.push(binding);
+      }
     }
 
     return resultsBindings;

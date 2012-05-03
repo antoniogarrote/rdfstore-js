@@ -798,3 +798,87 @@ exports.testConstructBlankNodes = function(test) {
         });
     });
 };
+
+exports.testRedundantVars1 = function(test) {
+    new Store.Store({name:'test', overwrite:true}, function(store) {
+	store.load(
+            'text/n3',
+            '<http://A> <http://B> <http://C>.',
+            function(success) {
+                store.execute(
+                    'SELECT *  WHERE { ?x ?p ?x }',
+                    function(success, results) {
+			test.ok(results.length === 0);
+			test.done()
+                    }
+                );
+            });
+    });
+
+};
+
+exports.testRedundantVars2 = function(test) {
+    new Store.Store({name:'test', overwrite:true}, function(store) {
+	store.load(
+            'text/n3',
+            '<http://C> <http://B> <http://C>.\
+             <http://D> <http://E> <http://F>.',
+            function(success) {
+                store.execute(
+                    'SELECT *  WHERE { ?x ?p ?x }',
+                    function(success, results) {
+			test.ok(results.length === 1);
+			test.done()
+                    }
+                );
+            });
+    });
+
+};
+
+exports.testRedundantVars3 = function(test) {
+    new Store.Store({name:'test', overwrite:true}, function(store) {
+	store.load(
+            'text/n3',
+            '<http://A> <http://B> <http://C>.',
+            function(success) {
+                store.execute(
+                    'CONSTRUCT { ?x ?p ?x }  WHERE { ?x ?p ?x }',
+                    function(success, results) {
+			var counter = 0;
+                        results.triples.forEach(function(result){
+			    counter++;
+                        });
+
+			test.ok(counter === 0);
+			test.done()
+                    }
+                );
+            });
+    });
+
+};
+
+exports.testRedundantVars4 = function(test) {
+    new Store.Store({name:'test', overwrite:true}, function(store) {
+	store.load(
+            'text/n3',
+            '<http://C> <http://B> <http://C>.\
+             <http://D> <http://E> <http://F>.',
+            function(success) {
+                store.execute(
+                    'CONSTRUCT { ?x ?p ?x }  WHERE { ?x ?p ?x }',
+                    function(success, results) {
+			var counter = 0;
+                        results.triples.forEach(function(result){
+			    counter++;
+                        });
+
+			test.ok(counter === 1);
+			test.done()
+                    }
+                );
+            });
+    });
+
+};
