@@ -195,6 +195,7 @@ Store.Store = function(arg1, arg2) {
  * associated to this graph instance.
  */
 Store.Store.prototype.rdf = RDFJSInterface.rdf;
+Store.Store.prototype.rdf.api = RDFJSInterface;
 
 /**
  * Executes a query in the store.<br/>

@@ -503,7 +503,7 @@ rdfstore-js implements parsers for Turtle and JSON-LD. The specification of JSON
 
     store.setPrefix("ex", "http://example.org/people/");
 
-    store.load("application/json", jsonld, "ex:text", function(success, results) {
+    store.load("application/json", jsonld, "ex:test", function(success, results) {
       store.node("ex:john_smith", "ex:test", function(success, graph) {
         // process graph here
       });
