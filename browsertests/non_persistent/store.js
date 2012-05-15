@@ -651,3 +651,274 @@ this.suite_store.testRegisteredGraph = function(test) {
     });
 };
 
+
+
+this.suite_store.testDefaultPrefixes = function(test){
+    new rdfstore.Store({name:'test', overwrite:true}, function(store){
+        store.execute('INSERT DATA {  <http://example/person1> <http://xmlns.com/foaf/0.1/name> "Celia" }', function(result, msg){
+            store.execute('SELECT * { ?s foaf:name ?name }', function(success,results) {
+                test.ok(success === true);
+                test.ok(results.length === 0);
+
+                store.registerDefaultProfileNamespaces();
+
+                store.execute('SELECT * { ?s foaf:name ?name }', function(success,results) {
+                    test.ok(success === true);
+                    test.ok(results.length === 1);
+                    test.ok(results[0].name.value === "Celia");
+                    store.close(function(){ test.done() });
+                });
+            });
+        });
+    });
+};
+
+this.suite_store.testDuplicatedInsert = function(test) {
+    new rdfstore.Store({name:'test', overwrite:true}, function(store){
+        store.execute('INSERT DATA {  <http://example/book3> <http://example.com/vocab#title> <http://test.com/example> }', function(result, msg){
+            store.execute('INSERT DATA {  <http://example/book3> <http://example.com/vocab#title> <http://test.com/example> }', function(result, msg){
+                store.execute('SELECT * { ?s ?p ?o }', function(success,results) {
+                    test.ok(success === true);
+                    test.ok(results.length === 1);
+                    test.ok(results[0].s.value === "http://example/book3");
+                    test.ok(results[0].p.value === "http://example.com/vocab#title");
+                    test.ok(results[0].o.value === "http://test.com/example");
+                    
+                    store.close(function(){ test.done() });
+                });
+            });
+        });
+    });
+};
+
+
+this.suite_store.testDuplicatedParsing = function(test) {
+    new rdfstore.Store({name:'test', overwrite:true}, function(store){
+        var data = {'@id': 'http://test.com/me', 'http://somproperty.org/prop': 'data'};
+        store.load('application/json',data, function(result, msg){
+            store.load('application/json',data, function(result, msg){
+                store.execute('SELECT * { ?s ?p ?o }', function(success,results) {
+                    test.ok(success === true);
+                    test.ok(results.length === 1);
+                    test.ok(results[0].s.value === 'http://test.com/me');
+                    store.close(function(){ test.done() });
+                });
+            });
+        });
+    });
+};
+
+this.suite_store.testConstructBlankNodes = function(test) {
+    new rdfstore.Store({name:'test', overwrite:true}, function(store){
+        var uriGraph   = 'http://www.example.com/data.ttl';
+        var triplesTTL = "@prefix foaf: <http://xmlns.com/foaf/0.1/> . <http://www.example.com/resource/12645> a foaf:Person . ";
+            
+        store.load( 'text/turtle', triplesTTL, uriGraph, function( success, results){
+
+            var query = "PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
+                         PREFIX test: <http://vocab.netlabs.org/test#>\
+                         CONSTRUCT {\
+                            ?s test:item [\
+                              a test:Item;\
+                              test:prop1 \"Value of property 1\";\
+                              test:prop2 \"Value of property 2\"\
+                            ] .\
+                         }\
+                         FROM <"+uriGraph+">\
+                         WHERE {\
+                           ?s a foaf:Person .\
+                         }";
+
+            store.execute(query, function(success, graph){
+                test.ok(success);
+                var numBlankSubjects = 0;
+                var distinctBlankSubjects = {};
+                var foundUris = false;
+                var triples = graph.toArray();
+                var triple;
+                test.ok(triples.length===4);
+                for(var i=0; i<triples.length; i++) {
+                    triple = triples[i];
+                    if(triple.subject.interfaceName === 'BlankNode') {
+                        numBlankSubjects++;
+                        distinctBlankSubjects[triple.subject.bnodeId] = true;
+                    } else {
+                        test.ok(triple.subject.valueOf() === 'http://www.example.com/resource/12645');
+                        test.ok(triple.object.interfaceName === 'BlankNode');
+                        distinctBlankSubjects[triple.object.bnodeId] = true;
+                    }
+                }
+
+                var numDistinctBlankSujects = 0;
+                for(var p in distinctBlankSubjects) {
+                    numDistinctBlankSujects++;
+                }
+
+                test.ok(numDistinctBlankSujects === 1);
+                store.close(function(){ test.done() });
+            });
+        });
+    });
+};
+
+this.suite_store.testRedundantVars1 = function(test) {
+    new rdfstore.Store({name:'test', overwrite:true}, function(store) {
+	store.load(
+            'text/n3',
+            '<http://A> <http://B> <http://C>.',
+            function(success) {
+                store.execute(
+                    'SELECT *  WHERE { ?x ?p ?x }',
+                    function(success, results) {
+			test.ok(results.length === 0);
+			test.done()
+                    }
+                );
+            });
+    });
+
+};
+
+this.suite_store.testRedundantVars2 = function(test) {
+    new rdfstore.Store({name:'test', overwrite:true}, function(store) {
+	store.load(
+            'text/n3',
+            '<http://C> <http://B> <http://C>.\
+             <http://D> <http://E> <http://F>.',
+            function(success) {
+                store.execute(
+                    'SELECT *  WHERE { ?x ?p ?x }',
+                    function(success, results) {
+			test.ok(results.length === 1);
+			test.done()
+                    }
+                );
+            });
+    });
+
+};
+
+this.suite_store.testRedundantVars3 = function(test) {
+    new rdfstore.Store({name:'test', overwrite:true}, function(store) {
+	store.load(
+            'text/n3',
+            '<http://A> <http://B> <http://C>.',
+            function(success) {
+                store.execute(
+                    'CONSTRUCT { ?x ?p ?x }  WHERE { ?x ?p ?x }',
+                    function(success, results) {
+			var counter = 0;
+                        results.triples.forEach(function(result){
+			    counter++;
+                        });
+
+			test.ok(counter === 0);
+			test.done()
+                    }
+                );
+            });
+    });
+
+};
+
+this.suite_store.testRedundantVars4 = function(test) {
+    new rdfstore.Store({name:'test', overwrite:true}, function(store) {
+	store.load(
+            'text/n3',
+            '<http://C> <http://B> <http://C>.\
+             <http://D> <http://E> <http://F>.',
+            function(success) {
+                store.execute(
+                    'CONSTRUCT { ?x ?p ?x }  WHERE { ?x ?p ?x }',
+                    function(success, results) {
+			var counter = 0;
+                        results.triples.forEach(function(result){
+			    counter++;
+                        });
+
+			test.ok(counter === 1);
+			test.done()
+                    }
+                );
+            });
+    });
+
+};
+
+this.suite_store.testShouldLoadJSONLDWithAllMediaTypes = function(test) {
+    var input = {  "@type": "foaf:Person",
+                   "foaf:name": "Manu Sporny",
+                   "foaf:homepage": "http://manu.sporny.org/",
+                   "sioc:avatar": "http://twitter.com/account/profile_image/manusporny",
+                   '@context': {'sioc:avatar': {'@type': '@id'},
+			        'foaf:homepage': {'@type': '@id'}}
+		};
+
+    var jsonmedia=0, jsonldmedia=0;
+    new rdfstore.Store({name:'test', overwrite:true}, function(store) {
+	store.load(
+            'application/ld+json',
+	    input,
+            function(success) {
+                store.execute(
+                    'SELECT * { ?s ?p ?o }',
+                    function(success, results) {
+			jsonmedia = results.length;
+			test.ok(jsonmedia > 0);
+
+			new rdfstore.Store({name:'test', overwrite:true}, function(store) {
+			    store.load(
+				'application/json',
+				input,
+				function(success) {
+				    store.execute(
+					'SELECT * { ?s ?p ?o }',
+					function(success, results) {
+					    jsonldmedia = results.length;
+					    test.ok(jsonldmedia > 0);
+					    
+					    test.ok(jsonldmedia === jsonmedia);
+					    test.done();
+					});
+				});
+			});
+                    }
+                );
+            });
+    });
+    
+};
+
+this.suite_store.testRegisterCustomFunction = function(test) {
+    new rdfstore.Store({name:'test', overwrite:true}, function(store) {
+	store.load(
+            'text/n3',
+            '@prefix test: <http://test.com/> .\
+             test:A test:prop 5.\
+	     test:B test:prop 4.\
+	     test:C test:prop 1.\
+	     test:D test:prop 3.',
+            function(success) {
+
+		var invoked = false;
+		store.registerCustomFunction('my_addition', function(engine,args) {
+		    var v1 = engine.effectiveTypeValue(args[0]);
+		    var v2 = engine.effectiveTypeValue(args[1]);
+
+		    return engine.ebvBoolean(v1+v2<5);
+		});
+
+                store.execute(
+                    'PREFIX test: <http://test.com/> SELECT * { ?x test:prop ?v1 . ?y test:prop ?v2 . filter(custom:my_addition(?v1,?v2)) }',
+                    function(success, results) {
+			test.ok(results.length === 3);
+			for(var i=0; i<results.length; i++) {
+			    test.ok(parseInt(results[i].v1.value) + parseInt(results[i].v2.value) < 5 );
+			}
+			test.done()
+                    }
+                );
+            });
+    });
+    
+};

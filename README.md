@@ -43,6 +43,7 @@ Some other features included in the library are the following:
 - W3C RDF Interfaces API
 - RDF graph events API
 - Partial support for property paths in queries
+- Custom filter functions
 - Parallel execution where WebWorkers are available
 - Persistent storage using HTML5 LocalStorage in the browser version
 - Persistent storage using MongoDB in the Node.js version
@@ -555,6 +556,54 @@ The main difference between both methods is that *subscribe* receives the triple
 
 In the same way, there are *startObservingQuery* and *stopObservingQuery* functions that makes possible to set up callbacks for whole SPARQL queries. 
 The store will try to be smart and not perform unnecessary evaluations of these query after quad insertion/deletions. Nevertheless too broad queries must be used carefully with the events API.
+
+###Custom Filter Functions
+
+Custom filter function can be registered into the store using the *registerCustomFunction* function. This function receives two argument, the name of the custom function and the associated implementation. This functions will be available in a SPARQL query using the prefix *custom*.
+The function implementation will receive two arguments, an object linking to the store query filters engine and a list with the actual arguments. Arguments will consist of literal or URIs objects. Results from the function must also be literal or URI objects.
+
+The query filters engine can be used to access auxiliary function to transform literals into JavaScript types using the *effectiveTypeValue* function, boolean values using the *effectiveBooleanValue*, to build boolean litearl objects (*ebvTrue*, *ebvFalse*) or return an error with the *ebvError*. Documentation and source code for the *QueryFilters* object n the 'js-query-engine' module can be consulted to find information about additional helper functions.
+
+The following test shows a simple examples of how custom functions can be invoked:
+
+    new Store.Store({name:'test', overwrite:true}, function(store) {
+	store.load(
+            'text/n3',
+            '@prefix test: <http://test.com/> .\
+             test:A test:prop 5.\
+	     test:B test:prop 4.\
+	     test:C test:prop 1.\
+	     test:D test:prop 3.',
+            function(success) {
+
+		var invoked = false;
+		store.registerCustomFunction('my_addition_check', function(engine,args) {
+		    // equivalent to var v1 = parseInt(args[0].value), v2 = parseInt(args[1]);
+
+		    var v1 = engine.effectiveTypeValue(args[0]);
+		    var v2 = engine.effectiveTypeValue(args[1]);
+
+		    // equivalent to return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#boolean", value:(v1+v2<5)};
+
+		    return engine.ebvBoolean(v1+v2<5);
+		});
+
+                store.execute(
+                    'PREFIX test: <http://test.com/> \
+                     SELECT * { ?x test:prop ?v1 .\
+                                ?y test:prop ?v2 .\
+                                filter(custom:my_addition_check(?v1,?v2)) }',
+                    function(success, results) {
+			test.ok(results.length === 3);
+			for(var i=0; i<results.length; i++) {
+			    test.ok(parseInt(results[i].v1.value) + parseInt(results[i].v2.value) < 5 );
+			}
+			test.done()
+                    }
+                );
+            });
+    });
+
 
 ###WebWorkers
 

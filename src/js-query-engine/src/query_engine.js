@@ -23,7 +23,12 @@ QueryEngine.QueryEngine = function(params) {
         this.abstractQueryTree = new AbstractQueryTree.AbstractQueryTree();
         this.rdfLoader = new RDFLoader.RDFLoader(params['communication']);
         this.callbacksBackend = new Callbacks.CallbacksBackend(this);
+	this.customFns = params.customFns || {};
     }
+};
+
+QueryEngine.QueryEngine.prototype.setCustomFunctions = function(customFns) {
+    this.customFns = customFns;
 };
 
 // Utils

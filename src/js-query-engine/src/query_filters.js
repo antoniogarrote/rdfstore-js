@@ -6,7 +6,6 @@ var QueryFilters = exports.QueryFilters;
 var Utils = require("./../../js-trees/src/utils").Utils;
 
 QueryFilters.checkFilters = function(pattern, bindings, nullifyErrors, dataset, queryEnv, queryEngine) {
-
     var filters = pattern.filter;
     var nullified = [];
     if(filters==null || pattern.length != null) {
@@ -15,7 +14,6 @@ QueryFilters.checkFilters = function(pattern, bindings, nullifyErrors, dataset, 
 
     for(var i=0; i<filters.length; i++) {
         var filter = filters[i];
-
         var filteredBindings = QueryFilters.run(filter.value, bindings, nullifyErrors, dataset, queryEnv, queryEngine);
         var acum = [];
         for(var j=0; j<filteredBindings.length; j++) {
@@ -307,6 +305,8 @@ QueryFilters.runFilter = function(filterExpr, bindings, queryEngine, dataset, en
             return QueryFilters.runIriRefOrFunction(filterExpr.iriref, filterExpr.args, bindings, queryEngine, dataset, env);
         } else if(expressionType == 'regex') {
             return QueryFilters.runRegex(filterExpr.text, filterExpr.pattern, filterExpr.flags, bindings, queryEngine, dataset, env)
+        } else if(expressionType == 'custom') {
+            return QueryFilters.runBuiltInCall(filterExpr.name, filterExpr.args, bindings, queryEngine, dataset, env);
         } else if(expressionType == 'atomic') {        
             if(filterExpr.primaryexpression == 'var') {
                 // lookup the var in the bindings
@@ -577,6 +577,7 @@ QueryFilters.ebv = function (term) {
     }
 };
 
+QueryFilters.effectiveBooleanValue = QueryFilters.ebv;
 
 QueryFilters.ebvTrue = function() {
     var val = {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#boolean", value:true};
@@ -1329,6 +1330,8 @@ QueryFilters.runBuiltInCall = function(builtincall, args, bindings, queryEngine,
             } else {
                 return QueryFilters.ebvFalse();
             }
+	} else if(queryEngine.customFns[builtincall] != null) {
+	    return queryEngine.customFns[builtincall](QueryFilters, ops);
         } else {
             throw ("Builtin call "+builtincall+" not implemented yet");
         }

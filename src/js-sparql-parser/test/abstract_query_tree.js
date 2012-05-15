@@ -309,3 +309,16 @@ exports.simplePath1 = function(test) {
 
     test.done();
 };
+
+exports.customFunction = function(test) {
+    var query = "SELECT ?givenName WHERE { ?x foaf:givenName  ?givenName . filter(custom:hey(3,?date)) }";
+
+    query = aqt.parseQueryString(query);
+    var result = aqt.parseSelect(query.units[0]);
+
+    test.ok(result.pattern.filter[0].value.token === 'expression');
+    test.ok(result.pattern.filter[0].value.expressionType === 'custom');
+    test.ok(result.pattern.filter[0].value.name === 'hey');
+    test.ok(result.pattern.filter[0].value.args.length === 2);
+    test.done();
+}

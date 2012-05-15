@@ -20,7 +20,7 @@ var Worker = require('webworker');
 /**
  * Version of the store
  */
-Store.VERSION = "0.6.6";
+Store.VERSION = "0.7.0";
 
 /**
  * Create a new RDFStore instance that will be
@@ -155,6 +155,7 @@ Store.Store = function(arg1, arg2) {
     this.functionMap = {};
 
     var that = this;
+    this.customFns = {};
     if(params['engine']==='mongodb') {
         this.isMongodb = true;
         this.engine = new MongodbQueryEngine.MongodbQueryEngine(params);
@@ -196,6 +197,41 @@ Store.Store = function(arg1, arg2) {
  */
 Store.Store.prototype.rdf = RDFJSInterface.rdf;
 Store.Store.prototype.rdf.api = RDFJSInterface;
+
+/**
+ * Registers a new function with an associated name that can
+ * be invoked as 'custom:fn_name(arg1,arg2,...,argn)' inside
+ * a SPARQL query.
+ * <br/>
+ * The registered function will receive two arguments, an
+ * instance of the store's query filters engine and a list
+ * with the arguments received by the function in the SPARQL query.
+ * <br/>
+ * The function must return a single token value that can
+ * consist in a literal value or an URI.
+ * <br/>
+ * The following is an example literal value:
+ * {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#integer", value:'3'}
+ * This is an example URI value:
+ * {token: 'uri', value:'http://test.com/my_uri'}
+ * <br/>
+ * The query filters engine can be used to perform common operations
+ * on the input values.
+ * An error can be returne dusing the 'ebvError' function of the engine.
+ * True and false values can be built directly using the 'ebvTrue' and
+ * 'ebvFalse' functions.
+ * 
+ * A complete reference of the available functions can be found in the
+ * documentation or source code of the QueryFilters module.
+ *
+ * @arguments:
+ * @param {String} [name]: name of the custom function, it will be accesible as custom:name in the query
+ * @param {Function} [function]: lambda function with the code for the query custom function.
+ */
+Store.Store.prototype.registerCustomFunction = function(name, fn) {
+    this.customFns[name] = fn;
+    this.engine.setCustomFunctions(this.customFns);
+};
 
 /**
  * Executes a query in the store.<br/>

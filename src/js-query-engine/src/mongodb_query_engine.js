@@ -31,6 +31,7 @@ MongodbQueryEngine.MongodbQueryEngine = function(params) {
 	server = server.split("@")[1];
     }
 
+    this.customFns = params.customFns || {};
     this.client = new mongodb.Db(mongoDBName, new mongodb.Server(server,port,mongoOptions));
     this.defaultGraphOid = "u:https://github.com/antoniogarrote/rdfstore-js#default_graph";
     this.defaultGraphUri = "https://github.com/antoniogarrote/rdfstore-js#default_graph";
@@ -53,6 +54,10 @@ MongodbQueryEngine.MongodbQueryEngine.prototype.close = function(cb) {
 	that.client = null;
 	cb();
     });
+};
+
+MongodbQueryEngine.MongodbQueryEngine.prototype.setCustomFunctions = function(customFns) {
+    this.customFns = customFns;
 };
 
 // Utils

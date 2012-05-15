@@ -14,12 +14,17 @@ var Callbacks = require("./callbacks.js").Callbacks;
 
 QueryEngine.QueryEngine = function(params) {
     if(arguments.length != 0) {
+	this.customFns = params.customFns || {};
         this.backend = params.backend;
         this.lexicon = params.lexicon;
         this.abstractQueryTree = new AbstractQueryTree.AbstractQueryTree();
         this.rdfLoader = new RDFLoader.RDFLoader(params['communication']);
         this.callbacksBackend = new Callbacks.CallbacksBackend(this);
     }
+};
+
+QueryEngine.QueryEngine.prototype.setCustomFunctions = function(customFns) {
+    this.customFns = customFns;
 };
 
 // Utils

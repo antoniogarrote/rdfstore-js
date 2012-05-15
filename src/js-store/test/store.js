@@ -926,3 +926,37 @@ exports.testShouldLoadJSONLDWithAllMediaTypes = function(test) {
     });
     
 };
+
+exports.testRegisterCustomFunction = function(test) {
+    new Store.Store({name:'test', overwrite:true}, function(store) {
+	store.load(
+            'text/n3',
+            '@prefix test: <http://test.com/> .\
+             test:A test:prop 5.\
+	     test:B test:prop 4.\
+	     test:C test:prop 1.\
+	     test:D test:prop 3.',
+            function(success) {
+
+		var invoked = false;
+		store.registerCustomFunction('my_addition', function(engine,args) {
+		    var v1 = engine.effectiveTypeValue(args[0]);
+		    var v2 = engine.effectiveTypeValue(args[1]);
+
+		    return engine.ebvBoolean(v1+v2<5);
+		});
+
+                store.execute(
+                    'PREFIX test: <http://test.com/> SELECT * { ?x test:prop ?v1 . ?y test:prop ?v2 . filter(custom:my_addition(?v1,?v2)) }',
+                    function(success, results) {
+			test.ok(results.length === 3);
+			for(var i=0; i<results.length; i++) {
+			    test.ok(parseInt(results[i].v1.value) + parseInt(results[i].v2.value) < 5 );
+			}
+			test.done()
+                    }
+                );
+            });
+    });
+    
+};
