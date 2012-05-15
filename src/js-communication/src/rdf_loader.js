@@ -9,8 +9,8 @@ var JSONLDParser = require("./jsonld_parser").JSONLDParser;
 var Utils = require("../../js-trees/src/utils").Utils;
 
 RDFLoader.RDFLoader = function (params) {
-    this.precedences = ["text/turtle", "text/n3", "application/json"];
-    this.parsers = {"text/turtle":N3Parser.parser, "text/n3":N3Parser.parser, "application/json":JSONLDParser.parser};
+    this.precedences = ["text/turtle", "text/n3", "application/ld+json", "application/json"];
+    this.parsers = {"text/turtle":N3Parser.parser, "text/n3":N3Parser.parser, "application/ld+json":JSONLDParser.parser, "application/json":JSONLDParser.parser};
     if (params != null) {
         for (var mime in params["parsers"]) {
             this.parsers[mime] = params["parsers"][mime];

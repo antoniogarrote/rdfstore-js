@@ -882,3 +882,47 @@ exports.testRedundantVars4 = function(test) {
     });
 
 };
+
+exports.testShouldLoadJSONLDWithAllMediaTypes = function(test) {
+    var input = {  "@type": "foaf:Person",
+                   "foaf:name": "Manu Sporny",
+                   "foaf:homepage": "http://manu.sporny.org/",
+                   "sioc:avatar": "http://twitter.com/account/profile_image/manusporny",
+                   '@context': {'sioc:avatar': {'@type': '@id'},
+			        'foaf:homepage': {'@type': '@id'}}
+		};
+
+    var jsonmedia=0, jsonldmedia=0;
+    new Store.Store({name:'test', overwrite:true}, function(store) {
+	store.load(
+            'application/ld+json',
+	    input,
+            function(success) {
+                store.execute(
+                    'SELECT * { ?s ?p ?o }',
+                    function(success, results) {
+			jsonmedia = results.length;
+			test.ok(jsonmedia > 0);
+
+			new Store.Store({name:'test', overwrite:true}, function(store) {
+			    store.load(
+				'application/json',
+				input,
+				function(success) {
+				    store.execute(
+					'SELECT * { ?s ?p ?o }',
+					function(success, results) {
+					    jsonldmedia = results.length;
+					    test.ok(jsonldmedia > 0);
+					    
+					    test.ok(jsonldmedia === jsonmedia);
+					    test.done();
+					});
+				});
+			});
+                    }
+                );
+            });
+    });
+    
+};
