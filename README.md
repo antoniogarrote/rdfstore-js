@@ -181,7 +181,7 @@ The previous command loads the graph for a DBPedia article in the store graph pa
     * Closing connection #0
     <?xml version="1.0" encoding="UTF-8"?><sparql xmlns="http://www.w3.org/2005/sparql-results#"><head><variable name="s"/>...</sparql>
 
-The store supports these formats in the response of *CONSTRUCT* SPARQL queries: rdf/xml, turtle, json-ld. When responding to *SELECT* and *ASK* queries results can be retrieved in the normative rdf/xml serialization, but they can also be retrieved as JSON passing an application/json media type in the HTTP Accept header.
+The store supports these formats in the response of *CONSTRUCT* SPARQL queries: rdf/xml, turtle, json-ld. When responding to *SELECT* and *ASK* queries results can be retrieved in the normative rdf/xml serialization, but they can also be retrieved as JSON passing an application/ld+json media type in the HTTP Accept header.
 
 Data can be removed from an instance of the store using a persistent backend with the *clear* command:
 
@@ -465,7 +465,7 @@ This object can be used to access to the full RDF Interfaces 1.0 API.
 ###Default Prefixes
 
 Default RDF name-spaces can be specified using the *registerDefaultNamespace*. These names will be included automatically in all queries. If the same name-space is specified by the client in the query string the new prefix will shadow the default one.
-A collection of common name-spaces like rdf, rdfs, foaf, etc. as suggested in the JSON-LD specification can be automatically registered using the *registerDefaultProfileNamespace* function.
+A collection of common name-spaces like rdf, rdfs, foaf, etc. can be automatically registered using the *registerDefaultProfileNamespace* function.
 
     new Store.Store({name:'test', overwrite:true}, function(store){
         store.execute('INSERT DATA {  <http://example/person1> <http://xmlns.com/foaf/0.1/name> "Celia" }', function(result, msg){
@@ -503,7 +503,7 @@ rdfstore-js implements parsers for Turtle and JSON-LD. The specification of JSON
 
     store.setPrefix("ex", "http://example.org/people/");
 
-    store.load("application/json", jsonld, "ex:test", function(success, results) {
+    store.load("application/ld+json", jsonld, "ex:test", function(success, results) {
       store.node("ex:john_smith", "ex:test", function(success, graph) {
         // process graph here
       });
