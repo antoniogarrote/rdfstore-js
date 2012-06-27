@@ -356,6 +356,7 @@ Utils.lexicalFormLiteral = function(term, env) {
 
 Utils.lexicalFormBaseUri = function(term, env) {
     var uri = null;
+    env = env || {};
     //console.log("*** normalizing URI token:");
     //console.log(term);
     if(term.value == null) {
