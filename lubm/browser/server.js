@@ -60,7 +60,7 @@ Utils.serveFileRaw = function(docroot, request, response, contentType) {
         }
     }
 
-    path.exists(filePath, function(exists){        
+    fs.exists(filePath, function(exists){        
         if(!exists) {
             response.writeHead(404);
             response.end();
