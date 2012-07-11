@@ -1631,7 +1631,7 @@ QueryFilters.runIriRefOrFunction = function(iriref, args, bindings,queryEngine, 
                 return from;
             } else if(from.type == "http://www.w3.org/2001/XMLSchema#string" || from.type == null) {
                 try {
-                    from.value = Utils.iso8601(Utils.parseStrictISO8601(from.value));
+                    from.value = Utils.iso8601(Utils.parseISO8601(from.value));
                     from.type = fun;
                     return from;
                 } catch(e) {
