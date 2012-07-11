@@ -4,7 +4,7 @@ require 'rubygems'
 require 'fileutils'
 require 'json'
 
-NODEUNIT = "/Users/antonio/Development/Projects/js/rdfstore-js/node_modules/nodeunit/bin/nodeunit"
+NODEUNIT = "./node_modules/nodeunit/bin/nodeunit"
 
 def load_configuration
   puts "*** loading configuration"

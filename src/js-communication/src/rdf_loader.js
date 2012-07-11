@@ -5,12 +5,13 @@ var RDFLoader = exports.RDFLoader;
 // imports
 var NetworkTransport = require("./tcp_transport").NetworkTransport;
 var N3Parser = require("./n3_parser").N3Parser;
+var RDFXMLParser = require("./rdfxml_parser").RDFXMLParser;
 var JSONLDParser = require("./jsonld_parser").JSONLDParser;
 var Utils = require("../../js-trees/src/utils").Utils;
 
 RDFLoader.RDFLoader = function (params) {
-    this.precedences = ["text/turtle", "text/n3", "application/ld+json", "application/json"];
-    this.parsers = {"text/turtle":N3Parser.parser, "text/n3":N3Parser.parser, "application/ld+json":JSONLDParser.parser, "application/json":JSONLDParser.parser};
+    this.precedences = ["text/turtle", "text/n3", "application/ld+json", "application/json", "application/rdf+xml"];
+    this.parsers = {"text/turtle":N3Parser.parser, "text/n3":N3Parser.parser, "application/ld+json":JSONLDParser.parser, "application/json":JSONLDParser.parser, "application/rdf+xml":RDFXMLParser.parser};
     if (params != null) {
         for (var mime in params["parsers"]) {
             this.parsers[mime] = params["parsers"][mime];
