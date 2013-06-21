@@ -376,7 +376,7 @@ RDFJSInterface.Literal = function(value, language, datatype) {
 Utils.extends(RDFJSInterface.RDFNode,RDFJSInterface.Literal);
 
 RDFJSInterface.Literal.prototype.toString = function(){
-    var tmp = "\""+this.nominalValue+"\"";
+    var tmp = '"'+this.nominalValue+'"';
     if(this.language != null) {
         tmp = tmp + "@" + this.language;
     } else if(this.datatype != null || this.type) {

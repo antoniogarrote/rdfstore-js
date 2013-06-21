@@ -23,7 +23,6 @@ MongodbQueryEngine.MongodbQueryEngine = function(params) {
 
     this.lexicon = this;
     this.backend = this;
-    this.auth;
 
     if(server.indexOf("@") != -1)  {
 	this.auth = server.split("@")[0];

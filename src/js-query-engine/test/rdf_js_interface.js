@@ -151,3 +151,11 @@ exports.testBlankDefaultNS = function(test) {
     test.ok(rdf.prefixes.resolve(":test")==="http://something.com/vocab/test");
     test.done();
 };
+
+exports.testToString = function(test) {
+    var node = RDFJSInterface.rdf.createNamedNode("http://www.w3.org/People/Berners-Lee/card#i");
+    console.log("DAS TEST");
+    console.log(node.toString());
+
+    test.done();
+};

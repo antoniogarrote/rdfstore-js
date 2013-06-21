@@ -270,6 +270,9 @@ def process_file_for_nodejs(of, f)
       puts " * writing right MemoryTree"
       tree = line.split(".")[-1];
       of << "var BaseTree = #{tree}"
+    elsif (line =~ /[\w\d\s]*RVN3Parser;$/)
+      puts " * Adding N3 Parser"
+      of << "var N3Parser = RVN3Parser;";
     else
       # require for YUI compressor
       line.gsub!('dataset.default', "dataset['default']")
@@ -372,7 +375,11 @@ def write_browser_preamble(of)
      console = {};
      console.log = function(e){};
   }
-
+  
+  window.process = {};
+  process.nextTick = function(f) {
+    setTimeout(f,0);
+  };
 __END
   of << js_code
 end
@@ -395,6 +402,9 @@ def process_file_for_browser(of, f)
       puts " * ignoring: #{line}"
     elsif (line =~ /var *([a-zA-Z0-9]+) *= *require\(['\"]webworker[\"']\);/)
       puts " * ignoring require for NodeJS WebWorkers: #{line}"  
+    elsif (line =~ /[\w\d\s]*RVN3Parser;$/)
+      puts " * Adding N3 Parser"
+      of << "var N3Parser = RVN3Parser;";
     elsif (line =~ /var BaseTree *= *require\(['\"]{1,1}[a-zA-Z0-9_\.\/-]*['\"]{1,1}\)\./) == 0
       puts " * writing right MemoryTree"
       tree = line.split(".")[-1];
@@ -436,6 +446,9 @@ def process_file_for_browser_persistent(of, f)
       puts " * ignoring: #{line}"
     elsif (line =~ /var *([a-zA-Z0-9]+) *= *require\(__dirname\+['\"]{1,1}[a-zA-Z0-9_\.\/-]*['\"]{1,1}\)\.\1;/) == 0
       puts " * ignoring: #{line}"
+    elsif (line =~ /[\w\d\s]*RVN3Parser;$/)
+      puts " * Adding N3 Parser"
+      of << "var N3Parser = RVN3Parser;";
     elsif (line =~ /var *([a-zA-Z0-9]+) *= *require\(['\"]webworker[\"']\);/)
       puts " * ignoring require for NodeJS WebWorkers: #{line}"  
     else

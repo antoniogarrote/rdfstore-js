@@ -1,5 +1,5 @@
 var Store = require("./../src/store").Store;
-var N3Parser = require("./../../js-communication/src/n3_parser").N3Parser;
+var N3Parser = require("./../../js-communication/src/rvn3_parser").RVN3Parser;
 
 exports.testIntegration1 = function(test){
     new Store.Store({engine:'mongodb', name:'test', overwrite:true}, function(store){
@@ -679,14 +679,14 @@ exports.testExport1 = function(test) {
                     n3 = n3 + triple.toString();
                 });
 
-                var result = N3Parser.parser.parse(n3);
-                test.ok(result.length > 0);
+                N3Parser.parser.parse(n3, function(success, result){
+                    test.ok(result.length > 0);
 
-                // an easier way
-                test.ok(graph.toNT() == n3);
+                    // an easier way
+                    test.ok(graph.toNT() == n3);
 
-                store.close(function(){ test.done() });
-
+                    store.close(function(){ test.done() });
+                });
             });
         });
     });

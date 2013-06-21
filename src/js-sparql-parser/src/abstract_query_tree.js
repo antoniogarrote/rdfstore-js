@@ -601,11 +601,8 @@ AbstractQueryTree.AbstractQueryTree.prototype.treeWithUnion = function(aqt) {
     } else if(aqt.kind === 'ZERO_OR_MORE_PATH') {
 	return false;
     } else if(aqt.kind === 'UNION') {
-	console.log("UNION!!");
 	if(aqt.value[0].value != null && aqt.value[0].value.variables != null &&
 	   aqt.value[1].value != null && aqt.value[1].value.variables != null) {
-	    console.log("COMPARING:"+aqt.value[0].variables.join("/"));
-	    console.log("VS "+aqt.values[1].variables.join("/"));
 	    if(aqt.value[0].variables.join("/") === aqt.values[1].variables.join("/")) {
 		if(this.treeWithUnion(aqt.value[0]))
 		    return true;

@@ -19,7 +19,7 @@ NetworkTransport.load = function (uri, accept, callback, redirect) {
                 }
 
                 callback(true, {headers:acum,
-                    data:data});
+                                data:data});
             }
         },
 

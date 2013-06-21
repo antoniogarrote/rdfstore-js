@@ -4,7 +4,7 @@ var RDFLoader = exports.RDFLoader;
 
 // imports
 var NetworkTransport = require("./tcp_transport").NetworkTransport;
-var N3Parser = require("./n3_parser").N3Parser;
+var N3Parser = require("./rvn3_parser").RVN3Parser;
 var JSONLDParser = require("./jsonld_parser").JSONLDParser;
 var Utils = require("../../js-trees/src/utils").Utils;
 
@@ -115,12 +115,16 @@ RDFLoader.RDFLoader.prototype.tryToParse = function(parser, graph, input, callba
         if(typeof(input) === 'string') {
             input = Utils.normalizeUnicodeLiterals(input);
         }
-        var parsed = parser.parse(input, graph);
-
-        if(parsed != null) {
-            callback(true, parsed);
+        if(parser.async) {
+            parser.parse(input, graph, callback);
         } else {
-            callback(false, "parsing error");
+            var parsed = parser.parse(input, graph);
+
+            if(parsed != null) {
+                callback(true, parsed);
+            } else {
+                callback(false, "parsing error");
+            }
         }
     } catch(e) {
         console.log(e.message);

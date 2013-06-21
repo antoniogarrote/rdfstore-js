@@ -76,7 +76,7 @@ Utils.repeat = function(c,max,floop,fend,env) {
 };
 
 
-Utilsmeanwhile = function(c,floop,fend,env) {
+Utils.meanwhile = function(c,floop,fend,env) {
     if(arguments.length===3) { env = {}; }
 
     if(env['_stack_counter'] == null) {
@@ -87,10 +87,10 @@ Utilsmeanwhile = function(c,floop,fend,env) {
         floop(function(c,floop,env){
             if(env['_stack_counter'] % 40 == 39) {
                 env['_stack_counter'] = env['_stack_counter'] + 1;
-                setTimeout(function(){ Utilsmeanwhile(c, floop, fend, env); }, 0);
+                setTimeout(function(){ Utils.neanwhile(c, floop, fend, env); }, 0);
             } else {
                 env['_stack_counter'] = env['_stack_counter'] + 1;
-                Utilsmeanwhile(c, floop, fend, env);
+                Utils.meanwhile(c, floop, fend, env);
             }
         },env);
     } else {
@@ -121,7 +121,6 @@ Utils.partition = function(c, n) {
     }
     
     var groups = [];
-    var groupCounter = rem;
     for(var i=0; i<c.length; i++) {
         currentGroup.push(c[i]);
         if(currentGroup.length % n == 0) {
@@ -163,23 +162,45 @@ Utils.parseStrictISO8601 = function (str) {
     var offset = 0;
     var date = new Date(d[1], 0, 1);
 
-    if (d[3]) { date.setMonth(d[3] - 1); } else { throw "missing ISO8061 component" }
-    if (d[5]) { date.setDate(d[5]);  } else { throw "missing ISO8061 component" }
-    if (d[7]) { date.setHours(d[7]);  } else { throw "missing ISO8061 component" }
-    if (d[8]) { date.setMinutes(d[8]);  } else { throw "missing ISO8061 component" }
-    if (d[10]) { date.setSeconds(d[10]);  } else { throw "missing ISO8061 component" }
-    if (d[12]) { date.setMilliseconds(Number("0." + d[12]) * 1000); }
+    if (d[3]) {
+        date.setMonth(d[3] - 1);
+    } else {
+        throw "missing ISO8061 component"
+    }
+    if (d[5]) {
+        date.setDate(d[5]);
+    } else {
+        throw "missing ISO8061 component"
+    }
+    if (d[7]) {
+        date.setHours(d[7]);
+    } else {
+        throw "missing ISO8061 component"
+    }
+    if (d[8]) {
+        date.setMinutes(d[8]);
+    } else {
+        throw "missing ISO8061 component"
+    }
+    if (d[10]) {
+        date.setSeconds(d[10]);
+    } else {
+        throw "missing ISO8061 component"
+    }
+    if (d[12]) {
+        date.setMilliseconds(Number("0." + d[12]) * 1000);
+    }
     if (d[14]) {
         offset = (Number(d[16]) * 60) + Number(d[17]);
         offset *= ((d[15] == '-') ? 1 : -1);
     }
 
     offset -= date.getTimezoneOffset();
-    time = (Number(date) + (offset * 60 * 1000));
+    var time = (Number(date) + (offset * 60 * 1000));
     var toReturn = new Date();
     toReturn.setTime(Number(time));
     return toReturn;
-}
+};
 
 
 Utils.parseISO8601 = function (str) {
@@ -203,7 +224,7 @@ Utils.parseISO8601 = function (str) {
     }
 
     offset -= date.getTimezoneOffset();
-    time = (Number(date) + (offset * 60 * 1000));
+    var time = (Number(date) + (offset * 60 * 1000));
     var toReturn = new Date();
     toReturn.setTime(Number(time));
     return toReturn;
@@ -251,8 +272,8 @@ Utils.compareDateComponents = function(stra,strb) {
 
     if((a.timezone == null && b.timezone == null) ||
        (a.timezone != null && b.timezone != null)) {        
-        da = Utils.parseISO8601(stra);
-        db = Utils.parseISO8601(strb);
+        var da = Utils.parseISO8601(stra);
+        var db = Utils.parseISO8601(strb);
         
         if(da.getTime() == db.getTime()) {
             return 0;
@@ -264,8 +285,8 @@ Utils.compareDateComponents = function(stra,strb) {
     } else if (a.timezone != null && b.timezone == null){
         da = Utils.parseISO8601(stra);
         db = Utils.parseISO8601(strb);
-        ta = da.getTime();
-        tb = db.getTime();
+        var ta = da.getTime();
+        var tb = db.getTime();
 
         var offset = 14*60*60;
 
@@ -385,18 +406,18 @@ Utils.lexicalFormTerm = function(term, ns) {
     }
 };
 
-Utils.normalizeUnicodeLiterals = function(string) {
+Utils.normalizeUnicodeLiterals = function (string) {
     var escapedUnicode = string.match(/\\u[0-9abcdefABCDEF]{4,4}/g) || [];
     var dups = {};
-    for(var i=0; i<escapedUnicode.length; i++) {
-        if(dups[escapedUnicode[i]] == null) {
+    for (var i = 0; i < escapedUnicode.length; i++) {
+        if (dups[escapedUnicode[i]] == null) {
             dups[escapedUnicode[i]] = true;
-            string = string.replace(new RegExp("\\"+escapedUnicode[i],"g"), eval("'"+escapedUnicode[i]+"'"));
+            string = string.replace(new RegExp("\\" + escapedUnicode[i], "g"), eval("'" + escapedUnicode[i] + "'"));
         }
     }
 
     return string;
-}
+};
 
 Utils.hashTerm = function(term) {
     try {
@@ -407,7 +428,7 @@ Utils.hashTerm = function(term) {
       } else if(term.token === 'blank') {
           return "b"+term.value;
       } else if(term.token === 'literal') {
-          l = "l"+term.value;
+          var l = "l"+term.value;
           l = l + (term.type || "");
           l = l + (term.lang || "");        
    
@@ -594,28 +615,62 @@ RDFJSInterface.Profile.prototype.setTerm = function(term, iri) {
 };
 
 // RDF environemnt
-RDFJSInterface.RDFEnvironment  = function(){
+RDFJSInterface.RDFEnvironment = function () {
     this.blankNodeCounter = 0;
     var that = this;
     this.filters = {
-        s: function(s) { return function(t) { return t.subject.equals(s); }; },
-        p: function(p) { return function(t) { return t.predicate.equals(p); }; },
-        o: function(o) { return function(t) { return t.object.equals(o); }; },
-        sp: function(s,p) { return function(t) { return t.subject.equals(s) && t.predicate.equals(p); }; },
-        so: function(s,o) { return function(t) { return t.subject.equals(s) && t.object.equals(o); }; },
-        po: function(p,o) { return function(t) { return t.predicate.equals(p) && t.object.equals(o); }; },
-        spo: function(s,p,o) { return function(t) { return t.subject.equals(s) && t.predicate.equals(p) && t.object.equals(o); }; },
-        describes: function(v) { return function(t) { return t.subject.equals(v) || t.object.equals(v); }; },
-        type: function(o) {
-            var type = that.resolve("rdf:type"); 
-            return function(t) { return t.predicate.equals(type) && t.object.equals(o); };
+        s:function (s) {
+            return function (t) {
+                return t.subject.equals(s);
+            };
+        },
+        p:function (p) {
+            return function (t) {
+                return t.predicate.equals(p);
+            };
+        },
+        o:function (o) {
+            return function (t) {
+                return t.object.equals(o);
+            };
+        },
+        sp:function (s, p) {
+            return function (t) {
+                return t.subject.equals(s) && t.predicate.equals(p);
+            };
+        },
+        so:function (s, o) {
+            return function (t) {
+                return t.subject.equals(s) && t.object.equals(o);
+            };
+        },
+        po:function (p, o) {
+            return function (t) {
+                return t.predicate.equals(p) && t.object.equals(o);
+            };
+        },
+        spo:function (s, p, o) {
+            return function (t) {
+                return t.subject.equals(s) && t.predicate.equals(p) && t.object.equals(o);
+            };
+        },
+        describes:function (v) {
+            return function (t) {
+                return t.subject.equals(v) || t.object.equals(v);
+            };
+        },
+        type:function (o) {
+            var type = that.resolve("rdf:type");
+            return function (t) {
+                return t.predicate.equals(type) && t.object.equals(o);
+            };
         }
     };
 
-    for(var p in RDFJSInterface.defaultContext) {
+    for (var p in RDFJSInterface.defaultContext) {
         this.prefixes.set(p, RDFJSInterface.defaultContext[p]);
     }
-}
+};
 Utils['extends'](RDFJSInterface.Profile,RDFJSInterface.RDFEnvironment);
 
 RDFJSInterface.RDFEnvironment.prototype.createBlankNode = function() {
@@ -768,7 +823,7 @@ RDFJSInterface.Literal = function(value, language, datatype) {
 Utils['extends'](RDFJSInterface.RDFNode,RDFJSInterface.Literal);
 
 RDFJSInterface.Literal.prototype.toString = function(){
-    var tmp = "\""+this.nominalValue+"\"";
+    var tmp = '"'+this.nominalValue+'"';
     if(this.language != null) {
         tmp = tmp + "@" + this.language;
     } else if(this.datatype != null || this.type) {
@@ -784,7 +839,7 @@ RDFJSInterface.Literal.prototype.toNT = function() {
 
 RDFJSInterface.Literal.prototype.valueOf = function() {
     return QueryFilters.effectiveTypeValue({token: 'literal', 
-                                            type: this.type, 
+                                            type: (this.type || this.datatype), 
                                             value: this.nominalValue, 
                                             language: this.language});
 };
@@ -837,6 +892,7 @@ RDFJSInterface.Graph = function() {
     this.triples = [];
     this.duplicates = {};
     this.actions = [];
+    this.length = 0;
 };
 
 RDFJSInterface.Graph.prototype.add = function(triple) {
@@ -850,29 +906,30 @@ RDFJSInterface.Graph.prototype.add = function(triple) {
         this.triples.push(triple);
     }
 
+    this.length = this.triples.length;
     return this;
 };
 
-RDFJSInterface.Graph.prototype.addAction = function(tripleAction, run) {
+RDFJSInterface.Graph.prototype.addAction = function (tripleAction, run) {
     this.actions.push(tripleAction);
-    if(run == true) {
-        for(var i=0; i<this.triples.length; i++) {
+    if (run == true) {
+        for (var i = 0; i < this.triples.length; i++) {
             this.triples[i] = tripleAction(this.triples[i]);
         }
     }
 
     return this;
-}
+};
 
-RDFJSInterface.Graph.prototype.addAll = function(graph) {
+RDFJSInterface.Graph.prototype.addAll = function (graph) {
     var newTriples = graph.toArray();
-    for(var i=0; i<newTriples.length; i++) {
+    for (var i = 0; i < newTriples.length; i++) {
         this.add(newTriples[i]);
     }
 
-
+    this.length = this.triples.length;
     return this;
-}
+};
 
 RDFJSInterface.Graph.prototype.remove = function(triple) {
     var toRemove = null;
@@ -889,6 +946,7 @@ RDFJSInterface.Graph.prototype.remove = function(triple) {
         this.triples.splice(toRemove,1);
     }
 
+    this.length = this.triples.length;
     return this;
 };
 
@@ -936,16 +994,9 @@ RDFJSInterface.Graph.prototype.forEach = function(f) {
 
 RDFJSInterface.Graph.prototype.merge = function(g) {
     var newGraph = new RDFJSInterface.Graph();
-    for(var i=0; i<this.triples; i++) {
-        var triple = this.triples[i];
-        newGraph.add(triple);
-    }
-
-    for(var i=0; i<triples.length; i++) {
-        var triple = triples[i];
-        this.add(triple);
-    }
-
+    for(var i=0; i<this.triples.length; i++)
+        newGraph.add(this.triples[i]);
+    
     return newGraph;
 };
 
@@ -973,7 +1024,6 @@ RDFJSInterface.Graph.prototype.match = function(subject, predicate, object, limi
 };
 
 RDFJSInterface.Graph.prototype.removeMatches = function(subject, predicate, object) {
-    var matched = [];
     var toRemove = [];
     for(var i=0; i<this.triples.length; i++) {
         var triple = this.triples[i];
@@ -1061,7 +1111,6 @@ var QueryFilters = {};
 // imports
 
 QueryFilters.checkFilters = function(pattern, bindings, nullifyErrors, dataset, queryEnv, queryEngine) {
-
     var filters = pattern.filter;
     var nullified = [];
     if(filters==null || pattern.length != null) {
@@ -1070,7 +1119,6 @@ QueryFilters.checkFilters = function(pattern, bindings, nullifyErrors, dataset, 
 
     for(var i=0; i<filters.length; i++) {
         var filter = filters[i];
-
         var filteredBindings = QueryFilters.run(filter.value, bindings, nullifyErrors, dataset, queryEnv, queryEngine);
         var acum = [];
         for(var j=0; j<filteredBindings.length; j++) {
@@ -1243,7 +1291,7 @@ QueryFilters.runAggregator = function(aggregator, bindingsGroup, queryEngine, da
                     return min;
                 }
             } else if(aggregator.expression.aggregateType === 'count') {
-                var distinct = {}
+                var distinct = {};
                 var count = 0;
                 if(aggregator.expression.expression === '*') {
                     if(aggregator.expression.distinct != null && aggregator.expression.distinct != '') {
@@ -1278,7 +1326,7 @@ QueryFilters.runAggregator = function(aggregator, bindingsGroup, queryEngine, da
 
                 return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#integer", value:''+count};
             } else if(aggregator.expression.aggregateType === 'avg') {
-                var distinct = {}
+                var distinct = {};
                 var aggregated = {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#integer", value:'0'};
                 var count = 0;
                 for(var i=0; i< bindingsGroup.length; i++) {
@@ -1307,7 +1355,7 @@ QueryFilters.runAggregator = function(aggregator, bindingsGroup, queryEngine, da
                 result.value = ''+result.value;
                 return result;
             } else if(aggregator.expression.aggregateType === 'sum') {
-                var distinct = {}
+                var distinct = {};
                 var aggregated = {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#integer", value:'0'};
                 for(var i=0; i< bindingsGroup.length; i++) {
                     var bindings = bindingsGroup[i];
@@ -1362,6 +1410,8 @@ QueryFilters.runFilter = function(filterExpr, bindings, queryEngine, dataset, en
             return QueryFilters.runIriRefOrFunction(filterExpr.iriref, filterExpr.args, bindings, queryEngine, dataset, env);
         } else if(expressionType == 'regex') {
             return QueryFilters.runRegex(filterExpr.text, filterExpr.pattern, filterExpr.flags, bindings, queryEngine, dataset, env)
+        } else if(expressionType == 'custom') {
+            return QueryFilters.runBuiltInCall(filterExpr.name, filterExpr.args, bindings, queryEngine, dataset, env);
         } else if(expressionType == 'atomic') {        
             if(filterExpr.primaryexpression == 'var') {
                 // lookup the var in the bindings
@@ -1583,68 +1633,69 @@ QueryFilters.isXsdType = function(type, val) {
     }
 };
 
-QueryFilters.ebv = function(term) {
-    if(term == null || QueryFilters.isEbvError(term)) {
+QueryFilters.ebv = function (term) {
+    if (term == null || QueryFilters.isEbvError(term)) {
         return QueryFilters.ebvError();
     } else {
-        if(term.token && term.token === 'literal') {
-          if(term.type == "http://www.w3.org/2001/XMLSchema#integer" ||
-             term.type == "http://www.w3.org/2001/XMLSchema#decimal" ||
-             term.type == "http://www.w3.org/2001/XMLSchema#double" ||
-             term.type == "http://www.w3.org/2001/XMLSchema#nonPositiveInteger" ||
-             term.type == "http://www.w3.org/2001/XMLSchema#negativeInteger" ||
-             term.type == "http://www.w3.org/2001/XMLSchema#long" ||
-             term.type == "http://www.w3.org/2001/XMLSchema#int" ||
-             term.type == "http://www.w3.org/2001/XMLSchema#short" ||
-             term.type == "http://www.w3.org/2001/XMLSchema#byte" ||
-             term.type == "http://www.w3.org/2001/XMLSchema#nonNegativeInteger" ||
-             term.type == "http://www.w3.org/2001/XMLSchema#unsignedLong" ||
-             term.type == "http://www.w3.org/2001/XMLSchema#unsignedInt" ||
-             term.type == "http://www.w3.org/2001/XMLSchema#unsignedShort" ||
-             term.type == "http://www.w3.org/2001/XMLSchema#unsignedByte" ||
-             term.type == "http://www.w3.org/2001/XMLSchema#positiveInteger" ) {
-              var tmp = parseFloat(term.value);
-              if(isNaN(tmp)) {
-                  return false;
-              } else {
-                  return parseFloat(term.value) != 0;
-              }
-          } else if(term.type === "http://www.w3.org/2001/XMLSchema#boolean"){
-              return (term.value === 'true' || term.value === true || term.value === 'True');
-          } else if(term.type === "http://www.w3.org/2001/XMLSchema#string"){
-              return term.value != "";
-          } else if(term.type === "http://www.w3.org/2001/XMLSchema#dateTime"){
-              return (new Date(term.value)) != null;
-          } else if(QueryFilters.isEbvError(term)) {
-              return term;
-          } else if(term.type == null) {
-              if( term.value != "") {
-                  return true;
-              } else {
-                  return false;
-              }
-          } else {
-              return QueryFilters.ebvError();
-          }
+        if (term.token && term.token === 'literal') {
+            if (term.type == "http://www.w3.org/2001/XMLSchema#integer" ||
+                term.type == "http://www.w3.org/2001/XMLSchema#decimal" ||
+                term.type == "http://www.w3.org/2001/XMLSchema#double" ||
+                term.type == "http://www.w3.org/2001/XMLSchema#nonPositiveInteger" ||
+                term.type == "http://www.w3.org/2001/XMLSchema#negativeInteger" ||
+                term.type == "http://www.w3.org/2001/XMLSchema#long" ||
+                term.type == "http://www.w3.org/2001/XMLSchema#int" ||
+                term.type == "http://www.w3.org/2001/XMLSchema#short" ||
+                term.type == "http://www.w3.org/2001/XMLSchema#byte" ||
+                term.type == "http://www.w3.org/2001/XMLSchema#nonNegativeInteger" ||
+                term.type == "http://www.w3.org/2001/XMLSchema#unsignedLong" ||
+                term.type == "http://www.w3.org/2001/XMLSchema#unsignedInt" ||
+                term.type == "http://www.w3.org/2001/XMLSchema#unsignedShort" ||
+                term.type == "http://www.w3.org/2001/XMLSchema#unsignedByte" ||
+                term.type == "http://www.w3.org/2001/XMLSchema#positiveInteger") {
+                var tmp = parseFloat(term.value);
+                if (isNaN(tmp)) {
+                    return false;
+                } else {
+                    return parseFloat(term.value) != 0;
+                }
+            } else if (term.type === "http://www.w3.org/2001/XMLSchema#boolean") {
+                return (term.value === 'true' || term.value === true || term.value === 'True');
+            } else if (term.type === "http://www.w3.org/2001/XMLSchema#string") {
+                return term.value != "";
+            } else if (term.type === "http://www.w3.org/2001/XMLSchema#dateTime") {
+                return (new Date(term.value)) != null;
+            } else if (QueryFilters.isEbvError(term)) {
+                return term;
+            } else if (term.type == null) {
+                if (term.value != "") {
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                return QueryFilters.ebvError();
+            }
         } else {
             return term.value === true;
         }
     }
-}
+};
 
+QueryFilters.effectiveBooleanValue = QueryFilters.ebv;
 
 QueryFilters.ebvTrue = function() {
-    val = {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#boolean", value:true};
+    var val = {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#boolean", value:true};
     return val;
 };
 
 QueryFilters.ebvFalse = function() {
-    val = {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#boolean", value:false};
+    var val = {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#boolean", value:false};
     return val;
 };
 
 QueryFilters.ebvError = function() {
-    val = {token: 'literal', type:"https://github.com/antoniogarrote/js-tools/types#error", value:null};
+    var val = {token: 'literal', type:"https://github.com/antoniogarrote/js-tools/types#error", value:null};
     return val;
 };
 
@@ -1658,17 +1709,17 @@ QueryFilters.isEbvError = function(term) {
     }
 };
 
-QueryFilters.ebvBoolean = function(bool) {    
-    if(QueryFilters.isEbvError(bool)) {
+QueryFilters.ebvBoolean = function (bool) {
+    if (QueryFilters.isEbvError(bool)) {
         return bool;
     } else {
-      if(bool === true) {
-          return QueryFilters.ebvTrue();
-      } else {
-          return QueryFilters.ebvFalse();
-      }
+        if (bool === true) {
+            return QueryFilters.ebvTrue();
+        } else {
+            return QueryFilters.ebvFalse();
+        }
     }
-}
+};
 
 
 QueryFilters.runRelationalFilter = function(filterExpr, op1, op2, bindings, queryEngine, dataset, env) {
@@ -1837,6 +1888,7 @@ QueryFilters.effectiveTypeValue = function(val){
     } else {
         // @todo
         console.log("not implemented yet");
+        console.log(val);
         throw("value not supported in operations yet");
     }
 };
@@ -1941,7 +1993,7 @@ QueryFilters.runEqualityFunction = function(op1, op2, bindings, queryEngine, dat
             return QueryFilters.ebvFalse();
         }
 
-        var comp = Utils.compareDateComponents(op1.value, op2.value)
+        var comp = Utils.compareDateComponents(op1.value, op2.value);
         if(comp != null) {
             if(comp == 0) {
                 return QueryFilters.ebvTrue();
@@ -1980,7 +2032,7 @@ QueryFilters.runGtFunction = function(op1, op2, bindings) {
             return QueryFilters.ebvFalse();
         }
 
-        var comp = Utils.compareDateComponents(op1.value, op2.value)
+        var comp = Utils.compareDateComponents(op1.value, op2.value);
         if(comp != null) {
             if(comp == 1) {
                 return QueryFilters.ebvTrue();
@@ -2049,7 +2101,7 @@ QueryFilters.runLtFunction = function(op1, op2, bindings) {
             return QueryFilters.ebvFalse();
         }
 
-        var comp = Utils.compareDateComponents(op1.value, op2.value)
+        var comp = Utils.compareDateComponents(op1.value, op2.value);
         if(comp != null) {
             if(comp == -1) {
                 return QueryFilters.ebvTrue();
@@ -2087,7 +2139,7 @@ QueryFilters.runGtEqFunction = function(op1, op2, bindings) {
             return QueryFilters.ebvFalse();
         }
 
-        var comp = Utils.compareDateComponents(op1.value, op2.value)
+        var comp = Utils.compareDateComponents(op1.value, op2.value);
         if(comp != null) {
             if(comp != -1) {
                 return QueryFilters.ebvTrue();
@@ -2126,7 +2178,7 @@ QueryFilters.runLtEqFunction = function(op1, op2, bindings) {
             return QueryFilters.ebvFalse();
         }
 
-        var comp = Utils.compareDateComponents(op1.value, op2.value)
+        var comp = Utils.compareDateComponents(op1.value, op2.value);
         if(comp != null) {
             if(comp != 1) {
                 return QueryFilters.ebvTrue();
@@ -2384,6 +2436,8 @@ QueryFilters.runBuiltInCall = function(builtincall, args, bindings, queryEngine,
             } else {
                 return QueryFilters.ebvFalse();
             }
+	} else if(queryEngine.customFns[builtincall] != null) {
+	    return queryEngine.customFns[builtincall](QueryFilters, ops);
         } else {
             throw ("Builtin call "+builtincall+" not implemented yet");
         }

@@ -783,6 +783,7 @@ QueryFilters.effectiveTypeValue = function(val){
     } else {
         // @todo
         console.log("not implemented yet");
+        console.log(val);
         throw("value not supported in operations yet");
     }
 };
