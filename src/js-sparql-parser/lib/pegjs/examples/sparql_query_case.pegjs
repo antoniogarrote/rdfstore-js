@@ -1009,7 +1009,7 @@ ArgList "[62] ArgList"
 }
 
 /*
-  [63]  	ExpressionList	  ::=  	( NIL | '(' Expression ( ',' Expression )* ')' )
+  [63]  	ExpressionList	  ::=  	( NIL | '(' Expression ( WS* ',' WS* Expression )* ')' )
 */
 ExpressionList "[63] ExpressionList"
   = NIL {
@@ -1022,7 +1022,7 @@ ExpressionList "[63] ExpressionList"
       var cleanEx = [];
 
       for(var i=0; i<es.length; i++) {
-          cleanEx.push(es[i][1]);
+          cleanEx.push(es[i][3]);
       }
       var args = {};
       args.token = 'args';
@@ -1732,14 +1732,44 @@ ValueLogical "[98] ValueLogical"
   = RelationalExpression
 
 /*
-  @todo
-  @incomplete
   [99]  	RelationalExpression	  ::=  	NumericExpression ( '=' NumericExpression | '!=' NumericExpression | '<' NumericExpression | '>' NumericExpression | '<=' NumericExpression | '>=' NumericExpression | 'IN' ExpressionList | 'NOT IN' ExpressionList )?
 */
 RelationalExpression "[99] RelationalExpression"
-  = op1:NumericExpression op2:( WS* '=' WS* NumericExpression / WS* '!=' WS* NumericExpression / WS* '<' WS* NumericExpression / WS* '>' WS* NumericExpression / WS* '<=' WS* NumericExpression / WS* '>=' WS* NumericExpression)* {
+  = op1:NumericExpression op2:( WS* '=' WS* NumericExpression / WS* '!=' WS* NumericExpression / WS* '<' WS* NumericExpression / WS* '>' WS* NumericExpression / WS* '<=' WS* NumericExpression / WS* '>=' WS* NumericExpression / WS* ('I'/'i')('N'/'n') WS* ExpressionList / WS* ('N'/'n')('O'/'o')('T'/'t') WS* ('I'/'i')('N'/'n') WS* ExpressionList )* {
       if(op2.length === 0) {
           return op1;
+      } else if(op2[0][1] === 'i' || op2[0][1] === 'I' || op2[0][1] === 'n' || op2[0][1] === 'N'){
+        var exp = {};
+
+        if(op2[0][1] === 'i' || op2[0][1] === 'I') {
+          var operator = "=";
+          exp.expressionType = "conditionalor"         
+        } else {
+          var operator = "!=";
+          exp.expressionType = "conditionaland"         
+        }
+        var lop = op1;
+        var rops = []
+        for(var opi=0; opi<op2[0].length; opi++) {
+          if(op2[0][opi].token ==="args") {
+            rops = op2[0][opi].value;
+            break;
+          }
+        }       
+
+        exp.token = "expression";
+        exp.operands = [];
+        for(var i=0; i<rops.length; i++) {
+          var nextOperand = {};
+          nextOperand.token = "expression";
+          nextOperand.expressionType = "relationalexpression";
+          nextOperand.operator = operator;
+          nextOperand.op1 = lop;
+          nextOperand.op2 = rops[i];
+
+          exp.operands.push(nextOperand);
+        }       
+        return exp;
       } else {
         var exp = {};
         exp.expressionType = "relationalexpression"

@@ -283,6 +283,8 @@ QueryFilters.runAggregator = function(aggregator, bindingsGroup, queryEngine, da
 };
 
 QueryFilters.runFilter = function(filterExpr, bindings, queryEngine, dataset, env) {
+    //console.log("RUNNING FILTER");
+    //console.log(filterExpr);
     if(filterExpr.expressionType != null) {
         var expressionType = filterExpr.expressionType;
         if(expressionType == 'relationalexpression') {
@@ -801,7 +803,6 @@ QueryFilters.runOrFunction = function(filterExpr, bindings, queryEngine, dataset
         if(QueryFilters.isEbvError(ebv) == false) {
             ebv = QueryFilters.ebv(ebv);
         }
-
         if(acum == null) {
             acum = ebv;
         } else if(QueryFilters.isEbvError(ebv)) {

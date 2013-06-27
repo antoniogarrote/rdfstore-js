@@ -101,10 +101,10 @@ exports.testParsing2 = function(test) {
 //                test);
 //};
 
-/*
+
 
 // 10 MB Test
-
+/*
 exports.testParsing3 = function(test) {
 
         fs = require('fs');

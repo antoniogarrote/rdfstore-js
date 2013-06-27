@@ -1796,27 +1796,43 @@ ValueLogical "[98] ValueLogical"
   = RelationalExpression
 
 /*
-  @todo
-  @incomplete
   [99]  	RelationalExpression	  ::=  	NumericExpression ( '=' NumericExpression | '!=' NumericExpression | '<' NumericExpression | '>' NumericExpression | '<=' NumericExpression | '>=' NumericExpression | 'IN' ExpressionList | 'NOT IN' ExpressionList )?
 */
 RelationalExpression "[99] RelationalExpression"
-  = op1:NumericExpression op2:( WS* '=' WS* NumericExpression / WS* '!=' WS* NumericExpression / WS* '<' WS* NumericExpression / WS* '>' WS* NumericExpression / WS* '<=' WS* NumericExpression / WS* '>=' WS* NumericExpression / WS* ('I'/'i')('N'/'n') WS* ExpressionList )* {
+  = op1:NumericExpression op2:( WS* '=' WS* NumericExpression / WS* '!=' WS* NumericExpression / WS* '<' WS* NumericExpression / WS* '>' WS* NumericExpression / WS* '<=' WS* NumericExpression / WS* '>=' WS* NumericExpression / WS* ('I'/'i')('N'/'n') WS* ExpressionList / WS* ('N'/'n')('O'/'o')('T'/'t') WS* ('I'/'i')('N'/'n') WS* ExpressionList )* {
       if(op2.length === 0) {
           return op1;
-      } else if(op2[0][1] === 'i' || op2[0][1] === 'I'){
+      } else if(op2[0][1] === 'i' || op2[0][1] === 'I' || op2[0][1] === 'n' || op2[0][1] === 'N'){
         var exp = {};
-        exp.expressionType = "relationalexpression"
-        exp.operator = 'in';
-        exp.op1 = op1;
-        exp.op2 = null;
+
+        if(op2[0][1] === 'i' || op2[0][1] === 'I') {
+          var operator = "=";
+          exp.expressionType = "conditionalor"         
+        } else {
+          var operator = "!=";
+          exp.expressionType = "conditionaland"         
+        }
+        var lop = op1;
+        var rops = []
         for(var opi=0; opi<op2[0].length; opi++) {
           if(op2[0][opi].token ==="args") {
-            exp.op2 = op2[0][opi];
+            rops = op2[0][opi].value;
             break;
           }
         }       
+
         exp.token = "expression";
+        exp.operands = [];
+        for(var i=0; i<rops.length; i++) {
+          var nextOperand = {};
+          nextOperand.token = "expression";
+          nextOperand.expressionType = "relationalexpression";
+          nextOperand.operator = operator;
+          nextOperand.op1 = lop;
+          nextOperand.op2 = rops[i];
+
+          exp.operands.push(nextOperand);
+        }       
         return exp;
       } else {
         var exp = {};

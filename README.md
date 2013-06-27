@@ -81,6 +81,7 @@ This is a list of the different kind of queries currently implemented:
 - DROP DEFAULT/NAMED/ALL/GRAPH clauses
 - CLEAR DEFAULT/NAMED/ALL/Graph clauses
 - FILTER EXISTS / NOT EXISTS operators
+- FILTER IN / NOT IN operators
 
 These are supported components in property path expressions:
 

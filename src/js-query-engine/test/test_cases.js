@@ -9407,3 +9407,165 @@ exports.testTemporalProximity01 = function(test) {
         });
     });
 };
+
+exports.testIn01 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 15}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+
+            var query = 'PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         PREFIX :  <http://example.org/>\
+                         INSERT DATA {\
+                              :n4 :num -2 .\
+                              :n1 :num -1 .\
+                              :n2 :num -1.6 .\
+                              :n3 :num 1.1 .\
+                              :n5 :num 2.5 .\
+                              :s1 :str "foo" .\
+                              :s2 :str "bar"@en .\
+                              :s3 :str "BAZ" .\
+                              :s4 :str "é£Ÿãç‰©" .\
+                              :s5 :str "100%" .\
+                              :s6 :str "abc"^^xsd:string .\
+                              :s7 :str "DEF"^^xsd:string .\
+                              :d1 :date "2010-06-21T11:28:01Z"^^xsd:dateTime .\
+                              :d2 :date "2010-12-21T15:38:02-08:00"^^xsd:dateTime .\
+                              :d3 :date "2008-06-20T23:59:00Z"^^xsd:dateTime .\
+                              :d4 :date "2011-02-01T01:02:03"^^xsd:dateTime .}';
+
+            engine.execute(query, function(success, result){
+
+                var query = 'PREFIX :  <http://example.org/> ASK {:n4 :num ?v FILTER(?v IN (-1, -2, -3))}';
+
+                engine.execute(query, function(success, results){
+                    test.ok(success);
+                    test.ok(results);
+                    test.done();
+                });
+            });
+        });
+    });
+};
+
+
+exports.testIn02 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 15}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+
+            var query = 'PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         PREFIX :  <http://example.org/>\
+                         INSERT DATA {\
+                              :n4 :num -2 .\
+                              :n1 :num -1 .\
+                              :n2 :num -1.6 .\
+                              :n3 :num 1.1 .\
+                              :n5 :num 2.5 .\
+                              :s1 :str "foo" .\
+                              :s2 :str "bar"@en .\
+                              :s3 :str "BAZ" .\
+                              :s4 :str "é£Ÿãç‰©" .\
+                              :s5 :str "100%" .\
+                              :s6 :str "abc"^^xsd:string .\
+                              :s7 :str "DEF"^^xsd:string .\
+                              :d1 :date "2010-06-21T11:28:01Z"^^xsd:dateTime .\
+                              :d2 :date "2010-12-21T15:38:02-08:00"^^xsd:dateTime .\
+                              :d3 :date "2008-06-20T23:59:00Z"^^xsd:dateTime .\
+                              :d4 :date "2011-02-01T01:02:03"^^xsd:dateTime .}';
+
+            engine.execute(query, function(success, result){
+
+                var query = 'PREFIX :  <http://example.org/> ASK {:n4 :num ?v FILTER(?v IN (1, 2, 3))}';
+
+                engine.execute(query, function(success, results){
+                    test.ok(success);
+                    test.ok(!results);
+                    test.done();
+                });
+            });
+        });
+    });
+};
+
+exports.testNotIn01 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 15}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+
+            var query = 'PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         PREFIX :  <http://example.org/>\
+                         INSERT DATA {\
+                              :n4 :num -2 .\
+                              :n1 :num -1 .\
+                              :n2 :num -1.6 .\
+                              :n3 :num 1.1 .\
+                              :n5 :num 2.5 .\
+                              :s1 :str "foo" .\
+                              :s2 :str "bar"@en .\
+                              :s3 :str "BAZ" .\
+                              :s4 :str "é£Ÿãç‰©" .\
+                              :s5 :str "100%" .\
+                              :s6 :str "abc"^^xsd:string .\
+                              :s7 :str "DEF"^^xsd:string .\
+                              :d1 :date "2010-06-21T11:28:01Z"^^xsd:dateTime .\
+                              :d2 :date "2010-12-21T15:38:02-08:00"^^xsd:dateTime .\
+                              :d3 :date "2008-06-20T23:59:00Z"^^xsd:dateTime .\
+                              :d4 :date "2011-02-01T01:02:03"^^xsd:dateTime .}';
+
+            engine.execute(query, function(success, result){
+
+                var query = 'PREFIX :  <http://example.org/> ASK {:n4 :num ?v FILTER(?v NOT IN (-1, -2, -3))}';
+
+                engine.execute(query, function(success, results){
+                    test.ok(success);
+                    test.ok(!results);
+                    test.done();
+                });
+            });
+        });
+    });
+};
+
+
+exports.testNotIn02 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 15}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+
+            var query = 'PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         PREFIX :  <http://example.org/>\
+                         INSERT DATA {\
+                              :n4 :num -2 .\
+                              :n1 :num -1 .\
+                              :n2 :num -1.6 .\
+                              :n3 :num 1.1 .\
+                              :n5 :num 2.5 .\
+                              :s1 :str "foo" .\
+                              :s2 :str "bar"@en .\
+                              :s3 :str "BAZ" .\
+                              :s4 :str "é£Ÿãç‰©" .\
+                              :s5 :str "100%" .\
+                              :s6 :str "abc"^^xsd:string .\
+                              :s7 :str "DEF"^^xsd:string .\
+                              :d1 :date "2010-06-21T11:28:01Z"^^xsd:dateTime .\
+                              :d2 :date "2010-12-21T15:38:02-08:00"^^xsd:dateTime .\
+                              :d3 :date "2008-06-20T23:59:00Z"^^xsd:dateTime .\
+                              :d4 :date "2011-02-01T01:02:03"^^xsd:dateTime .}';
+
+            engine.execute(query, function(success, result){
+
+                var query = 'PREFIX :  <http://example.org/> ASK {:n4 :num ?v FILTER(?v NOT IN (1, 2, 3))}';
+
+                engine.execute(query, function(success, results){
+                    test.ok(success);
+                    test.ok(results);
+                    test.done();
+                });
+            });
+        });
+    });
+};
