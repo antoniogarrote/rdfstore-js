@@ -1801,9 +1801,23 @@ ValueLogical "[98] ValueLogical"
   [99]  	RelationalExpression	  ::=  	NumericExpression ( '=' NumericExpression | '!=' NumericExpression | '<' NumericExpression | '>' NumericExpression | '<=' NumericExpression | '>=' NumericExpression | 'IN' ExpressionList | 'NOT IN' ExpressionList )?
 */
 RelationalExpression "[99] RelationalExpression"
-  = op1:NumericExpression op2:( WS* '=' WS* NumericExpression / WS* '!=' WS* NumericExpression / WS* '<' WS* NumericExpression / WS* '>' WS* NumericExpression / WS* '<=' WS* NumericExpression / WS* '>=' WS* NumericExpression)* {
+  = op1:NumericExpression op2:( WS* '=' WS* NumericExpression / WS* '!=' WS* NumericExpression / WS* '<' WS* NumericExpression / WS* '>' WS* NumericExpression / WS* '<=' WS* NumericExpression / WS* '>=' WS* NumericExpression / WS* ('I'/'i')('N'/'n') WS* ExpressionList )* {
       if(op2.length === 0) {
           return op1;
+      } else if(op2[0][1] === 'i' || op2[0][1] === 'I'){
+        var exp = {};
+        exp.expressionType = "relationalexpression"
+        exp.operator = 'in';
+        exp.op1 = op1;
+        exp.op2 = null;
+        for(var opi=0; opi<op2[0].length; opi++) {
+          if(op2[0][opi].token ==="args") {
+            exp.op2 = op2[0][opi];
+            break;
+          }
+        }       
+        exp.token = "expression";
+        return exp;
       } else {
         var exp = {};
         exp.expressionType = "relationalexpression"
