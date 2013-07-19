@@ -831,31 +831,28 @@ Store.Store.prototype.load = function(){
         var query = "LOAD <"+data.valueOf()+"> INTO GRAPH <"+graph.valueOf()+">";
 
         this.engine.execute(query, callback);
-    } else if(data && typeof(data)==='string' && data.indexOf('file://')=== 0) {
-        var parser = this.engine.rdfLoader.parsers[mediaType];
-
-        var that = this;
-        this.engine.rdfLoader.loadFromFile(parser, {'token':'uri', 'value':graph.valueOf()}, data, function(success, quads) {
-            if(success) {
-                that.engine.batchLoad(quads,callback);
-            } else {
-                callback(success, quads);
-            }
-        });
-
-
     } else {
-        var parser = this.engine.rdfLoader.parsers[mediaType];
 
         var that = this;
 
-        this.engine.rdfLoader.tryToParse(parser, {'token':'uri', 'value':graph.valueOf()}, data, function(success, quads) {
+        var parser = this.engine.rdfLoader.parsers[mediaType];
+        if (!parser) return callback(false, 0);
+
+        var cb = function(success, quads) {
             if(success) {
                 that.engine.batchLoad(quads,callback);
             } else {
                 callback(success, quads);
             }
-        });
+        };
+
+        var args = [parser, {'token':'uri', 'value':graph.valueOf()}, data, cb];
+
+        if(data && typeof(data)==='string' && data.indexOf('file://')=== 0) {
+          this.engine.rdfLoader.loadFromFile.apply(null, args);
+        } else {
+          this.engine.rdfLoader.tryToParse.apply(null, args);
+        }
     }
 };
 
