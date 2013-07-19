@@ -127,7 +127,12 @@ To execute the whole test suite of the library, including the DAWG test cases fo
 
     $./make.rb tests
 
-The tests depend on [nodeunit](http://search.npmjs.org/#/nodeunit). That node.js library must be installed in order to run the tests.
+The tests depend on
+  - [nodeunit](http://search.npmjs.org/#/nodeunit).
+  - put
+  - binary
+
+These node.js libraries must be installed in order to run the tests.
 
 You can also run the tests on the minimized version of the library with the command:
 
