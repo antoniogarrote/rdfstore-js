@@ -549,7 +549,7 @@ RVInnerN3Parser.prototype = {
         this._object += '^^<' + value + '>';
         this._object = {literal: this._object};
       }
-      return this._readPunctuation;
+      return this._getNextReader();
     case 'langcode':
         if(this._object.literal) {
             this._object.literal += '@' + token.value.toLowerCase();
