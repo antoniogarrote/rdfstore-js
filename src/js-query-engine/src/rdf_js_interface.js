@@ -376,26 +376,32 @@ RDFJSInterface.Literal = function(value, language, datatype) {
 Utils.extends(RDFJSInterface.RDFNode,RDFJSInterface.Literal);
 
 RDFJSInterface.Literal.prototype.toString = function(){
-    if(this.nominalValue.match(/"/)) {
-        var tmp = "'"+this.nominalValue+"'";
-        if(this.nominalValue.match(/'/)) {
-            var tmp = '"""'+this.nominalValue+'"""';
-            if(this.nominalValue.match(/"""/)) {
-                var tmp = "'''"+this.nominalValue+"'''";
-                if(this.nominalValue.match(/'''/)) {
-                    throw "Literal not possible to escape in a String.";
-                }
-            }
+    if(this.nominalValue.match("\n")) {
+        var tmp = '"""'+this.nominalValue+'"""';
+        if(this.nominalValue.match(/"""/)) {
+            var tmp = "'''"+this.nominalValue+"'''";
         }
     } else {
-        var tmp = '"'+this.nominalValue+'"';
+        if(this.nominalValue.match(/"/)) {
+            var tmp = "'"+this.nominalValue+"'";
+            if(this.nominalValue.match(/'/)) {
+                var tmp = '"""'+this.nominalValue+'"""';
+                if(this.nominalValue.match(/"""/)) {
+                    var tmp = "'''"+this.nominalValue+"'''";
+                    if(this.nominalValue.match(/'''/)) {
+                        throw "Literal not possible to escape in a String.";
+                    }
+                }
+            }
+        } else {
+            var tmp = '"'+this.nominalValue+'"';
+        }
     };
     if(this.language != null) {
         tmp = tmp + "@" + this.language;
     } else if(this.datatype != null || this.type) {
         tmp = tmp + "^^<" + (this.datatype||this.type) + ">";
     }
-
     return tmp;
 };
 
