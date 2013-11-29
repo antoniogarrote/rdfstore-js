@@ -376,7 +376,20 @@ RDFJSInterface.Literal = function(value, language, datatype) {
 Utils.extends(RDFJSInterface.RDFNode,RDFJSInterface.Literal);
 
 RDFJSInterface.Literal.prototype.toString = function(){
-    var tmp = '"'+this.nominalValue+'"';
+    if(this.nominalValue.match(/"/)) {
+        var tmp = "'"+this.nominalValue+"'";
+        if(this.nominalValue.match(/'/)) {
+            var tmp = '"""'+this.nominalValue+'"""';
+            if(this.nominalValue.match(/"""/)) {
+                var tmp = "'''"+this.nominalValue+"'''";
+                if(this.nominalValue.match(/'''/)) {
+                    throw "Literal not possible to escape in a String.";
+                }
+            }
+        }
+    } else {
+        var tmp = '"'+this.nominalValue+'"';
+    };
     if(this.language != null) {
         tmp = tmp + "@" + this.language;
     } else if(this.datatype != null || this.type) {

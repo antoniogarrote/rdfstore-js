@@ -644,14 +644,7 @@ Store.Store.prototype._nodeToQuery = function(term) {
         } else {
             return "<" + term.valueOf() + ">";
         }
-    } else if(term.interfaceName === '') {
-        return term.toString();
     } else {
-        if(term.lang != null) {
-            return "\""+term.valueOf()+"\"@"+term.lang;
-        } else if(term.datatype != null) {
-            return "\""+term.valueOf()+"\"^^<"+term.datatype+">";
-        }
         return term.toString();
     }
 };
@@ -921,22 +914,6 @@ Store.Store.prototype.registeredGraphs = function(callback) {
         }
      
         return callback(true, acum);    
-    }
-};
-
-/** @private */
-Store.Store.prototype._nodeToQuery = function(term) {
-    if(term.interfaceName === 'NamedNode') {
-        var resolvedUri = this.rdf.resolve(term.valueOf());
-        if(resolvedUri != null) {
-            return "<" + resolvedUri + ">";
-        } else {
-            return "<" + term.valueOf() + ">";
-        }
-    } else if(term.interfaceName === '') {
-        return term.toString();
-    } else {
-        return term.toString();
     }
 };
 
