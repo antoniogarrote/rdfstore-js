@@ -1296,7 +1296,7 @@ QueryEngine.QueryEngine.prototype.executeUpdate = function(syntaxTree, callback)
                 graph = {'uri': Utils.lexicalFormBaseUri(aqt.destinyGraph, queryEnv)};
             }
             var that = this;
-            this.rdfLoader.load(aqt.sourceGraph.value, graph, function(success, result){
+            this.rdfLoader.load(aqt.sourceGraph.value, graph,function(success, result){
                 if(success == false) {
                     console.log("Error loading graph");
                     console.log(result);

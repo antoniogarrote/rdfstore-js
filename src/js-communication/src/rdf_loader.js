@@ -5,12 +5,13 @@ var RDFLoader = exports.RDFLoader;
 // imports
 var NetworkTransport = require("./tcp_transport").NetworkTransport;
 var N3Parser = require("./rvn3_parser").RVN3Parser;
+var RDFXMLParser = require("./rdfxml_parser").RDFXMLParser;
 var JSONLDParser = require("./jsonld_parser").JSONLDParser;
 var Utils = require("../../js-trees/src/utils").Utils;
 
 RDFLoader.RDFLoader = function (params) {
-    this.precedences = ["text/turtle", "text/n3", "application/ld+json", "application/json"];
-    this.parsers = {"text/turtle":N3Parser.parser, "text/n3":N3Parser.parser, "application/ld+json":JSONLDParser.parser, "application/json":JSONLDParser.parser};
+    this.precedences = ["text/turtle", "text/n3", "application/ld+json", "application/json"/*, "application/rdf+xml"*/];
+    this.parsers = {"text/turtle":N3Parser.parser, "text/n3":N3Parser.parser, "application/ld+json":JSONLDParser.parser, "application/json":JSONLDParser.parser/*, "application/rdf+xml":RDFXMLParser.parser*/};
     if (params != null) {
         for (var mime in params["parsers"]) {
             this.parsers[mime] = params["parsers"][mime];
@@ -70,18 +71,18 @@ RDFLoader.RDFLoader.prototype.load = function(uri, graph, callback) {
                         var mimeParts = m.split("/");
                         if(mimeParts[1] === '*') {
                             if(mime.indexOf(mimeParts[0])!=-1) {
-                                return that.tryToParse(that.parsers[m], graph, data, callback);
+                                return that.tryToParse(that.parsers[m], graph, data, {documentURI: uri}, callback);
                             }
                         } else {
                             if(mime.indexOf(m)!=-1) {
-                                return that.tryToParse(that.parsers[m], graph, data, callback);
+                                return that.tryToParse(that.parsers[m], graph, data, {documentURI: uri}, callback);
                             } else if(mime.indexOf(mimeParts[1])!=-1) {
-                                return that.tryToParse(that.parsers[m], graph, data, callback);
+                                return that.tryToParse(that.parsers[m], graph, data, {documentURI: uri}, callback);
                             }
                         }
                     } else {
                         if(mime.indexOf(m)!=-1) {
-                            return that.tryToParse(that.parsers[m], uri, graph, callback);
+                            return that.tryToParse(that.parsers[m], graph, data, {documentURI: uri}, callback);
                         }
                     }
                 }
@@ -103,22 +104,27 @@ RDFLoader.RDFLoader.prototype.loadFromFile = function(parser, graph, uri, callba
         fs.readFile(uri.split("file:/")[1], function(err, data) {
             if(err) throw err;
             var data = data.toString('utf8');
-            that.tryToParse(parser, graph, data, callback);
+            that.tryToParse(parser, graph, data, {documentURI: uri}, callback);
         });
     } catch(e) {
         callback(false, e);
     }
 };
 
-RDFLoader.RDFLoader.prototype.tryToParse = function(parser, graph, input, callback) {
+RDFLoader.RDFLoader.prototype.tryToParse = function(parser, graph, input, options, callback) {
+    // console.log("TRYING TO PARSE");
+    // console.log(parser);
+    // console.log(graph);
+    // console.log(options);
+    // console.log(callback);
     try {
         if(typeof(input) === 'string') {
             input = Utils.normalizeUnicodeLiterals(input);
         }
         if(parser.async) {
-            parser.parse(input, graph, callback);
+            parser.parse(input, graph, options, callback);
         } else {
-            var parsed = parser.parse(input, graph);
+            var parsed = parser.parse(input, graph, options);
 
             if(parsed != null) {
                 callback(true, parsed);

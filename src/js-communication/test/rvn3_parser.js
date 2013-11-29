@@ -8,7 +8,7 @@ exports.testParsing1 = function(test) {
             if(err) throw err;
             var data = data.toString('utf8');
             console.log("DATA:"+data.length);
-            N3Parser.parser.parse(data, 'http://test.com/graph1', function(success, result){
+            N3Parser.parser.parse(data, 'http://test.com/graph1', {}, function(success, result){
                 test.ok(success);
                 test.ok(result.length===43);
                 for(var i=0; i<result.length; i++) {
@@ -27,7 +27,7 @@ exports.testParsing1b = function(test) {
             if(err) throw err;
             var data = data.toString('utf8');
             console.log("DATA:"+data.length);
-            N3Parser.parser.parse(data, function(success, result){
+            N3Parser.parser.parse(data, {}, function(success, result){
                 test.ok(success);
                 test.ok(result.length===43);
                 for(var i=0; i<result.length; i++) {
@@ -45,7 +45,7 @@ exports.testParsing2 = function(test) {
             if(err) throw err;
             var data = data.toString('utf8');
             console.log("DATA:"+data.length);
-            var result = N3Parser.parser.parse(data, function(err, result) {
+            var result = N3Parser.parser.parse(data, {}, function(err, result) {
                 test.ok(result.length===9);
                 test.done();
             });
@@ -80,8 +80,9 @@ var compareTriple = function(ta,tb,test) {
     compare(ta.graph,tb.graph,test);
 };
 
-var shouldParse = function(input, output, test) {
-    var result = N3Parser.parser.parse(input, function(success, result) {
+var shouldParse = function(input, output, test, options) {
+    options = options || {};
+    var result = N3Parser.parser.parse(input, options, function(success, result) {
         //console.log("PARSED? "+success);
         //console.log("------------");
         //console.log(input);
@@ -111,6 +112,14 @@ exports.testSingleTriple = function(test) {
                                    predicate: { token: 'uri', value: 'b', prefix: null, suffix: null },
                                    object: { token: 'uri', value: 'c', prefix: null, suffix: null },
                                    graph: null } ],test);
+};
+
+exports.testDocumentTriples = function(test) {
+    shouldParse('<#a> <#b> <#c>.',[ { subject: { token: 'uri', value: 'http://test.com/something#a', prefix: null, suffix: null },
+                                   predicate: { token: 'uri', value: 'http://test.com/something#b', prefix: null, suffix: null },
+                                   object: { token: 'uri', value: 'http://test.com/something#c', prefix: null, suffix: null },
+                                   graph: null } ],test,
+                {baseURI: 'http://test.com/something#me'});
 };
 
 exports.testThreeTriples = function(test) {

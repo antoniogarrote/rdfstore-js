@@ -332,7 +332,7 @@ exports.callbacksBatchLoad = function(test) {
             var graph = RDFJSInterface.rdf.createNamedNode(engine.lexicon.defaultGraphUri);
             var parser = engine.rdfLoader.parsers['application/json'];
 
-            engine.rdfLoader.tryToParse(parser, {'token':'uri', 'value':graph.valueOf()}, jsonld, function(success, quads) {
+            engine.rdfLoader.tryToParse(parser, {'token':'uri', 'value':graph.valueOf()}, jsonld, {}, function(success, quads) {
                 if(success) {
                     engine.batchLoad(quads,function(){
                         engine.eventsOnBatchLoad = true;
@@ -341,7 +341,7 @@ exports.callbacksBatchLoad = function(test) {
                             '@id':"http://test.com/2",
                             'http://test.com/named2': 'hello'
                         };
-                        engine.rdfLoader.tryToParse(parser, {'token':'uri', 'value':graph.valueOf()}, jsonld, function(success, quads) {
+                        engine.rdfLoader.tryToParse(parser, {'token':'uri', 'value':graph.valueOf()}, jsonld, {}, function(success, quads) {
                             if(success) {
                                 engine.batchLoad(quads,function(){
                                     test.ok(callbackCounter===2);

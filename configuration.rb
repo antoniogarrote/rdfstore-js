@@ -17,6 +17,7 @@ BUILD_CONFIGURATION = {
                  "./src/js-communication/src/rdf_loader.js",
                  "./src/js-sparql-parser/src/abstract_query_tree.js",
                  "./src/js-sparql-parser/src/sparql_parser.js",
+                 #"./src/js-communication/src/rdfxml_parser.js",
                  "./src/js-query-engine/src/rdf_js_interface.js",
                  "./src/js-query-engine/src/query_filters.js",
                  #"./src/js-query-engine/src/query_plan.js",
@@ -48,6 +49,7 @@ BUILD_CONFIGURATION = {
                  "./src/js-communication/src/rdf_loader.js",
                  "./src/js-sparql-parser/src/abstract_query_tree.js",
                  "./src/js-sparql-parser/src/sparql_parser.js",
+                 #"./src/js-communication/src/rdfxml_parser.js",
                  "./src/js-query-engine/src/rdf_js_interface.js",
                  "./src/js-query-engine/src/query_filters.js",
                  #"./src/js-query-engine/src/query_plan.js",
@@ -72,6 +74,7 @@ BUILD_CONFIGURATION = {
                  "./src/js-communication/src/tcp_transport.js",
                  "./src/js-communication/src/jsonld_parser.js",
                  "./src/js-communication/src/rvn3_parser.js",
+                 #"./src/js-communication/src/rdfxml_parser.js",
                  "./src/js-communication/src/rdf_loader.js",
                  "./src/js-sparql-parser/src/abstract_query_tree.js",
                  "./src/js-sparql-parser/src/sparql_parser.js",
@@ -88,7 +91,7 @@ BUILD_CONFIGURATION = {
                 ],
     :package => {
       :name    => "rdfstore",
-      :version => "0.8.1",
+      :version => "0.8.2",
       :description => "RDF graph store supporting the SPARQL query language",
       :keywords => ["RDF", "SPARQL", "graph", "store"],
       :author  => {
@@ -104,7 +107,8 @@ BUILD_CONFIGURATION = {
                    ],
       :bin => { "rdfstorejs" =>  "./bin/rdfstorejs" },
       :dependencies => {
-        "mongodb"   => ">=0.9.7"
+        "mongodb"   => ">=0.9.7",
+        "jsdom"     => ">0.8.4"
       }
     }
   },
@@ -118,7 +122,7 @@ BUILD_CONFIGURATION = {
                 ],
     :package => {
       :name    => "rdf_js_interface",
-      :version => "0.8.1",
+      :version => "0.8.2",
       :description => "Implementation of W3C's RDF Interfaces API",
       :keywords => ["RDF"],
       :author  => {
@@ -128,8 +132,8 @@ BUILD_CONFIGURATION = {
       :engines => {:node => ">=0.4.1"},
       :repository =>  {:type => "git", :url => "https://github.com/antoniogarrote/rdfstore-js.git"},
       :licenses => [
-                    { :type =>  "LGPL V3",
-                      :url  =>  "http://www.gnu.org/licenses/lgpl.html"
+                    { :type =>  "MIT",
+                      :url  =>  "http://opensource.org/licenses/MIT"
                     }
                    ]
     }

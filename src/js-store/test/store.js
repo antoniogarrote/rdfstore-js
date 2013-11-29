@@ -478,13 +478,18 @@ exports.testLoad1 = function(test) {
 exports.testLoad2 = function(test) {
     Store.create(function(store) {
         store.load('remote', 'http://dbpedia.org/resource/Tim_Berners-Lee', function(success, result) {
-            store.node('http://dbpedia.org/resource/Tim_Berners-Lee', function(success, graph){
+            store.execute("SELECT ?o WHERE { ?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?o }", function(success, results) {
                 test.ok(success);
-		var tmp = graph.toArray();
-                var results = graph.filter(store.rdf.filters.type(store.rdf.resolve("foaf:Person")));
-                test.ok(results.toArray().length === 1);
-                store.close(function(){ test.done() });
+                test.ok(results.length > 0);
+                test.done();
             });
+            //store.node('http://dbpedia.org/resource/Tim_Berners-Lee', function(success, graph){
+            //    test.ok(success);
+		        //    var tmp = graph.toArray();
+            //    var results = graph.filter(store.rdf.filters.type(store.rdf.resolve("foaf:Person")));
+            //    test.ok(results.toArray().length === 1);
+            //    store.close(function(){ test.done() });
+            //});
         });
     });
 };
@@ -519,6 +524,125 @@ exports.testLoad3 = function(test) {
     });
 };
 
+exports.testLoad5 = function(test) {
+    Store.create({name:'test', overwrite:true},function(store) {
+        
+        store.setPrefix("ex", "http://example.org/examples/");
+
+        var graph = store.rdf.createGraph();
+
+        input = '_:a <http://test.com/p1> "test". _:a <http://test.com/p2> "test2". _:b <http://test.com/p1> "test" .';
+        store.load("text/n3", input, {graph: "ex:test"}, function(success, results){
+            store.execute("select ?s { GRAPH <http://example.org/examples/test> { ?s ?p ?o } }", function(success, results) {
+                test.ok(success);
+
+                var blankIds = {};
+
+                for(var i=0; i<results.length; i++) {
+                     var blankId = results[i].s.value;
+                    blankIds[blankId] = true;
+                }
+                var counter = 0;
+                for(var p in blankIds) {
+                    counter++;
+                }
+
+                test.ok(counter === 2);
+                store.close(function(){ test.done() });
+            });
+        });
+    });
+};
+
+exports.testLoad5b = function(test) {
+    Store.create({name:'test', overwrite:true},function(store) {
+        
+        store.setPrefix("ex", "http://example.org/examples/");
+
+        var graph = store.rdf.createGraph();
+
+        input = '<#me> <http://test.com/p1> "test". <http://test.com/something#me> <http://test.com/p2> "test2". _:b <http://test.com/p1> "test" .';
+        store.load("text/n3", input, {baseURI: "http://test.com/something#me"}, function(success, results){
+            store.execute("select ?s { ?s ?p ?o }", function(success, results) {
+                test.ok(success);
+
+                var blankIds = {};
+
+                for(var i=0; i<results.length; i++) {
+                     var blankId = results[i].s.value;
+                    blankIds[blankId] = true;
+                }
+                var counter = 0;
+                for(var p in blankIds) {
+                    counter++;
+                }
+
+                test.ok(counter === 2);
+                store.close(function(){ test.done() });
+            });
+        });
+    });
+};
+
+exports.testLoad5c = function(test) {
+    Store.create({name:'test', overwrite:true},function(store) {
+        
+        store.setPrefix("ex", "http://example.org/examples/");
+
+        var graph = store.rdf.createGraph();
+
+        input = '<#me> <http://test.com/p1> "test". <http://test.com/something#me> <http://test.com/p2> "test2". _:b <http://test.com/p1> "test" .';
+        store.load("text/n3", input, {baseURI: "http://test.com/something#me", graph:"ex:test"}, function(success, results){
+            store.execute("select ?s { GRAPH <http://example.org/examples/test> { ?s ?p ?o }  }", function(success, results) {
+                test.ok(success);
+
+                var blankIds = {};
+
+                for(var i=0; i<results.length; i++) {
+                     var blankId = results[i].s.value;
+                    blankIds[blankId] = true;
+                }
+                var counter = 0;
+                for(var p in blankIds) {
+                    counter++;
+                }
+
+                test.ok(counter === 2);
+                store.close(function(){ test.done() });
+            });
+        });
+    });
+};
+
+/*
+exports.testLoad5 = function(test) {
+    Store.create({name:'test', overwrite:true},function(store) {
+        
+        store.setPrefix("ex", "http://example.org/people/");
+
+        var graph = store.rdf.createGraph();
+        var input = '<?xml version="1.0" encoding="UTF-8"?>\n\
+<rdf:RDF\n\
+xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">\n\
+<rdf:Description rdf:about="http://purl.bioontology.org/ontology/RXNORM/309054">\n\
+<rdf:type rdf:resource="http://smartplatforms.org/terms#Code"/>\n\
+<rdf:type rdf:resource="http://smartplatforms.org/terms/codes/RxNorm_Semantic"/>\n\
+<title xmlns="http://purl.org/dc/terms/">Cefdinir 25 MG/ML Oral Suspension</title>\n\
+</rdf:Description>\n\
+</rdf:RDF>';
+
+        store.load("application/rdf+xml", input, "ex:test", function(success, results){
+            console.log(results);
+            store.node("http://purl.bioontology.org/ontology/RXNORM/309054",  function(success, graph) {
+                console.log(graph);
+                test.ok(graph.toArray().length === 3);
+                test.done(); 
+            });
+
+        });
+    });
+};
+*/
 exports.testEventsAPI1 = function(test){
     var counter = 0;
     new Store.Store({name:'test', overwrite:true},function(store){
@@ -928,29 +1052,28 @@ exports.testShouldLoadJSONLDWithAllMediaTypes = function(test) {
 
 exports.testRegisterCustomFunction = function(test) {
     new Store.Store({name:'test', overwrite:true}, function(store) {
-	store.load(
+	      store.load(
             'text/n3',
             '@prefix test: <http://test.com/> .\
              test:A test:prop 5.\
-	           test:B test:prop 4.\
-	           test:C test:prop 1.\
-	           test:D test:prop 3.',
+             test:B test:prop 4.\
+             test:C test:prop 1.\
+             test:D test:prop 3.',
             function(success) {
 
-		var invoked = false;
-		store.registerCustomFunction('my_addition', function(engine,args) {
-		    var v1 = engine.effectiveTypeValue(args[0]);
-		    var v2 = engine.effectiveTypeValue(args[1]);
-
-		    return engine.ebvBoolean(v1+v2<5);
-		});
+		            var invoked = false;
+		            store.registerCustomFunction('my_addition', function(engine,args) {
+		                var v1 = engine.effectiveTypeValue(args[0]);
+		                var v2 = engine.effectiveTypeValue(args[1]);
+		                return engine.ebvBoolean(v1+v2<5);
+		            });
                 store.execute(
                     'PREFIX test: <http://test.com/> SELECT * { ?x test:prop ?v1 . ?y test:prop ?v2 . filter(custom:my_addition(?v1,?v2)) }',
                     function(success, results) {
-			test.ok(results.length === 3);
-			for(var i=0; i<results.length; i++) {
-			    test.ok(parseInt(results[i].v1.value) + parseInt(results[i].v2.value) < 5 );
-			}
+			                  test.ok(results.length === 3);
+			                  for(var i=0; i<results.length; i++) {
+			                      test.ok(parseInt(results[i].v1.value) + parseInt(results[i].v2.value) < 5 );
+			                  }
 			                  test.done();
                     }
                 );

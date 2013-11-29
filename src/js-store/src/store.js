@@ -14,8 +14,7 @@ var QueryEngine = require("./../../js-query-engine/src/query_engine").QueryEngin
 var QuadBackend = require("./../../js-rdf-persistence/src/quad_backend").QuadBackend;
 var Lexicon = require("./../../js-rdf-persistence/src/lexicon").Lexicon;
 var RDFJSInterface = require("./../../js-query-engine/src/rdf_js_interface").RDFJSInterface;
-var RDFStoreClient = require("./../../js-connection/src/rdfstore_client").RDFStoreClient;
-var Worker = require('webworker');
+var RDFStoreClient = require("./../../js-connection/src/rdfstore_child_client").RDFStoreChildClient;
 
 /**
  * Version of the store
@@ -51,7 +50,7 @@ Store.connect = function() {
         path = __dirname;
         args = {};
         callback = arguments[0];
-    } if(arguments.length == 2) {
+    } else if(arguments.length == 2) {
         if(typeof(arguments[0]) === 'string') {
             path = arguments[0];
             args = {};
@@ -811,6 +810,7 @@ Store.Store.prototype.load = function(){
     var data;
     var graph;
     var callback;
+    var options = {};
 
     if(arguments.length === 3) {
         graph = this.rdf.createNamedNode(this.engine.lexicon.defaultGraphUri);
@@ -820,7 +820,14 @@ Store.Store.prototype.load = function(){
     } else if(arguments.length === 4) {
         mediaType = arguments[0];
         data = arguments[1];
-        graph = this.rdf.createNamedNode(arguments[2]);
+        options = arguments[2];
+        if(typeof(options) === 'string') {
+            graph = this.rdf.createNamedNode(options);
+            options = {};
+        } else {
+            graph = this.rdf.createNamedNode(options.graph || this.engine.lexicon.defaultGraphUri);
+            delete options['graph'];
+        }
         callback= arguments[3] || function(){};
     } else if(arguments.length === 2) {
         throw("The mediaType of the parser, the data a callback and an optional graph must be provided");
@@ -829,7 +836,6 @@ Store.Store.prototype.load = function(){
     if(mediaType === 'remote') {
         data = this.rdf.createNamedNode(data);
         var query = "LOAD <"+data.valueOf()+"> INTO GRAPH <"+graph.valueOf()+">";
-
         this.engine.execute(query, callback);
     } else if(data && typeof(data)==='string' && data.indexOf('file://')=== 0) {
         var parser = this.engine.rdfLoader.parsers[mediaType];
@@ -846,10 +852,9 @@ Store.Store.prototype.load = function(){
 
     } else {
         var parser = this.engine.rdfLoader.parsers[mediaType];
-
         var that = this;
 
-        this.engine.rdfLoader.tryToParse(parser, {'token':'uri', 'value':graph.valueOf()}, data, function(success, quads) {
+        this.engine.rdfLoader.tryToParse(parser, {'token':'uri', 'value':graph.valueOf()}, data, options, function(success, quads) {
             if(success) {
                 that.engine.batchLoad(quads,callback);
             } else {

@@ -4,7 +4,7 @@ require 'rubygems'
 require 'fileutils'
 require 'json'
 
-NODEUNIT = "/Users/antonio/Development/Projects/js/rdfstore-js/node_modules/nodeunit/bin/nodeunit"
+NODEUNIT = "./node_modules/nodeunit/bin/nodeunit"
 
 def load_configuration
   puts "*** loading configuration"
@@ -400,6 +400,10 @@ def process_file_for_browser(of, f)
       puts " * ignoring: #{line}"
     elsif (line =~ /var *([a-zA-Z0-9]+) *= *require\(__dirname\+['\"]{1,1}[a-zA-Z0-9_\.\/-]*['\"]{1,1}\)\.\1;/) == 0
       puts " * ignoring: #{line}"
+    elsif (line =~ /var RDFStoreClient *= *require\(['\"]{1,1}[a-zA-Z0-9_\.\/-]*['\"]{1,1}\)\./) == 0
+      puts " * writing right RDFStoreClient"
+      tree = line.split(".")[-1];
+      of << "var RDFStoreClient = RDFStoreClient;"
     elsif (line =~ /var *([a-zA-Z0-9]+) *= *require\(['\"]webworker[\"']\);/)
       puts " * ignoring require for NodeJS WebWorkers: #{line}"  
     elsif (line =~ /[\w\d\s]*RVN3Parser;$/)
@@ -449,6 +453,10 @@ def process_file_for_browser_persistent(of, f)
     elsif (line =~ /[\w\d\s]*RVN3Parser;$/)
       puts " * Adding N3 Parser"
       of << "var N3Parser = RVN3Parser;";
+    elsif (line =~ /var RDFStoreClient *= *require\(['\"]{1,1}[a-zA-Z0-9_\.\/-]*['\"]{1,1}\)\./) == 0
+      puts " * writing right RDFStoreClient"
+      tree = line.split(".")[-1];
+      of << "var RDFStoreClient = RDFStoreClient;"
     elsif (line =~ /var *([a-zA-Z0-9]+) *= *require\(['\"]webworker[\"']\);/)
       puts " * ignoring require for NodeJS WebWorkers: #{line}"  
     else
@@ -564,7 +572,7 @@ def test_minimized
   process_files_for_nodejs
   process_files_for_test_min
   minimize_output_nodejs
-  puts `cd ./dist/nodejs && #{NODEUNIT} ./test_min.js`
+  puts `cd ./dist/nodejs && ../../#{NODEUNIT} ./test_min.js`
   puts "\r\n*** FINISHED";
 end
 

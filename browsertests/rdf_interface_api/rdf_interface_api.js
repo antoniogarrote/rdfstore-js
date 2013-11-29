@@ -555,7 +555,7 @@ RDFJSInterface.UrisMap.prototype.resolve = function(curie) {
         } else {
             return this.defaultNs + suffix;
         }
-    } else if(this[ns] != null) {
+    } else if(this.hasOwnProperty(ns)) {
         return this[ns] + suffix;
     } else {
         return null;
@@ -1389,6 +1389,8 @@ QueryFilters.runAggregator = function(aggregator, bindingsGroup, queryEngine, da
 };
 
 QueryFilters.runFilter = function(filterExpr, bindings, queryEngine, dataset, env) {
+    //console.log("RUNNING FILTER");
+    //console.log(filterExpr);
     if(filterExpr.expressionType != null) {
         var expressionType = filterExpr.expressionType;
         if(expressionType == 'relationalexpression') {
@@ -1907,7 +1909,6 @@ QueryFilters.runOrFunction = function(filterExpr, bindings, queryEngine, dataset
         if(QueryFilters.isEbvError(ebv) == false) {
             ebv = QueryFilters.ebv(ebv);
         }
-
         if(acum == null) {
             acum = ebv;
         } else if(QueryFilters.isEbvError(ebv)) {

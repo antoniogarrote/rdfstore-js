@@ -107,7 +107,7 @@ RDFJSInterface.UrisMap.prototype.resolve = function(curie) {
         } else {
             return this.defaultNs + suffix;
         }
-    } else if(this[ns] != null) {
+    } else if(this.hasOwnProperty(ns)) {
         return this[ns] + suffix;
     } else {
         return null;
