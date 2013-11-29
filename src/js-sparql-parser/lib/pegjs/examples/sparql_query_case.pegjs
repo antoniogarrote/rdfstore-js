@@ -2520,18 +2520,16 @@ STRING_LITERAL2 "[140] STRING_LITERAL2"
   =  '"' content:([^\u0022\u005C\u000A\u000D] / ECHAR)* '"' { return flattenString(content) }
 
 /*
-  @todo check
   [141]  	STRING_LITERAL_LONG1	  ::=  	"'''" ( ( "'" | "''" )? ( [^'\] | ECHAR ) )* "'''"
 */
 STRING_LITERAL_LONG1 "[141] STRING_LITERAL_LONG1"
-  = "'''" content:([^\'\\] / ECHAR)* "'''"  { return flattenString(content) }
+  = "'''" content:(("'"/"''")?[^\'] / ECHAR)* "'''"  { return flattenString(content) }
 
 /*
-  @todo check
   [142]  	STRING_LITERAL_LONG2	  ::=  	'"""' ( ( '"' | '""' )? ( [^"\] | ECHAR ) )* '"""'
 */
 STRING_LITERAL_LONG2 "[142] STRING_LITERAL_LONG2"
-  = '"""' content:([^\"\\] / ECHAR)* '"""'  { return flattenString(content) }
+  = '"""' content:(("\""/"\"\"")?[^\"] / ECHAR)* '"""'  { return flattenString(content) }
 
 /*
   [143]  	ECHAR	  ::=  	'\' [tbnrf\"']

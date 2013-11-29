@@ -16389,8 +16389,8 @@ SparqlParser.parser = (function(){
       }
       
       function parse_STRING_LITERAL_LONG1() {
-        var result0, result1, result2;
-        var pos0, pos1;
+        var result0, result1, result2, result3;
+        var pos0, pos1, pos2;
         
         reportFailures++;
         pos0 = pos;
@@ -16406,28 +16406,94 @@ SparqlParser.parser = (function(){
         }
         if (result0 !== null) {
           result1 = [];
-          if (/^[^'\\]/.test(input.charAt(pos))) {
-            result2 = input.charAt(pos);
+          pos2 = pos;
+          if (input.charCodeAt(pos) === 39) {
+            result2 = "'";
             pos++;
           } else {
             result2 = null;
             if (reportFailures === 0) {
-              matchFailed("[^'\\\\]");
+              matchFailed("\"'\"");
             }
+          }
+          if (result2 === null) {
+            if (input.substr(pos, 2) === "''") {
+              result2 = "''";
+              pos += 2;
+            } else {
+              result2 = null;
+              if (reportFailures === 0) {
+                matchFailed("\"''\"");
+              }
+            }
+          }
+          result2 = result2 !== null ? result2 : "";
+          if (result2 !== null) {
+            if (/^[^']/.test(input.charAt(pos))) {
+              result3 = input.charAt(pos);
+              pos++;
+            } else {
+              result3 = null;
+              if (reportFailures === 0) {
+                matchFailed("[^']");
+              }
+            }
+            if (result3 !== null) {
+              result2 = [result2, result3];
+            } else {
+              result2 = null;
+              pos = pos2;
+            }
+          } else {
+            result2 = null;
+            pos = pos2;
           }
           if (result2 === null) {
             result2 = parse_ECHAR();
           }
           while (result2 !== null) {
             result1.push(result2);
-            if (/^[^'\\]/.test(input.charAt(pos))) {
-              result2 = input.charAt(pos);
+            pos2 = pos;
+            if (input.charCodeAt(pos) === 39) {
+              result2 = "'";
               pos++;
             } else {
               result2 = null;
               if (reportFailures === 0) {
-                matchFailed("[^'\\\\]");
+                matchFailed("\"'\"");
               }
+            }
+            if (result2 === null) {
+              if (input.substr(pos, 2) === "''") {
+                result2 = "''";
+                pos += 2;
+              } else {
+                result2 = null;
+                if (reportFailures === 0) {
+                  matchFailed("\"''\"");
+                }
+              }
+            }
+            result2 = result2 !== null ? result2 : "";
+            if (result2 !== null) {
+              if (/^[^']/.test(input.charAt(pos))) {
+                result3 = input.charAt(pos);
+                pos++;
+              } else {
+                result3 = null;
+                if (reportFailures === 0) {
+                  matchFailed("[^']");
+                }
+              }
+              if (result3 !== null) {
+                result2 = [result2, result3];
+              } else {
+                result2 = null;
+                pos = pos2;
+              }
+            } else {
+              result2 = null;
+              pos = pos2;
             }
             if (result2 === null) {
               result2 = parse_ECHAR();
@@ -16471,8 +16537,8 @@ SparqlParser.parser = (function(){
       }
       
       function parse_STRING_LITERAL_LONG2() {
-        var result0, result1, result2;
-        var pos0, pos1;
+        var result0, result1, result2, result3;
+        var pos0, pos1, pos2;
         
         reportFailures++;
         pos0 = pos;
@@ -16488,28 +16554,94 @@ SparqlParser.parser = (function(){
         }
         if (result0 !== null) {
           result1 = [];
-          if (/^[^"\\]/.test(input.charAt(pos))) {
-            result2 = input.charAt(pos);
+          pos2 = pos;
+          if (input.charCodeAt(pos) === 34) {
+            result2 = "\"";
             pos++;
           } else {
             result2 = null;
             if (reportFailures === 0) {
-              matchFailed("[^\"\\\\]");
+              matchFailed("\"\\\"\"");
             }
+          }
+          if (result2 === null) {
+            if (input.substr(pos, 2) === "\"\"") {
+              result2 = "\"\"";
+              pos += 2;
+            } else {
+              result2 = null;
+              if (reportFailures === 0) {
+                matchFailed("\"\\\"\\\"\"");
+              }
+            }
+          }
+          result2 = result2 !== null ? result2 : "";
+          if (result2 !== null) {
+            if (/^[^"]/.test(input.charAt(pos))) {
+              result3 = input.charAt(pos);
+              pos++;
+            } else {
+              result3 = null;
+              if (reportFailures === 0) {
+                matchFailed("[^\"]");
+              }
+            }
+            if (result3 !== null) {
+              result2 = [result2, result3];
+            } else {
+              result2 = null;
+              pos = pos2;
+            }
+          } else {
+            result2 = null;
+            pos = pos2;
           }
           if (result2 === null) {
             result2 = parse_ECHAR();
           }
           while (result2 !== null) {
             result1.push(result2);
-            if (/^[^"\\]/.test(input.charAt(pos))) {
-              result2 = input.charAt(pos);
+            pos2 = pos;
+            if (input.charCodeAt(pos) === 34) {
+              result2 = "\"";
               pos++;
             } else {
               result2 = null;
               if (reportFailures === 0) {
-                matchFailed("[^\"\\\\]");
+                matchFailed("\"\\\"\"");
               }
+            }
+            if (result2 === null) {
+              if (input.substr(pos, 2) === "\"\"") {
+                result2 = "\"\"";
+                pos += 2;
+              } else {
+                result2 = null;
+                if (reportFailures === 0) {
+                  matchFailed("\"\\\"\\\"\"");
+                }
+              }
+            }
+            result2 = result2 !== null ? result2 : "";
+            if (result2 !== null) {
+              if (/^[^"]/.test(input.charAt(pos))) {
+                result3 = input.charAt(pos);
+                pos++;
+              } else {
+                result3 = null;
+                if (reportFailures === 0) {
+                  matchFailed("[^\"]");
+                }
+              }
+              if (result3 !== null) {
+                result2 = [result2, result3];
+              } else {
+                result2 = null;
+                pos = pos2;
+              }
+            } else {
+              result2 = null;
+              pos = pos2;
             }
             if (result2 === null) {
               result2 = parse_ECHAR();
