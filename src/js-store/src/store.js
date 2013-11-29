@@ -609,8 +609,8 @@ Store.Store.prototype.insert = function() {
     var callback;
     if(arguments.length === 1) {
         triples = arguments[0];
+        callback= function(){};
     } else if(arguments.length === 2) {
-        graph = this.rdf.createNamedNode(this.engine.lexicon.defaultGraphUri);
         triples = arguments[0];
         callback= arguments[1] || function(){};
     } else if(arguments.length === 3) {
@@ -630,7 +630,7 @@ Store.Store.prototype.insert = function() {
     if(graph != null) {
         query = "INSERT DATA { GRAPH " + this._nodeToQuery(graph) +" { "+ query + " } }";
     } else {
-        query = "INSERT DATA { " + this._nodeToQuery(graph) +" { "+ query + " }";
+        query = "INSERT DATA { "+ query + " }";
     }
 
     this.engine.execute(query, callback);
@@ -680,8 +680,8 @@ Store.Store.prototype.delete = function() {
     var callback;
     if(arguments.length === 1) {
         triples = arguments[0];
+        callback= function(){};
     } else if(arguments.length === 2) {
-        graph = this.rdf.createNamedNode(this.engine.lexicon.defaultGraphUri);
         triples = arguments[0];
         callback= arguments[1] || function(){};
     } else if(arguments.length === 3) {
@@ -701,7 +701,7 @@ Store.Store.prototype.delete = function() {
     if(graph != null) {
         query = "DELETE DATA { GRAPH " + this._nodeToQuery(graph) +" { "+ query + " } }";
     } else {
-        query = "DELETE DATA { " + this._nodeToQuery(graph) +" { "+ query + " }";
+        query = "DELETE DATA { "+ query + " }";
     }
 
     this.engine.execute(query, callback);
