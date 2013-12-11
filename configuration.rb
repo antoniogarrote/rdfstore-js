@@ -13,6 +13,8 @@ BUILD_CONFIGURATION = {
                  "./src/js-rdf-persistence/src/lexicon.js",
                  "./src/js-communication/src/ajax_transport.js",
                  "./src/js-communication/src/jsonld_parser.js",
+                 "./node_modules/n3/lib/N3Lexer.js",
+                 "./node_modules/n3/lib/N3Parser.js",
                  "./src/js-communication/src/rvn3_parser.js",
                  "./src/js-communication/src/rdf_loader.js",
                  "./src/js-sparql-parser/src/abstract_query_tree.js",
