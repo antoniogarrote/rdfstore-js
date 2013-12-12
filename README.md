@@ -705,7 +705,8 @@ rdfstore-js is still at the beginning of its development. If you take a look at 
 Antonio Garrote, email:antoniogarrote@gmail.com, twitter:@antoniogarrote.
 
 This code includes a modified version of the JSON-LD parser built by Digital Bazaar (see LICENSE file at https://github.com/digitalbazaar/jsonld.js/blob/master/LICENSE).
-It also includes a modified version of N3 parser developed as part of the Ruben Verborgh, see (https://github.com/RubenVerborgh/node-n3/) under the MIT license.
+
+It also includes the Turtle parser of the [N3.js library](https://github.com/RubenVerborgh/N3.js/), developed by Ruben Verborgh and released under the MIT license.
 
 ## Contributors
 
