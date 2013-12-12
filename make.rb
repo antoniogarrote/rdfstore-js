@@ -434,11 +434,14 @@ def process_file_for_browser(output, f)
   output << of
 end
 
-def process_file_for_browser_persistent(of, f) 
+def process_file_for_browser_persistent(output, f)
+  of = ''
   f.each_line do |line|
     if (line =~ /exports\.[a-zA-Z0-9]+ *= *\{ *\};/) == 0
       puts " * modifying: #{line} -> var #{line.split("exports.")[1]}"
       of << "var #{line.split('exports.')[1]}"
+    elsif (line =~ /module\.exports|var N3\w+ = require/) == 0
+      puts " * ignoring: #{line}"
     elsif (line =~/var QueryPlan = require/) == 0
       of << "var QueryPlan = QueryPlanDPSize;"
     elsif (line =~ /var QueryEngine = require/) == 0
@@ -478,6 +481,9 @@ def process_file_for_browser_persistent(of, f)
       of << line
     end
   end
+  # remove trailing commas for IE
+  of.gsub!(/,\s*\}/, '}')
+  output << of
 end
 
 def write_browser_coda(of)
