@@ -119,7 +119,7 @@ exports.testDocumentTriples = function(test) {
                                    predicate: { token: 'uri', value: 'http://test.com/something#b', prefix: null, suffix: null },
                                    object: { token: 'uri', value: 'http://test.com/something#c', prefix: null, suffix: null },
                                    graph: null } ],test,
-                {baseURI: 'http://test.com/something#me'});
+                {baseURI: 'http://test.com/something'});
 };
 
 exports.testThreeTriples = function(test) {
