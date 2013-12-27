@@ -105,6 +105,10 @@ The persistent versions can be found [here (min)](https://raw.github.com/antonio
 
 The library can be built for different environments using the included Ruby script and configuration file. The JSON 1.5 Ruby gem is required by the build script.
 
+Before running the build script, you must install JavaScript dependencies with [npm](https://npmjs.org/doc/install.html) (`npm` is shipped with [node](http://nodejs.org/download/)):
+
+    $npm install
+
 To build the library for node.js execute the following command from the root directory of the project:
 
     $./make.rb nodejs
