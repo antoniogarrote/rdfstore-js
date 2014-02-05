@@ -412,7 +412,7 @@ Utils.normalizeUnicodeLiterals = function (string) {
     for (var i = 0; i < escapedUnicode.length; i++) {
         if (dups[escapedUnicode[i]] == null) {
             dups[escapedUnicode[i]] = true;
-            string = string.replace(new RegExp("\\" + escapedUnicode[i], "g"), eval("'" + escapedUnicode[i] + "'"));
+            string = string.replace(new RegExp("\\" + escapedUnicode[i], "g"), JSON.parse('"' + escapedUnicode[i] + '"'));
         }
     }
 
