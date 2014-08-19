@@ -38,7 +38,7 @@ RVN3Parser.parser = {
 // Converts an entity in N3.js representation to this library's representation
 function convertEntity(entity) {
   switch (entity[0]) {
-    case '"': return { literal: entity };
+    case '"': return { literal: entity.replace(/\^\^(.*)$/, '^^<$1>') };
     case '_': return { blank: entity.replace('b', '') };
     default:  return { token: 'uri', value: entity, prefix: null, suffix: null };
   };
