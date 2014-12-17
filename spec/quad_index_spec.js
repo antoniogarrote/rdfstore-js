@@ -1,6 +1,7 @@
 var QuadIndex = require('../src/quad_index').QuadIndex;
 var NodeKey = require('../src/quad_index').NodeKey;
 var Pattern = require('../src/quad_index').Pattern;
+var async = require('async');
 
 describe("NodeKey", function(){
 
@@ -89,4 +90,57 @@ describe("Pattern", function(){
         expect(pattern.indexKey.length).toBe(4);
     });
 
-})
+});
+
+describe("QuadIndex", function(){
+
+    var quadBuilder = function(s,p,o) {
+        return new NodeKey({subject: s, predicate:p, object:o});
+    };
+
+    var patternBuiler = function(s,p,o) {
+        return new Pattern({subject: s, predicate:p, object:o});
+    };
+
+    var repeat = function(c,max,floop,fend,env) {
+        if(arguments.length===4) { env = {}; }
+        if(c<max) {
+            env._i = c;
+            floop(function(floop,env){
+                repeat(c+1, max, floop, fend, env);
+            },env);
+        } else {
+            fend(env);
+        }
+    }
+
+
+    it("Should be possible to run range queries over the QuadIndex", function(done){
+
+        new QuadIndex({order: 2, componentOrder:['subject', 'predicate', 'object']}, function(index){
+
+            async.timesSeries(10, function(i,k){
+                index.insert(quadBuilder(i,0,0), function(){
+                    k();
+                });
+            }, function(){
+                async.timesSeries(5, function(i,k){
+                    index.insert(quadBuilder(5,5+i,0), function(){
+                        k();
+                    });
+                }, function(){
+                    index.range(patternBuiler(5,null,null), function(results){
+                        for(var i=0; i<results.length; i++) {
+                            expect(results[i].subject).toBe(5);
+                        }
+                        expect(results.length).toBe(6);
+                        done();
+                    });
+                })
+            });
+
+        });
+
+    });
+
+});

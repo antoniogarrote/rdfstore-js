@@ -93,6 +93,7 @@ QuadIndex = function (params, callback) {
 
         BaseTree.call(this, params.order, function (tree) {
 
+            // For exact matches. Used by search.
             tree.comparator = function (a, b) {
                 for (var i = 0; i < tree.componentOrder.length; i++) {
                     var component = tree.componentOrder[i];
@@ -110,6 +111,7 @@ QuadIndex = function (params, callback) {
                 return 0;
             };
 
+            // For range matches.
             tree.rangeComparator = function (a, b) {
                 for (var i = 0; i < tree.componentOrder.length; i++) {
                     var component = tree.componentOrder[i];
@@ -126,6 +128,7 @@ QuadIndex = function (params, callback) {
 
                 return 0;
             };
+
             callback(tree);
         });
     }
@@ -205,7 +208,7 @@ QuadIndex.prototype._rangeTraverse = function(tree,node, pattern, callback) {
                 pendingNodes.push(childNode);
                 var idxMax = idxMin;
 
-                asyn.whilst(function(){
+                async.whilst(function(){
                     // keep pushing nodes while the key for that nod ematches the pattern
                     return (idxMax < node.numberActives && tree.rangeComparator(node.keys[idxMax].key,patternKey) === 0);
 
