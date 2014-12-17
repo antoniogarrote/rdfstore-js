@@ -1,4 +1,4 @@
-var btree = require('../src/btree_hash');
+var btree = require('../src/btree');
 var async = require('async');
 
 var shuffle = function(o){ //v1.0
@@ -12,7 +12,7 @@ describe('BTree', function(){
 
     it("Should be possible to find data that has been inserted in the tree as well as walk through it.", function(done){
         async.seq(function(_,c){
-            new btree.Tree(parseInt,function(tree){
+            new btree.Tree(2,function(tree){
                 c(null,tree);
             });
         },function(tree,c){
@@ -57,7 +57,7 @@ describe('BTree', function(){
     it("Should be possible to delete data inserted in the tree.", function(done) {
 
         async.seq(function(_,c){
-            new btree.Tree(parseInt,function(tree){
+            new btree.Tree(2,function(tree){
                 c(null,tree);
             });
         },function(tree,c) {
@@ -175,7 +175,7 @@ describe('BTree', function(){
             var next = i * 100 /max;
             console.log(next+"%.");
             async.seq(function(_,c){
-                new btree.Tree(parseInt, function(tree){
+                new btree.Tree(2, function(tree){
                     c(null,tree);
                 });
             },function(tree,c){

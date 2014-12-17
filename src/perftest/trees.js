@@ -1,4 +1,4 @@
-var HashTree = require('../btree_hash').Tree;
+var HashTree = require('btree_hash').Tree;
 var MemBTree = require('../btree').Tree;
 var async = require('async');
 
