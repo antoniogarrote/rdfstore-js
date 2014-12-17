@@ -69,7 +69,7 @@ Pattern = function (components) {
             that.keyComponents[component] = null;
         } else {
             order.push(component);
-            that.keyComponents[component] = this[component];
+            that.keyComponents[component] = that[component];
             that.indexKey.push(component);
         }
 
