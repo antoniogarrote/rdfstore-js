@@ -229,4 +229,32 @@ describe('BTree', function(){
         });
     });
 
+    it("Should be possible to update a key in the tree", function(done){
+        var tree;
+        async.seq(function(c) {
+            new btree.Tree(2, function (t) {
+                tree = t;
+                c();
+            });
+        }, function(c){
+            tree.insert(1,5, function(){
+                c();
+            })
+        }, function(c) {
+            tree.search(1,function(val){
+                expect(val).toBe(5);
+                tree.insert(1,55, function(){
+                    c();
+                })
+            })
+        }, function(c){
+            tree.search(1,function(val){
+                expect(val).toBe(55);
+                c();
+            })
+        })(function(){
+            done();
+        });
+    })
+
 });

@@ -343,8 +343,12 @@ Tree.prototype.__insertNonFull = function(tree,node,idx,key,data,callback) {
             idx--;
         }
 
-        node.keys[idx + 1] = {key:key, data:data};
-        node.numberActives++;
+        if(idx>=0 && tree.comparator(key,node.keys[idx].key) === 0){
+            node.keys[idx] = {key:key, data:data};
+        } else {
+            node.keys[idx + 1] = {key:key, data:data};
+            node.numberActives++;
+        }
         tree._diskWrite(node, function(node){
             return callback(node);
         });
