@@ -52,8 +52,6 @@ describe("Lexicon", function(){
                 })
             }, function(k){
                 lexicon.retrieve(34234234234, function(token){
-                    console.log("GOT TOKEN");
-                    console.log(token);
                     expect(token).toBe(null);
                     k();
                 })
@@ -62,7 +60,39 @@ describe("Lexicon", function(){
             });
 
         });
-
     });
+
+    it("Should be possible to unregister tokens", function(done){
+        new Lexicon(function(lexicon){
+
+            var oid1;
+            var uri = "http://test.com/1";
+            var literal = '"this is a literal"';
+
+            async.seq(function(k){
+                lexicon.registerUri(uri,function(oid){
+                    oid1 = oid;
+                    k();
+                });
+            }, function(k){
+                lexicon.retrieve(oid1,function(token){
+                    expect(token.value).toBe(uri);
+                    k();
+                })
+            }, function(k){
+                lexicon._unregisterTerm('uri', oid1, function(token){
+                    k();
+                })
+            }, function(k){
+                lexicon.retrieve(oid1,function(token){
+                    expect(token).toBe(null);
+                    k();
+                })
+            })(function(){
+                done();
+            });
+
+        });
+    })
 
 });

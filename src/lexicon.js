@@ -1,3 +1,5 @@
+var async = require('async');
+var Tree = require('./btree').Tree;
 
 /**
  * Temporal implementation of the lexicon
@@ -5,33 +7,59 @@
 
 
 Lexicon = function(callback){
-    this.uriToOID = {};
-    this.OIDToUri = {};
-
-    this.literalToOID = {};
-    this.OIDToLiteral = {};
-
-    this.OIDToBlank = {};
-
+    var that = this;
     this.defaultGraphOid = 0;
     this.defaultGraphUri = "https://github.com/antoniogarrote/rdfstore-js#default_graph";
-
     this.oidCounter = 1;
 
-    this.knownGraphs = {};
+    async.seq(function(k){
+        new Tree(2,function(tree){
+            that.uris = tree;
+            k();
+        })
+    }, function(k){
+        new Tree(2, function(tree){
+            that.literals = tree;
+            k();
+        })
+    }, function(k){
+        new Tree(2, function(tree){
+            that.knownGraphs = tree;
+            k();
+        })
+    },function(k){
+        new Tree(2,function(tree){
+            that.oidUris = tree;
+            k();
+        })
+    }, function(k){
+        new Tree(2, function(tree){
+            that.oidLiterals = tree;
+            k();
+        })
+    }, function(k){
+        new Tree(2, function(tree){
+            that.oidBlanks = tree;
+            k();
+        })
+    })(function(){
+        if(callback != null)
+            callback(that);
 
-    if(callback != null) {
-        callback(this);
-    }
+    });
 };
 
 /**
  * Registers a new graph in the lexicon list of known graphs.
  * @param oid
+ * @param uriToken
+ * @param callback
  */
-Lexicon.prototype.registerGraph = function(oid){
+Lexicon.prototype.registerGraph = function(oid, uriToken, callback){
     if(oid != this.defaultGraphOid) {
-        this.knownGraphs[oid] = true;
+        this.knownGraphs.insert(oid, uriToken, function(){
+           callback();
+        });
     }
 };
 
@@ -41,15 +69,16 @@ Lexicon.prototype.registerGraph = function(oid){
  * @param callback
  */
 Lexicon.prototype.registeredGraphs = function(returnUris, callback) {
-    var graphs = _.map(this.knownGraphs, function(g){
+    var graphs = [];
+    this.knownGraphs.walk(function(node){
         if(returnUris === true) {
-            return this.OIDToUri['u'+g];
+            graphs.push(node.value);
         } else {
-            return g;
+            graphs.push(node.key);
         }
-    },this);
-
-    callback(graphs);
+    },function(){
+        callback(graphs);
+    });
 };
 
 /**
@@ -60,23 +89,36 @@ Lexicon.prototype.registeredGraphs = function(returnUris, callback) {
  * @returns URI's OID.
  */
 Lexicon.prototype.registerUri = function(uri, callback) {
+    var that = this;
     if(uri === this.defaultGraphUri) {
         callback(this.defaultGraphOid);
-    } else if(this.uriToOID[uri] == null){
-        var oid = this.oidCounter;
-        var oidStr = 'u'+oid;
-        this.oidCounter++;
+    } else{
+        this.uris.search(uri, function(oidData){
+            if(oidData == null){
+                var oid = that.oidCounter;
+                var oidStr = 'u'+oid;
+                that.oidCounter++;
 
-        this.uriToOID[uri] =[oid, 0];
-        this.OIDToUri[oidStr] = uri;
+                async.seq(function(k){
+                    that.uris.insert(uri, [oid,0], function(){
+                        k();
+                    })
+                }, function(k){
+                    that.oidUris.insert(oidStr, uri, function(){
+                        k();
+                    })
+                })(function(){
+                    callback(oid);
+                });
 
-        callback(oid);
-    } else {
-        var oidCounter = this.uriToOID[uri];
-        var oid = oidCounter[0];
-        var counter = oidCounter[1] + 1;
-        this.uriToOID[uri] = [oid, counter];
-        callback(oid);
+            } else {
+                var oid = oidData[0];
+                var counter = oidData[1] + 1;
+                that.uris.insert(uri, [oid,counter], function(){
+                    callback(oid);
+                });
+            }
+        });
     }
 };
 
@@ -90,12 +132,13 @@ Lexicon.prototype.resolveUri = function(uri,callback) {
     if(uri === this.defaultGraphUri) {
         callback(this.defaultGraphOid);
     } else {
-        var oidCounter = this.uriToOID[uri];
-        if(oidCounter != null) {
-            callback(oidCounter[0]);
-        } else {
-            callback(-1);
-        }
+        this.uris.search(uri, function(oidData){
+            if(oidData != null) {
+                callback(oidData[0]);
+            } else {
+                callback(-1);
+            }
+        });
     }
 };
 
@@ -107,14 +150,15 @@ Lexicon.prototype.resolveUri = function(uri,callback) {
  */
 Lexicon.prototype.resolveUriCost = function(uri, callback) {
     if(uri === this.defaultGraphUri) {
-        callback(this.defaultGraphOid);
+        callback(0);
     } else {
-        var oidCounter = this.uriToOID[uri];
-        if(oidCounter != null) {
-            callback(oidCounter[1]);
-        } else {
-            callback(-1);
-        }
+        this.uris.search(uri, function(oidData){
+            if(oidData != null) {
+                callback(oidData[1]);
+            } else {
+                callback(-1);
+            }
+        });
     }
 };
 
@@ -127,8 +171,9 @@ Lexicon.prototype.registerBlank = function(callback) {
     var oid = this.oidCounter;
     this.oidCounter++;
     var oidStr = ""+oid;
-    this.OIDToBlank[oidStr] = true;
-    callback(oidStr);
+    this.oidBlanks.insert(oidStr, oidStr, function(){
+        callback(oid);
+    })
 };
 
 /**
@@ -138,18 +183,24 @@ Lexicon.prototype.registerBlank = function(callback) {
  * @param callback
  */
 Lexicon.prototype.resolveBlank = function(label,callback) {
-    if(this.OIDToBlank[label] != null) {
-        callback(this.OIDToBlank[label]);
-    } else {
-        var oid = this.oidCounter;
-        this.oidCounter++;
-        callback(""+oid);
-    }
+    var that = this;
+    this.oidBlanks.search(label, function(oidData){
+        if(oidData != null) {
+            callback(oidData);
+        } else {
+            // ??
+            var oid = that.oidCounter;
+            this.oidCounter++;
+            callback(""+oid);
+            //
+        }
+    });
 };
 
 /**
  * Blank nodes don't have an associated cost.
  * @param label
+ * @param callback
  * @returns {number}
  */
 Lexicon.prototype.resolveBlankCost = function(label, callback) {
@@ -159,46 +210,76 @@ Lexicon.prototype.resolveBlankCost = function(label, callback) {
 /**
  * Registers a new literal in the index.
  * @param literal
- * @returns {*}
+ * @param callback
+ * @returns the OID of the newly registered literal
  */
 Lexicon.prototype.registerLiteral = function(literal, callback) {
-    if(this.literalToOID[literal] == null){
-        var oid = this.oidCounter;
-        var oidStr =  'l'+ oid;
-        this.oidCounter++;
+    var that = this;
 
-        this.literalToOID[literal] = [oid, 0];
-        this.OIDToLiteral[oidStr] = literal;
+        this.literals.search(literal, function(oidData){
+            if(oidData == null){
+                var oid = that.oidCounter;
+                var oidStr = 'l'+oid;
+                that.oidCounter++;
 
-        callback(oid);
-    } else {
-        var oidCounter = this.literalToOID[literal];
-        var oid = oidCounter[0];
-        var counter = oidCounter[1] + 1;
-        this.literalToOID[literal] = [oid, counter];
-        callback(oid);
-    }
+                async.seq(function(k){
+                    that.literals.insert(literal, [oid,0], function(){
+                        k();
+                    })
+                }, function(k){
+                    that.oidLiterals.insert(oidStr, literal, function(){
+                        k();
+                    })
+                })(function(){
+                    callback(oid);
+                });
+
+            } else {
+                var oid = oidData[0];
+                var counter = oidData[1] + 1;
+                that.literals.insert(literal, [oid,counter], function(){
+                    callback(oid);
+                });
+            }
+        });
 };
 
+/**
+ * Returns the OID of the resolved literal or -1 if no literal is found.
+ * @param literal
+ * @param callback
+ */
 Lexicon.prototype.resolveLiteral = function (literal,callback) {
-    var oidCounter = this.literalToOID[literal];
-    if (oidCounter != null) {
-        callback(oidCounter[0]);
-    } else {
-        callback(-1);
-    }
+    this.literals.search(literal, function(oidData){
+        if(oidData != null) {
+            callback(oidData[0]);
+        } else {
+            callback(-1);
+        }
+    });
 };
 
+/**
+ * Returns the cost associated to the literal or -1 if no literal is found.
+ * @param literal
+ * @param callback
+ */
 Lexicon.prototype.resolveLiteralCost = function (literal,callback) {
-    var oidCounter = this.literalToOID[literal];
-    if (oidCounter != null) {
-        callback(oidCounter[1]);
-    } else {
-        callback(0);
-    }
+    this.literals.search(literal, function(oidData){
+        if(oidData != null) {
+            callback(oidData[1]);
+        } else {
+            callback(-1);
+        }
+    });
 };
 
 
+/**
+ * Transforms a literal string into a token object.
+ * @param literalString
+ * @returns A token object with the parsed literal.
+ */
 Lexicon.prototype.parseLiteral = function(literalString) {
     var parts = literalString.lastIndexOf("@");
     if(parts!=-1 && literalString[parts-1]==='"' && literalString.substring(parts, literalString.length).match(/^@[a-zA-Z\-]+$/g)!=null) {
@@ -219,125 +300,233 @@ Lexicon.prototype.parseLiteral = function(literalString) {
     return {token:"literal", value:value};
 };
 
+/**
+ * Parses a literal URI string into a token object
+ * @param uriString
+ * @returns A token object with the parsed URI.
+ */
 Lexicon.prototype.parseUri = function(uriString) {
     return {token: "uri", value:uriString};
 };
 
+/**
+ * Retrieves a token containing the URI, literal or blank node associated
+ * to the provided OID.
+ * If no value is found, null is returned.
+ * @param oid
+ * @param callback
+ * @returns parsed token or null if not found.
+ */
 Lexicon.prototype.retrieve = function(oid, callback) {
-    try {
-        if(oid === this.defaultGraphOid) {
-            callback({ token: "uri",
-                value:this.defaultGraphUri,
-                prefix: null,
-                suffix: null,
-                defaultGraph: true });
-        } else {
-            var maybeUri = this.OIDToUri['u'+oid];
-            if(maybeUri != null) {
-                callback(this.parseUri(maybeUri));
-            } else {
-                var maybeLiteral = this.OIDToLiteral['l'+oid];
-                if(maybeLiteral != null) {
-                    callback(this.parseLiteral(maybeLiteral));
+    var that = this;
+
+    if(oid === this.defaultGraphOid) {
+        callback({
+            token: "uri",
+            value:this.defaultGraphUri,
+            prefix: null,
+            suffix: null,
+            defaultGraph: true
+        });
+    } else {
+
+        async.seq(function(found,k){
+            that.oidUris.search('u'+oid, function(maybeUri) {
+                if(maybeUri != null) {
+                    k(null,that.parseUri(maybeUri));
                 } else {
-                    var maybeBlank = this.OIDToBlank[""+oid];
-                    if(maybeBlank != null) {
-                        return({token:"blank", value:"_:"+oid});
-                    } else {
-                        callback(null);
-                    }
+                    k(null,null);
                 }
+            })
+        }, function(found,k){
+            if(found == null) {
+                that.oidLiterals.search('l'+oid, function(maybeLiteral) {
+                    if (maybeLiteral != null) {
+                        k(null,that.parseLiteral(maybeLiteral));
+                    } else {
+                        k(null,null);
+                    }
+                });
+            } else {
+                k(null,found);
             }
-        }
-    } catch(e) {
-        console.log("error in lexicon retrieving OID:");
-        console.log(oid);
-        if(e.message || e.stack) {
-            if(e.message) {
-                console.log(e.message);
+        }, function(found,k){
+            if(found == null) {
+                that.oidBlanks.search(''+oid, function(maybeBlank) {
+                    if (maybeBlank != null) {
+                        k(null,{token:"blank", value:"_:"+oid});
+                    } else {
+                        k(null,null);
+                    }
+                });
+            } else {
+                k(null,found);
             }
-            if(e.stack) {
-                console.log(e.stack);
-            }
-        } else {
-            console.log(e);
-        }
-        throw new Error("Unknown retrieving OID in lexicon:"+oid);
-
+        })(null,function(_,found){
+            callback(found);
+        });
     }
 };
 
+/**
+ * Empties the lexicon and restarts the counters.
+ * @param callback
+ */
 Lexicon.prototype.clear = function(callback) {
-    this.uriToOID = {};
-    this.OIDToUri = {};
+    var that = this;
+    this.defaultGraphOid = 0;
+    this.defaultGraphUri = "https://github.com/antoniogarrote/rdfstore-js#default_graph";
+    this.oidCounter = 1;
 
-    this.literalToOID = {};
-    this.OIDToLiteral = {};
+    async.seq(function(k){
+        new Tree(2,function(tree){
+            that.uris = tree;
+            k();
+        })
+    }, function(k){
+        new Tree(2, function(tree){
+            that.literals = tree;
+            k();
+        })
+    }, function(k){
+        new Tree(2, function(tree){
+            that.knownGraphs = tree;
+            k();
+        })
+    },function(k){
+        new Tree(2,function(tree){
+            that.oidUris = tree;
+            k();
+        })
+    }, function(k){
+        new Tree(2, function(tree){
+            that.oidLiterals = tree;
+            k();
+        })
+    }, function(k){
+        new Tree(2, function(tree){
+            that.oidBlanks = tree;
+            k();
+        })
+    })(function(){
+        if(callback != null)
+            callback();
 
-    this.OIDToBlank = {};
-    callback();
+    });
 };
 
+/**
+ * Removes the values associated to the subject, predicate, object and graph
+ * values of the provided quad.
+ * @param quad
+ * @param key
+ * @param callback
+ */
 Lexicon.prototype.unregister = function (quad, key, callback) {
-    try {
-        this._unregisterTerm(quad.subject.token, key.subject);
-        this._unregisterTerm(quad.predicate.token, key.predicate);
-        this._unregisterTerm(quad.object.token, key.object);
+    var that = this;
+    async.seq(function(k){
+        that._unregisterTerm(quad.subject.token, key.subject,k);
+    }, function(k){
+        that._unregisterTerm(quad.predicate.token, key.predicate,k);
+    }, function(k){
+        that._unregisterTerm(quad.object.token, key.object, k);
+    }, function(k){
         if (quad.graph != null) {
-            this._unregisterTerm(quad.graph.token, key.graph);
+            that._unregisterTerm(quad.graph.token, key.graph, k);
+        } else {
+            k();
         }
+    })(function(){
         callback(true);
-    } catch (e) {
-        console.log("Error unregistering quad");
-        console.log(e.message);
-        callback(false);
-    }
+    });
 };
 
+/**
+ * Unregisters a value, either URI, literal or blank.
+ * @param kind
+ * @param oid
+ * @param callback
+ * @private
+ */
 Lexicon.prototype._unregisterTerm = function (kind, oid, callback) {
+    var that = this;
     if (kind === 'uri') {
         if (oid != this.defaultGraphOid) {
             var oidStr = 'u' + oid;
-            var uri = this.OIDToUri[oidStr];     // = uri;
-            var oidCounter = this.uriToOID[uri]; // =[oid, 0];
+            that.oidUris.search(oidStr, function(uri) {
+                that.uris.search(uri, function(oidData){
+                    var counter = oidData[1];
+                    if ("" + oidData[0] === "" + oid) {
+                        if (counter === 0) {
+                            async.seq(function(k) {
+                                that.oidUris.delete(oidStr, function () {
+                                    k();
+                                });
+                            }, function(k){
+                                that.uris.delete(uri, function(){
+                                    k();
+                                });
+                            }, function(k){
+                                // delete the graph oid from known graphs
+                                // in case this URI is a graph identifier
+                                that.knownGraphs.delete(oid, function(){
+                                   k();
+                                }) ;
+                            })(function(){
+                                callback();
+                            })
+                        } else {
+                            that.uris.insert(uri,[oid, counter - 1], function(){
+                                callback();
+                            });
+                        }
+                    } else {
+                        callback();
+                    }
+                });
+            });
 
-            var counter = oidCounter[1];
-            if ("" + oidCounter[0] === "" + oid) {
-                if (counter === 0) {
-                    delete this.OIDToUri[oidStr];
-                    delete this.uriToOID[uri];
-                    // delete the graph oid from known graphs
-                    // in case this URI is a graph identifier
-                    delete this.knownGraphs[oid];
-                } else {
-                    this.uriToOID[uri] = [oid, counter - 1];
-                }
-            } else {
-                throw("Not matching OID : " + oid + " vs " + oidCounter[0]);
-            }
+        } else {
+            callback();
         }
     } else if (kind === 'literal') {
         this.oidCounter++;
         var oidStr = 'l' + oid;
-        var literal = this.OIDToLiteral[oidStr];  // = literal;
-        var oidCounter = this.literalToOID[literal]; // = [oid, 0];
 
-        var counter = oidCounter[1];
-        if ("" + oidCounter[0] === "" + oid) {
-            if (counter === 0) {
-                delete this.OIDToLiteral[oidStr];
-                delete this.literalToOID[literal];
-            } else {
-                this.literalToOID[literal] = [oid, counter - 1];
-            }
-        } else {
-            throw("Not matching OID : " + oid + " vs " + oidCounter[0]);
-        }
+        that.oidLiterals.search(oidStr, function(literal) {
+            that.literals.search(literal, function(oidData){
+                var counter = oidData[1];
+                if ("" + oidData[0] === "" + oid) {
+                    if (counter === 0) {
+                        async.seq(function(k) {
+                            that.oidLiterals.delete(oidStr, function () {
+                                k();
+                            });
+                        }, function(k){
+                            that.literals.delete(literal, function(){
+                                k();
+                            });
+                        })(function(){
+                            callback();
+                        })
+                    } else {
+                        that.literals.insert(literal,[oid, counter - 1], function(){
+                            callback();
+                        });
+                    }
+                } else {
+                    callback();
+                }
+            });
+        });
 
     } else if (kind === 'blank') {
-        delete this.OIDToBlank["" + oid];
+        that.oidBlanks.delete("" + oid, function(){
+            callback();
+        })
+    } else {
+        callback();
     }
-    callback();
 };
 
 module.exports = {
