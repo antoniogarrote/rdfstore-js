@@ -173,7 +173,6 @@ describe('BTree', function(){
             return i<max;
         }, function(c){
             var next = i * 100 /max;
-            console.log(next+"%.");
             async.seq(function(_,c){
                 new btree.Tree(2, function(tree){
                     c(null,tree);
