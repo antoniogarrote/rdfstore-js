@@ -1,3 +1,5 @@
+var moment = require('moment');
+
 var nextTick = (function () {
 
     var global = null;
@@ -49,6 +51,101 @@ var nextTick = (function () {
 
 })();
 
+/**
+ * Function that generates a hash key for a bound term.
+ * @param term
+ * @returns {*}
+ */
+var hashTerm = function(term) {
+    try {
+        if(term == null) {
+            return "";
+        } if(term.token==='uri') {
+            return "u"+term.value;
+        } else if(term.token === 'blank') {
+            return "b"+term.value;
+        } else if(term.token === 'literal') {
+            var l = "l"+term.value;
+            l = l + (term.type || "");
+            l = l + (term.lang || "");
+
+            return l;
+        }
+    } catch(e) {
+        if(typeof(term) === 'object') {
+            var key = "";
+            for(p in term) {
+                key = key + p + term[p];
+            }
+
+            return key;
+        }
+        return term;
+    }
+};
+
+/**
+ * Returns a String with the lexical representation of a URI term.
+ * @param term the URI term to be transformed into a String representation.
+ * @param env Repository of the prefixes where th prefix of the URI will be resolved.
+ * @returns the lexical representation of the URI term.
+ */
+var lexicalFormBaseUri = function(term, env) {
+    var uri = null;
+    env = env || {};
+    if(term.value == null) {
+        // URI has prefix and suffix, we'll try to resolve it.
+        var prefix = term.prefix;
+        var suffix = term.suffix;
+        var resolvedPrefix = env.namespaces[prefix];
+        if(resolvedPrefix != null) {
+            uri = resolvedPrefix+suffix;
+        } else {
+            uri = prefix+":"+suffix;
+        }
+    } else {
+        // URI is not prefixed
+        uri = term.value;
+    }
+
+    if(uri===null) {
+        return null;
+    } else {
+        // Should we apply the base URI namespace?
+        if(uri.indexOf(":") == -1) {
+            uri = (env.base||"") + uri; // applyBaseUri
+        }
+    }
+
+    return uri;
+};
+
+parseISO8601 = function (str) {
+    return moment(str).toDate();
+};
+
+iso8601 = function(date) {
+    return moment(date).toISOString();
+};
+
+compareDateComponents = function(stra,strb) {
+    var dateA = moment(stra);
+    var dateB = moment(strb);
+
+    if(dateA.isSame(dateB)) {
+        return 0;
+    } else if(dateA.isBefore(dateB)) {
+        return -1;
+    } else {
+        return 1;
+    }
+}
+
 module.exports = {
-    nextTick: nextTick
+    nextTick: nextTick,
+    hasTerm: hashTerm,
+    lexicalFormBaseUri: lexicalFormBaseUri,
+    parseISO8601: parseISO8601,
+    compareDateComponents: compareDateComponents,
+    iso8601: iso8601
 };
