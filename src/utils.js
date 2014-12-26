@@ -139,7 +139,63 @@ compareDateComponents = function(stra,strb) {
     } else {
         return 1;
     }
-}
+};
+
+lexicalFormLiteral = function(term, env) {
+    var value = term.value;
+    var lang = term.lang;
+    var type = term.type;
+
+    var indexedValue = null;
+    if(value != null && type != null && typeof(type) != 'string') {
+        var typeValue = type.value;
+
+        if(typeValue == null) {
+            var typePrefix = type.prefix;
+            var typeSuffix = type.suffix;
+
+            var resolvedPrefix = env.namespaces[typePrefix];
+            term.type = resolvedPrefix+typeSuffix;
+            typeValue = resolvedPrefix+typeSuffix;
+        }
+        // normalization
+        if(typeValue.indexOf('hexBinary') != -1) {
+            indexedValue = '"' + term.value.toLowerCase() + '"^^<' + typeValue + '>';
+        } else {
+            indexedValue = '"' + term.value + '"^^<' + typeValue + '>';
+        }
+    } else {
+        if(lang == null && type == null) {
+            indexedValue = '"' + value + '"';
+        } else if(type == null) {
+            indexedValue = '"' + value + '"' + "@" + lang;
+        } else {
+            // normalization
+            if(type.indexOf('hexBinary') != -1) {
+                indexedValue = '"' + term.value.toLowerCase() + '"^^<'+type+'>';
+            } else {
+                indexedValue = '"' + term.value + '"^^<'+type+'>';
+            }
+        }
+    }
+    return indexedValue;
+};
+
+normalizeUnicodeLiterals = function (string) {
+    var escapedUnicode = string.match(/\\u[0-9abcdefABCDEF]{4,4}/g) || [];
+    var dups = {};
+    for (var i = 0; i < escapedUnicode.length; i++) {
+        if (dups[escapedUnicode[i]] == null) {
+            dups[escapedUnicode[i]] = true;
+            string = string.replace(new RegExp("\\" + escapedUnicode[i], "g"), eval("'" + escapedUnicode[i] + "'"));
+        }
+    }
+
+    return string;
+};
+
+
+
 
 module.exports = {
     nextTick: nextTick,
@@ -147,5 +203,7 @@ module.exports = {
     lexicalFormBaseUri: lexicalFormBaseUri,
     parseISO8601: parseISO8601,
     compareDateComponents: compareDateComponents,
-    iso8601: iso8601
+    iso8601: iso8601,
+    normalizeUnicodeLiterals: normalizeUnicodeLiterals,
+    lexicalFormLiteral: lexicalFormLiteral
 };

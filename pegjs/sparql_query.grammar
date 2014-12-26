@@ -458,7 +458,7 @@ query.prologue = p;
 
 var units = [u];
 
-if(us.length != null && us[3] != null && us[3].units != null) {
+if(us != null && us.length != null && us[3] != null && us[3].units != null) {
     units = units.concat(us[3].units);
 }
 
@@ -748,17 +748,19 @@ return {token:'quadsnottriples',
 TriplesTemplate "[49] TriplesTemplate"
     = b:TriplesSameSubject bs:(WS* '.' WS* TriplesTemplate? )? {
     var triples = b.triplesContext;
-var toTest = null;
-if(typeof(bs) === 'object') {
-    if(bs.length != null) {
-        if(bs[3].triplesContext!=null) {
-            triples = triples.concat(bs[3].triplesContext);
-        }
+    var toTest = null;
+    if(typeof(bs) === 'object') {
+       if(bs.length != null) {
+          if(bs[3] != null && bs[3].triplesContext!=null) {
+              triples = triples.concat(bs[3].triplesContext);
+          }
+       }
     }
-}
 
-return {token:'triplestemplate',
-    triplesContext: triples}
+    return {
+        token:'triplestemplate',
+        triplesContext: triples
+    };
 }
 
 /*
@@ -2262,7 +2264,7 @@ RDFLiteral "[112] RDFLiteral"
     if(typeof(e) === "string" && e.length > 0) {
     return {token:'literal', value:s.value, lang:e.slice(1), type:null}
 } else {
-    if(typeof(e) === "object") {
+    if(e != null && typeof(e) === "object") {
         e.shift(); // remove the '^^' char
         return {token:'literal', value:s.value, lang:null, type:e[0] }
     } else {
