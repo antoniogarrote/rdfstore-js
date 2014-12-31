@@ -3,6 +3,22 @@ var SparqlParser = require("./parser");
 var Utils = require("./utils");
 var _ = require('lodash');
 
+function NonSupportedSparqlFeatureError(feature, message) {
+    this.name = "NonSupportedSparqlFeatureError";
+    this.feature = feature;
+    this.message = message || "SPARQL feature "+feature+" non supported";
+}
+NonSupportedSparqlFeatureError.prototype = new Error();
+NonSupportedSparqlFeatureError.constructor = NonSupportedSparqlFeatureError;
+
+function SparqlParserError(message) {
+    this.name = ParserError;
+    this.message = message || "Error parsing SPARQL query";
+}
+SparqlParserError.prototype = new Error();
+SparqlParserError.constructor = SparqlParserError;
+
+
 /**
  * @doc
  *
@@ -89,7 +105,11 @@ AbstractQueryTree.prototype.build = function(node, env) {
             graph: node.graph
         };
     } else {
-        throw new Error("not supported token in query:"+node.token);
+        if(node.token != null) {
+            throw new NonSupportedSparqlFeatureError(node.token, "Non implemented SPARQL graph pattern: '" + node.token+"'");
+        } else {
+            throw new SparqlParserError("Error parsing graph pattern: '"+JSON.stringify(node)+"'");
+        }
     }
 };
 
@@ -243,6 +263,8 @@ AbstractQueryTree.translatePathExpression  = function(pathExpression, env) {
         //console.log(bgp);
         //console.log("--------------");
         return AbstractQueryTree.translatePathExpressionsInBGP(bgp, env);
+    } else {
+        throw new NonSupportedSparqlFeatureError("Non supported path expression "+pathExpression.predicate.kind);
     }
 };
 
@@ -629,5 +651,7 @@ AbstractQueryTree.prototype.treeWithUnion = function(aqt) {
 };
 
 module.exports = {
-    AbstractQueryTree: AbstractQueryTree
+    AbstractQueryTree: AbstractQueryTree,
+    NonSupportedSparqlFeatureError: NonSupportedSparqlFeatureError,
+    SparqlParserError: SparqlParserError
 };

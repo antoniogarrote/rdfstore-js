@@ -1,31 +1,34 @@
-var _ = require('lodash');
+var     _ = require('lodash');
 var Utils = require('./utils');
+var async = require('async');
 
 QueryFilters = {};
 
-QueryFilters.checkFilters = function(pattern, bindings, nullifyErrors, dataset, queryEnv, queryEngine) {
-    var filters = pattern.filter;
+QueryFilters.checkFilters = function(pattern, bindings, nullifyErrors, dataset, queryEnv, queryEngine, callback) {
+    var filters = pattern.filter || [];
     var nullified = [];
     if(filters==null || pattern.length != null) {
-        return bindings;
+        callback(bindings);
     }
 
-    for(var i=0; i<filters.length; i++) {
-        var filter = filters[i];
-        var filteredBindings = QueryFilters.run(filter.value, bindings, nullifyErrors, dataset, queryEnv, queryEngine);
-        var acum = [];
-        for(var j=0; j<filteredBindings.length; j++) {
-            if(filteredBindings[j]["__nullify__"]!=null) {
-                nullified.push(filteredBindings[j]);
-            } else {
-                acum.push(filteredBindings[j]);
-            }
-        }
-
-        bindings = acum;
-    }
-
-    return bindings.concat(nullified);
+    async.eachSeries(filters, function(filter,k){
+        QueryFilters.run(filter.value, bindings, nullifyErrors, dataset, queryEnv, queryEngine, function(filteredBindings){
+            var acum = [];
+            async.eachSeries(filteredBindings, function(filteredBinding,kk) {
+                if(filteredBinding["__nullify__"]!=null) {
+                    nullified.push(filteredBinding);
+                } else {
+                    acum.push(filteredBinding);
+                }
+                kk();
+            },function(){
+                bindings = acum;
+                k();
+            })
+        });
+    },function(){
+        callback(bindings.concat(nullified))
+    });
 };
 
 QueryFilters.boundVars = function(filterExpr) {
@@ -84,37 +87,38 @@ QueryFilters.boundVars = function(filterExpr) {
     }
 };
 
-QueryFilters.run = function(filterExpr, bindings, nullifyFilters, dataset, env, queryEngine) {
-    var denormBindings = queryEngine.copyDenormalizedBindings(bindings, env.outCache);
-    var filteredBindings = [];
-    for(var i=0; i<bindings.length; i++) {
-        var thisDenormBindings = denormBindings[i];
-        var ebv = QueryFilters.runFilter(filterExpr, thisDenormBindings, queryEngine, dataset, env);
-        // ebv can be directly a RDFTerm (e.g. atomic expression in filter)
-        // this additional call to ebv will return -> true/false/error
-        var ebv = QueryFilters.ebv(ebv);
-        //console.log("EBV:")
-        //console.log(ebv)
-        //console.log("FOR:")
-        //console.log(thisDenormBindings)
-        if(QueryFilters.isEbvError(ebv)) {
-            // error
-            if(nullifyFilters) {
-                var thisBindings = {"__nullify__": true, "bindings": bindings[i]};
-                filteredBindings.push(thisBindings);
-            }
-        } else if(ebv === true) {
-            // true
-            filteredBindings.push(bindings[i]);
-        } else {
-            // false
-            if(nullifyFilters) {
-                var thisBindings = {"__nullify__": true, "bindings": bindings[i]};
-                filteredBindings.push(thisBindings);
+QueryFilters.run = function(filterExpr, bindings, nullifyFilters, dataset, env, queryEngine, callback) {
+    queryEngine.copyDenormalizedBindings(bindings, env.outCache, function(denormBindings){
+        var filteredBindings = [];
+        for(var i=0; i<bindings.length; i++) {
+            var thisDenormBindings = denormBindings[i];
+            var ebv = QueryFilters.runFilter(filterExpr, thisDenormBindings, queryEngine, dataset, env);
+            // ebv can be directly a RDFTerm (e.g. atomic expression in filter)
+            // this additional call to ebv will return -> true/false/error
+            var ebv = QueryFilters.ebv(ebv);
+            //console.log("EBV:")
+            //console.log(ebv)
+            //console.log("FOR:")
+            //console.log(thisDenormBindings)
+            if(QueryFilters.isEbvError(ebv)) {
+                // error
+                if(nullifyFilters) {
+                    var thisBindings = {"__nullify__": true, "bindings": bindings[i]};
+                    filteredBindings.push(thisBindings);
+                }
+            } else if(ebv === true) {
+                // true
+                filteredBindings.push(bindings[i]);
+            } else {
+                // false
+                if(nullifyFilters) {
+                    var thisBindings = {"__nullify__": true, "bindings": bindings[i]};
+                    filteredBindings.push(thisBindings);
+                }
             }
         }
-    }
-    return filteredBindings;
+        callback(filteredBindings);
+    });
 };
 
 QueryFilters.collect = function(filterExpr, bindings, dataset, env, queryEngine, callback) {

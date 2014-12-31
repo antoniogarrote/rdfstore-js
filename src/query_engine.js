@@ -1,10 +1,11 @@
 //imports
 var AbstractQueryTree = require("./abstract_query_tree").AbstractQueryTree;
+var NonSupportedSparqlFeatureError = require("./abstract_query_tree").NonSupportedSparqlFeatureError;
 var Utils = require("./utils");
 var QuadIndex = require("./quad_index");
 var QueryPlan = require("./query_plan").QueryPlan;
 var QueryFilters = require("./query_filters").QueryFilters;
-var RDFModel = require("./rdf_model").RDFModel;
+var RDFModel = require("./rdf_model");
 //var RDFLoader = require("./rdf_loader").RDFLoader;
 var Callbacks = require("./graph_callbacks").CallbacksBackend;
 var async = require('async');
@@ -376,21 +377,21 @@ QueryEngine.prototype.normalizeTerm = function(term, env, shouldIndex, callback)
 
 QueryEngine.prototype.normalizeDatasets = function(datasets, outerEnv, callback) {
     var that = this;
-    for(var i=0; i<datasets.length; i++) {
-        var dataset = datasets[i];
+    async.eachSeries(datasets, function(dataset, k){
         if(dataset.value === that.lexicon.defaultGraphUri) {
             dataset.oid = that.lexicon.defaultGraphOid;
+            k();
         } else {
-            var oid = that.normalizeTerm(dataset, outerEnv, false);
-            if(oid != null) {
-                dataset.oid = oid;
-            } else {
-                return(null);
-            }
+            var oid = that.normalizeTerm(dataset, outerEnv, false, function(){
+                if(oid != null) {
+                    dataset.oid = oid;
+                }
+                k();
+            });
         }
-    }
-
-    return true
+    }, function(){
+        callback(true);
+    });
 };
 
 QueryEngine.prototype.normalizeQuad = function(quad, queryEnv, shouldIndex, callback) {
@@ -566,7 +567,7 @@ QueryEngine.prototype.denormalizeBindings = function(bindings, env, callback) {
 // Queries execution
 
 QueryEngine.prototype.execute = function(queryString, callback, defaultDataset, namedDataset){
-    try{
+    //try{
         queryString = Utils.normalizeUnicodeLiterals(queryString);
 
         var syntaxTree = this.abstractQueryTree.parseQueryString(queryString);
@@ -593,9 +594,9 @@ QueryEngine.prototype.execute = function(queryString, callback, defaultDataset, 
                 this.executeQuery(syntaxTree, callback, defaultDataset, namedDataset);
             }
         }
-    } catch(e) {
-        callback(e);
-    }
+    //} catch(e) {
+    //    callback(e);
+    //}
 };
 
 // Retrieval queries
@@ -723,53 +724,55 @@ QueryEngine.prototype.executeSelect = function(unit, env, defaultDataset, namedD
             dataset.implicit.push(this.lexicon.defaultGraphUriTerm);
         }
 
-        if (that.normalizeDatasets(dataset.implicit.concat(dataset.named), env) != null) {
-            that.executeSelectUnit(projection, dataset, unit.pattern, env, function(result){
-                if(result != null) {
-                    // detect single group
-                    if(unit.group!=null && unit.group === "") {
-                        var foundUniqueGroup = false;
-                        for(var i=0; i<unit.projection.length; i++) {
-                            if(unit.projection[i].expression!=null && unit.projection[i].expression.expressionType === 'aggregate') {
-                                foundUniqueGroup = true;
-                                break;
+        that.normalizeDatasets(dataset.implicit.concat(dataset.named), env, function(){
+            try {
+                that.executeSelectUnit(projection, dataset, unit.pattern, env, function (result) {
+                    if (result != null) {
+                        // detect single group
+                        if (unit.group != null && unit.group === "") {
+                            var foundUniqueGroup = false;
+                            for (var i = 0; i < unit.projection.length; i++) {
+                                if (unit.projection[i].expression != null && unit.projection[i].expression.expressionType === 'aggregate') {
+                                    foundUniqueGroup = true;
+                                    break;
+                                }
+                            }
+                            if (foundUniqueGroup === true) {
+                                unit.group = 'singleGroup';
                             }
                         }
-                        if(foundUniqueGroup === true) {
-                            unit.group = 'singleGroup';
-                        }
-                    }
-                    if(unit.group && unit.group != "") {
-                        if(that.checkGroupSemantics(unit.group,projection)) {
-                            var groupedBindings = that.groupSolution(result, unit.group, dataset, env);
+                        if (unit.group && unit.group != "") {
+                            if (that.checkGroupSemantics(unit.group, projection)) {
+                                var groupedBindings = that.groupSolution(result, unit.group, dataset, env);
 
-                            var aggregatedBindings = [];
+                                var aggregatedBindings = [];
 
-                            for(var i=0; i<groupedBindings.length; i++) {
-                                var resultingBindings = that.aggregateBindings(projection, groupedBindings[i], dataset, env);
-                                aggregatedBindings.push(resultingBindings);
+                                for (var i = 0; i < groupedBindings.length; i++) {
+                                    var resultingBindings = that.aggregateBindings(projection, groupedBindings[i], dataset, env);
+                                    aggregatedBindings.push(resultingBindings);
+                                }
+                                callback(null, {'bindings': aggregatedBindings, 'denorm': true});
+                            } else {
+                                callback(new Error("Incompatible Group and Projection variables"));
                             }
-                            callback(null, {'bindings': aggregatedBindings, 'denorm':true});
                         } else {
-                            callback(new Error("Incompatible Group and Projection variables"));
+                            var orderedBindings = that.applyOrderBy(order, result, dataset, env);
+                            var projectedBindings = that.projectBindings(projection, orderedBindings, dataset);
+                            var modifiedBindings = that.applyModifier(modifier, projectedBindings);
+                            var limitedBindings = that.applyLimitOffset(offset, limit, modifiedBindings);
+                            var filteredBindings = that.removeDefaultGraphBindings(limitedBindings, dataset);
+
+                            callback(null, filteredBindings);
                         }
-                    } else {
-                        var orderedBindings = that.applyOrderBy(order, result, dataset, env);
-                        var projectedBindings = that.projectBindings(projection, orderedBindings, dataset);
-                        var modifiedBindings = that.applyModifier(modifier, projectedBindings);
-                        var limitedBindings  = that.applyLimitOffset(offset, limit, modifiedBindings);
-                        var filteredBindings = that.removeDefaultGraphBindings(limitedBindings, dataset);
 
-                        callback(null, filteredBindings);
+                    } else { // fail selectUnit
+                        callback(new Error("Error executing SELECT query."));
                     }
-
-                } else { // fail selectUnit
-                    callback(new Error("Error executing SELECT query."));
-                }
-            });
-        } else { // fail  normalizaing datasets
-            callback(new Error("Error normalizing datasets"));
-        }
+                });
+            } catch(e) {
+                callback(e);
+            }
+        });
     } else {
         callback(new Error("Cannot execute " + unit.kind + " query as a select query"));
     }
@@ -908,10 +911,10 @@ QueryEngine.prototype.executeSelectUnit = function(projection, dataset, pattern,
         this.executeLEFT_JOIN(projection, dataset, pattern, env, callback);
     } else if(pattern.kind === "FILTER") {
         // Some components may have the filter inside the unit
-        this.executeSelectUnit(projection, dataset, pattern.value, env, function(results) {
-            if(results != null) {
-                results = QueryFilters.checkFilters(pattern, results, false, dataset, env, this);
-                callback(results);
+        var that = this;
+        this.executeSelectUnit(projection, dataset, pattern.value, env, function (results) {
+            if (results != null) {
+                QueryFilters.checkFilters(pattern, results, false, dataset, env, that, callback);
             } else {
                 callback([]);
             }
@@ -922,8 +925,7 @@ QueryEngine.prototype.executeSelectUnit = function(projection, dataset, pattern,
     //} else if(pattern.kind === "ZERO_OR_MORE_PATH" || pattern.kind === 'ONE_OR_MORE_PATH') {
     //    return this.executeZeroOrMorePath(pattern, dataset, env);
     } else {
-        console.log("Cannot execute query pattern " + pattern.kind + ". Not implemented yet.");
-        callback(null);
+        throw(new NonSupportedSparqlFeatureError(pattern.kind))
     }
 };
 
@@ -1056,8 +1058,8 @@ QueryEngine.prototype.executeZeroOrMorePath = function(pattern, dataset, env) {
 QueryEngine.prototype.executeUNION = function(projection, dataset, patterns, env, callback) {
     var setQuery1 = patterns[0];
     var setQuery2 = patterns[1];
-    var set1 = null;
-    var set2 = null;
+    var error = null;
+    var set1,set2;
 
     if(patterns.length != 2) {
         throw("SPARQL algebra UNION with more than two components");
@@ -1066,27 +1068,36 @@ QueryEngine.prototype.executeUNION = function(projection, dataset, patterns, env
     var that = this;
     async.seq(
         function(k){
-            that.executeSelectUnit(projection, dataset, setQuery1, env, function(result){
-                set1 = result;
+            try {
+                that.executeSelectUnit(projection, dataset, setQuery1, env, function (result) {
+                    set1 = result;
+                    k();
+                });
+            } catch(e) {
+                error = e;
                 k();
-            });
+            }
         },
     function(k){
-        if(set1 != null) {
-            that.executeSelectUnit(projection, dataset, setQuery2, env, function (result) {
-                set2 = result;
+        if(error == null) {
+            try {
+                that.executeSelectUnit(projection, dataset, setQuery2, env, function (result) {
+                    set2 = result;
+                    k();
+                });
+            } catch(e) {
+                error = e;
                 k();
-            });
+            }
         } else {
             k();
         }
     })(function(){
-        if(set1 == null || set2 == null) {
-            callback(null);
+        if(error != null) {
+            callback(error);
         } else {
             var result = QueryPlan.unionBindings(set1, set2);
-            result = QueryFilters.checkFilters(patterns, result, false, dataset, env, that);
-            callback(result);
+            QueryFilters.checkFilters(patterns, result, false, dataset, env, that, callback);
         }
     });
 };
@@ -1095,7 +1106,7 @@ QueryEngine.prototype.executeAndBGP = function(projection, dataset, patterns, en
     var that = this;
     QueryPlan.executeAndBGPsDPSize(patterns.value, dataset, this, env, function(result){
         if(result!=null) {
-            callback(QueryFilters.checkFilters(patterns, result, false, dataset, env, that));
+            QueryFilters.checkFilters(patterns, result, false, dataset, env, that, callback);
         } else {
             callback(null);
         }
@@ -1108,83 +1119,99 @@ QueryEngine.prototype.executeLEFT_JOIN = function(projection, dataset, patterns,
 
     var set1 = null;
     var set2 = null;
+    var error = null;
 
     var that = this;
     var acum, duplicates;
 
     async.seq(
         function(k){
-            that.executeSelectUnit(projection, dataset, setQuery1, env, function(result){
-                set1 = result;
-                k();
-            });
-        },
-        function(k){
-            if(set1 == null) {
-                k();
-            } else {
-                that.executeSelectUnit(projection, dataset, setQuery2, env, function(result){
-                    set2 = result;
+            try {
+                that.executeSelectUnit(projection, dataset, setQuery1, env, function (result) {
+                    set1 = result;
                     k();
                 });
+            } catch(e) {
+                error = e;
+                k();
+            }
+        },
+        function(k){
+            if(error != null) {
+                k();
+            } else {
+                try {
+                    that.executeSelectUnit(projection, dataset, setQuery2, env, function (result) {
+                        set2 = result;
+                        k();
+                    });
+                } catch(e) {
+                    error = e;
+                    k();
+                }
             }
         })(
         function(){
-            var result = QueryPlan.leftOuterJoinBindings(set1, set2);
-            var bindings = QueryFilters.checkFilters(patterns, result, true, dataset, env, that);
-            if(set1.length>1 && set2.length>1) {
-                var vars = [];
-                var vars1 = {};
-                for(var p in set1[0]) {
-                    vars1[p] = true;
-                }
-                for(p in set2[0]) {
-                    if(vars1[p] != true) {
-                        vars.push(p);
-                    }
-                }
-                acum = [];
-                duplicates = {};
-                for(var i=0; i<bindings.length; i++) {
-                    if(bindings[i]["__nullify__"] === true) {
-                        for(var j=0; j<vars.length; j++) {
-                            bindings[i]["bindings"][vars[j]] = null;
-                        }
-                        var idx = [];
-                        var idxColl = [];
-                        for(var p in bindings[i]["bindings"]) {
-                            if(bindings[i]["bindings"][p] != null) {
-                                idx.push(p+bindings[i]["bindings"][p]);
-                                idx.sort();
-                                idxColl.push(idx.join(""));
-                            }
-                        }
-                        // reject duplicates -> (set union)
-                        if(duplicates[idx.join("")]==null) {
-                            for(j=0; j<idxColl.length; j++) {
-                                //console.log(" - "+idxColl[j])
-                                duplicates[idxColl[j]] = true;
-                            }
-                            ////duplicates[idx.join("")]= true
-                            acum.push(bindings[i]["bindings"]);
-                        }
-                    } else {
-                        acum.push(bindings[i]);
-                        var idx = [];
-                        var idxColl = [];
-                        for(var p in bindings[i]) {
-                            idx.push(p+bindings[i][p]);
-                            idx.sort();
-                            //console.log(idx.join("") + " -> ok");
-                            duplicates[idx.join("")] = true;
-                        }
-
-                    }
-                }
-
-                callback(acum);
+            if(error != null) {
+                callback(error);
             } else {
-                callback(bindings);
+                var result = QueryPlan.leftOuterJoinBindings(set1, set2);
+                QueryFilters.checkFilters(patterns, result, true, dataset, env, that, function(bindings){
+                    if(set1.length>1 && set2.length>1) {
+                        var vars = [];
+                        var vars1 = {};
+                        for(var p in set1[0]) {
+                            vars1[p] = true;
+                        }
+                        for(p in set2[0]) {
+                            if(vars1[p] != true) {
+                                vars.push(p);
+                            }
+                        }
+                        acum = [];
+                        duplicates = {};
+                        for(var i=0; i<bindings.length; i++) {
+                            if(bindings[i]["__nullify__"] === true) {
+                                for(var j=0; j<vars.length; j++) {
+                                    bindings[i]["bindings"][vars[j]] = null;
+                                }
+                                var idx = [];
+                                var idxColl = [];
+                                for(var p in bindings[i]["bindings"]) {
+                                    if(bindings[i]["bindings"][p] != null) {
+                                        idx.push(p+bindings[i]["bindings"][p]);
+                                        idx.sort();
+                                        idxColl.push(idx.join(""));
+                                    }
+                                }
+                                // reject duplicates -> (set union)
+                                if(duplicates[idx.join("")]==null) {
+                                    for(j=0; j<idxColl.length; j++) {
+                                        //console.log(" - "+idxColl[j])
+                                        duplicates[idxColl[j]] = true;
+                                    }
+                                    ////duplicates[idx.join("")]= true
+                                    acum.push(bindings[i]["bindings"]);
+                                }
+                            } else {
+                                acum.push(bindings[i]);
+                                var idx = [];
+                                var idxColl = [];
+                                for(var p in bindings[i]) {
+                                    idx.push(p+bindings[i][p]);
+                                    idx.sort();
+                                    //console.log(idx.join("") + " -> ok");
+                                    duplicates[idx.join("")] = true;
+                                }
+
+                            }
+                        }
+
+                        callback(acum);
+                    } else {
+                        callback(bindings);
+                    }
+                });
             }
         });
 };
@@ -1194,30 +1221,41 @@ QueryEngine.prototype.executeJOIN = function(projection, dataset, patterns, env,
     var setQuery2 = patterns.rvalue;
     var set1 = null;
     var set2 = null;
+    var error = null
 
     var that = this;
 
     async.seq(
         function(k){
-            that.executeSelectUnit(projection, dataset, setQuery1, env, function(result){
-                set1 = result;
-                k();
-            });
-        },
-        function(k){
-            if(set1 == null) {
-                k();
-            } else {
-                that.executeSelectUnit(projection, dataset, setQuery2, env, function(result){
-                    set2 = result;
+            try {
+                that.executeSelectUnit(projection, dataset, setQuery1, env, function (result) {
+                    set1 = result;
                     k();
                 });
+            } catch(e) {
+                error = e;
+                k();
+            }
+        },
+        function(k){
+            if(error != null) {
+                k();
+            } else {
+                try {
+                    that.executeSelectUnit(projection, dataset, setQuery2, env, function (result) {
+                        set2 = result;
+                        k();
+                    });
+                } catch(e) {
+                    error = e;
+                    k();
+                }
             }
         })(
         function(){
             var result = null;
-            if(set1 == null || set2 == null) {
-                callback(null);
+            if(error != null) {
+                callback(error);
             } else if(set1.length ===0 || set2.length===0) {
                 callback([]);
             } else {
@@ -1239,8 +1277,7 @@ QueryEngine.prototype.executeJOIN = function(projection, dataset, patterns, env,
                 } else {
                     result = QueryPlan.joinBindings2(commonVars, set1, set2);
                 }
-                result = QueryFilters.checkFilters(patterns, result, false, dataset, env, that);
-                callback(result);
+                QueryFilters.checkFilters(patterns, result, false, dataset, env, that, callback);
             }
         });
 };
