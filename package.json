@@ -1,9 +1,20 @@
 {
+  "browserify": {
+    "transform": [
+      "coffeeify"
+    ]
+  },
   "devDependencies": {
-    "binary": ">=0.3.0",
-    "mongodb": ">=0.9.7",
-    "nodeunit": ">=0.8.2",
-    "put": ">=0.0.6",
-    "n3": ">=0.2.1"
+    "async": "^0.9.0",
+    "browserify": "7.0.0",
+    "coffeeify": "^1.0.0",
+    "grunt": "^0.4.5",
+    "gulp": "3.8.10",
+    "gulp-jasmine": "^1.0.1",
+    "lodash": "^2.4.1",
+    "moment": "^2.8.4",
+    "n3": "^0.3.6",
+    "pegjs": "^0.8.0",
+    "vinyl-source-stream": "^1.0.0"
   }
 }
