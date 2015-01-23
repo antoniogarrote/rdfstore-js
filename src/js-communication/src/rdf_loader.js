@@ -10,8 +10,15 @@ var JSONLDParser = require("./jsonld_parser").JSONLDParser;
 var Utils = require("../../js-trees/src/utils").Utils;
 
 RDFLoader.RDFLoader = function (params) {
-    this.precedences = ["text/turtle", "text/n3", "application/ld+json", "application/json"/*, "application/rdf+xml"*/];
-    this.parsers = {"text/turtle":N3Parser.parser, "text/n3":N3Parser.parser, "application/ld+json":JSONLDParser.parser, "application/json":JSONLDParser.parser/*, "application/rdf+xml":RDFXMLParser.parser*/};
+    this.precedences = ["text/turtle", "text/n3", "application/ld+json", "application/json"];
+    this.parsers = {"text/turtle":N3Parser.parser, "text/n3":N3Parser.parser, "application/ld+json":JSONLDParser.parser, "application/json":JSONLDParser.parser};
+
+    // Conditionally adding RDFXML parser
+    if(typeof(RDFXMLParser) !== 'undefined') {
+        this.precedences.push("application/rdf+xml");
+        this.parsers["application/rdf+xml"] = RDFXMLParser.parser;
+    }
+
     if (params != null) {
         for (var mime in params["parsers"]) {
             this.parsers[mime] = params["parsers"][mime];

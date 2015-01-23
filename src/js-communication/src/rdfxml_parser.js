@@ -639,7 +639,7 @@ var TabulatorRDFXMLParser = function() {
         var parser, xmlDoc;
         if (typeof module != 'undefined') {
             var jsdom = require('jsdom');
-            xmlDoc = jsdom.jsdom(string, jsdom.level(2, "core"), {});
+            xmlDoc = jsdom.jsdom(string/*, jsdom.level(2, "core")*/, {});
         } else if (window.DOMParser) {
             parser = new DOMParser();
             xmlDoc = parser.parseFromString(string, 'text/xml');

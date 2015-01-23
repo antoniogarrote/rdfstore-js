@@ -1070,15 +1070,24 @@ xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">\n\
 </rdf:Description>\n\
 </rdf:RDF>';
 
-        store.load("application/rdf+xml", input, "ex:test", function(success, results){
+        store.load("application/rdf+xml", input, function(success, results){
+            console.log("RESULTS...")
             console.log(results);
-            store.node("http://purl.bioontology.org/ontology/RXNORM/309054",  function(success, graph) {
-                console.log(graph);
-                test.ok(graph.toArray().length === 3);
-                test.done(); 
+            
+            store.execute("SELECT * { ?s  ?p  ?o }", function(success, results){
+                console.log(results);
+                test.done();
             });
+
+          //  store.node("http://purl.bioontology.org/ontology/RXNORM/309054",  function(success, graph) {
+          //      console.log(graph);
+          //      console.log(graph.toArray());
+          //      test.ok(graph.toArray().length === 3);
+          //      test.done(); 
+          //  });
 
         });
     });
 };
+
 */

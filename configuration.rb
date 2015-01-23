@@ -112,8 +112,8 @@ BUILD_CONFIGURATION = {
       :bin => { "rdfstorejs" =>  "./bin/rdfstorejs" },
       :dependencies => {
         "mongodb"   => ">=0.9.7",
-        "jsdom"     => ">0.8.4",
-        "n3"        => ">0.2.1"
+        "jsdom"     => "3.1.2",
+        "n3"        => "=0.4.1"
       }
     }
   },
