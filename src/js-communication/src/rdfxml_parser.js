@@ -142,155 +142,157 @@ var TabulatorRDFXMLParser = function() {
          *
          * @private
          */
-        this['frameFactory'] = function (parser, parent, element) {
-	          return {'NODE': 1,
-		                'ARC': 2,
-		                'parent': parent,
-		                'parser': parser,
-		                'store': parser['store'],
-		                'element': element,
-		                'lastChild': 0,
-		                'base': null,
-		                'lang': null,
-		                'node': null,
-		                'nodeType': null,
-		                'listIndex': 1,
-		                'rdfid': null,
-		                'datatype': null,
-		                'collection': false,
+        this.frameFactory = function(parser, parent, element) {
+            return {
+                'NODE': 1,
+                'ARC': 2,
+                'parent': parent,
+                'parser': parser,
+                'store': parser.store,
+                'element': element,
+                'lastChild': 0,
+                'base': null,
+                'lang': null,
+                'node': null,
+                'nodeType': null,
+                'listIndex': 1,
+                'rdfid': null,
+                'datatype': null,
+                'collection': false,
 
-	                  /** Terminate the frame and notify the store that we're done */
-		                'terminateFrame': function () {
-		                    if (this['collection']) {
-			                      this['node']['close']()
-		                    }
-		                },
-	                  
-	                  /** Add a symbol of a certain type to the this frame */
-		                'addSymbol': function (type, uri) {
-		                    uri = URIJoin(uri, this['base'])
-		                    this['node'] = this['store']['sym'](uri)
-		                    this['nodeType'] = type
-		                },
-	                  
-	                  /** Load any constructed triples into the store */
-		                'loadTriple': function () {
-		                    if (this['parent']['parent']['collection']) {
-			                      this['parent']['parent']['node']['append'](this['node'])
-		                    }
-		                    else {
-			                      this['store']['add'](this['parent']['parent']['node'],
-				                                         this['parent']['node'],
-				                                         this['node'],
-				                                         this['parser']['why'])
-		                    }
-		                    if (this['parent']['rdfid'] != null) { // reify
-			                      var triple = this['store']['sym'](
-			                          URIJoin("#"+this['parent']['rdfid'],
-					                              this['base']))
-			                      this['store']['add'](triple,
-					                                       this['store']['sym'](
-						                                         RDFParser['ns']['RDF']
-						                                             +"type"),
-					                                       this['store']['sym'](
-						                                         RDFParser['ns']['RDF']
-						                                             +"Statement"),
-					                                       this['parser']['why'])
-			                      this['store']['add'](triple,
-					                                       this['store']['sym'](
-						                                         RDFParser['ns']['RDF']
-						                                             +"subject"),
-					                                       this['parent']['parent']['node'],
-					                                       this['parser']['why'])
-			                      this['store']['add'](triple,
-					                                       this['store']['sym'](
-						                                         RDFParser['ns']['RDF']
-						                                             +"predicate"),
-					                                       this['parent']['node'],
-					                                       this['parser']['why'])
-			                      this['store']['add'](triple,
-					                                       this['store']['sym'](
-						                                         RDFParser['ns']['RDF']
-						                                             +"object"),
-					                                       this['node'],
-					                                       this['parser']['why'])
-		                    }
-		                },
+                /** Terminate the frame and notify the store that we're done */
+                'terminateFrame': function() {
+                    if (this.collection) {
+                        // create the collection triples
+                        var pn = this.node;
+                        for(var i = 0, l = this.node.nodes.length; i < l; i++) {
+                            var n = this.store.bnode();
+                            this.store.add(pn, this.store.sym(RDFParser.ns.RDF + "first"), this.node.nodes[i]);
+                            if(i < l-1)
+                                this.store.add(pn, this.store.sym(RDFParser.ns.RDF + "rest"), n);
+                            else
+                                this.store.add(pn, this.store.sym(RDFParser.ns.RDF + "rest"), this.store.sym(RDFParser.ns.RDF + "nil"));
+                            pn = n;
+                        }
+                    }
+                },
 
-	                  /** Check if it's OK to load a triple */
-		                'isTripleToLoad': function () {
-		                    return (this['parent'] != null
-			                          && this['parent']['parent'] != null
-			                          && this['nodeType'] == this['NODE']
-			                          && this['parent']['nodeType'] == this['ARC']
-			                          && this['parent']['parent']['nodeType']
-			                          == this['NODE'])
-		                },
+                /** Add a symbol of a certain type to the this frame */
+                'addSymbol': function(type, uri) {
+                    uri = URIJoin(uri, this.base)
+                    this.node = this.store.sym(uri)
+                    this.nodeType = type
+                },
 
-	                  /** Add a symbolic node to this frame */
-		                'addNode': function (uri) {
-		                    this['addSymbol'](this['NODE'],uri)
-		                    if (this['isTripleToLoad']()) {
-			                      this['loadTriple']()
-		                    }
-		                },
+                /** Load any constructed triples into the store */
+                'loadTriple': function() {
+                    if (this.parent.parent.collection) {
+                        this.parent.parent.node.append(this.node)
+                    } else {
+                        this.store.add(this.parent.parent.node,
+                            this.parent.node,
+                            this.node,
+                            this.parser.why)
+                    }
+                    if (this.parent.rdfid != null) { // reify
+                        var triple = this.store.sym(
+                            URIJoin("#" + this.parent.rdfid,
+                                this.base))
+                        this.store.add(triple,
+                            this.store.sym(
+                                RDFParser.ns.RDF + "type"),
+                            this.store.sym(
+                                RDFParser.ns.RDF + "Statement"),
+                            this.parser.why)
+                        this.store.add(triple,
+                            this.store.sym(
+                                RDFParser.ns.RDF + "subject"),
+                            this.parent.parent.node,
+                            this.parser.why)
+                        this.store.add(triple,
+                            this.store.sym(
+                                RDFParser.ns.RDF + "predicate"),
+                            this.parent.node,
+                            this.parser.why)
+                        this.store.add(triple,
+                            this.store.sym(
+                                RDFParser.ns.RDF + "object"),
+                            this.node,
+                            this.parser.why)
+                    }
+                },
 
-	                  /** Add a collection node to this frame */
-		                'addCollection': function () {
-		                    this['nodeType'] = this['NODE']
-		                    this['node'] = this['store']['collection']()
-		                    this['collection'] = true
-		                    if (this['isTripleToLoad']()) {
-			                      this['loadTriple']()
-		                    }
-		                },
+                /** Check if it's OK to load a triple */
+                'isTripleToLoad': function() {
+                    return (this.parent != null && this.parent.parent != null && this.nodeType == this.NODE && this.parent.nodeType == this.ARC && this.parent.parent.nodeType == this.NODE)
+                },
 
-	                  /** Add a collection arc to this frame */
-		                'addCollectionArc': function () {
-		                    this['nodeType'] = this['ARC']
-		                },
+                /** Add a symbolic node to this frame */
+                'addNode': function(uri) {
+                    this.addSymbol(this.NODE, uri)
+                    if (this.isTripleToLoad()) {
+                        this.loadTriple()
+                    }
+                },
 
-	                  /** Add a bnode to this frame */
-		                'addBNode': function (id) {
-		                    if (id != null) {
-			                      if (this['parser']['bnodes'][id] != null) {
-			                          this['node'] = this['parser']['bnodes'][id]
-			                      } else {
-			                          this['node'] = this['parser']['bnodes'][id] = this['store']['bnode']()
-			                      }
-		                    } else { this['node'] = this['store']['bnode']() }
-		                    
-		                    this['nodeType'] = this['NODE']
-		                    if (this['isTripleToLoad']()) {
-			                      this['loadTriple']()
-		                    }
-		                },
+                /** Add a collection node to this frame */
+                'addCollection': function(dom) {
+                    console.log("Add collection:", dom);
+                    this.nodeType = this.NODE
+                    this.node = this.store.collection()
+                    this.collection = true
+                    if (this.isTripleToLoad()) {
+                        this.loadTriple()
+                    }
+                },
 
-	                  /** Add an arc or property to this frame */
-		                'addArc': function (uri) {
-		                    if (uri == RDFParser['ns']['RDF']+"li") {
-			                      uri = RDFParser['ns']['RDF']+"_"+this['parent']['listIndex']++
-		                    }
-		                    this['addSymbol'](this['ARC'], uri)
-		                },
+                /** Add a collection arc to this frame */
+                'addCollectionArc': function() {
+                    this.nodeType = this.ARC
+                },
 
-	                  /** Add a literal to this frame */
-		                'addLiteral': function (value) {
-		                    if (this['parent']['datatype']) {
-			                      this['node'] = this['store']['literal'](
-			                          value, "", this['store']['sym'](
-				                            this['parent']['datatype']))
-		                    }
-		                    else {
-			                      this['node'] = this['store']['literal'](
-			                          value, this['lang'])
-		                    }
-		                    this['nodeType'] = this['NODE']
-		                    if (this['isTripleToLoad']()) {
-			                      this['loadTriple']()
-		                    }
-		                }
-	                 }
+                /** Add a bnode to this frame */
+                'addBNode': function(id) {
+                    if (id != null) {
+                        if (this.parser.bnodes[id] != null) {
+                            this.node = this.parser.bnodes[id]
+                        } else {
+                            this.node = this.parser.bnodes[id] = this.store.bnode()
+                        }
+                    } else {
+                        this.node = this.store.bnode()
+                    }
+
+                    this.nodeType = this.NODE
+                    if (this.isTripleToLoad()) {
+                        this.loadTriple()
+                    }
+                },
+
+                /** Add an arc or property to this frame */
+                'addArc': function(uri) {
+                    if (uri == RDFParser.ns.RDF + "li") {
+                        uri = RDFParser.ns.RDF + "_" + this.parent.listIndex ++
+                    }
+                    this.addSymbol(this.ARC, uri)
+                },
+
+                /** Add a literal to this frame */
+                'addLiteral': function(value) {
+                    if (this.parent.datatype) {
+                        this.node = this.store.literal(
+                            value, "", this.store.sym(
+                                this.parent.datatype))
+                    } else {
+                        this.node = this.store.literal(
+                            value, this.lang)
+                    }
+                    this.nodeType = this.NODE
+                    if (this.isTripleToLoad()) {
+                        this.loadTriple()
+                    }
+                }
+            }
         }
 
         //from the OpenLayers source .. needed to get around IE problems.
@@ -689,44 +691,66 @@ var TabulatorRDFXMLParser = function() {
     };
 
     var RDFStore = function(default_graph) {
-	      this.statements = [];
-	      this.namespaces = {};
-	      
-	      this.add = function(s,p,o) {
-		        this.statements.push({subject: s, predicate: p, object: o, graph: default_graph});
-	      };
+        this.statements = [];
+        this.namespaces = {};
 
-	      this.sym = function(x) {
-		        return {token: 'uri', value: x};
-	      };
-	      
-	      this.literal = function(str, lang, datatype) {
-		        str = str.replace(/\\/g, '\\\\');  // escape backslashes
-		        str = str.replace(/\"/g, '\\"');    // escape quotes
-		        str = str.replace(/\n/g, '\\n');    // escape newlines
-		        str = '"' + str + '"'  //';
-		        
-		        if (datatype){
-				        str = str + '^^' + datatype
-		        }
-		        if (lang) {
-				        str = str + "@" + lang;
-		        }
-		        return {'literal': str};
-	      };
+        this.add = function(s, p, o) {
+            this.statements.push({
+                subject: s,
+                predicate: p,
+                object: o,
+                graph: default_graph
+            });
+        };
 
-	      var _id = 0;
-	      this.bnode = function(id) {
-		        id = id || "_:bnid" + _id++;
-		        return {'blank': id}
-	      };
+        this.sym = function(x) {
+            return {
+                token: 'uri',
+                value: x
+            };
+        };
 
-	      this.setPrefixForURI = function(prefix, nsuri) {
-		        if (this.namespaces[prefix]||nsuri !== nsuri) {
-			          throw "Can't redefine prefix " + prefix;
-		        }
-		        this.namespaces[prefix] = nsuri;
-	      };
+        this.literal = function(str, lang, datatype) {
+            str = str.replace(/\\/g, '\\\\'); // escape backslashes
+            str = str.replace(/\"/g, '\\"'); // escape quotes
+            str = str.replace(/\n/g, '\\n'); // escape newlines
+            str = '"' + str + '"' //';
+
+            if (datatype) {
+                str = str + '^^' + datatype
+            }
+            if (lang) {
+                str = str + "@" + lang;
+            }
+            return {
+                'literal': str
+            };
+        };
+
+        var _id = 0;
+        this.bnode = function(id) {
+            id = id || "_:bnid" + _id++;
+            return {
+                'blank': id
+            }
+        };
+
+        var self = this;
+        this.collection = function() {
+            var n = self.bnode();
+            n.nodes = [];
+            n.append = function(n) {
+                this.nodes.push(n);
+            };
+            return n;
+        };
+
+        this.setPrefixForURI = function(prefix, nsuri) {
+            if (this.namespaces[prefix] || nsuri !== nsuri) {
+                throw "Can't redefine prefix " + prefix;
+            }
+            this.namespaces[prefix] = nsuri;
+        };
     };
 
     function _isString(v) {
