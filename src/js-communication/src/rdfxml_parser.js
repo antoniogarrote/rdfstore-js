@@ -171,7 +171,17 @@ var TabulatorRDFXMLParser = function() {
                 /** Terminate the frame and notify the store that we're done */
                 'terminateFrame': function() {
                     if (this.collection) {
-                        this.node.close()
+                        // create the collection triples
+                        var pn = this.node;
+                        for(var i = 0, l = this.node.nodes.length; i < l; i++) {
+                            var n = this.store.bnode();
+                            this.store.add(pn, this.store.sym(RDFParser.ns.RDF + "first"), this.node.nodes[i]);
+                            if(i < l-1)
+                                this.store.add(pn, this.store.sym(RDFParser.ns.RDF + "rest"), n);
+                            else
+                                this.store.add(pn, this.store.sym(RDFParser.ns.RDF + "rest"), this.store.sym(RDFParser.ns.RDF + "nil"));
+                            pn = n;
+                        }
                     }
                 },
 
@@ -697,6 +707,16 @@ var TabulatorRDFXMLParser = function() {
             return {
                 'blank': id
             }
+        };
+
+        var self = this;
+        this.collection = function() {
+            var n = self.bnode();
+            n.nodes = [];
+            n.append = function(n) {
+                this.nodes.push(n);
+            };
+            return n;
         };
 
         this.setPrefixForURI = function(prefix, nsuri) {
