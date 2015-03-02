@@ -16406,7 +16406,9 @@ SparqlParser.parser = (function(){
         }
         if (result0 !== null) {
           result1 = [];
-          if (/^[^'\\]/.test(input.charAt(pos))) {
+          if (input.substr(pos, 3) == result0) {
+            result2 = null;
+          } else if (/^[^\\]/.test(input.charAt(pos))) {
             result2 = input.charAt(pos);
             pos++;
           } else {
@@ -16420,7 +16422,9 @@ SparqlParser.parser = (function(){
           }
           while (result2 !== null) {
             result1.push(result2);
-            if (/^[^'\\]/.test(input.charAt(pos))) {
+            if (input.substr(pos, 3) == result0) {
+              result2 = null;
+            } else if (/^[^\\]/.test(input.charAt(pos))) {
               result2 = input.charAt(pos);
               pos++;
             } else {
@@ -16488,7 +16492,9 @@ SparqlParser.parser = (function(){
         }
         if (result0 !== null) {
           result1 = [];
-          if (/^[^"\\]/.test(input.charAt(pos))) {
+          if (input.substr(pos, 3) == result0) {
+            result2 = null;
+          } else if (/^[^\\]/.test(input.charAt(pos))) {
             result2 = input.charAt(pos);
             pos++;
           } else {
@@ -16502,7 +16508,9 @@ SparqlParser.parser = (function(){
           }
           while (result2 !== null) {
             result1.push(result2);
-            if (/^[^"\\]/.test(input.charAt(pos))) {
+            if (input.substr(pos, 3) == result0) {
+              result2 = null;
+            } else if (/^[^\\]/.test(input.charAt(pos))) {
               result2 = input.charAt(pos);
               pos++;
             } else {
