@@ -320,10 +320,10 @@ The Node.js version of the library uses [MongoDB](http://www.mongodb.org/) as th
 
     // execution with an explicit default and named graph
 
-    var defaultGraph = [{'token':'uri', 'vaue': graph1}, {'token':'uri', 'value': graph2}, ...];
-    var namedGraphs  = [{'token':'uri', 'vaue': graph3}, {'token':'uri', 'value': graph4}, ...];
+    var defaultGraph = [{'token':'uri', 'value': graph1}, {'token':'uri', 'value': graph2}, ...];
+    var namedGraphs  = [{'token':'uri', 'value': graph3}, {'token':'uri', 'value': graph4}, ...];
 
-    store.executionWithEnvironment("SELECT * { ?s ?p ?o }",defaultGraph,
+    store.executeWithEnvironment("SELECT * { ?s ?p ?o }",defaultGraph,
       namedGraphs, function(success, results) {
       if(success) {
         // process results
