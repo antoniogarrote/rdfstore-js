@@ -649,6 +649,7 @@ After installing the module it can be required in the code of a Node.js applicat
     var RDFJSInterface = require('rdf_js_interface');
 
     var graph = new RDFJSInterface.Graph();
+    var rdf   = new RDFJSInterface.RDFEnvironment();
 
     graph.add(rdf.createTriple( rdf.createBlankNode(),
                                 rdf.createNamedNode("rdf:type"),
@@ -663,6 +664,7 @@ The module has also been compiled for the browser. The original and minimised ve
 The module declares a new property 'RDFJSInterface' in the 'window' object pointing to the API object:
 
     var graph = new RDFJSInterface.Graph();
+    var rdf   = new RDFJSInterface.RDFEnvironment();
 
     graph.add(rdf.createTriple( rdf.createBlankNode(),
                                 rdf.createNamedNode("rdf:type"),
