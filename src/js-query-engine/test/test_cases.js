@@ -4285,6 +4285,32 @@ exports.testOpenDate4 = function(test) {
     });
 }
 
+exports.testDateCast01 = function(test) {
+    new Lexicon.Lexicon(function(lexicon){
+        new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
+            var engine = new QueryEngine.QueryEngine({backend: backend,
+                                                      lexicon: lexicon});      
+            var query = 'PREFIX : <http://example/> \
+                         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                         INSERT DATA {\
+                           :dt1 :r "2006-08-23" .\
+}';
+            engine.execute(query, function(success, result){
+                engine.execute('PREFIX :     <http://example/>\
+                                PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>\
+                                SELECT ?x ?date { \
+                                  ?x :r ?date .\
+                                  FILTER ( xsd:dateTime(?date) > "2006-01-01"^^xsd:dateTime  )\
+                                }', function(success, results){
+                                    test.ok(success === true);
+                                    test.ok(results.length===1);
+                                    test.done();
+                });
+            });
+        });
+    });
+}
+
 exports.testOpenCmp01 = function(test) {
     new Lexicon.Lexicon(function(lexicon){
         new QuadBackend.QuadBackend({treeOrder: 2}, function(backend){
