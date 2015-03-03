@@ -322,3 +322,23 @@ exports.customFunction = function(test) {
     test.ok(result.pattern.filter[0].value.args.length === 2);
     test.done();
 }
+
+exports.longLiteral1 = function(test) {
+    var query = 'SELECT * { ?s ?p """This is a literal""" }';
+
+    var query = aqt.parseQueryString(query);
+    var result = aqt.parseSelect(query.units[0]);
+
+    test.ok(result.pattern.value[0].object.value === 'This is a literal');
+    test.done();
+};
+
+exports.longLiteral2 = function(test) {
+    var query = 'SELECT * { ?s ?p """This is a "Literal".""" }';
+
+    var query = aqt.parseQueryString(query);
+    var result = aqt.parseSelect(query.units[0]);
+
+    test.ok(result.pattern.value[0].object.value === 'This is a "Literal".');
+    test.done();
+};
