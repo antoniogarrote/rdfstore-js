@@ -82,6 +82,7 @@ var compareTriple = function(ta,tb,test) {
 
 var shouldParse = function(input, output, test, options) {
     options = options || {};
+    N3Parser.parser.resetBlankNodeIds();
     var result = N3Parser.parser.parse(input, options, function(success, result) {
         //console.log("PARSED? "+success);
         //console.log("------------");
@@ -259,9 +260,9 @@ exports.testParseStatementsWithSharedSubjectsAndPredicates= function(test) {
 
 exports.testParseStatementsWithNamedBlankNodes = function(test) {
     shouldParse('_:a <b> _:c.',
-                [ { subject: { blank: '_:0' },
+                [ { subject: { blank: '_:0_a' },
                     predicate: { token: 'uri', value: 'b', prefix: null, suffix: null },
-                    object: { blank: '_:1' },
+                    object: { blank: '_:0_c' },
                     graph: null } ],
                 test);
 };

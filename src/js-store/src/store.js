@@ -981,9 +981,9 @@ Store.Store.prototype.setNetworkTransport = function(networkTransportImpl) {
  */
 Store.Store.prototype.close = function(cb) {
     if(cb == null)
-	cb = function(){};
+	      cb = function(){};
     if(this.engine.close)
-	this.engine.close(cb);
+	      this.engine.close(cb);
     else
-	cb();
+	      cb();
 };

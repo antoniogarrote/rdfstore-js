@@ -15,7 +15,7 @@ RVN3Parser.parser = {
       graph = { token: 'uri', value: graph, prefix: null, suffix: null };
     // Convert options
     if (options && options.baseURI)
-      options.documentURI = options.baseURI;
+      options.documentIRI = options.baseURI;
 
     // Parse triples into array
     var triples = [];
@@ -32,13 +32,25 @@ RVN3Parser.parser = {
           graph:     graph,
         });
     });
+  },
+
+  resetBlankNodeIds: function() {
+      N3Parser._resetBlankNodeIds();
   }
+    
 };
 
 // Converts an entity in N3.js representation to this library's representation
 function convertEntity(entity) {
   switch (entity[0]) {
-    case '"': return { literal: entity };
+  case '"': {
+      if(entity.indexOf("^^") > 0) {
+          var parts = entity.split("^^");
+          return {literal: parts[0] + "^^<" + parts[1] + ">" };
+      } else {
+          return { literal: entity };
+      }      
+    }
     case '_': return { blank: entity.replace('b', '') };
     default:  return { token: 'uri', value: entity, prefix: null, suffix: null };
   };

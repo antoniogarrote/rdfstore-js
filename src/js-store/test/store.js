@@ -1,6 +1,7 @@
 var Store = require("./../src/store").Store;
 var N3Parser = require("./../../js-communication/src/rvn3_parser").RVN3Parser;
 
+
 exports.testIntegration1 = function(test){
     new Store.Store({name:'test', overwrite:true}, function(store){
         store.execute('INSERT DATA {  <http://example/book3> <http://example.com/vocab#title> <http://test.com/example> }', function(result, msg){
@@ -10,12 +11,11 @@ exports.testIntegration1 = function(test){
                 test.ok(results[0].s.value === "http://example/book3");
                 test.ok(results[0].p.value === "http://example.com/vocab#title");
                 test.ok(results[0].o.value === "http://test.com/example");
-
                 store.close(function(){ test.done() });
             });
         });
     });
-}
+};
 
 exports.testIntegration2 = function(test){
     new Store.Store({treeOrder: 50, name:'test', overwrite:true}, function(store){
@@ -562,10 +562,9 @@ exports.testLoad5b = function(test) {
         var graph = store.rdf.createGraph();
 
         input = '<#me> <http://test.com/p1> "test". <http://test.com/something#me> <http://test.com/p2> "test2". _:b <http://test.com/p1> "test" .';
-        store.load("text/n3", input, {baseURI: "http://test.com/something#me"}, function(success, results){
+        store.load("text/n3", input, {baseURI: "http://test.com/something"}, function(success, results){
             store.execute("select ?s { ?s ?p ?o }", function(success, results) {
                 test.ok(success);
-
                 var blankIds = {};
 
                 for(var i=0; i<results.length; i++) {
@@ -592,7 +591,7 @@ exports.testLoad5c = function(test) {
         var graph = store.rdf.createGraph();
 
         input = '<#me> <http://test.com/p1> "test". <http://test.com/something#me> <http://test.com/p2> "test2". _:b <http://test.com/p1> "test" .';
-        store.load("text/n3", input, {baseURI: "http://test.com/something#me", graph:"ex:test"}, function(success, results){
+        store.load("text/n3", input, {baseURI: "http://test.com/something", graph:"ex:test"}, function(success, results){
             store.execute("select ?s { GRAPH <http://example.org/examples/test> { ?s ?p ?o }  }", function(success, results) {
                 test.ok(success);
 
@@ -614,35 +613,6 @@ exports.testLoad5c = function(test) {
     });
 };
 
-/*
-exports.testLoad5 = function(test) {
-    Store.create({name:'test', overwrite:true},function(store) {
-        
-        store.setPrefix("ex", "http://example.org/people/");
-
-        var graph = store.rdf.createGraph();
-        var input = '<?xml version="1.0" encoding="UTF-8"?>\n\
-<rdf:RDF\n\
-xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">\n\
-<rdf:Description rdf:about="http://purl.bioontology.org/ontology/RXNORM/309054">\n\
-<rdf:type rdf:resource="http://smartplatforms.org/terms#Code"/>\n\
-<rdf:type rdf:resource="http://smartplatforms.org/terms/codes/RxNorm_Semantic"/>\n\
-<title xmlns="http://purl.org/dc/terms/">Cefdinir 25 MG/ML Oral Suspension</title>\n\
-</rdf:Description>\n\
-</rdf:RDF>';
-
-        store.load("application/rdf+xml", input, "ex:test", function(success, results){
-            console.log(results);
-            store.node("http://purl.bioontology.org/ontology/RXNORM/309054",  function(success, graph) {
-                console.log(graph);
-                test.ok(graph.toArray().length === 3);
-                test.done(); 
-            });
-
-        });
-    });
-};
-*/
 exports.testEventsAPI1 = function(test){
     var counter = 0;
     new Store.Store({name:'test', overwrite:true},function(store){
@@ -1082,3 +1052,33 @@ exports.testRegisterCustomFunction = function(test) {
     });
     
 };
+
+/*
+exports.testLoad5 = function(test) {
+    Store.create({name:'test', overwrite:true},function(store) {
+        
+        store.setPrefix("ex", "http://example.org/people/");
+
+        var graph = store.rdf.createGraph();
+        var input = '<?xml version="1.0" encoding="UTF-8"?>\n\
+<rdf:RDF\n\
+xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">\n\
+<rdf:Description rdf:about="http://purl.bioontology.org/ontology/RXNORM/309054">\n\
+<rdf:type rdf:resource="http://smartplatforms.org/terms#Code"/>\n\
+<rdf:type rdf:resource="http://smartplatforms.org/terms/codes/RxNorm_Semantic"/>\n\
+<title xmlns="http://purl.org/dc/terms/">Cefdinir 25 MG/ML Oral Suspension</title>\n\
+</rdf:Description>\n\
+</rdf:RDF>';
+
+        store.load("application/rdf+xml", input, "ex:test", function(success, results){
+            console.log(results);
+            store.node("http://purl.bioontology.org/ontology/RXNORM/309054",  function(success, graph) {
+                console.log(graph);
+                test.ok(graph.toArray().length === 3);
+                test.done(); 
+            });
+
+        });
+    });
+};
+*/
