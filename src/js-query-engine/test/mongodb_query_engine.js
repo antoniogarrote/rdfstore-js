@@ -1,5 +1,6 @@
 var MongodbQueryEngine = require("./../src/mongodb_query_engine").MongodbQueryEngine;
 
+console.log("AVOIDING MONGODB??" + MongodbQueryEngine.mongodb)
 if(MongodbQueryEngine.mongodb === true) {
 
     exports.testInsertDataTrivialRecovery = function(test){

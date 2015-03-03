@@ -12,7 +12,7 @@ var RDFLoader = require("../../js-communication/src/rdf_loader").RDFLoader;
 var Callbacks = require("./callbacks.js").Callbacks;
 var mongodb = require('mongodb');
 
-MongodbQueryEngine.mongodb = true;
+MongodbQueryEngine.mongodb = false;
 
 MongodbQueryEngine.MongodbQueryEngine = function(params) {
     params = params || {};

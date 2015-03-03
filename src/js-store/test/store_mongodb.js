@@ -1,6 +1,7 @@
 var Store = require("./../src/store").Store;
 var N3Parser = require("./../../js-communication/src/rvn3_parser").RVN3Parser;
 
+/*
 exports.testIntegration1 = function(test){
     new Store.Store({engine:'mongodb', name:'test', overwrite:true}, function(store){
         store.execute('INSERT DATA {  <http://example/book3> <http://example.com/vocab#title> <http://test.com/example> }', function(result, msg){
@@ -888,3 +889,4 @@ exports.testRedundantVars4 = function(test) {
     });
 
 };
+*/
