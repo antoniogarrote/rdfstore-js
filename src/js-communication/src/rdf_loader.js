@@ -4,14 +4,14 @@ var RDFLoader = exports.RDFLoader;
 
 // imports
 var NetworkTransport = require("./tcp_transport").NetworkTransport;
-var N3Parser = require("./rvn3_parser").RVN3Parser;
+var RVN3Parser = require("./rvn3_parser").RVN3Parser;
 var RDFXMLParser = require("./rdfxml_parser").RDFXMLParser;
 var JSONLDParser = require("./jsonld_parser").JSONLDParser;
 var Utils = require("../../js-trees/src/utils").Utils;
 
 RDFLoader.RDFLoader = function (params) {
     this.precedences = ["text/turtle", "text/n3", "application/ld+json", "application/json"];
-    this.parsers = {"text/turtle":N3Parser.parser, "text/n3":N3Parser.parser, "application/ld+json":JSONLDParser.parser, "application/json":JSONLDParser.parser};
+    this.parsers = {"text/turtle":RVN3Parser.parser, "text/n3":RVN3Parser.parser, "application/ld+json":JSONLDParser.parser, "application/json":JSONLDParser.parser};
 
     // Conditionally adding RDFXML parser
     if(typeof(RDFXMLParser) !== 'undefined') {

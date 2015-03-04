@@ -29,7 +29,7 @@ RVN3Parser.parser = {
           subject:   convertEntity(triple.subject),
           predicate: convertEntity(triple.predicate),
           object:    convertEntity(triple.object),
-          graph:     graph,
+          graph:     graph
         });
     });
   },
