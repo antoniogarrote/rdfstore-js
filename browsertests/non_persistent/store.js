@@ -497,7 +497,6 @@ this.suite_store.testLoad3 = function(test) {
                 for(var p in blankIds) {
                     counter++;
                 }
-
                 test.ok(counter === 2);
                 test.done();
             });
