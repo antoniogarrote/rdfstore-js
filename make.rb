@@ -363,6 +363,8 @@ def make_nodejs
   process_files_for_nodejs
   make_package_json
   #npm_linking
+  puts "Copying README file"
+  `cp ./README.md ./dist/nodejs/`  
   puts "\r\n*** FINISHED";
 end
 
@@ -601,8 +603,15 @@ else
     test_minimized
   elsif ARGV[0] == "tests"
     exec "#{NODEUNIT} ./src/js-trees/tests/*.js ./src/js-store/test/*.js ./src/js-sparql-parser/test/*.js ./src/js-rdf-persistence/test/*.js ./src/js-query-engine/test/*.js ./src/js-communication/test/*.js ./src/js-connection/tests/*.js"
+  elsif ARGV[0] == "all"
+    make_nodejs
+    make_browser
+    make_browser_persistent
+    make_rdf_interface_api
+    test_minimized
+    exec "#{NODEUNIT} ./src/js-trees/tests/*.js ./src/js-store/test/*.js ./src/js-sparql-parser/test/*.js ./src/js-rdf-persistence/test/*.js ./src/js-query-engine/test/*.js ./src/js-communication/test/*.js ./src/js-connection/tests/*.js"    
   else
     puts "Unknown configuration: #{ARGV[0]}"
-    puts "USAGE make.rb [nodejs | browser | browser_persistent | rdf_interface_api | tests | test_min]"
+    puts "USAGE make.rb [nodejs | browser | browser_persistent | rdf_interface_api | tests | test_min | all]"
   end
 end
