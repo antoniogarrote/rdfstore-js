@@ -270,9 +270,9 @@ def process_file_for_nodejs(of, f)
       puts " * writing right MemoryTree"
       tree = line.split(".")[-1];
       of << "var BaseTree = #{tree}"
-    elsif (line =~ /[\w\d\s]*RVN3Parser;$/)
-      puts " * Adding N3 Parser"
-      of << "var N3Parser = RVN3Parser;";
+#    elsif (line =~ /[\w\d\s]*RVN3Parser;$/)
+#      puts " * Adding N3 Parser"
+#      of << "var N3Parser = RVN3Parser;";
     else
       # require for YUI compressor
       line.gsub!('dataset.default', "dataset['default']")
@@ -409,9 +409,6 @@ def process_file_for_browser(output, f)
       of << "var RDFStoreClient = RDFStoreClient;"
     elsif (line =~ /var *([a-zA-Z0-9]+) *= *require\(['\"]webworker[\"']\);/)
       puts " * ignoring require for NodeJS WebWorkers: #{line}"  
-    elsif (line =~ /[\w\d\s]*RVN3Parser;$/)
-      puts " * Adding N3 Parser"
-      of << "var N3Parser = RVN3Parser;";
     elsif (line =~ /var BaseTree *= *require\(['\"]{1,1}[a-zA-Z0-9_\.\/-]*['\"]{1,1}\)\./) == 0
       puts " * writing right MemoryTree"
       tree = line.split(".")[-1];
