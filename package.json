@@ -13,7 +13,7 @@
     "gulp-jasmine": "^1.0.1",
     "lodash": "^2.4.1",
     "moment": "^2.8.4",
-    "n3": "^0.3.6",
+    "n3": "^0.4.1",
     "pegjs": "^0.8.0",
     "vinyl-source-stream": "^1.0.0"
   }
