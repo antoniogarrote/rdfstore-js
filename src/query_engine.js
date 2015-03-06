@@ -6,7 +6,7 @@ var QuadIndex = require("./quad_index");
 var QueryPlan = require("./query_plan").QueryPlan;
 var QueryFilters = require("./query_filters").QueryFilters;
 var RDFModel = require("./rdf_model");
-//var RDFLoader = require("./rdf_loader").RDFLoader;
+var RDFLoader = require("./rdf_loader").RDFLoader;
 var Callbacks = require("./graph_callbacks").CallbacksBackend;
 var async = require('async');
 var _ = require('lodash');
@@ -20,7 +20,7 @@ QueryEngine = function(params) {
         // list of namespaces that will be automatically added to every query
         this.defaultPrefixes = {};
         this.abstractQueryTree = new AbstractQueryTree();
-        //this.rdfLoader = new RDFLoader.RDFLoader(params['communication']);
+        this.rdfLoader = new RDFLoader.RDFLoader(params['communication']);
         this.callbacksBackend = new Callbacks(this);
         this.customFns = params.customFns || {};
     }
