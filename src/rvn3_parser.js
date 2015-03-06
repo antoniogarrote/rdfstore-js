@@ -23,7 +23,7 @@ RVN3Parser.parser = {
         var triples = [];
         new N3Parser(options).parse(data, function (error, triple) {
             if (error)
-                callback(true, error);
+                callback(error);
             else if (!triple)
                 callback(false, triples);
             else

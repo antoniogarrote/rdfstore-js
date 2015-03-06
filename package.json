@@ -16,5 +16,8 @@
     "n3": "^0.4.1",
     "pegjs": "^0.8.0",
     "vinyl-source-stream": "^1.0.0"
+  },
+  "dependencies": {
+    "jsonld": "^0.3.22"
   }
 }
