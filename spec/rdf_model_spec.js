@@ -1,6 +1,76 @@
 var RDFModel = require('../src/rdf_model');
+var QueryEngine = require("../src/query_engine").QueryEngine;
+var QuadBackend = require("../src/quad_backend").QuadBackend;
+var Lexicon = require("../src/lexicon").Lexicon;
 
 describe("RDFModel", function(){
+
+    it("Should be possible to use filters", function(done){
+        new Lexicon(function(lexicon){
+            new QuadBackend({treeOrder: 2}, function(backend){
+                var engine = new QueryEngine({backend: backend,
+                    lexicon: lexicon});
+                var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
+                         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\
+                         PREFIX : <http://example.org/people/>\
+                         INSERT DATA {\
+                         :alice\
+                             rdf:type        foaf:Person ;\
+                             foaf:name       "Alice" ;\
+                             foaf:mbox       <mailto:alice@work> ;\
+                             foaf:knows      :bob \
+                             .\
+                         :bob\
+                             rdf:type        foaf:Person ;\
+                             foaf:name       "Bob" ; \
+                             foaf:knows      :alice ;\
+                             foaf:mbox       <mailto:bob@work> ;\
+                             foaf:mbox       <mailto:bob@home> \
+                             .\
+                         }';
+                engine.execute(query, function(err, result){
+                    expect(err == null);
+                    engine.execute('PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                                PREFIX  foaf:       <http://xmlns.com/foaf/0.1/>\
+                                CONSTRUCT { ?s ?p ?o . }\
+                                WHERE {\
+                                  ?s ?p ?o .\
+                                }', function(err, graph){
+                        expect(err == null);
+                        expect(graph.length).toBe(9);
+
+                        var rdf = RDFModel.rdf;
+
+                        var results = graph.filter( rdf.filters.describes("http://example.org/people/alice") );
+
+                        var resultsCount = results.toArray().length;
+
+                        var resultsSubject = results.filter(rdf.filters.s("http://example.org/people/alice"));
+                        var resultsObject  = results.filter(rdf.filters.o("http://example.org/people/alice"));
+
+                        expect(resultsObject.toArray().length).toBe(1);
+                        expect((resultsObject.toArray().length + resultsSubject.toArray().length)).toBe(resultsCount);
+
+
+                        // filter the graph to find all subjects with an "rdf:type" of "foaf:Person"
+                        var filter = rdf.filters.type(rdf.resolve("foaf:Person"));
+                        results = graph.filter( filter );
+                        var people = [];
+                        results.forEach( function(t) {
+                            // iterate over the results, creating a filtered graph for each subject found
+                            // and pass that graph to a display function
+                            people.push(graph.filter( rdf.filters.s(t.subject) ) );
+                        });
+
+                        expect(people.length).toBe(2);
+                        done();
+                    });
+                });
+            });
+        });
+    });
+
 
     it("Should be possible to add actions to a model.", function(){
         var rdf = RDFModel.rdf;
