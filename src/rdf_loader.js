@@ -114,7 +114,7 @@ RDFLoader.prototype.loadFromFile = function(parser, graph, uri, callback) {
     }
 };
 
-RDFLoader.RDFLoader.prototype.tryToParse = function(parser, graph, input, options, callback) {
+RDFLoader.prototype.tryToParse = function(parser, graph, input, options, callback) {
     // console.log("TRYING TO PARSE");
     // console.log(parser);
     // console.log(graph);

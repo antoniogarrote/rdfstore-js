@@ -6,6 +6,7 @@ var fs = require('fs');
 var N3 = require('n3');
 var _ = require("lodash");
 var async = require("async");
+var runW3CTestSpec = require("./w3c_suite_helper").runW3CTestSpec;
 
 // basic
 
@@ -45,119 +46,10 @@ describe("test prefix 1", function(){
 
 });
 
-
-
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 15000;
-
-var querySyntaxTestFn = function(queryString, isPositive, done) {
-    //console.log("\n\n\nTESTING: "+queryString +" >>>> POSITIVE? "+isPositive);
-    new Lexicon(function(lexicon){
-        new QuadBackend({treeOrder: 2}, function(backend){
-            var engine = new QueryEngine({backend: backend, lexicon: lexicon});
-            try {
-                engine.execute(queryString, function (err, _) {
-                    if (isPositive) {
-                        if (err != null) {
-                            console.log("\nERROR IN POSITIVE QUERY:\n" + queryString);
-                            console.log(err);
-                            throw(err);
-                        }
-                        expect(err == null).toBe(true);
-                    } else {
-                        if (err == null) {
-                            console.log("\nERROR IN NEGATIVE QUERY:\n" + queryString + " NOT ERROR");
-                        }
-                        //expect(err != null).toBe(true);
-                    }
-                    done();
-                });
-            } catch(e) {
-                if(e.name === "NonSupportedSparqlFeatureError"){
-                    console.log("[NON SUPPORTED]"+e.toString());
-                    console.log(queryString);
-                    //if(isPositive === true)
-                    //  console.log("\n[WARNING] "+e.toString()+" for query\n"+queryString);
-                    done();
-                } else {
-                    if(isPositive === true) {
-                        console.log("\n[ERROR] Parsing error "+e.toString()+" for query:\n"+queryString);
-                        throw e
-                        expect(e == null).toBe(true);
-                    }
-                    done()
-                }
-            }
-        });
-    });
-};
-
-
 describe("W3C > syntax-query test cases", function(){
 
     it("Should pass all the tests", function(done){
-
-        var DAWG_NS = "http://www.w3.org/2001/sw/DataAccess/tests/test-dawg#";
-        var MF_NS = "http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#";
-        var RDF_NS = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
-        var manifestPath = "./spec/w3c/syntax-query/manifest.ttl";
-
-
-        var manifestN3Data = fs.readFileSync(manifestPath).toString();
-
-        var parser = N3.Parser();
-        var triples = [];
-        var objects = [];
-
-        parser.parse(manifestN3Data, function(error, triple, prefixes){
-            if(triple != null) {
-                triples.push(triple);
-            } else {
-                var parsed = {};
-                //console.log("\n\nFINISHED PARSING\n\n");
-                _.each(triples, function(triple){
-                    var s = triple.subject;
-                    var p = triple.predicate;
-                    var o = triple.object;
-                    var object = parsed[s] || {};
-                    parsed[s] = object;
-                    object[p] = o;
-                });
-
-                parsed = _.filter(_.values(parsed), function(object){
-                    return object[DAWG_NS+"approval"] === DAWG_NS+"Approved";
-                })
-
-                _.each(parsed, function(object){
-                    var name = object[MF_NS+"name"];
-                    var action = object[MF_NS+"action"];
-                    var testType = object[RDF_NS+"type"];
-                    var isPositive;
-                    if(testType === MF_NS+"PositiveSyntaxTest11") {
-                        isPositive = true;
-                    } else {
-                        isPositive = false;
-                    }
-
-                    var queryText = fs.readFileSync("./spec/w3c/syntax-query/"+action).toString().trim();
-
-                    objects.push({
-                        name: name,
-                        isPositive: isPositive,
-                        queryText: queryText
-                    });
-
-                });
-
-                async.eachSeries(objects, function(object, k){
-                    //console.log(JSON.stringify(object));
-                    querySyntaxTestFn(object.queryText, object.isPositive,k);
-                }, function(){
-                    done();
-                });
-            }
-        });
-
-
+        runW3CTestSpec("./spec/w3c/syntax-query/manifest.ttl", done);
     },60000);
 
 });

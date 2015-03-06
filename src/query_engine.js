@@ -20,7 +20,7 @@ QueryEngine = function(params) {
         // list of namespaces that will be automatically added to every query
         this.defaultPrefixes = {};
         this.abstractQueryTree = new AbstractQueryTree();
-        this.rdfLoader = new RDFLoader.RDFLoader(params['communication']);
+        this.rdfLoader = new RDFLoader(params['communication']);
         this.callbacksBackend = new Callbacks(this);
         this.customFns = params.customFns || {};
     }
