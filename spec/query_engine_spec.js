@@ -61,3 +61,11 @@ describe("W3C > syntax-update-1 test cases", function(){
     },60000);
 
 });
+
+describe("W3C > syntax-update-2 test cases", function(){
+
+    it("Should pass all the tests", function(done){
+        runW3CTestSpec("./spec/w3c/syntax-update-2/manifest.ttl", done);
+    },60000);
+
+});
