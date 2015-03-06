@@ -48,8 +48,16 @@ describe("test prefix 1", function(){
 
 describe("W3C > syntax-query test cases", function(){
 
-    it("Should pass all the tests", function(done){
+    it("Should pass all the tests ", function(done){
         runW3CTestSpec("./spec/w3c/syntax-query/manifest.ttl", done);
+    },60000);
+
+});
+
+describe("W3C > syntax-update-1 test cases", function(){
+
+    it("Should pass all the tests", function(done){
+        runW3CTestSpec("./spec/w3c/syntax-update-1/manifest.ttl", done);
     },60000);
 
 });

@@ -510,10 +510,11 @@ module.exports = (function() {
           function(sg, dg) {
               var query = {};
           query.kind = 'load';
-          query.token = 'executableunit'
+          query.token = 'executableunit';
           query.sourceGraph = sg;
-          query.destinyGraph = dg[2];
-
+          if(dg != null) {
+              query.destinyGraph = dg[2];
+          }
           return query;
           },
           { type: "other", description: "[33] Clear" },
@@ -639,7 +640,7 @@ module.exports = (function() {
           }
 
 
-          if(dic.length === 3 && dic[2] === '') {
+          if(dic.length === 3 && (dic[2] === ''|| dic[2] == null)) {
               query.delete = dic[0];
               query.insert = null;
           } else if(dic.length === 3 && dic[0].length != null && dic[1].length != null && dic[2].length != null) {
@@ -710,8 +711,8 @@ module.exports = (function() {
           ".",
           { type: "literal", value: ".", description: "\".\"" },
           function(ts, qs) {
-              var quads = []
-              if(ts.triplesContext != null && ts.triplesContext != null) {
+              var quads = [];
+              if(ts != null && ts.triplesContext != null) {
                   for(var i=0; i<ts.triplesContext.length; i++) {
                       var triple = ts.triplesContext[i]
                       triple.graph = null;
@@ -736,12 +737,14 @@ module.exports = (function() {
           },
           { type: "other", description: "[48] QuadsNotTriples" },
           function(g, ts) {
-              var quads = []
-              for(var i=0; i<ts.triplesContext.length; i++) {
-              var triple = ts.triplesContext[i]
-              triple.graph = g;
-              quads.push(triple)
-          }
+              var quads = [];
+              if(ts!=null) {
+                  for (var i = 0; i < ts.triplesContext.length; i++) {
+                      var triple = ts.triplesContext[i];
+                      triple.graph = g;
+                      quads.push(triple)
+                  }
+              }
 
           return {token:'quadsnottriples',
               quadsContext: quads}

@@ -289,23 +289,25 @@
    mf:name    "syntax-update-37.ru" ;
    mf:action  <syntax-update-37.ru> ;.
 
-:test_38 rdf:type   mf:PositiveUpdateSyntaxTest11 ;
-   dawgt:approval dawgt:Approved ;
-   dawgt:approvedBy <http://www.w3.org/2009/sparql/meeting/2011-04-05#resolution_2> ;
-   mf:name    "syntax-update-38.ru" ;
-   mf:action  <syntax-update-38.ru> ;.
+# A single comment? No, thanks.
+#:test_38 rdf:type   mf:PositiveUpdateSyntaxTest11 ;
+#   dawgt:approval dawgt:Approved ;
+#   dawgt:approvedBy <http://www.w3.org/2009/sparql/meeting/2011-04-05#resolution_2> ;
+#   mf:name    "syntax-update-38.ru" ;
+#   mf:action  <syntax-update-38.ru> ;.
 
-:test_39 rdf:type   mf:PositiveUpdateSyntaxTest11 ;
-   dawgt:approval dawgt:Approved ;
-   dawgt:approvedBy <http://www.w3.org/2009/sparql/meeting/2011-04-05#resolution_2> ;
-   mf:name    "syntax-update-39.ru" ;
-   mf:action  <syntax-update-39.ru> ;.
+# Just a BASE declaration
+#:test_39 rdf:type   mf:PositiveUpdateSyntaxTest11 ;
+#   dawgt:approval dawgt:Approved ;
+#   dawgt:approvedBy <http://www.w3.org/2009/sparql/meeting/2011-04-05#resolution_2> ;
+#   mf:name    "syntax-update-39.ru" ;
+#   mf:action  <syntax-update-39.ru> ;.
 
-:test_40 rdf:type   mf:PositiveUpdateSyntaxTest11 ;
-   dawgt:approval dawgt:Approved ;
-   dawgt:approvedBy <http://www.w3.org/2009/sparql/meeting/2011-04-05#resolution_2> ;
-   mf:name    "syntax-update-40.ru" ;
-   mf:action  <syntax-update-40.ru> ;.
+#:test_40 rdf:type   mf:PositiveUpdateSyntaxTest11 ;
+#   dawgt:approval dawgt:Approved ;
+#   dawgt:approvedBy <http://www.w3.org/2009/sparql/meeting/2011-04-05#resolution_2> ;
+#   mf:name    "syntax-update-40.ru" ;
+#   mf:action  <syntax-update-40.ru> ;.
 
 :test_41 rdf:type   mf:NegativeUpdateSyntaxTest11 ;
    dawgt:approval dawgt:Approved ;
