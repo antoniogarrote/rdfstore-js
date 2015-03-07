@@ -58,6 +58,9 @@ Lexicon = function(callback){
 Lexicon.prototype.registerGraph = function(oid, uriToken, callback){
     if(oid != this.defaultGraphOid) {
         this.knownGraphs.insert(oid, uriToken, function(){
+            if(callback == null){
+                console.log("CACHIS...")
+            }
            callback();
         });
     }

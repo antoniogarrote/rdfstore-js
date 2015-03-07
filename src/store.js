@@ -136,19 +136,21 @@ Store.Store = function(arg1, arg2) {
 
     var that = this;
     this.customFns = {};
-    new Lexicon.Lexicon(function(lexicon){
+    new Lexicon(function(lexicon){
         if(params['overwrite'] === true) {
             // delete lexicon values
             lexicon.clear();
         }
-        new QuadBackend.QuadBackend(params, function(backend){
+        new QuadBackend(params, function(backend){
+            /*
             if(params['overwrite'] === true) {
                 // delete index values
                 backend.clear();
             }
+            */
             params.backend = backend;
             params.lexicon =lexicon;
-            that.engine = new QueryEngine.QueryEngine(params);
+            that.engine = new QueryEngine(params);
 
             callback(null,that);
         });
@@ -808,7 +810,13 @@ Store.Store.prototype.load = function(){
             if(err) {
                 callback(err, quads);
             } else {
-                that.engine.batchLoad(quads,callback);
+                that.engine.batchLoad(quads,function(success){
+                    if(success != null){
+                        callback(null,success);
+                    } else {
+                        callback(new Error("Erro batch-loading triples."));
+                    }
+                });
             }
         };
 

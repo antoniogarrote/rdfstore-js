@@ -411,7 +411,7 @@ QueryEngine.prototype.normalizeQuad = function(quad, queryEnv, shouldIndex, call
                 if(oid != null) {
                     graph = oid;
                     if(shouldIndex === true && quad.graph.token!='var') {
-                        that.lexicon.registerGraph(oid, function(){
+                        that.lexicon.registerGraph(oid, quad.graph.value, function(){
                             k();
                         });
                     } else {
@@ -1353,8 +1353,9 @@ QueryEngine.prototype.executeUpdate = function(syntaxTree, callback) {
                     console.log(result);
                     callback(false, "error batch loading quads");
                 } else {
-                    var result = that.batchLoad(result);
-                    callback(result!=null, result||"error batch loading quads");
+                    var result = that.batchLoad(result,function(result){
+                        callback(result!=null, result||"error batch loading quads");
+                    });
                 }
             });
         } else if(aqt.kind === 'drop') {
@@ -1368,196 +1369,103 @@ QueryEngine.prototype.executeUpdate = function(syntaxTree, callback) {
 };
 
 QueryEngine.prototype.batchLoad = function(quads, callback) {
-    var subject    = null;
-    var predicate  = null;
-    var object     = null;
-    var graph      = null;
     var counter = 0;
-    var success = true;
     var blanks = {};
-    var maybeBlankOid, oid, quad, key, originalQuad;
+    var that = this;
 
     if(this.eventsOnBatchLoad)
         this.callbacksBackend.startGraphModification();
 
-    for(var i=0; i<quads.length; i++) {
-        quad = quads[i];
+    // subject
+    var registerComponent = function(quad, component, newQuad, k) {
+        var maybeBlankOid, oid, quad;
 
-        // subject
-        if(quad.subject['uri'] || quad.subject.token === 'uri') {
-            oid = this.lexicon.registerUri(quad.subject.uri || quad.subject.value);
-            if(quad.subject.uri != null) {
-                quad.subject = {'token': 'uri', 'value': quad.subject.uri};
-                delete quad.subject['uri'];
-            }
-            subject = oid;
-        } else if(quad.subject['literal'] || quad.subject.token === 'literal') {
-            oid = this.lexicon.registerLiteral(quad.subject.literal || quad.subject.value);
-            if(quad.subject.literal != null) {
-                quad.subject = this.lexicon.parseLiteral(quad.subject.literal);
-                delete quad.subject['literal'];
-            }
-            subject = oid;
-        } else {
-            maybeBlankOid = blanks[quad.subject.blank || quad.subject.value];
-            if(maybeBlankOid == null) {
-                maybeBlankOid = this.lexicon.registerBlank(quad.subject.blank || quad.subject.value);
-                blanks[(quad.subject.blank || quad.subject.value)] = maybeBlankOid;
-            }
-            if(quad.subject.token == null) {
-                quad.subject.token = 'blank';
-                quad.subject.value = quad.subject.blank;
-                delete quad.subject['blank'];
-            }
-            subject = maybeBlankOid;
-        }
-
-        // predicate
-        if(quad.predicate['uri'] || quad.predicate.token === 'uri') {
-            oid = this.lexicon.registerUri(quad.predicate.uri || quad.predicate.value);
-            if(quad.predicate.uri != null) {
-                quad.predicate = {'token': 'uri', 'value': quad.predicate.uri};
-                delete quad.subject['uri'];
-            }
-            predicate = oid;
-        } else if(quad.predicate['literal'] || quad.predicate.token === 'literal') {
-            oid = this.lexicon.registerLiteral(quad.predicate.literal || quad.predicate.value);
-            if(quad.predicate.literal != null) {
-                quad.predicate = this.lexicon.parseLiteral(quad.predicate.literal);
-                delete quad.predicate['literal'];
-            }
-            predicate = oid;
-        } else {
-            maybeBlankOid = blanks[quad.predicate.blank || quad.predicate.value];
-            if(maybeBlankOid == null) {
-                maybeBlankOid = this.lexicon.registerBlank(quad.predicate.blank || quad.predicate.value);
-                blanks[(quad.predicate.blank || quad.predicate.value)] = maybeBlankOid;
-            }
-            if(quad.predicate.token == null) {
-                quad.predicate.token = 'blank';
-                quad.predicate.value = quad.predicate.blank;
-                delete quad.predicate['blank'];
-            }
-            predicate = maybeBlankOid;
-        }
-
-        // object
-        if(quad.object['uri'] || quad.object.token === 'uri') {
-            oid = this.lexicon.registerUri(quad.object.uri || quad.object.value);
-            if(quad.object.uri != null) {
-                quad.object = {'token': 'uri', 'value': quad.object.uri};
-                delete quad.subject['uri'];
-            }
-            object = oid;
-        } else if(quad.object['literal'] || quad.object.token === 'literal') {
-            if(quad.object.token === 'literal') {
-                if(quad.object.type != null) {
-                    quad.object.value = '"'+quad.object.value+'"^^<'+quad.object.type+'>';
-                } else if(quad.object.lang != null) {
-                    quad.object.value = '"'+quad.object.value+'"@'+quad.object.lang;
-                } else {
-                    quad.object.value = '"'+quad.object.value+'"';
+        if (quad[component]['uri'] || quad[component].token === 'uri') {
+            this.lexicon.registerUri(quad[component].uri || quad[component].value, function(oid){
+                if (quad[component].uri != null) {
+                    quad[component] = {'token': 'uri', 'value': quad[component].uri};
+                    delete quad[component]['uri'];
                 }
-            }
-            oid = this.lexicon.registerLiteral(quad.object.literal || quad.object.value);
-            if(quad.object.literal != null) {
-                quad.object = this.lexicon.parseLiteral(quad.object.literal);
-                delete quad.object['literal'];
-            }
-            object = oid;
+                newQuad[component] = oid;
+                k();
+            });
+        } else if (quad[component]['literal'] || quad[component].token === 'literal') {
+            this.lexicon.registerLiteral(quad[component].literal || quad[component].value, function(oid){
+                if (quad[component].literal != null) {
+                    quad[component] = this.lexicon.parseLiteral(quad[component].literal);
+                    delete quad[component]['literal'];
+                }
+                newQuad[component] = oid;
+                k();
+            });
         } else {
-            maybeBlankOid = blanks[quad.object.blank || quad.object.value];
-            if(maybeBlankOid == null) {
-                maybeBlankOid = this.lexicon.registerBlank(quad.object.blank || quad.object.value);
-                blanks[(quad.object.blank || quad.object.value)] = maybeBlankOid;
-            }
-            if(quad.object.token == null) {
-                quad.object.token = 'blank';
-                quad.object.value = quad.object.blank;
-                delete quad.object['blank'];
-            }
+            maybeBlankOid = blanks[quad[component].blank || quad[component].value];
+            if (maybeBlankOid == null) {
+                this.lexicon.registerBlank(quad[component].blank || quad[component].value, function(maybeBlankOid){
+                    blanks[(quad[component].blank || quad[component].value)] = maybeBlankOid;
 
-            object = maybeBlankOid;
-        }
+                    if (quad[component].token == null) {
+                        quad[component].token = 'blank';
+                        quad[component].value = quad[component].blank;
+                        delete quad[component]['blank'];
+                    }
+                    newQuad[component] = maybeBlankOid;
+                    k();
+                });
 
-        // graph
-        if(quad.graph['uri'] || quad.graph.token === 'uri') {
-            oid = this.lexicon.registerUri(quad.graph.uri || quad.graph.value);
-            if(quad.graph.uri != null) {
-                quad.graph = {'token': 'uri', 'value': quad.graph.uri};
-                delete quad.subject['uri'];
-            }
-            this.lexicon.registerGraph(oid);
-            graph = oid;
-
-        } else if(quad.graph['literal'] || quad.graph.token === 'literal') {
-            oid = this.lexicon.registerLiteral(quad.graph.literal || quad.graph.value);
-            if(quad.predicate.literal != null) {
-                quad.predicate = this.lexicon.parseLiteral(quad.predicate.literal);
-                delete quad.predicate['literal'];
-            }
-            graph = oid;
-        } else {
-            maybeBlankOid = blanks[quad.graph.blank || quad.graph.value];
-            if(maybeBlankOid == null) {
-                maybeBlankOid = this.lexicon.registerBlank(quad.graph.blank || quad.graph.value);
-                blanks[(quad.graph.blank || quad.graph.value)] = maybeBlankOid;
-            }
-            if(quad.graph.token == null) {
-                quad.graph.token = 'blank';
-                quad.graph.value = quad.graph.blank;
-                delete quad.graph['blank'];
-            }
-            graph = maybeBlankOid;
-        }
-
-
-
-        originalQuad = quad;
-        quad = {subject: subject, predicate:predicate, object:object, graph: graph};
-        key = new QuadIndex.NodeKey(quad);
-
-        var result = this.backend.search(key);
-        if(!result) {
-            result = this.backend.index(key);
-            if(result == true){
-                if(this.eventsOnBatchLoad)
-                    this.callbacksBackend.nextGraphModification(Callbacks.added, [originalQuad,quad]);
-                counter = counter + 1;
             } else {
-                success = false;
-                break;
+                if (quad[component].token == null) {
+                    quad[component].token = 'blank';
+                    quad[component].value = quad[component].blank;
+                    delete quad[component]['blank'];
+                }
+                newQuad[component] = maybeBlankOid;
+                k();
             }
         }
 
-    }
-
-    if(this.lexicon.updateAfterWrite != null)
-        this.lexicon.updateAfterWrite();
-
-    var exitFn = function(){
-        if(success) {
-            if(callback)
-                callback(true, counter);
-        } else {
-            if(callback)
-                callback(false, null);
-        }
     };
 
-    if(this.eventsOnBatchLoad) {
-        this.callbacksBackend.endGraphModification(function(){
-            exitFn();
-        });
-    } else {
-        exitFn();
-    }
 
-    if(success) {
-        return counter;
-    } else {
-        return null;
-    }
+    async.eachSeries(quads, function(quad,k){
+        var newQuad = {};
+        async.eachSeries(['subject','predicate','object','graph'], function(component,kk){
+            registerComponent(quad, component, newQuad, kk)
+        }, function(){
+            var originalQuad = quad;
+            quad = newQuad;
+            var key = new QuadIndex.NodeKey(quad);
+
+            that.backend.search(key, function(result){
+                if(!result) {
+                    that.backend.index(key, function(result){
+                        if(result == true){
+                            if(that.eventsOnBatchLoad)
+                                that.callbacksBackend.nextGraphModification(Callbacks.added, [originalQuad,quad]);
+                            counter = counter + 1;
+                        }
+                        k();
+                    });
+                } else {
+                    k();
+                }
+            });
+
+        });
+    }, function(){
+        if(that.lexicon.updateAfterWrite != null)
+            that.lexicon.updateAfterWrite();
+
+        var exitFn = function(){
+            callback(counter);
+        };
+
+        if(that.eventsOnBatchLoad) {
+            that.callbacksBackend.endGraphModification(exitFn());
+        } else {
+            exitFn();
+        }
+    });
 };
 
 // Low level operations for update queries
@@ -1572,7 +1480,7 @@ QueryEngine.prototype._executeModifyQuery = function(aqt, queryEnv, callback) {
     aqt.insert = aqt.insert == null ? [] : aqt.insert;
     aqt.delete = aqt.delete == null ? [] : aqt.delete;
 
-    Utils.seq(
+    async.seq(
         function(k) {
             // select query
 
