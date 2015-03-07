@@ -97,7 +97,7 @@ describe("Store", function(){
                        }\
                      }';
             store.execute(query, function(success) {
-                expect(err == null)
+                expect(err == null);
                 var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
                          PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
                          PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\
@@ -126,13 +126,12 @@ describe("Store", function(){
                 });
             });
         });
-    })
-});
+    });
 
-/*
-exports.testSubject1 = function(test) {
-    new Store.Store({name:'test', overwrite:true},function(store) {
-        var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
+    it("Should pass test subject #1",function(done) {
+        new Store.Store({name:'test', overwrite:true},function(err,store) {
+            expect(err==null);
+            var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
                      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
                      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\
                      PREFIX : <http://example.org/people/>\
@@ -150,18 +149,21 @@ exports.testSubject1 = function(test) {
                          foaf:mbox       <mailto:bob@home> \
                          .\
                      }';
-        store.execute(query, function(success, results) {
-            store.node("http://example.org/people/alice", function(succes, graph){
-                expect(graph.toArray().length === 4);
-                store.close(function(){ test.done() });
+            store.execute(query, function(err, results) {
+                expect(err==null);
+                store.node("http://example.org/people/alice", function(err, graph){
+                    expect(err==null);
+                    expect(graph.toArray().length).toBe(4);
+                    store.close(function(){ done() });
+                });
             });
         });
     });
-};
 
-exports.testSubject2 = function(test) {
-    new Store.Store({name:'test', overwrite:true},function(store) {
-        var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
+    it("Should pass test subject #2", function(done) {
+        new Store.Store({name:'test', overwrite:true},function(err,store) {
+            expect(err==null);
+            var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
                      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
                      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\
                      PREFIX : <http://example.org/people/>\
@@ -175,9 +177,9 @@ exports.testSubject2 = function(test) {
                          .\
                        }\
                      }';
-        store.execute(query, function(success, results) {
-
-            var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
+            store.execute(query, function(err) {
+                expect(err==null);
+                var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
                          PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
                          PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\
                          PREFIX : <http://example.org/people/>\
@@ -191,21 +193,28 @@ exports.testSubject2 = function(test) {
                                   .\
                            }\
                          }'
-            store.execute(query, function(success, results) {
+                store.execute(query, function(err) {
+                    expect(err==null);
+                    store.graph(function(err, graph){
+                        expect(err==null);
+                        expect(graph.toArray().length).toBe(0);
 
-                store.graph(function(succes, graph){
-                    expect(graph.toArray().length === 0);
+                        store.node("http://example.org/people/alice", "http://example.org/people/alice", function(success, results) {
 
-                    store.node("http://example.org/people/alice", "http://example.org/people/alice", function(success, results) {
-
-                        expect(results.toArray().length === 4);
-                        store.close(function(){ test.done() });
+                            expect(results.toArray().length).toBe(4);
+                            store.close(function(){ done() });
+                        });
                     });
                 });
             });
         });
     });
-};
+
+
+});
+
+
+/*
 
 exports.testPrefixes = function(test) {
     new Store.Store({name:'test', overwrite:true},function(store) {
