@@ -54,13 +54,15 @@ Callbacks.CallbacksBackend = function() {
 };
 
 Callbacks.CallbacksBackend.prototype.startGraphModification = function() {
-    this.pendingQueries = [].concat(this.queriesList);
-    this.matchedQueries = [];
+    if(this.ongoingModification !== true) {
+        this.pendingQueries = [].concat(this.queriesList);
+        this.matchedQueries = [];
 
-    if(this.updateInProgress == null) {
-        this.updateInProgress = {};
-        this.updateInProgress[Callbacks['added']] = [];
-        this.updateInProgress[Callbacks['deleted']] = [];
+        if (this.updateInProgress == null) {
+            this.updateInProgress = {};
+            this.updateInProgress[Callbacks['added']] = [];
+            this.updateInProgress[Callbacks['deleted']] = [];
+        }
     }
 };
 
@@ -69,26 +71,32 @@ Callbacks.CallbacksBackend.prototype.nextGraphModification = function(event, qua
 };
 
 Callbacks.CallbacksBackend.prototype.endGraphModification = function(callback) {
-    var that = this;
-    if(this.updateInProgress != null) {
-        var tmp = that.updateInProgress;
-        that.updateInProgress = null;
-        this.sendNotification(Callbacks['deleted'], tmp[Callbacks['deleted']],function(){
-            that.sendNotification(Callbacks['added'], tmp[Callbacks['added']], function(){
-                that.sendEmptyNotification(Callbacks['eventsFlushed'], null, function(){
-                    that.dispatchQueries(function(){
-                        callback(true);
+    if(this.ongoingModification !== true) {
+        var that = this;
+        if (this.updateInProgress != null) {
+            var tmp = that.updateInProgress;
+            that.updateInProgress = null;
+            this.sendNotification(Callbacks['deleted'], tmp[Callbacks['deleted']], function () {
+                that.sendNotification(Callbacks['added'], tmp[Callbacks['added']], function () {
+                    that.sendEmptyNotification(Callbacks['eventsFlushed'], null, function () {
+                        that.dispatchQueries(function () {
+                            callback(true);
+                        });
                     });
                 });
             });
-        });
+        } else {
+            callback(true);
+        }
     } else {
         callback(true);
     }
 };
 
 Callbacks.CallbacksBackend.prototype.cancelGraphModification = function() {
-    this.updateInProgress = null;
+    if(this.ongoingModification !== true) {
+        this.updateInProgress = null;
+    }
 };
 
 Callbacks.CallbacksBackend.prototype.sendNotification = function(event, quadsPairs, doneCallback) {

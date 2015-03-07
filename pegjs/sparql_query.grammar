@@ -679,7 +679,7 @@ Modify "[39] Modify"
     var query = {};
 query.kind = 'modify';
 
-if(wg != "") {
+if(wg != "" && wg != null) {
     query.with = wg[2];
 } else {
     query.with = null;

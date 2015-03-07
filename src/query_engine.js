@@ -577,17 +577,17 @@ QueryEngine.prototype.execute = function(queryString, callback, defaultDataset, 
             if(syntaxTree.token === 'query' && syntaxTree.kind == 'update')  {
                 this.callbacksBackend.startGraphModification();
                 var that = this;
-                this.executeUpdate(syntaxTree, function(success, result){
+                this.executeUpdate(syntaxTree, function(err, result){
                     if(that.lexicon.updateAfterWrite)
                         that.lexicon.updateAfterWrite();
 
-                    if(success) {
-                        that.callbacksBackend.endGraphModification(function(){
-                            callback(success, result);
-                        });
-                    } else {
+                    if(err) {
                         that.callbacksBackend.cancelGraphModification();
-                        callback(success, result);
+                        callback(err, result);
+                    } else {
+                        that.callbacksBackend.endGraphModification(function(){
+                            callback(err, result);
+                        });
                     }
                 });
             } else if(syntaxTree.token === 'query' && syntaxTree.kind == 'query') {
@@ -1332,11 +1332,23 @@ QueryEngine.prototype.executeUpdate = function(syntaxTree, callback) {
                     callback(error);
             });
         } else if(aqt.kind === 'deletedata') {
-            for(var j=0; j<aqt.quads.length; j++) {
-                var quad = aqt.quads[j];
-                this._executeQuadDelete(quad, queryEnv);
-            }
-            callback(true);
+            var error = null;
+            async.eachSeries(aqt.quads, function(quad, k){
+                if(error === null) {
+                    that._executeQuadDelete(quad, queryEnv, function(err) {
+                        if(err != null)
+                            error = err;
+                        k();
+                    });
+                } else {
+                    k();
+                }
+            }, function(){
+                if(error === null)
+                    callback(null, true);
+                else
+                    callback(error);
+            });
         } else if(aqt.kind === 'modify') {
             this._executeModifyQuery(aqt, queryEnv, callback);
         } else if(aqt.kind === 'create') {
@@ -1381,7 +1393,7 @@ QueryEngine.prototype.batchLoad = function(quads, callback) {
         var maybeBlankOid, oid, quad;
 
         if (quad[component]['uri'] || quad[component].token === 'uri') {
-            this.lexicon.registerUri(quad[component].uri || quad[component].value, function(oid){
+            that.lexicon.registerUri(quad[component].uri || quad[component].value, function(oid){
                 if (quad[component].uri != null) {
                     quad[component] = {'token': 'uri', 'value': quad[component].uri};
                     delete quad[component]['uri'];
@@ -1390,9 +1402,9 @@ QueryEngine.prototype.batchLoad = function(quads, callback) {
                 k();
             });
         } else if (quad[component]['literal'] || quad[component].token === 'literal') {
-            this.lexicon.registerLiteral(quad[component].literal || quad[component].value, function(oid){
+            that.lexicon.registerLiteral(quad[component].literal || quad[component].value, function(oid){
                 if (quad[component].literal != null) {
-                    quad[component] = this.lexicon.parseLiteral(quad[component].literal);
+                    quad[component] = that.lexicon.parseLiteral(quad[component].literal);
                     delete quad[component]['literal'];
                 }
                 newQuad[component] = oid;
@@ -1401,7 +1413,7 @@ QueryEngine.prototype.batchLoad = function(quads, callback) {
         } else {
             maybeBlankOid = blanks[quad[component].blank || quad[component].value];
             if (maybeBlankOid == null) {
-                this.lexicon.registerBlank(quad[component].blank || quad[component].value, function(maybeBlankOid){
+                that.lexicon.registerBlank(quad[component].blank || quad[component].value, function(maybeBlankOid){
                     blanks[(quad[component].blank || quad[component].value)] = maybeBlankOid;
 
                     if (quad[component].token == null) {
@@ -1473,7 +1485,7 @@ QueryEngine.prototype.batchLoad = function(quads, callback) {
 QueryEngine.prototype._executeModifyQuery = function(aqt, queryEnv, callback) {
     var that = this;
     var querySuccess = true;
-    var error = null;
+    var error = new Error("Error executing modify query");
     var bindings = null;
     var components = ['subject', 'predicate', 'object', 'graph'];
 
@@ -1508,6 +1520,7 @@ QueryEngine.prototype._executeModifyQuery = function(aqt, queryEnv, callback) {
 
             that.executeSelect(aqt, queryEnv, defaultGraph, namedGraph, function(err, result) {
                 if(err) {
+                    error = err
                     querySuccess = false;
                     return k();
                 } else {
@@ -1515,6 +1528,7 @@ QueryEngine.prototype._executeModifyQuery = function(aqt, queryEnv, callback) {
                         if(result!=null) {
                             bindings = result;
                         } else {
+                            error = new Error("Error denormalizing bindings list");
                             querySuccess = false;
                         }
                         k();
@@ -1549,12 +1563,11 @@ QueryEngine.prototype._executeModifyQuery = function(aqt, queryEnv, callback) {
                     }
                 }
 
-                var quad;
-                for(var j=0; j<quads.length; j++) {
-                    quad = quads[j];
-                    that._executeQuadDelete(quad, queryEnv);
-                }
-                k();
+                async.eachSeries(quads, function(quad,kk) {
+                    that._executeQuadDelete(quad, queryEnv, function(){
+                        kk();
+                    });
+                },function(){ k(); });
             } else {
                 k();
             }
@@ -1586,18 +1599,20 @@ QueryEngine.prototype._executeModifyQuery = function(aqt, queryEnv, callback) {
                     }
                 }
 
-                for(var i=0; i<quads.length; i++) {
-                    var quad = quads[i];
-                    that._executeQuadInsert(quad, queryEnv);
-                }
-
-                k();
+                async.eachSeries(quads, function(quad,kk) {
+                    that._executeQuadInsert(quad, queryEnv, function(){
+                        kk();
+                    });
+                },function(){ k(); });
             } else {
                 k();
             }
         }
     )(function(){
-        callback(querySuccess);
+        if(querySuccess)
+            callback(null);
+        else
+            callback(error);
     });
 };
 
@@ -1644,27 +1659,54 @@ QueryEngine.prototype._executeQuadInsert = function(quad, queryEnv, callback) {
         });
 };
 
-QueryEngine.prototype._executeQuadDelete = function(quad, queryEnv) {
+QueryEngine.prototype._executeQuadDelete = function(quad, queryEnv, callback) {
     var that = this;
-    var normalized = this.normalizeQuad(quad, queryEnv, false);
-    if(normalized != null) {
-        var key = new QuadIndex.NodeKey(normalized);
-        that.backend.delete(key);
-        var result = that.lexicon.unregister(quad, key);
-        if(result == true){
-            that.callbacksBackend.nextGraphModification(Callbacks['deleted'], [quad, normalized]);
-            return true;
-        } else {
-            console.log("ERROR unregistering quad");
-            return false;
-        }
-    } else {
-        console.log("ERROR normalizing quad");
-        return false;
-    }
+    var normalized;
+    var error = false;
+    var errorMessage, key;
+    async.seq(
+        function(k){
+            that.normalizeQuad(quad, queryEnv, true, function(result){
+                if(result != null){
+                    normalized = result;
+                } else {
+                    error = true;
+                    errorMessage = "Error normalizing quad.";
+                }
+                k();
+            });
+        },
+        function(k){
+            if(error === false) {
+                key = new QuadIndex.NodeKey(normalized);
+                that.backend.delete(key, function(){
+                        k();
+                });
+            } else {
+                k();
+            }
+        },
+        function(k){
+            if(error === false) {
+                that.lexicon.unregister(quad, key, function(){
+                    that.callbacksBackend.nextGraphModification(Callbacks['deleted'], [quad, normalized]);
+                    k();
+                });
+            } else {
+                k();
+            }
+        })(
+        function(){
+            if(error) {
+                callback(new Error(errorMessage));
+            } else {
+                callback(null, true);
+            }
+        });
 };
 
 QueryEngine.prototype._executeClearGraph = function(destinyGraph, queryEnv, callback) {
+    var that = this;
     if(destinyGraph === 'default') {
         this.execute("DELETE { ?s ?p ?o } WHERE { ?s ?p ?o }", callback);
     } else if(destinyGraph === 'named') {
@@ -1672,18 +1714,16 @@ QueryEngine.prototype._executeClearGraph = function(destinyGraph, queryEnv, call
         var graphs = this.lexicon.registeredGraphs(true);
         if(graphs!=null) {
             var foundErrorDeleting = false;
-            Utils.repeat(0, graphs.length,function(k,env) {
-                var graph = graphs[env._i];
-                var floop = arguments.callee;
+            async.eachSeries(graphs, function(graph,k){
                 if(!foundErrorDeleting) {
                     that.execute("DELETE { GRAPH <"+graph+"> { ?s ?p ?o } } WHERE { GRAPH <"+graph+"> { ?s ?p ?o } }", function(success, results){
                         foundErrorDeleting = !success;
-                        k(floop, env);
+                        k();
                     });
                 } else {
-                    k(floop, env);
+                    k();
                 }
-            }, function(env) {
+            }, function(){
                 callback(!foundErrorDeleting);
             });
         } else {
@@ -1703,7 +1743,11 @@ QueryEngine.prototype._executeClearGraph = function(destinyGraph, queryEnv, call
         if(destinyGraph.token == 'uri') {
             var graphUri = Utils.lexicalFormBaseUri(destinyGraph,queryEnv);
             if(graphUri != null) {
-                this.execute("DELETE { GRAPH <"+graphUri+"> { ?s ?p ?o } } WHERE { GRAPH <"+graphUri+"> { ?s ?p ?o } }", callback);
+                this.callbacksBackend.ongoingModification = true;
+                this.execute("DELETE { GRAPH <"+graphUri+"> { ?s ?p ?o } } WHERE { GRAPH <"+graphUri+"> { ?s ?p ?o } }", function(res){
+                    that.callbacksBackend.ongoingModification = false;
+                    callback(res);
+                });
             } else {
                 callback(false, "wrong graph URI");
             }

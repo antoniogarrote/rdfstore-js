@@ -10,6 +10,7 @@ Lexicon = function(callback){
     var that = this;
     this.defaultGraphOid = 0;
     this.defaultGraphUri = "https://github.com/antoniogarrote/rdfstore-js#default_graph";
+    this.defaultGraphUriTerm = {"token":"uri","prefix":null,"suffix":null,"value":this.defaultGraphUri};
     this.oidCounter = 1;
 
     async.seq(function(k){
@@ -58,9 +59,6 @@ Lexicon = function(callback){
 Lexicon.prototype.registerGraph = function(oid, uriToken, callback){
     if(oid != this.defaultGraphOid) {
         this.knownGraphs.insert(oid, uriToken, function(){
-            if(callback == null){
-                console.log("CACHIS...")
-            }
            callback();
         });
     }
@@ -379,6 +377,7 @@ Lexicon.prototype.clear = function(callback) {
     var that = this;
     this.defaultGraphOid = 0;
     this.defaultGraphUri = "https://github.com/antoniogarrote/rdfstore-js#default_graph";
+    this.defaultGraphUriTerm = {"token":"uri","prefix":null,"suffix":null,"value":this.defaultGraphUri};
     this.oidCounter = 1;
 
     async.seq(function(k){
