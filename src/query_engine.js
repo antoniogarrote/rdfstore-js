@@ -357,12 +357,12 @@ QueryEngine.prototype.normalizeTerm = function(term, env, shouldIndex, callback)
             callback(oid);
         } else {
             if(shouldIndex) {
-                this.lexicon.registerBlank(label, function(oid){
+                this.lexicon.registerBlank(function(oid){
                     env.blanks[label] = oid;
                     callback(oid);
                 });
             } else {
-                this.lexicon.resolveBlank(label, function(oid) {
+                this.lexicon.resolveBlank(function(oid) {
                     env.blanks[label] = oid;
                     callback(oid);
                 });
@@ -403,15 +403,16 @@ QueryEngine.prototype.normalizeQuad = function(quad, queryEnv, shouldIndex, call
     var error = false;
 
     async.seq(function(k){
-        if(quad.graph == null) {
+        if(quad.graph == null || quad.graph.value === that.lexicon.defaultGraphUri) {
             graph = 0; // default graph
             k();
         } else {
+            var graphUriValue = Utils.lexicalFormBaseUri(quad.graph, queryEnv);
             that.normalizeTerm(quad.graph, queryEnv, shouldIndex, function(oid){
                 if(oid != null) {
                     graph = oid;
                     if(shouldIndex === true && quad.graph.token!='var') {
-                        that.lexicon.registerGraph(oid, quad.graph.value, function(){
+                        that.lexicon.registerGraph(oid, graphUriValue, function(){
                             k();
                         });
                     } else {
@@ -1359,13 +1360,13 @@ QueryEngine.prototype.executeUpdate = function(syntaxTree, callback) {
                 graph = {'uri': Utils.lexicalFormBaseUri(aqt.destinyGraph, queryEnv)};
             }
             var that = this;
-            this.rdfLoader.load(aqt.sourceGraph.value, graph, function(success, result){
-                if(success == false) {
+            this.rdfLoader.load(aqt.sourceGraph.value, graph, function(err, result){
+                if(err) {
                     console.log("Error loading graph");
                     console.log(result);
                     callback(false, "error batch loading quads");
                 } else {
-                    var result = that.batchLoad(result,function(result){
+                    that.batchLoad(result,function(result){
                         callback(result!=null, result||"error batch loading quads");
                     });
                 }
@@ -1413,7 +1414,7 @@ QueryEngine.prototype.batchLoad = function(quads, callback) {
         } else {
             maybeBlankOid = blanks[quad[component].blank || quad[component].value];
             if (maybeBlankOid == null) {
-                that.lexicon.registerBlank(quad[component].blank || quad[component].value, function(maybeBlankOid){
+                that.lexicon.registerBlank(function(maybeBlankOid){
                     blanks[(quad[component].blank || quad[component].value)] = maybeBlankOid;
 
                     if (quad[component].token == null) {
@@ -1731,8 +1732,8 @@ QueryEngine.prototype._executeClearGraph = function(destinyGraph, queryEnv, call
         }
     } else if(destinyGraph === 'all') {
         var that = this;
-        this.execute("CLEAR DEFAULT", function(success, result) {
-            if(success) {
+        this.execute("CLEAR DEFAULT", function(err, result) {
+            if(!err) {
                 that.execute("CLEAR NAMED", callback);
             } else {
                 callback(false,result);

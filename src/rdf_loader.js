@@ -1,7 +1,7 @@
 var NetworkTransport = require("./network_transport").NetworkTransport;
 var RVN3Parser = require("./rvn3_parser").RVN3Parser;
 var JSONLDParser = require("./jsonld_parser").JSONLDParser;
-var Utils = require("./utils").Utils;
+var Utils = require("./utils");
 
  var RDFLoader = function (params) {
 

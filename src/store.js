@@ -10,6 +10,7 @@ var QueryEngine = require("./query_engine").QueryEngine;
 var QuadBackend = require("./quad_backend").QuadBackend;
 var Lexicon = require("./lexicon").Lexicon;
 var RDFModel = require("./rdf_model");
+var _ = require("lodash");
 
 /**
  * Version of the store
@@ -106,10 +107,6 @@ Store.create = function(){
  *  <li> name: when using persistence, the name for this store. In the MongoDB backed version, name of the DB used by the store. By default <code>'rdfstore_js'</code> is used</li>
  *  <li> overwrite: clears the persistent storage </li>
  *  <li> maxCacheSize: if using persistence, maximum size of the index cache </li>
- *  <li> engine: the persistent storage to use, a value <code>mongodb</code> selects the MongoDB engine</li>
- *  <li> mongoDomain: when <code>engine=mongodb</code>, server domain name or IP address where the MongoDB server backing the store is running. By default <code>'127.0.0.1'</code> is used</li>
- *  <li> mongoPort: when <code>engine=mongodb</code>, port where the MongoDB server is running. By default <code>27017</code> is used</li>
- *  <li> mongoOptions: when <code>engine=mongodb</code>, additional options for the MongoDB driver. By default <code>{}</code> is used</li>
  * </ul>
  */
 Store.Store = function(arg1, arg2) {
@@ -281,15 +278,15 @@ Store.Store.prototype.executeWithEnvironment = function() {
         defaultGraphs = arguments[1];
         namedGraphs   = arguments[2];
     }
-    var defaultGraphsNorm = [];
-    var namedGraphsNorm = [];
-    for(var i=0; i<defaultGraphs.length; i++) {
-        defaultGraphsNorm.push({'token':'uri','value':defaultGraphs[i]})
-    }
-    for(var i=0; i<namedGraphs.length; i++) {
-        namedGraphsNorm.push({'token':'uri','value':namedGraphs[i]})
-    }
-    this.engine.execute(queryString, callback, defaultGraphsNorm, namedGraphsNorm);
+
+    defaultGraphs = _.map(defaultGraphs, function(graph){
+        return {'token':'uri','value':graph};
+    });
+    namedGraphs = _.map(namedGraphs, function(graph){
+        return {'token':'uri','value':graph};
+    });
+
+    this.engine.execute(queryString, callback, defaultGraphs, namedGraphs);
 };
 
 /**
@@ -497,8 +494,7 @@ Store.Store.prototype.subscribe = function(s, p, o, g, callback) {
         var queryEnv = {blanks:{}, outCache:{}};
         var bindings = [];
 
-        for(var i=0; i<triples.length; i++) {
-            var triple = triples[i];
+        _.each(triples, function(triple){
             var s = RDFModel.buildRDFResource(triple.subject,bindings,that.engine,queryEnv);
             var p = RDFModel.buildRDFResource(triple.predicate,bindings,that.engine,queryEnv);
             var o = RDFModel.buildRDFResource(triple.object,bindings,that.engine,queryEnv);
@@ -506,7 +502,7 @@ Store.Store.prototype.subscribe = function(s, p, o, g, callback) {
                 triple = new RDFModel.Triple(s,p,o);
                 acum.push(triple);
             }
-        }
+        });
 
         callback(event,acum);
     };
@@ -866,28 +862,13 @@ Store.Store.prototype.registerParser = function(mediaType, parser) {
  * @param {Function} callback function that will receive a success notification and the array of graph URIs
  */
 Store.Store.prototype.registeredGraphs = function(callback) {
-    if(this.isMongodb) {
-        this.engine.registeredGraphs(true, function(graphs){
-            var acum = [];
-            for(var i=0; i<graphs.length; i++) {
-                var graph = graphs[i];
-                var uri = new RDFModel.NamedNode(graph);
-                acum.push(uri);
-            }
-
-            return callback(null, acum);
+    this.engine.lexicon.registeredGraphs(true, function(graphs){
+        var graphNodes = _.map(graphs, function(graph){
+            return new RDFModel.NamedNode(graph);
         });
-    } else {
-        var graphs = this.engine.lexicon.registeredGraphs(true);
-        var acum = [];
-        for(var i=0; i<graphs.length; i++) {
-            var graph = graphs[i];
-            var uri = new RDFModel.NamedNode(graph);
-            acum.push(uri);
-        }
 
-        return callback(null, acum);
-    }
+        callback(null, graphNodes);
+    });
 };
 
 /**

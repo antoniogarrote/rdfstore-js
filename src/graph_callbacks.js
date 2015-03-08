@@ -2,6 +2,7 @@
 var _ = require('lodash');
 var async = require('async');
 var QuadIndex = require('./quad_index').QuadIndex;
+var Pattern = require('./quad_index').Pattern;
 var RDFModel = require('./rdf_model');
 var AbstractQueryTree = require('./abstract_query_tree').AbstractQueryTree;
 
@@ -194,38 +195,39 @@ Callbacks.CallbacksBackend.prototype.subscribe = function(s,p,o,g,callback, done
     var queryEnv = {blanks:{}, outCache:{}};
     this.engine.registerNsInEnvironment(null, queryEnv);
     var that = this;
-    var normalized = this.engine.normalizeQuad(quad, queryEnv, true);
-    var pattern =  new QuadIndexCommon.Pattern(normalized);
-    var indexKey = that._indexForPattern(pattern);
-    var indexOrder = that.componentOrders[indexKey];
-    var index = that.indexMap[indexKey];
-    for(var i=0; i<indexOrder.length; i++) {
-        var component = indexOrder[i];
-        var quadValue = normalized[component];
-        if(quadValue === '_') {
-            if(index['_'] == null) {
-                index['_'] = [];
-            }
-            that.callbackCounter++;
-            index['_'].push(that.callbackCounter);
-            that.callbacksMap[that.callbackCounter] = callback;
-            that.callbacksInverseMap[callback] = that.callbackCounter;
-            break;
-        } else {
-            if(i===indexOrder.length-1) {
-                index[quadValue] = index[quadValue] || {'_':[]};
+    this.engine.normalizeQuad(quad, queryEnv, true, function(normalized){
+        var pattern =  new Pattern(normalized);
+        var indexKey = that._indexForPattern(pattern);
+        var indexOrder = that.componentOrders[indexKey];
+        var index = that.indexMap[indexKey];
+        for(var i=0; i<indexOrder.length; i++) {
+            var component = indexOrder[i];
+            var quadValue = normalized[component];
+            if(quadValue === '_') {
+                if(index['_'] == null) {
+                    index['_'] = [];
+                }
                 that.callbackCounter++;
-                index[quadValue]['_'].push(that.callbackCounter);
+                index['_'].push(that.callbackCounter);
                 that.callbacksMap[that.callbackCounter] = callback;
                 that.callbacksInverseMap[callback] = that.callbackCounter;
+                break;
             } else {
-                index[quadValue] = index[quadValue] || {};
-                index = index[quadValue];
+                if(i===indexOrder.length-1) {
+                    index[quadValue] = index[quadValue] || {'_':[]};
+                    that.callbackCounter++;
+                    index[quadValue]['_'].push(that.callbackCounter);
+                    that.callbacksMap[that.callbackCounter] = callback;
+                    that.callbacksInverseMap[callback] = that.callbackCounter;
+                } else {
+                    index[quadValue] = index[quadValue] || {};
+                    index = index[quadValue];
+                }
             }
         }
-    }
-    if(doneCallback != null)
-        doneCallback(true);
+        if(doneCallback != null)
+            doneCallback(true);
+    });
 };
 
 Callbacks.CallbacksBackend.prototype.unsubscribe = function(callback) {
@@ -309,8 +311,8 @@ Callbacks.CallbacksBackend.prototype.observeNode = function() {
     var queryEnv = {blanks:{}, outCache:{}};
     this.engine.registerNsInEnvironment(null, queryEnv);
     var bindings = [];
-    this.engine.execute(query,  function(success, graph){
-        if(success) {
+    this.engine.execute(query,  function(err, graph){
+        if(!err) {
             var node = graph;
             var mustFlush = false;
             var observer = function(event, triples){
@@ -390,7 +392,7 @@ Callbacks.CallbacksBackend.prototype.observeQuery = function(query, callback, en
         }
 
         var normalized = that.engine.normalizeQuad(quad, queryEnv, true);
-        pattern =  new QuadIndexCommon.Pattern(normalized);
+        pattern =  new Pattern(normalized);
         indexKey = that._indexForPattern(pattern);
         indexOrder = that.componentOrders[indexKey];
         index = that.queriesIndexMap[indexKey];
@@ -417,8 +419,8 @@ Callbacks.CallbacksBackend.prototype.observeQuery = function(query, callback, en
 
     }
 
-    this.engine.execute(query, function(success, results){
-        if(success){
+    this.engine.execute(query, function(err, results){
+        if(!err){
             callback(results);
         } else {
             console.log("ERROR in query callback "+results);
@@ -481,8 +483,8 @@ Callbacks.CallbacksBackend.prototype.dispatchQueries = function(callback) {
             queryCallback = that.queriesCallbacksMap[queryId];
 
             that.engine.execute(query,
-                function(success, results){
-                    if(success) {
+                function(err, results){
+                    if(!err) {
                         try{
                             queryCallback(results);
                         }catch(e){}

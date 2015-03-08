@@ -485,7 +485,7 @@ describe("Store", function () {
         });
     });
 
-/*
+
     it("Should pass test Load1", function (done) {
         Store.create({name: 'test', overwrite: true}, function (err, store) {
 
@@ -518,6 +518,7 @@ describe("Store", function () {
         });
     });
 
+/*
     it("Should pass test Load2", function (done) {
         Store.create(function (err, store) {
             store.load('remote', 'http://dbpedia.org/resource/Tim_Berners-Lee', function (err, result) {
@@ -536,7 +537,7 @@ describe("Store", function () {
             });
         });
     });
-
+*/
     it("Should pass test Load3", function (done) {
         Store.create({name: 'test', overwrite: true}, function (err, store) {
 
@@ -568,6 +569,7 @@ describe("Store", function () {
             });
         });
     });
+
 
     it("Should pass test Load5", function (done) {
         Store.create({name: 'test', overwrite: true}, function (err, store) {
@@ -820,7 +822,7 @@ describe("Store", function () {
             });
         });
     });
-
+    /*
 //it("Should pass test Export1", function(done) {
 //    Store.create(function(err,store) {
 //        store.load('remote', 'http://dbpedia.org/resource/Tim_Berners-Lee', 'http://test.com/graph-to-export', function(err, result) {

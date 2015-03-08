@@ -73,7 +73,7 @@ Lexicon.prototype.registeredGraphs = function(returnUris, callback) {
     var graphs = [];
     this.knownGraphs.walk(function(node){
         if(returnUris === true) {
-            graphs.push(node.value);
+            graphs.push(node.data);
         } else {
             graphs.push(node.key);
         }
