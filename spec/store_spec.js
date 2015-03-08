@@ -42,7 +42,7 @@ describe("Store", function () {
         });
     });
 
-    it("Should pass test graph #1", function (done) {
+    it("Should pass integration test graph #1", function (done) {
         new Store.Store({name: 'test', overwrite: true}, function (err, store) {
             expect(err == null);
             var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
@@ -85,7 +85,7 @@ describe("Store", function () {
         });
     });
 
-    it("Should pass test graph #2", function (done) {
+    it("Should pass integration test graph #2", function (done) {
         new Store.Store({name: 'test', overwrite: true}, function (err, store) {
             expect(err == null);
             var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
@@ -136,7 +136,7 @@ describe("Store", function () {
         });
     });
 
-    it("Should pass test subject #1", function (done) {
+    it("Should pass integration test subject #1", function (done) {
         new Store.Store({name: 'test', overwrite: true}, function (err, store) {
             expect(err == null);
             var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
@@ -170,7 +170,7 @@ describe("Store", function () {
         });
     });
 
-    it("Should pass test subject #2", function (done) {
+    it("Should pass integration test subject #2", function (done) {
         new Store.Store({name: 'test', overwrite: true}, function (err, store) {
             expect(err == null);
             var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
@@ -222,7 +222,7 @@ describe("Store", function () {
         });
     });
 
-    it("Should pass test prefixes", function (done) {
+    it("Should pass integration test prefixes", function (done) {
         new Store.Store({name: 'test', overwrite: true}, function (err, store) {
             expect(err == null);
             var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
@@ -275,7 +275,7 @@ describe("Store", function () {
         });
     });
 
-    it("Should pass test default prefixes", function (done) {
+    it("Should pass integration test default prefixes", function (done) {
         new Store.Store({name: 'test', overwrite: true}, function (err, store) {
             expect(err == null);
             var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
@@ -329,7 +329,7 @@ describe("Store", function () {
     });
 
 
-    it("Should pass test Insert1", function (done) {
+    it("Should pass integration test Insert1", function (done) {
         Store.create({name: 'test', overwrite: true}, function (err, store) {
 
             store.setPrefix("ex", "http://example.org/people/");
@@ -357,7 +357,7 @@ describe("Store", function () {
         });
     });
 
-    it("Should pass test Insert2", function (done) {
+    it("Should pass integration test Insert2", function (done) {
         Store.create({name: 'test', overwrite: true}, function (err, store) {
 
             store.setPrefix("ex", "http://example.org/people/");
@@ -386,7 +386,7 @@ describe("Store", function () {
         });
     });
 
-    it("Should pass test Delete1", function (done) {
+    it("Should pass integration test Delete1", function (done) {
         Store.create({name: 'test', overwrite: true}, function (err, store) {
 
             store.setPrefix("ex", "http://example.org/people/");
@@ -420,7 +420,7 @@ describe("Store", function () {
         });
     });
 
-    it("Should pass test Delete2", function (done) {
+    it("Should pass integration test Delete2", function (done) {
         Store.create({name: 'test', overwrite: true}, function (err, store) {
 
             store.setPrefix("ex", "http://example.org/people/");
@@ -453,7 +453,7 @@ describe("Store", function () {
         });
     });
 
-    it("Should pass test Clear", function (done) {
+    it("Should pass integration test Clear", function (done) {
         Store.create({name: 'test', overwrite: true}, function (err, store) {
 
             store.setPrefix("ex", "http://example.org/people/");
@@ -486,7 +486,7 @@ describe("Store", function () {
     });
 
 
-    it("Should pass test Load1", function (done) {
+    it("Should pass integration test Load1", function (done) {
         Store.create({name: 'test', overwrite: true}, function (err, store) {
 
             store.setPrefix("ex", "http://example.org/people/");
@@ -519,7 +519,7 @@ describe("Store", function () {
     });
 
 /*
-    it("Should pass test Load2", function (done) {
+    it("Should pass integration test Load2", function (done) {
         Store.create(function (err, store) {
             store.load('remote', 'http://dbpedia.org/resource/Tim_Berners-Lee', function (err, result) {
                 store.execute("SELECT ?o WHERE { ?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?o }", function (err, results) {
@@ -538,7 +538,7 @@ describe("Store", function () {
         });
     });
 */
-    it("Should pass test Load3", function (done) {
+    it("Should pass integration test Load3", function (done) {
         Store.create({name: 'test', overwrite: true}, function (err, store) {
 
             store.setPrefix("ex", "http://example.org/examples/");
@@ -571,7 +571,7 @@ describe("Store", function () {
     });
 
 
-    it("Should pass test Load5", function (done) {
+    it("Should pass integration test Load5", function (done) {
         Store.create({name: 'test', overwrite: true}, function (err, store) {
 
             store.setPrefix("ex", "http://example.org/examples/");
@@ -603,7 +603,7 @@ describe("Store", function () {
         });
     });
 
-    it("Should pass test Load5b", function (done) {
+    it("Should pass integration test Load5b", function (done) {
         Store.create({name: 'test', overwrite: true}, function (err, store) {
 
             store.setPrefix("ex", "http://example.org/examples/");
@@ -634,7 +634,7 @@ describe("Store", function () {
         });
     });
 
-    it("Should pass test Load5c", function (done) {
+    it("Should pass integration test Load5c", function (done) {
         Store.create({name: 'test', overwrite: true}, function (err, store) {
 
             store.setPrefix("ex", "http://example.org/examples/");
@@ -669,7 +669,7 @@ describe("Store", function () {
         });
     });
 
-    it("Should pass test EventsAPI1", function (done) {
+    it("Should pass integration test EventsAPI1", function (done) {
         var counter = 0;
         new Store.Store({name: 'test', overwrite: true}, function (err, store) {
             store.execute('INSERT DATA {  <http://example/book> <http://example.com/vocab#title> <http://test.com/example> }', function (result, msg) {
@@ -699,7 +699,7 @@ describe("Store", function () {
         });
     });
 
-    it("Should pass test EventsAPI2", function (done) {
+    it("Should pass integration test EventsAPI2", function (done) {
         var counter = 0;
         new Store.Store({name: 'test', overwrite: true}, function (err, store) {
             store.execute('INSERT DATA { GRAPH <http://example/graph> { <http://example/book> <http://example.com/vocab#title> <http://test.com/example> } }', function (result, msg) {
@@ -730,7 +730,7 @@ describe("Store", function () {
     });
 
 
-    it("Should pass test EventsAPI3", function (done) {
+    it("Should pass integration test EventsAPI3", function (done) {
         var counter = 0;
         new Store.Store({name: 'test', overwrite: true}, function (err, store) {
             store.subscribe("http://example/book", null, null, null, function (event, triples) {
@@ -771,7 +771,7 @@ describe("Store", function () {
         });
     });
 
-    it("Should pass test RegisteredGraph", function (done) {
+    it("Should pass integration test RegisteredGraph", function (done) {
         new Store.Store({name: 'test', overwrite: true}, function (err, store) {
             var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
                      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
@@ -822,8 +822,8 @@ describe("Store", function () {
             });
         });
     });
-    /*
-//it("Should pass test Export1", function(done) {
+
+//it("Should pass integration test Export1", function(done) {
 //    Store.create(function(err,store) {
 //        store.load('remote', 'http://dbpedia.org/resource/Tim_Berners-Lee', 'http://test.com/graph-to-export', function(err, result) {
 //            var graph = store.graph('http://test.com/graph-to-export', function(err, graph){
@@ -848,7 +848,7 @@ describe("Store", function () {
 //};
 
 
-    it("Should pass test DefaultPrefixes", function (done) {
+    it("Should pass integration test DefaultPrefixes", function (done) {
         new Store.Store({name: 'test', overwrite: true}, function (err, store) {
             store.execute('INSERT DATA {  <http://example/person1> <http://xmlns.com/foaf/0.1/name> "Celia" }', function (result, msg) {
                 store.execute('SELECT * { ?s foaf:name ?name }', function (err, results) {
@@ -870,7 +870,7 @@ describe("Store", function () {
         });
     });
 
-    it("Should pass test DuplicatedInsert", function (done) {
+    it("Should pass integration test DuplicatedInsert", function (done) {
         new Store.Store({name: 'test', overwrite: true}, function (err, store) {
             store.execute('INSERT DATA {  <http://example/book3> <http://example.com/vocab#title> <http://test.com/example> }', function (result, msg) {
                 store.execute('INSERT DATA {  <http://example/book3> <http://example.com/vocab#title> <http://test.com/example> }', function (result, msg) {
@@ -891,7 +891,7 @@ describe("Store", function () {
     });
 
 
-    it("Should pass test DuplicatedParsing", function (done) {
+    it("Should pass integration test DuplicatedParsing", function (done) {
         new Store.Store({name: 'test', overwrite: true}, function (err, store) {
             var data = {'@id': 'http://test.com/me', 'http://somproperty.org/prop': 'data'};
             store.load('application/json', data, function (result, msg) {
@@ -909,7 +909,7 @@ describe("Store", function () {
         });
     });
 
-    it("Should pass test ConstructBlankNodes", function (done) {
+    it("Should pass integration test ConstructBlankNodes", function (done) {
         new Store.Store({name: 'test', overwrite: true}, function (err, store) {
             var uriGraph = 'http://www.example.com/data.ttl';
             var triplesTTL = "@prefix foaf: <http://xmlns.com/foaf/0.1/> . <http://www.example.com/resource/12645> a foaf:Person . ";
@@ -964,7 +964,7 @@ describe("Store", function () {
         });
     });
 
-    it("Should pass test RedundantVars1", function (done) {
+    it("Should pass integration test RedundantVars1", function (done) {
         new Store.Store({name: 'test', overwrite: true}, function (err, store) {
             store.load(
                 'text/n3',
@@ -982,7 +982,7 @@ describe("Store", function () {
 
     });
 
-    it("Should pass test RedundantVars2", function (done) {
+    it("Should pass integration test RedundantVars2", function (done) {
         new Store.Store({name: 'test', overwrite: true}, function (err, store) {
             store.load(
                 'text/n3',
@@ -1001,7 +1001,7 @@ describe("Store", function () {
 
     });
 
-    it("Should pass test RedundantVars3", function (done) {
+    it("Should pass integration test RedundantVars3", function (done) {
         new Store.Store({name: 'test', overwrite: true}, function (err, store) {
             store.load(
                 'text/n3',
@@ -1024,7 +1024,7 @@ describe("Store", function () {
 
     });
 
-    it("Should pass test RedundantVars4", function (done) {
+    it("Should pass integration test RedundantVars4", function (done) {
         new Store.Store({name: 'test', overwrite: true}, function (err, store) {
             store.load(
                 'text/n3',
@@ -1048,7 +1048,7 @@ describe("Store", function () {
 
     });
 
-    it("Should pass test ShouldLoadJSONLDWithAllMediaTypes", function (done) {
+    it("Should pass integration test ShouldLoadJSONLDWithAllMediaTypes", function (done) {
         var input = {
             "@type": "foaf:Person",
             "foaf:name": "Manu Sporny",
@@ -1095,7 +1095,7 @@ describe("Store", function () {
 
     });
 
-    it("Should pass test RegisterCustomFunction", function (done) {
+    it("Should pass integration test RegisterCustomFunction", function (done) {
         new Store.Store({name: 'test', overwrite: true}, function (err, store) {
             store.load(
                 'text/n3',
@@ -1127,12 +1127,12 @@ describe("Store", function () {
         });
 
     });
-    */
+
 
 });
 
 /*
- it("Should pass test Load5", function(done) {
+ it("Should pass integration test Load5", function(done) {
  Store.create({name:'test', overwrite:true},function(err,store) {
 
  store.setPrefix("ex", "http://example.org/people/");

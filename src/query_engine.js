@@ -523,12 +523,12 @@ QueryEngine.prototype.copyDenormalizedBindings = function(bindingsList, out, cal
                 } else {
                     that.lexicon.retrieve(oid, function(val){
                         out[oid] = val;
-                        denorm[variables[j]] = val;
+                        denorm[variable] = val;
                         kk();
                     });
                 }
             }
-        })(function(){
+        },function(){
             k(null,denorm);
         });
     }, function(_, denormList){
