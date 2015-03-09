@@ -195,8 +195,6 @@ normalizeUnicodeLiterals = function (string) {
 };
 
 
-
-
 module.exports = {
     nextTick: nextTick,
     hasTerm: hashTerm,

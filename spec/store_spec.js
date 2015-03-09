@@ -1,4 +1,4 @@
-var Store = require("../src/store").Store;
+var Store = require("../src/store");
 var N3Parser = require("../src/rvn3_parser").RVN3Parser;
 
 describe("Store", function () {

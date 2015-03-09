@@ -1,10 +1,3 @@
-/**
- * @namespace
- *
- * The Store module defines the public interface to the RDF store.
- */
-var Store = {};
-
 // imports
 var QueryEngine = require("./query_engine").QueryEngine;
 var QuadBackend = require("./quad_backend").QuadBackend;
@@ -12,85 +5,6 @@ var Lexicon = require("./lexicon").Lexicon;
 var RDFModel = require("./rdf_model");
 var _ = require("lodash");
 
-/**
- * Version of the store
- */
-Store.VERSION = "0.9.0";
-
-/**
- * Create a new RDFStore instance that will be
- * executed in a web worker in the browser or a new process
- * in Node.js.
- * <br/>
- * <br/>
- * The first argument to this function is the URL/FS location
- * of the store script.
- * <br/>
- * <br/>
- * This parameter is mandatory in the browser. It is safe to
- * ignore this parameter in Node.js.
- * <br/>
- * <br/>
- * If support for web workers is not present, a regular
- * store object will be initialized and returned.
- * <br/>
- * <br/>
- *
- * @param {String} [scriptPath] URL of the RDFStore script
- * @param {Object[]} [args] Arguments to be passed to the store that will be created
- * @param {Function} callback Callback function that will be invoked with an error flag and the connection/store object.
- */
-Store.connect = function() {
-    var path, args, callback;
-    if(arguments.length == 1) {
-        path = __dirname;
-        args = {};
-        callback = arguments[0];
-    } else if(arguments.length == 2) {
-        if(typeof(arguments[0]) === 'string') {
-            path = arguments[0];
-            args = {};
-        } else {
-            path = __dirname+"/index.js";
-            args = arguments[0];
-        }
-        callback = arguments[1];
-    } else {
-        path = arguments[0];
-        args = arguments[1];
-        callback = arguments[2];
-    }
-    callback(new Error("Store#connect is not supported in the 1.x series of the library"));
-};
-
-/**
- * Creates a new instance of the store.
- *
- * The function accepts two optional arguments.
- * <br/>
- * If only one argument is passed it must be a
- * callback function that will be invoked when the
- * store had been created.<br/>
- * <br/>
- * If two arguments are passed the first one must
- * be a map of configuration parameters for the
- * store, and the second one the callback function.<br/>
- * <br/>
- * Take a look at the Store constructor function for
- * a detailed list of possible configuration parameters.<br/>
- *
- * @param {Object[]} [args] Arguments to be passed to the store that will be created
- * @param {Function} [callback] Callback function that will be invoked with an error flag and the connection/store object.
- */
-Store.create = function(){
-    if(arguments.length == 1) {
-        return new Store.Store(arguments[0]);
-    } else if(arguments.length == 2) {
-        return new Store.Store(arguments[0], arguments[1]);
-    } else {
-        return new Store.Store();
-    };
-};
 
 /**
  * Creates a new store.<br/>
@@ -109,7 +23,7 @@ Store.create = function(){
  *  <li> maxCacheSize: if using persistence, maximum size of the index cache </li>
  * </ul>
  */
-Store.Store = function(arg1, arg2) {
+Store = function(arg1, arg2) {
     var callback = null;
     var params   = null;
 
@@ -159,8 +73,8 @@ Store.Store = function(arg1, arg2) {
  * An instance of RDF JS Interface <code>RDFEnvironment</code>
  * associated to this graph instance.
  */
-Store.Store.prototype.rdf = RDFModel.rdf;
-Store.Store.prototype.rdf.api = RDFModel;
+Store.prototype.rdf = RDFModel.rdf;
+Store.prototype.rdf.api = RDFModel;
 
 /**
  * Registers a new function with an associated name that can
@@ -192,7 +106,7 @@ Store.Store.prototype.rdf.api = RDFModel;
  * @param {String} [name]: name of the custom function, it will be accesible as custom:name in the query
  * @param {Function} [function]: lambda function with the code for the query custom function.
  */
-Store.Store.prototype.registerCustomFunction = function(name, fn) {
+Store.prototype.registerCustomFunction = function(name, fn) {
     this.customFns[name] = fn;
     this.engine.setCustomFunctions(this.customFns);
 };
@@ -225,7 +139,7 @@ Store.Store.prototype.registerCustomFunction = function(name, fn) {
  * @param {String} [namespacesURIs] named namespaces
  * @param {Function} [callback]
  */
-Store.Store.prototype.execute = function() {
+Store.prototype.execute = function() {
     if(arguments.length === 3) {
         this.executeWithEnvironment(arguments[0],
             arguments[1],
@@ -263,7 +177,7 @@ Store.Store.prototype.execute = function() {
  * @param {String} URIs named namespaces
  * @param {Function} [callback]
  */
-Store.Store.prototype.executeWithEnvironment = function() {
+Store.prototype.executeWithEnvironment = function() {
     var queryString, defaultGraphs, namedGraphs;
 
     if(arguments.length === 3) {
@@ -304,7 +218,7 @@ Store.Store.prototype.executeWithEnvironment = function() {
  * @param {String} [graphURI] If this parameter is missing, the default graph will be returned
  * @param {Functon} callback
  */
-Store.Store.prototype.graph = function() {
+Store.prototype.graph = function() {
     var graphUri = null;
     var callback = null;
     if(arguments.length === 1) {
@@ -344,7 +258,7 @@ Store.Store.prototype.graph = function() {
  * @param {String} [graphURI] If this parameter is missing, the node will be looked into the default graph
  * @param {Functon} callback
  */
-Store.Store.prototype.node = function() {
+Store.prototype.node = function() {
     var graphUri = null;
     var callback = null;
     var nodeUri  = null;
@@ -395,7 +309,7 @@ Store.Store.prototype.node = function() {
  * @param {Function} eventListener Function that will be notified with the events
  * @param {Function} [callback] Function that will be invoked, once the event listener had been correctly set up.
  */
-Store.Store.prototype.startObservingNode = function() {
+Store.prototype.startObservingNode = function() {
     var uri, graphUri, callback;
 
     if(arguments.length === 2) {
@@ -417,7 +331,7 @@ Store.Store.prototype.startObservingNode = function() {
  * @arguments
  * @param {Function} eventListener The event listener function to remove, the same passed as an argument to startObservingNode
  */
-Store.Store.prototype.stopObservingNode = function(callback) {
+Store.prototype.stopObservingNode = function(callback) {
     this.engine.callbacksBackend.stopObservingNode(callback);
 };
 
@@ -442,7 +356,7 @@ Store.Store.prototype.stopObservingNode = function(callback) {
  * @param {Function} eventListener the function that will receive the notifications
  * @param {Function} [callback] optional function that will be invoked when the stored had set up the event listener function.
  */
-Store.Store.prototype.startObservingQuery = function() {
+Store.prototype.startObservingQuery = function() {
     var query = arguments[0];
     var callback = arguments[1];
     var endCallback = arguments[2];
@@ -460,7 +374,7 @@ Store.Store.prototype.startObservingQuery = function() {
  * @arguments
  * @param {Function} eventListener The event listener function to remove, the same passed as an argument to startObservingQuery
  */
-Store.Store.prototype.stopObservingQuery = function(query) {
+Store.prototype.stopObservingQuery = function(query) {
     this.engine.callbacksBackend.stopObservingQuery(query);
 };
 
@@ -487,7 +401,7 @@ Store.Store.prototype.stopObservingQuery = function(query) {
  * @param {String} g graph or null for any graph
  * @param {Function} event listener function that will be notified when a change occurs
  */
-Store.Store.prototype.subscribe = function(s, p, o, g, callback) {
+Store.prototype.subscribe = function(s, p, o, g, callback) {
     var that = this;
     var adapterCb = function(event,triples){
         var acum = [];
@@ -519,7 +433,7 @@ Store.Store.prototype.subscribe = function(s, p, o, g, callback) {
  * @arguments
  * @param {Function} callback The event listener to be removed
  */
-Store.Store.prototype.unsubscribe = function(callback) {
+Store.prototype.unsubscribe = function(callback) {
     var adapterCb = this.functionMap[callback];
     this.engine.callbacksBackend.unsubscribe(adapterCb);
     delete this.functionMap[callback];
@@ -534,7 +448,7 @@ Store.Store.prototype.unsubscribe = function(callback) {
  * @param {String} prefix The prefix to be associated
  * @param {String} URIFragment URI fragment the provided prefix will be resolved
  */
-Store.Store.prototype.setPrefix = function(prefix, uri) {
+Store.prototype.setPrefix = function(prefix, uri) {
     this.rdf.setPrefix(prefix, uri);
 };
 
@@ -546,7 +460,7 @@ Store.Store.prototype.setPrefix = function(prefix, uri) {
  * @arguments
  * @param {String} URIFragment The URI fragment will be used by default
  */
-Store.Store.prototype.setDefaultPrefix = function(uri) {
+Store.prototype.setDefaultPrefix = function(uri) {
     this.rdf.setDefaultPrefix(uri);
 };
 
@@ -567,7 +481,7 @@ Store.Store.prototype.setDefaultPrefix = function(uri) {
  * @param {String} [graphURI] URI of the graph where the triples will be inserted. If it is missing, triples will be inserted in the default graph
  * @param {String} [callback] A callback function that will be invoked with a success notification and the number of triples inserted
  */
-Store.Store.prototype.insert = function() {
+Store.prototype.insert = function() {
     var graph;
     var triples;
     var callback;
@@ -600,7 +514,7 @@ Store.Store.prototype.insert = function() {
     this.engine.execute(query, callback);
 };
 
-Store.Store.prototype._nodeToQuery = function(term) {
+Store.prototype._nodeToQuery = function(term) {
     if(term.interfaceName === 'NamedNode') {
         var resolvedUri = this.rdf.resolve(term.valueOf());
         if(resolvedUri != null) {
@@ -630,7 +544,7 @@ Store.Store.prototype._nodeToQuery = function(term) {
  * @param {String} [graphURI] URI of the graph where the triples will be removed from. If it is missing, triples will be removed from the default graph
  * @param {String} [callback] A callback function that will be invoked with a success notification
  */
-Store.Store.prototype.delete = function() {
+Store.prototype.delete = function() {
 
     var graph;
     var triples;
@@ -677,7 +591,7 @@ Store.Store.prototype.delete = function() {
  * @param {String} [graph] the URI of the graph the triples must be removed from
  * @param {Function} [callback] a function that will be invoked with a success notification
  */
-Store.Store.prototype.clear = function() {
+Store.prototype.clear = function() {
     var graph;
     var callback;
 
@@ -706,7 +620,7 @@ Store.Store.prototype.clear = function() {
  * @arguments
  * @param {boolean} mustFireEvents true/false value.
  */
-Store.Store.prototype.setBatchLoadEvents = function(mustFireEvents){
+Store.prototype.setBatchLoadEvents = function(mustFireEvents){
     this.engine.eventsOnBatchLoad = mustFireEvents;
 };
 
@@ -721,7 +635,7 @@ Store.Store.prototype.setBatchLoadEvents = function(mustFireEvents){
  * @param {String} ns the name space to be regsitered
  * @param {String} prefix the URI fragment associated to the name space
  */
-Store.Store.prototype.registerDefaultNamespace = function(ns, prefix) {
+Store.prototype.registerDefaultNamespace = function(ns, prefix) {
     this.rdf.prefixes.set(ns,prefix);
     this.engine.registerDefaultNamespace(ns,prefix);
 };
@@ -730,7 +644,7 @@ Store.Store.prototype.registerDefaultNamespace = function(ns, prefix) {
  * Registers the default namespaces declared in the RDF JS Interfaces
  * specification in the default Profile.
  */
-Store.Store.prototype.registerDefaultProfileNamespaces = function() {
+Store.prototype.registerDefaultProfileNamespaces = function() {
     var defaultNsMap = this.rdf.prefixes.values();
     for (var p in defaultNsMap) {
         this.registerDefaultNamespace(p,defaultNsMap[p]);
@@ -762,7 +676,7 @@ Store.Store.prototype.registerDefaultProfileNamespaces = function() {
  * @param {String} [graph] Graph where the parsed triples will be inserted. If it is not specified, triples will be loaded in the default graph
  * @param {Function} callback that will be invoked with a success notification and the number of triples loaded.
  */
-Store.Store.prototype.load = function(){
+Store.prototype.load = function(){
     var mediaType;
     var data;
     var graph;
@@ -850,7 +764,7 @@ Store.Store.prototype.load = function(){
  * @param {String} mediaType the media type for this parser
  * @param {String} parser an object containing the *parse* function with the parser logic
  */
-Store.Store.prototype.registerParser = function(mediaType, parser) {
+Store.prototype.registerParser = function(mediaType, parser) {
     this.engine.rdfLoader.registerParser(mediaType,parser);
 };
 
@@ -861,7 +775,7 @@ Store.Store.prototype.registerParser = function(mediaType, parser) {
  * @arguments:
  * @param {Function} callback function that will receive a success notification and the array of graph URIs
  */
-Store.Store.prototype.registeredGraphs = function(callback) {
+Store.prototype.registeredGraphs = function(callback) {
     this.engine.lexicon.registeredGraphs(true, function(graphs){
         var graphNodes = _.map(graphs, function(graph){
             return new RDFModel.NamedNode(graph);
@@ -879,7 +793,7 @@ Store.Store.prototype.registeredGraphs = function(callback) {
  * and relies on jQuery in the browser version. This can be overriden
  * using the <code>setNetworkTransport</code> function.
  */
-Store.Store.prototype.getNetworkTransport = function() {
+Store.prototype.getNetworkTransport = function() {
     return NetworkTransport;
 };
 
@@ -901,7 +815,7 @@ Store.Store.prototype.getNetworkTransport = function() {
  * @arguments
  * @param networkTransportImpl object implementing the transport *load* function.
  */
-Store.Store.prototype.setNetworkTransport = function(networkTransportImpl) {
+Store.prototype.setNetworkTransport = function(networkTransportImpl) {
     NetworkTransport = networkTransportImpl;
 };
 
@@ -910,7 +824,7 @@ Store.Store.prototype.setNetworkTransport = function(networkTransportImpl) {
  * Clean-up function releasing all temporary resources held by the
  * store instance.
  */
-Store.Store.prototype.close = function(cb) {
+Store.prototype.close = function(cb) {
     if(cb == null)
         cb = function(){};
     if(this.engine.close)
@@ -919,6 +833,86 @@ Store.Store.prototype.close = function(cb) {
         cb();
 };
 
-module.exports = {
-    Store: Store
+/**
+ * Version of the store
+ */
+Store.VERSION = "0.9.0";
+
+/**
+ * Create a new RDFStore instance that will be
+ * executed in a web worker in the browser or a new process
+ * in Node.js.
+ * <br/>
+ * <br/>
+ * The first argument to this function is the URL/FS location
+ * of the store script.
+ * <br/>
+ * <br/>
+ * This parameter is mandatory in the browser. It is safe to
+ * ignore this parameter in Node.js.
+ * <br/>
+ * <br/>
+ * If support for web workers is not present, a regular
+ * store object will be initialized and returned.
+ * <br/>
+ * <br/>
+ *
+ * @param {String} [scriptPath] URL of the RDFStore script
+ * @param {Object[]} [args] Arguments to be passed to the store that will be created
+ * @param {Function} callback Callback function that will be invoked with an error flag and the connection/store object.
+ */
+var connect = function() {
+    var path, args, callback;
+    if(arguments.length == 1) {
+        path = __dirname;
+        args = {};
+        callback = arguments[0];
+    } else if(arguments.length == 2) {
+        if(typeof(arguments[0]) === 'string') {
+            path = arguments[0];
+            args = {};
+        } else {
+            path = __dirname+"/index.js";
+            args = arguments[0];
+        }
+        callback = arguments[1];
+    } else {
+        path = arguments[0];
+        args = arguments[1];
+        callback = arguments[2];
+    }
+    callback(new Error("Store#connect is not supported in the 1.x series of the library"));
 };
+
+/**
+ * Creates a new instance of the store.
+ *
+ * The function accepts two optional arguments.
+ * <br/>
+ * If only one argument is passed it must be a
+ * callback function that will be invoked when the
+ * store had been created.<br/>
+ * <br/>
+ * If two arguments are passed the first one must
+ * be a map of configuration parameters for the
+ * store, and the second one the callback function.<br/>
+ * <br/>
+ * Take a look at the Store constructor function for
+ * a detailed list of possible configuration parameters.<br/>
+ *
+ * @param {Object[]} [args] Arguments to be passed to the store that will be created
+ * @param {Function} [callback] Callback function that will be invoked with an error flag and the connection/store object.
+ */
+var create = function(){
+    if(arguments.length == 1) {
+        return new Store(arguments[0]);
+    } else if(arguments.length == 2) {
+        return new Store(arguments[0], arguments[1]);
+    } else {
+        return new Store();
+    };
+};
+
+module.exports.Store = Store;
+module.exports.create = create;
+module.exports.connect = connect;

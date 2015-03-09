@@ -372,7 +372,7 @@ QueryFilters.RDFTermEquality = function(v1, v2, queryEngine, env) {
 
             return true;
         } else {
-l
+
 
             if(v1.type != null && v2.type != null) {
                 return  QueryFilters.ebvError();
