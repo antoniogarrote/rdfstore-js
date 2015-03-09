@@ -27,7 +27,7 @@ rdfstore-js is a pure Javascript implementation of a RDF graph store with suppor
 
       });
     })
-    ```
+```
     
 rdfstore-js can be executed in a web browser or can be included as a library in a node.js application. It can also be executed as a stand-alone SPARQL end-point accepting SPARQL RDF Protocol HTTP requests. Go to the bottom of this page to find some application examples using the library.
 
@@ -103,8 +103,9 @@ To execute the whole test suite of the library, including the DAWG
 test cases for SPARQL 1.0 and the test cases for SPARQL 1.1
 implemented at the moment, a gulp target can be executed:
 
+```bash
     $gulp specs
-
+```
 
 Additionally, there are some smoke tests for both browser versions that can be found ithe 'spec/browser'' directory.
 
@@ -196,7 +197,7 @@ rdfstore-js relies in on the jQuery Javascript library to peform cross-browser A
         });
       }
     })
-    ```
+```
     
 ###High level interface
 
