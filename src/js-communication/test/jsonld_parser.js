@@ -216,7 +216,7 @@ exports.testParsing6 = function(test) {
     test.ok(result[0].object.uri === "http://manu.sporny.org");
  
  
-    input = {"foaf:name": { "@literal": "花澄", "@language": "ja"  } };
+    input = {"foaf:name": { "@value": "花澄", "@language": "ja"  } };
  
     result = JSONLDParser.parser.parse(input);
     
