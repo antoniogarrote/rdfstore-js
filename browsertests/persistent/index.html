@@ -1,0 +1,20 @@
+<html>
+  <head>
+    <title>Example Test Suite</title>
+    <link rel="stylesheet" href="nodeunit.css" type="text/css" />
+    <script src="rdf_store.js"></script>
+    <script src="nodeunit.js"></script>
+    <script src="store.js"></script>
+    <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+  </head>
+  <body>
+    <h1 id="nodeunit-header">RDFStore-JS Persistent Storage Version Smoke Tests</h1>
+    <script>
+      jQuery(document).ready(function(){
+        nodeunit.run({
+          'Store': suite_store
+        });
+      });
+    </script>
+  </body>
+</html>

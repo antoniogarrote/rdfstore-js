@@ -1,0 +1,260 @@
+<!doctype html>
+<!--[if lt IE 7 ]> <html class="no-js ie6" lang="en"> <![endif]-->
+<!--[if IE 7 ]>    <html class="no-js ie7" lang="en"> <![endif]-->
+<!--[if IE 8 ]>    <html class="no-js ie8" lang="en"> <![endif]-->
+<!--[if (gte IE 9)|!(IE)]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+
+  <!-- Always force latest IE rendering engine (even in intranet) & Chrome Frame
+       Remove this if you use the .htaccess -->
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+  <title>rdfstore-js</title>
+  <meta name="author" content="Antonio Garrote">
+
+  <link rel="stylesheet" href="./css/rdfstore_frontend.css">
+  <link rel="stylesheet" href="./css/demo.css">
+  <link rel="stylesheet" href="./css/ui-lightness/jquery-ui-1.8.14.custom.css">
+
+  <!-- All JavaScript at the bottom, except for Modernizr which
+  enables HTML5 elements & feature detects -->
+  <script type='text/javascript' src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+  <script type='text/javascript' src='./js/jquery-ui.min.js'></script>
+  <script type='text/javascript' src='http://ajax.aspnetcdn.com/ajax/jquery.templates/beta1/jquery.tmpl.js'></script>
+  <script type='text/javascript' src='./js/rdf_store.js'></script>
+  <script type='text/javascript' src='./js/rdfquery.js'></script>
+  <script type='text/javascript' src='./js/knockout-1.2.1.js'></script>
+  <script type='text/javascript' src='./js/rdfstore_frontend.js'></script>
+  <script type='text/javascript'>
+    jQuery(document).ready(function(){   
+    frontend = null;
+    var startDemo = function(cb) {
+      rdfstore.create({"communication": {
+                         "parsers": {
+                           "text/html" :           rdfstore_frontend.rdfaParser,
+                           "application/rdf+xml":  rdfstore_frontend.rdfParser
+                         },
+                        "precedences": ["text/n3", "text/turtle", "application/rdf+xml", "text/html", "application/json"] }
+                      }, 
+                      function(store) {
+
+                         // original network transport
+                         var originalNetworkTransport = store.getNetworkTransport();
+                         rdfstore_frontend.ProxyNetworkTransport.proxyUri = "http://localhost:3000/rdfstoreproxy";
+                         store.setNetworkTransport(rdfstore_frontend.ProxyNetworkTransport);
+
+                         store.execute("PREFIX : <http://example.org/ns#> \
+                          INSERT DATA { \
+                           <https://github.com/antoniogarrote/rdfstore-js> <http://purl.org/dc/elements/1.1/creator> <http://foaf.me/antoniogarrote#me> .\
+                           <https://github.com/antoniogarrote/rdfstore-js> <http://purl.org/dc/elements/1.1/rights> <http://www.gnu.org/licenses/agpl-3.0.rdf> \
+                         }", function(){
+                               frontend = new rdfstore_frontend('#target',store);
+                               if(cb) { cb(); }
+                             })
+                      });
+      };
+
+      jQuery("#launch").click(function() {
+        startDemo();
+      });
+
+      jQuery("#demo1").click(function() {
+        jQuery("#demo1").remove();
+        var runDemo = function() {
+          frontend.viewModel.newLoadGraphDialog();
+          jQuery("#rdf-store-graph-to-load").val('http://dbpedia.org/data/Tim_Berners-Lee.n3');
+        };
+        if(jQuery("#rdfstore-frontend").length==0) {
+          startDemo(function() {
+            runDemo();
+          })
+        } else {
+          runDemo();
+        }
+      });
+
+      jQuery("#demo2").click(function() {
+        jQuery("#demo2").remove();
+        var runDemo = function() {
+          frontend.viewModel.newLoadGraphDialog();
+          jQuery("#rdf-store-graph-to-load").val('http://oreilly.com/catalog/9781934356333/');
+        };
+        if(jQuery("#rdfstore-frontend").length==0) {
+          startDemo(function() {
+            runDemo();
+          })
+        } else {
+          runDemo();
+        }
+      });
+
+      jQuery("#demo3").click(function() {
+        jQuery("#demo3").remove();
+        var runDemo = function() {
+          frontend.viewModel.newLoadGraphDialog();
+          jQuery("#rdf-store-graph-to-load").val('http://www.flickr.com/photos/txanoduna/135551759');
+        };
+        if(jQuery("#rdfstore-frontend").length==0) {
+          startDemo(function() {
+            runDemo();
+          })
+        } else {
+          runDemo();
+        }
+      });
+
+      jQuery("#demo4").click(function() {
+        jQuery("#demo4").remove();
+        var runDemo = function() {
+          frontend.viewModel.newLoadGraphDialog();
+          jQuery("#rdf-store-graph-to-load").val("http://foaf.me/antoniogarrote#me");
+        };
+        if(jQuery("#rdfstore-frontend").length==0) {
+          startDemo(function() {
+            runDemo();
+          })
+        } else {
+          runDemo();
+        }
+      });
+
+    });
+  </script>
+</head>
+
+<body>
+
+<div id='target'>
+</div>
+
+<h1>rdfstore-js frontend</h1>
+
+<div id='about'>
+  <h2>About</h2>
+  <p>
+    <a href='https://github.com/antoniogarrote/rdfstore-js'>rdfstore-js</a>
+    is a project that tries to build a RDF Store with support for the
+    SPARQL query language entirely in JavaScript. The overall goal is
+    to provide infrastructure that will make easier to use RDF and other
+    semantic technologies as the data layer for complex web
+    applications.
+  </p>
+
+  <p>
+    This page demoes a simple HTML frontend on top of the store that
+    can be used to manipulate RDF graphs retrieved from the web and
+    stored locally in rdfstore-js.
+  </p>
+  <div id='launch'>
+    <a href='#'>start frontend</a>
+  </div>
+</div>
+
+<div id='tries'>
+  <h2>Things to try</h2>
+  <p>
+    You can use the the store and the frontend to store data
+    retrieved from the whole web of linked data. <br/>
+    
+    Some examples:
+
+    <ul>
+      <li>
+        Retrieve information from a product annotated with RDFa 
+        <a href='http://oreilly.com/catalog/9781934356333/' target='_blank'>browse</a>
+        <a id='demo2' href='#'>run example</a>
+      </li>
+      <li>
+        Check my public WebID profile:
+        <a href='http://foaf.me/index.php?webid=http%3A%2F%2Ffoaf.me%2Fantoniogarrote%23me' target='_blank'>browse</a>
+        <a id='demo4' href='#'>run example</a>
+      </li>
+      <li>
+        Load RDF data from DBPedia 
+        <a href='http://dbpedia.org/data/Tim_Berners-Lee.n3' target='_blank'>browse</a>
+        <a id='demo1' href='#'>run example</a>
+      </li>
+      <li>
+        Extract meta-data from a social network like Flickr
+        <a href='http://www.flickr.com/photos/txanoduna/135551759' target='_blank'>browse</a>
+        <a id='demo3' href='#'>run example</a>
+      </li>
+    </ul>
+</div>
+
+<div id='usage'>
+  <h2>Usage</h2>
+
+  The frontend is built using the following libraries:
+
+  <ul>
+    <li>jQuery 1.4.2</li>
+    <li>jQuery template</li>
+    <li>jQuery UI</li>
+    <li>Knockout JS 1.2.1</li>
+  </ul>
+
+  Additionally, it uses a modified version of RDFQuery to parse RDFa
+  and RDF/XML serializations of RDF.<br/>
+
+  
+  You can download the code of the frontend
+  from <a href='https://github.com/antoniogarrote/rdfstore-js/tree/master/frontend'>github</a>
+  with all the dependencies.<br/>
+
+  In order to use it, add the JavaScript and CSS files to you HTML and start the frontend
+  passing as parameters a RDFStore-js instance and a target HTML DOM
+  node:
+
+  <pre>
+    new rdfstore_frontend('#target',store);
+  </pre>
+
+</div>
+
+<div id=notes'>
+  <h2>Notes</h2>
+
+  The functionality of the store library has been extended for this
+  demo. Some of the differences are:
+
+  <ul>
+    <li>Use of a proxy service to resolve URIs instead of using
+    only native XMLHTTP + CORS requests.</li>
+    <li>Capacity to parse RDFa and RDF/XML documents using a modified
+    version of <a href='http://code.google.com/p/rdfquery/'>RDFQuery</a></li>
+  </ul>
+
+  The store has been designed to be modular and it can be configured
+  to use different network transports and additional parsers. The
+  order of precedence for different media types when performing
+  content negotiation can also be configured:
+
+  <pre>
+      rdfstore.create({"communication": {
+                         "parsers": {
+                           "text/html" :           rdfstore_frontend.rdfaParser,
+                           "application/rdf+xml":  rdfstore_frontend.rdfParser
+                         },
+                        "precedences": ["application/rdf+xml", "text/html"] }
+                      }, 
+
+                      function(store) {
+
+                         // original network transport
+ 
+                        var originalNetworkTransport = store.getNetworkTransport();
+                        var proxy = rdfstore_frontend.ProxyNetworkTransport;
+                        proxy.proxyUri = "http://antoniogarrote.com/rdfstoreproxy";
+                        store.setNetworkTransport(proxy);
+
+                        // use the store
+      });
+  </pre>
+
+  The code for the proxy and the modified version of RDFQuery are
+  included in the frontend code repository.
+</div>
+</body>
+</html>

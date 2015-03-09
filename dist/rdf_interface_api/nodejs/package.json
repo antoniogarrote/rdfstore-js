@@ -1,0 +1,1 @@
+{"name":"rdf_js_interface","version":"0.8.4","description":"Implementation of W3C's RDF Interfaces API","keywords":["RDF"],"author":{"name":"Antonio Garrote","email":"<antoniogarrote@gmail.com>"},"engines":{"node":">=0.4.1"},"repository":{"type":"git","url":"https://github.com/antoniogarrote/rdfstore-js.git"},"licenses":[{"type":"MIT","url":"http://opensource.org/licenses/MIT"}]}
