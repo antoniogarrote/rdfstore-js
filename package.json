@@ -6,7 +6,8 @@
     "author":{"name":"Antonio Garrote","email":"<antoniogarrote@gmail.com>"},
     "engines":{"node":">=0.6.1"},
     "repository":{"type":"git","url":"https://github.com/antoniogarrote/rdfstore-js.git"},
-    "licenses":[{"type":"MIT","url":"http://opensource.org/licenses/MIT"}]
+    "licenses":[{"type":"MIT","url":"http://opensource.org/licenses/MIT"}],
+    "main": "src/store",
     "devDependencies": {
         "bower-resolve": "^2.2.1",
         "browserify": "7.0.0",
