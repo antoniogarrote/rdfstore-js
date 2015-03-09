@@ -33,7 +33,6 @@
     "gulp-browserify": "^0.5.1",
     "gulp-closure-compiler": "^0.2.17",
     "gulp-jasmine": "^1.0.1",
-    "moment": "^2.8.4",
     "pegjs": "^0.8.0",
     "vinyl-source-stream": "^1.0.0",
     "closure-compiler": "^0.2.6",
@@ -41,6 +40,7 @@
   },
   "dependencies": {
     "async": "^0.9.0",
+    "indexeddb-js": "0.0.14",
     "jsonld": "^0.3.22",
     "lodash": "^2.4.1",
     "moment": "^2.9.0",
