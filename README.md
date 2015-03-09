@@ -1,4 +1,4 @@
-#rdfstore-js
+#rdfstore-js [![Build Status](https://travis-ci.org/antoniogarrote/rdfstore-js.svg?branch=master)](https://travis-ci.org/antoniogarrote/rdfstore-js)
 
 ## Important Note
 
