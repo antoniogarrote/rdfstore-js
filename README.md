@@ -1,5 +1,13 @@
 #rdfstore-js
 
+## Important Note
+
+The library is going right now through a major rewrite. Versions > 0.9.X must be considered development versions until version 1.0.0 is finished.
+Many features present in versions 0.8.X have been removed. Some of them, like persistence in the browser will be added in the next versions, other like the MongoDB backend will be discarded.
+
+Please read this README file carefully to find the current set of features.
+
+## Introduction
 
 rdfstore-js is a pure Javascript implementation of a RDF graph store with support for the SPARQL query and data manipulation language.
 ```javascript
@@ -81,7 +89,13 @@ This is a list of the different kind of queries currently implemented:
 
 ##Installation
 
-NPM and Bower packages will be pusblished for the library soon.
+The library can be installed using NPM:
+
+```bash
+   $npm install rdfstore
+```
+
+Bower package will be pusblished for the library soon.
 
 ##Building
 
