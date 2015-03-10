@@ -13,7 +13,7 @@ var _ = require('lodash');
  * GSP  (s, ?, ?, g), (s, p, ?, g)
  * OS   (s, ?, o, ?)
  *
- * @param configuration['treeOrder'] Tree order for the indices that are going to be created
+ * @param configuration['dbName'] Name for the IndexedDB
  * @return The newly created backend.
  */
 QuadBackend = function (configuration, callback) {
@@ -22,23 +22,27 @@ QuadBackend = function (configuration, callback) {
     if (arguments !== 0) {
 
         if(typeof(window) === 'undefined') {
+            var sqlite3 = require('sqlite3')
             var indexeddbjs = require("indexeddb-js");
-            var indexEngine    = new sqlite3.Database(':memory:');
-            that.indexedDB = new indexeddbjs.indexedDB('sqlite3', indexEngine);
+            var engine    = new sqlite3.Database(':memory:');
+            var scope     = indexeddbjs.makeScope('sqlite3', engine);
+            that.indexedDB = scope.indexedDB;
+            that.IDBKeyRange = scope.IDBKeyRange;
         } else {
             // In the following line, you should include the prefixes of implementations you want to test.
             window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
+            window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
             // DON'T use "var indexedDB = ..." if you're not in a function.
             // Moreover, you may need references to some window.IDB* objects:
             if (!window.indexedDB) {
                 callback(null,new Error("The browser does not support IndexDB."));
             } else {
                 that.indexedDB = window.indexedDB;
+                that.IDBKeyRange = window.IDBKeyRange;
             }
         }
 
         this.indexMap = {};
-        this.treeOrder = configuration['treeOrder'];
         this.indices = ['SPOG', 'GP', 'OGS', 'POG', 'GSP', 'OS'];
         this.componentOrders = {
             SPOG:['subject', 'predicate', 'object', 'graph'],
@@ -60,67 +64,146 @@ QuadBackend = function (configuration, callback) {
         };
         request.onupgradeneeded = function(event) {
             var db = event.target.result;
-            db.createObjectStore(index, { keyPath: 'SPOG'});
+            var objectStore = db.createObjectStore(that.dbName, { keyPath: 'SPOG'});
             _.each(that.indices, function(index){
                 if(index !== 'SPOG') {
-                    db.createIndex(index,index,{unique: false});
+                    objectStore.createIndex(index,index,{unique: false});
                 }
             });
         };
     }
 };
 
-QuadBackend.prototype._genIndexKey = function(quad,index) {
-    return _.map(indexComponents, function(component){
-        return ""+(quad[component] || -1);
-    }).join('.');
-};
 
 QuadBackend.prototype.index = function (quad, callback) {
     var that = this;
     _.each(this.indices, function(index){
-        quad[index] = that._genIndexKey(quad, that.componentOrders[index]);
+        quad[index] = that._genMinIndexKey(quad, index);
     });
 
-    var transaction = that.db.transaction([that.dbName],"write");
+    var transaction = that.db.transaction([that.dbName],"readwrite");
     transaction.oncomplete = function(event) {
-        callback(true)
+        //callback(true)
     };
     transaction.onerror = function(event) {
         callback(null, new Error(event.target.statusCode));
     };
     var objectStore = transaction.objectStore(that.dbName);
-    objectStore.add(quad);
+    var request = objectStore.add(quad);
+    request.onsuccess = function(event) {
+        // event.target.result == customerData[i].ssn;
+        callback(true)
+    };
 };
 
 QuadBackend.prototype.range = function (pattern, callback) {
+    var that = this;
+    var objectStore = that.db.transaction([that.dbName]).objectStore(that.dbName);
     var indexKey = this._indexForPattern(pattern);
-    var index = this.indexMap[indexKey];
-    index.range(pattern, function (quads) {
-        callback(quads);
-    });
+    var minIndexKeyValue = this._genMinIndexKey(pattern,indexKey);
+    var maxIndexKeyValue = this._genMaxIndexKey(pattern,indexKey);
+    var keyRange = that.IDBKeyRange.bound(minIndexKeyValue, maxIndexKeyValue, false, false);
+    var quads = [];
+    var cursorSource;
+
+    if(indexKey === 'SPOG') {
+        cursorSource = objectStore;
+    } else {
+        cursorSource = objectStore.index(indexKey);
+    }
+
+    cursorSource.openCursor(keyRange).onsuccess = function(event) {
+        var cursor = event.target.result;
+        if (cursor) {
+            quads.push(cursor.value);
+            cursor.continue();
+        } else {
+            callback(quads);
+        }
+    }
 };
 
 QuadBackend.prototype.search = function (quad, callback) {
-    var index = this.indexMap['SPOG'];
-
-    index.search(quad, function (result) {
-        callback(result != null);
-    });
+    var objectStore = that.db.transaction([this.dbName]).objectStore(that.dbName);
+    var indexKey = that._genMinIndexKey(quad, 'SPOG');
+    var request = objectStore.get(indexKey);
+    request.onerror = function(event) {
+        callback(null, new Error(event.target.statusCode));
+    };
+    request.onsuccess = function(event) {
+        callback(event.target.result != null);
+    };
 };
 
 
 QuadBackend.prototype.delete = function (quad, callback) {
     var that = this;
-
-    async.eachSeries(this.indices, function(indexKey,k){
-        var index = that.indexMap[indexKey];
-        index.delete(quad, function(){
-            k();
-        })
-    },function(){
-        callback(that);
-    });
+    var indexKey = that._genMinIndexKey(quad, 'SPOG');
+    var request = that.db.transaction([that.dbName], "readwrite")
+        .objectStore(that.dbName)
+        .delete(indexKey);
+    request.onsuccess = function() {
+        callback(true);
+    };
+    request.onerror = function(event) {
+        callback(null, new Error(event.target.statusCode));
+    };
 };
+
+QuadBackend.prototype._genMinIndexKey = function(quad,index) {
+    var indexComponents = this.componentOrders[index];
+    return _.map(indexComponents, function(component){
+        if(typeof(quad[component]) === 'string' || quad[component] == null) {
+            return "-1";
+        } else {
+            return ""+quad[component];
+        }
+    }).join('.');
+};
+
+QuadBackend.prototype._genMaxIndexKey = function(quad,index) {
+    var indexComponents = this.componentOrders[index];
+    var acum = [];
+    var foundFirstMissing = false;
+    for(var i=0; i<indexComponents.length; i++){
+        var component = indexComponents[i];
+        var componentValue= quad[component];
+        if(typeof(componentValue) === 'string') {
+            if (foundFirstMissing === false) {
+                    foundFirstMissing = true;
+                if (i - 1 >= 0) {
+                    acum[i - 1] = acum[i - 1] + 1
+                }
+            }
+            acum[i] = -1;
+        } else {
+            acum[i] = componentValue;
+        }
+    }
+    return _.map(acum, function(componentValue){
+        return ""+componentValue
+    }).join('.');
+};
+
+
+QuadBackend.prototype._indexForPattern = function (pattern) {
+    var indexKey = pattern.indexKey;
+
+    for (var i = 0; i < this.indices.length; i++) {
+        var index = this.indices[i];
+        var indexComponents = this.componentOrders[index];
+        for (var j = 0; j < indexComponents.length; j++) {
+            if (_.include(indexKey, indexComponents[j]) === false) {
+                break;
+            }
+            if (j == indexKey.length - 1) {
+                return index;
+            }
+        }
+    }
+
+    return 'SPOG'; // If no other match, we return the more generic index
+};
+
 
 module.exports.QuadBackend = QuadBackend;

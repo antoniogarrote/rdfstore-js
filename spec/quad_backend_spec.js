@@ -63,7 +63,7 @@ describe("QuadBackend", function(){
                     expect(index.root.keys[0].key.graph).toBe(4);
                 }
 
-                var pattern = new Pattern({subject:null, object:2, predicate:3, graph:4});
+                var pattern = new Pattern({subject:'s', predicate:2, object:3, graph:4});
                 backend.range(pattern, function(results){
                     expect(results.length).toBe(1);
 
