@@ -362,6 +362,8 @@ QueryEngine.prototype.normalizeTerm = function(term, env, shouldIndex, callback)
                     callback(oid);
                 });
             } else {
+                // should never get here...
+                // is resolveBlank useful?
                 this.lexicon.resolveBlank(function(oid) {
                     env.blanks[label] = oid;
                     callback(oid);

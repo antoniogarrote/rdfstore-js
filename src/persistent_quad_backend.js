@@ -2,6 +2,7 @@
 // imports
 var async = require('async');
 var _ = require('lodash');
+var utils = require('./utils');
 
 /*
  * "perfect" indices for RDF indexing
@@ -21,26 +22,7 @@ QuadBackend = function (configuration, callback) {
 
     if (arguments !== 0) {
 
-        if(typeof(window) === 'undefined') {
-            var sqlite3 = require('sqlite3')
-            var indexeddbjs = require("indexeddb-js");
-            var engine    = new sqlite3.Database(':memory:');
-            var scope     = indexeddbjs.makeScope('sqlite3', engine);
-            that.indexedDB = scope.indexedDB;
-            that.IDBKeyRange = scope.IDBKeyRange;
-        } else {
-            // In the following line, you should include the prefixes of implementations you want to test.
-            window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
-            window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
-            // DON'T use "var indexedDB = ..." if you're not in a function.
-            // Moreover, you may need references to some window.IDB* objects:
-            if (!window.indexedDB) {
-                callback(null,new Error("The browser does not support IndexDB."));
-            } else {
-                that.indexedDB = window.indexedDB;
-                that.IDBKeyRange = window.IDBKeyRange;
-            }
-        }
+        utils.registerIndexedDB(that);
 
         this.indexMap = {};
         this.indices = ['SPOG', 'GP', 'OGS', 'POG', 'GSP', 'OS'];

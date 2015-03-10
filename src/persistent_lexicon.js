@@ -1,5 +1,6 @@
 var async = require('async');
 var Tree = require('./btree').Tree;
+var utils = require('./utils');
 
 /**
  * Temporal implementation of the lexicon
@@ -8,46 +9,41 @@ var Tree = require('./btree').Tree;
 
 Lexicon = function(callback){
     var that = this;
+
+    utils.registerIndexedDB(that);
+
     this.defaultGraphOid = 0;
     this.defaultGraphUri = "https://github.com/antoniogarrote/rdfstore-js#default_graph";
     this.defaultGraphUriTerm = {"token":"uri","prefix":null,"suffix":null,"value":this.defaultGraphUri};
     this.oidCounter = 1;
 
-    async.seq(function(k){
-        new Tree(2,function(tree){
-            that.uris = tree;
-            k();
-        })
-    }, function(k){
-        new Tree(2, function(tree){
-            that.literals = tree;
-            k();
-        })
-    }, function(k){
-        new Tree(2, function(tree){
-            that.knownGraphs = tree;
-            k();
-        })
-    },function(k){
-        new Tree(2,function(tree){
-            that.oidUris = tree;
-            k();
-        })
-    }, function(k){
-        new Tree(2, function(tree){
-            that.oidLiterals = tree;
-            k();
-        })
-    }, function(k){
-        new Tree(2, function(tree){
-            that.oidBlanks = tree;
-            k();
-        })
-    })(function(){
-        if(callback != null)
-            callback(that);
+    that.dbName = configuration['dbName'] || "rdfstorejs";
+    var request = that.indexedDB.open(this.dbName, 1);
+    request.onerror = function(event) {
+        callback(null,new Error("Error opening IndexedDB: " + event.target.errorCode));
+    };
+    request.onsuccess = function(event) {
+        that.db = event.target.result;
+        callback(that);
+    };
+    request.onupgradeneeded = function(event) {
+        var db = event.target.result;
+        // graphs
+        db.createObjectStore('knownGraphs', { keyPath: 'oid'});
+        // uris mapping
+        var urisStore = db.createObjectStore('uris', { autoIncrement : true });
+        urisStore.createIndex("uri","uri",{unique: true});
+        // blanks mapping
+        var urisStore = db.createObjectStore('balnks', { autoIncrement : true });
+        urisStore.createIndex("label","label",{unique: true});
 
-    });
+
+        db.createObjectStore('literals', { keyPath: 'SPOG'});
+        db.createObjectStore('oidLiterals', { keyPath: 'SPOG'});
+        db.createObjectStore('oidBlanks', { keyPath: 'SPOG'});
+        callback(that);
+    };
+
 };
 
 /**
@@ -57,10 +53,20 @@ Lexicon = function(callback){
  * @param callback
  */
 Lexicon.prototype.registerGraph = function(oid, uriToken, callback){
+
     if(oid != this.defaultGraphOid) {
-        this.knownGraphs.insert(oid, uriToken, function(){
-           callback();
-        });
+        that.db.transaction(['knownGraphs'], 'readwrite');
+        transaction.oncomplete = function (event) {
+            callback();
+        };
+        transaction.onerror = function (event) {
+            callback(null, new Error(event.target.statusCode));
+        };
+        var objectStore = transaction.objectStore('knownGraphs');
+        var request = objectStore.add({oid: oid, utiToken: uriToken});
+        request.onsuccess = function (event) {
+            callback(true);
+        };
     } else {
         callback();
     }
@@ -73,15 +79,25 @@ Lexicon.prototype.registerGraph = function(oid, uriToken, callback){
  */
 Lexicon.prototype.registeredGraphs = function(returnUris, callback) {
     var graphs = [];
-    this.knownGraphs.walk(function(node){
-        if(returnUris === true) {
-            graphs.push(node.data);
+    var objectStore = that.db.transaction(['knownGraphs'],'readwrite').objectStore("customers");
+
+    var request = objectStore.openCursor();
+    request.onsuccess = function(event) {
+        var cursor = event.target.result;
+        if(cursor) {
+            if(returnUris === true) {
+                graphs.push(cursor.value.uriToken);
+            } else {
+                graphs.push(cursor.value.oid);
+            }
+            cursor.continue();
         } else {
-            graphs.push(node.key);
+            callback(graphs);
         }
-    },function(){
-        callback(graphs);
-    });
+    };
+    request.onerror = function(event) {
+        callback(null,new Error("Error retrieving adta from the cursor: " + event.target.errorCode));
+    };
 };
 
 /**
@@ -96,32 +112,35 @@ Lexicon.prototype.registerUri = function(uri, callback) {
     if(uri === this.defaultGraphUri) {
         callback(this.defaultGraphOid);
     } else{
-        this.uris.search(uri, function(oidData){
-            if(oidData == null){
-                var oid = that.oidCounter;
-                var oidStr = 'u'+oid;
-                that.oidCounter++;
-
-                async.seq(function(k){
-                    that.uris.insert(uri, [oid,0], function(){
-                        k();
-                    })
-                }, function(k){
-                    that.oidUris.insert(oidStr, uri, function(){
-                        k();
-                    })
-                })(function(){
+        var objectStore = that.db.transaction(["uris"],"readwrite").objectStore("uris");
+        var request = objectStore.index("uri").get(uri);
+        request.onsuccess = function(event) {
+            var uriData = event.target.result;
+            if(uriData) {
+                // found in index -> update
+                uriData.counter++;
+                var oid = "u" + uriData.id;
+                var requestUpdate = objectStore.put(uriData);
+                requestUpdate.onsuccess(function (event) {
                     callback(oid);
                 });
-
+                requestUpdate.onerror(function (event) {
+                    callback(null, new Error("Error updating the URI data" + event.targe.errorCode));
+                });
             } else {
-                var oid = oidData[0];
-                var counter = oidData[1] + 1;
-                that.uris.insert(uri, [oid,counter], function(){
-                    callback(oid);
+                // not found -> create
+                var requestAdd = objectStore.add({uri: uri, counter:0});
+                requestAdd.onsuccess((function(event){
+                    callback("u"+event.target.result);
+                }));
+                requestAdd.onerror(function(event){
+                    callback(null, new Error("Error inserting the URI data"+event.targe.errorCode));
                 });
             }
-        });
+        };
+        request.onerror = function(event) {
+            callback(null, new Error("Error retrieving the URI data"+event.targe.errorCode));
+        };
     }
 };
 
@@ -135,13 +154,17 @@ Lexicon.prototype.resolveUri = function(uri,callback) {
     if(uri === this.defaultGraphUri) {
         callback(this.defaultGraphOid);
     } else {
-        this.uris.search(uri, function(oidData){
-            if(oidData != null) {
-                callback(oidData[0]);
-            } else {
+        var objectStore = that.db.transaction(["uris"]).objectStore("uris");
+        var request = objectStore.index("uri").get(uri);
+        request.onsuccess = function(event) {
+            if(event.target.result != null)
+                callback("u"+event.target.result.id);
+            else
                 callback(-1);
-            }
-        });
+        };
+        request.onerror = function(event) {
+            callback(null, new Error("Error retrieving uri data "+event.target.errorCode));
+        }
     }
 };
 
@@ -155,13 +178,17 @@ Lexicon.prototype.resolveUriCost = function(uri, callback) {
     if(uri === this.defaultGraphUri) {
         callback(0);
     } else {
-        this.uris.search(uri, function(oidData){
-            if(oidData != null) {
-                callback(oidData[1]);
-            } else {
+        var objectStore = that.db.transaction(["uris"]).objectStore("uris");
+        var request = objectStore.index("uri").get(uri);
+        request.onsuccess = function(event) {
+            if(event.target.result != null)
+                callback(event.target.result.cost);
+            else
                 callback(-1);
-            }
-        });
+        };
+        request.onerror = function(event) {
+            callback(null, new Error("Error retrieving uri data "+event.target.errorCode));
+        };
     }
 };
 
@@ -171,34 +198,54 @@ Lexicon.prototype.resolveUriCost = function(uri, callback) {
  * @returns {string}
  */
 Lexicon.prototype.registerBlank = function(callback) {
-    var oid = this.oidCounter;
-    this.oidCounter++;
-    var oidStr = ""+oid;
-    this.oidBlanks.insert(oidStr, oidStr, function(){
-        callback(oid);
-    })
+    var oidStr = guid();
+    var that = this;
+
+    var objectStore = that.db.transaction(["blanks"],"readwrite").objectStore("blanks");
+    var requestAdd = objectStore.add({label: oidStr, counter:0});
+    requestAdd.onsuccess((function(event){
+        callback(event.target.result);
+    }));
+    requestAdd.onerror(function(event){
+        callback(null, new Error("Error inserting the URI data"+event.targe.errorCode));
+    });
+    request.onerror = function(event) {
+        callback(null, new Error("Error retrieving the URI data"+event.targe.errorCode));
+    };
 };
 
 /**
- * @TODO: check this implementation. It shouldn't be possible to
- * use blank nodes by name, but it's not clear what happens when parsing.
- * @param label
+ * Resolves a blank node OID
+ * @param oid
  * @param callback
  */
-Lexicon.prototype.resolveBlank = function(label,callback) {
-    var that = this;
-    this.oidBlanks.search(label, function(oidData){
-        if(oidData != null) {
-            callback(oidData);
-        } else {
-            // ??
-            var oid = that.oidCounter;
-            this.oidCounter++;
-            callback(""+oid);
-            //
-        }
-    });
-};
+//Lexicon.prototype.resolveBlank = function(oid,callback) {
+//    var that = this;
+//    var objectStore = that.db.transaction(["blanks"]).objectStore("blanks");
+//    var request = objectStore.get(oid);
+//    request.onsuccess = function(event) {
+//        if(event.target.result != null)
+//            callback(event.target.result.id);
+//        else {
+//            // we register it if it doesn't exist
+//        }
+//    };
+//    request.onerror = function(event) {
+//        callback(null, new Error("Error retrieving blank data "+event.target.errorCode));
+//    }
+//
+//    this.oidBlanks.search(label, function(oidData){
+//        if(oidData != null) {
+//            callback(oidData);
+//        } else {
+//            // ??
+//            var oid = that.oidCounter;
+//            this.oidCounter++;
+//            callback(""+oid);
+//            //
+//        }
+//    });
+//};
 
 /**
  * Blank nodes don't have an associated cost.

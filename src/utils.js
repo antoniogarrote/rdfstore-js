@@ -194,6 +194,39 @@ normalizeUnicodeLiterals = function (string) {
     return string;
 };
 
+registerIndexedDB = function(that) {
+    if(typeof(window) === 'undefined') {
+        var sqlite3 = require('sqlite3')
+        var indexeddbjs = require("indexeddb-js");
+        var engine    = new sqlite3.Database(':memory:');
+        var scope     = indexeddbjs.makeScope('sqlite3', engine);
+        that.indexedDB = scope.indexedDB;
+        that.IDBKeyRange = scope.IDBKeyRange;
+    } else {
+        // In the following line, you should include the prefixes of implementations you want to test.
+        window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
+        window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
+        // DON'T use "var indexedDB = ..." if you're not in a function.
+        // Moreover, you may need references to some window.IDB* objects:
+        if (!window.indexedDB) {
+            callback(null,new Error("The browser does not support IndexDB."));
+        } else {
+            that.indexedDB = window.indexedDB;
+            that.IDBKeyRange = window.IDBKeyRange;
+        }
+    }
+};
+
+function guid() {
+    function s4() {
+        return Math.floor((1 + Math.random()) * 0x10000)
+            .toString(16)
+            .substring(1);
+    }
+    return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+        s4() + '-' + s4() + s4() + s4();
+};
+
 
 module.exports = {
     nextTick: nextTick,
@@ -203,5 +236,7 @@ module.exports = {
     compareDateComponents: compareDateComponents,
     iso8601: iso8601,
     normalizeUnicodeLiterals: normalizeUnicodeLiterals,
-    lexicalFormLiteral: lexicalFormLiteral
+    lexicalFormLiteral: lexicalFormLiteral,
+    registerIndexedDB: registerIndexedDB,
+    guid: guid
 };
