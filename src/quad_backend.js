@@ -110,4 +110,19 @@ QuadBackend.prototype.delete = function (quad, callback) {
     });
 };
 
+QuadBackend.prototype.clear = function(callback) {
+    var that = this;
+    async.eachSeries(this.indices,function(indexKey,k){
+        new QuadIndex({
+            order:that.treeOrder,
+            componentOrder:that.componentOrders[indexKey]
+        },function (tree) {
+            that.indexMap[indexKey] = tree;
+            k();
+        });
+    },function(){
+        callback(that);
+    });
+};
+
 module.exports.QuadBackend = QuadBackend;

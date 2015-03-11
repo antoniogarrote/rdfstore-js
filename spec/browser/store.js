@@ -34,7 +34,7 @@ this.suite_store.testIntegration2 = function(test){
 
 
 this.suite_store.testGraph1 = function(test) {
-    new rdfstore.Store({name:'test', overwrite:true}, function(err,store) {
+    new Store({name:'test', overwrite:true}, function(err,store) {
         var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
                      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
                      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\
@@ -942,5 +942,22 @@ this.suite_store.testRegisterCustomFunction = function(test) {
                 );
             });
     });
-    
 };
+
+
+this.suite_store.testPersistence = function(test) {
+    debugger;
+    new Store({persistent: true, name: 'simplyTest', overwrite: true}, function(err, store){
+        store.execute('INSERT DATA {  <http://example/book3> <http://example.com/vocab#title> <http://test.com/example> }', function(){
+            store.execute('SELECT * { ?s ?p ?o }', function(err,results) {
+                test.ok(err === null);
+                test.ok(results.length === 1);
+                test.ok(results[0].s.value === "http://example/book3");
+                test.ok(results[0].p.value === "http://example.com/vocab#title");
+                test.ok(results[0].o.value === "http://test.com/example");
+
+                test.done();
+            });
+        });
+    })
+}

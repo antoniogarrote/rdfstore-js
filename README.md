@@ -3,7 +3,7 @@
 ## Important Note
 
 The library is going right now through a major rewrite. Versions > 0.9.X must be considered development versions until version 1.0.0 is finished.
-Many features present in versions 0.8.X have been removed. Some of them, like persistence in the browser will be added in the next versions, other like the MongoDB backend will be discarded.
+Many features present in versions 0.8.X have been removed. Some of them, will be added in the next versions, other like the MongoDB backend will be discarded.
 
 Please read this README file carefully to find the current set of features.
 
@@ -51,6 +51,7 @@ Some other features included in the library are the following:
 - W3C RDF Interfaces API
 - RDF graph events API
 - Custom filter functions
+- Browser persistence using IndexedDB
 
 ## Documentation
 
@@ -463,6 +464,13 @@ new Store({name:'test', overwrite:true}, function(err,store) {
   });
 });
 ```
+
+###Persistence
+
+The store can be persisted in the browser using IndexedDB as the backend. In order to make the store persistent,
+the 'persistent' flat must be set to true in the store creation options.
+Additionally, a 'name' option can also be passed for the store. Different persistent instances of the store can be
+opened using different names.
 
 ##Dependencies
 

@@ -1,7 +1,9 @@
 // imports
 var QueryEngine = require("./query_engine").QueryEngine;
-var QuadBackend = require("./quad_backend").QuadBackend;
-var Lexicon = require("./lexicon").Lexicon;
+var InMemoryQuadBackend = require("./quad_backend").QuadBackend;
+var PersistentBackend = require("./persistent_quad_backend").QuadBackend;
+var InMemoryLexicon = require("./lexicon").Lexicon;
+var PersistentLexicon = require("./persistent_lexicon").Lexicon;
 var RDFModel = require("./rdf_model");
 var _ = require("lodash");
 
@@ -43,28 +45,46 @@ Store = function(arg1, arg2) {
         params['treeOrder'] = 15;
     }
 
+    var Lexicon = InMemoryLexicon;
+    var QuadBackend = InMemoryQuadBackend;
+    if(params['persistent'] === true){
+        Lexicon = PersistentLexicon;
+        QuadBackend = PersistentBackend;
+    }
     this.functionMap = {};
 
     var that = this;
     this.customFns = {};
     new Lexicon(function(lexicon){
+        var createQuadBackend = function() {
+            new QuadBackend(params, function (backend) {
+                /*
+                 if(params['overwrite'] === true) {
+                 // delete index values
+                 backend.clear();
+                 }
+                 */
+                var createEngine = function() {
+                    params.backend = backend;
+                    params.lexicon = lexicon;
+                    that.engine = new QueryEngine(params);
+
+                    callback(null, that);
+                }
+                if(params['overwrite']) {
+                    backend.clear(createEngine)
+                } else {
+                    createEngine();
+                }
+            });
+        }
         if(params['overwrite'] === true) {
             // delete lexicon values
-            lexicon.clear();
+            lexicon.clear(createQuadBackend);
+        } else {
+            createQuadBackend();
         }
-        new QuadBackend(params, function(backend){
-            /*
-            if(params['overwrite'] === true) {
-                // delete index values
-                backend.clear();
-            }
-            */
-            params.backend = backend;
-            params.lexicon =lexicon;
-            that.engine = new QueryEngine(params);
 
-            callback(null,that);
-        });
     },params['name']);
 };
 
@@ -836,7 +856,7 @@ Store.prototype.close = function(cb) {
 /**
  * Version of the store
  */
-Store.VERSION = "0.9.2";
+Store.VERSION = "0.9.3";
 
 /**
  * Create a new RDFStore instance that will be

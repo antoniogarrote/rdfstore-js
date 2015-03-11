@@ -8,7 +8,7 @@ var InMemoryLexicon = require('./lexicon').Lexicon;
  */
 
 
-Lexicon = function(callback){
+Lexicon = function(callback, dbName){
     var that = this;
 
     utils.registerIndexedDB(that);
@@ -18,8 +18,8 @@ Lexicon = function(callback){
     this.defaultGraphUriTerm = {"token":"uri","prefix":null,"suffix":null,"value":this.defaultGraphUri};
     this.oidCounter = 1;
 
-    that.dbName = configuration['dbName'] || "rdfstorejs";
-    var request = that.indexedDB.open(this.dbName, 1);
+    that.dbName = dbName || "rdfstorejs";
+    var request = that.indexedDB.open(this.dbName+"_lexicon", 1);
     request.onerror = function(event) {
         callback(null,new Error("Error opening IndexedDB: " + event.target.errorCode));
     };
@@ -28,20 +28,21 @@ Lexicon = function(callback){
         callback(that);
     };
     request.onupgradeneeded = function(event) {
-        var db = event.target.result;
-        // graphs
-        db.createObjectStore('knownGraphs', { keyPath: 'oid'});
-        // uris mapping
-        var urisStore = db.createObjectStore('uris', { autoIncrement : true });
-        urisStore.createIndex("uri","uri",{unique: true});
-        // blanks mapping
-        var urisStore = db.createObjectStore('blanks', { autoIncrement : true });
-        urisStore.createIndex("label","label",{unique: true});
-        // literals mapping
-        var urisStore = db.createObjectStore('literals', { autoIncrement : true });
-        urisStore.createIndex("value","value",{unique: true});
+        that.db = event.target.result;
 
-        callback(that);
+        // graphs
+        var graphStore = that.db.createObjectStore('knownGraphs', { keyPath: 'oid'});
+        // uris mapping
+        var uriStore = that.db.createObjectStore('uris', { keyPath: 'id', autoIncrement : true });
+        uriStore.createIndex("uri","uri",{unique: true});
+        // blanks mapping
+        var blankStore = that.db.createObjectStore('blanks', { keyPath: 'id', autoIncrement : true });
+        blankStore.createIndex("label","label",{unique: true});
+        // literals mapping
+        var literalStore = that.db.createObjectStore('literals', { keyPath: 'id', autoIncrement : true });
+        literalStore.createIndex("value","value",{unique: true});
+
+        //setTimeout(function(){ callback(that); },0);
     };
 
 };
@@ -119,27 +120,27 @@ Lexicon.prototype.registerUri = function(uri, callback) {
             if(uriData) {
                 // found in index -> update
                 uriData.counter++;
-                var oid = "u" + uriData.id;
+                var oid = uriData.id;
                 var requestUpdate = objectStore.put(uriData);
-                requestUpdate.onsuccess(function (event) {
+                requestUpdate.onsuccess =function (event) {
                     callback(oid);
-                });
-                requestUpdate.onerror(function (event) {
-                    callback(null, new Error("Error updating the URI data" + event.targe.errorCode));
-                });
+                };
+                requestUpdate.onerror = function (event) {
+                    callback(null, new Error("Error updating the URI data" + event.target.errorCode));
+                };
             } else {
                 // not found -> create
                 var requestAdd = objectStore.add({uri: uri, counter:0});
-                requestAdd.onsuccess((function(event){
-                    callback("u"+event.target.result);
-                }));
-                requestAdd.onerror(function(event){
-                    callback(null, new Error("Error inserting the URI data"+event.targe.errorCode));
-                });
+                requestAdd.onsuccess = function(event){
+                    callback(event.target.result);
+                };
+                requestAdd.onerror = function(event){
+                    callback(null, new Error("Error inserting the URI data"+event.target.errorCode));
+                };
             }
         };
         request.onerror = function(event) {
-            callback(null, new Error("Error retrieving the URI data"+event.targe.errorCode));
+            callback(null, new Error("Error retrieving the URI data"+event.target.errorCode));
         };
     }
 };
@@ -158,7 +159,7 @@ Lexicon.prototype.resolveUri = function(uri,callback) {
         var request = objectStore.index("uri").get(uri);
         request.onsuccess = function(event) {
             if(event.target.result != null)
-                callback("u"+event.target.result.id);
+                callback(event.target.result.id);
             else
                 callback(-1);
         };
@@ -203,14 +204,11 @@ Lexicon.prototype.registerBlank = function(callback) {
 
     var objectStore = that.db.transaction(["blanks"],"readwrite").objectStore("blanks");
     var requestAdd = objectStore.add({label: oidStr, counter:0});
-    requestAdd.onsuccess((function(event){
+    requestAdd.onsuccess = function(event){
         callback(event.target.result);
-    }));
-    requestAdd.onerror(function(event){
-        callback(null, new Error("Error inserting the URI data"+event.targe.errorCode));
-    });
-    request.onerror = function(event) {
-        callback(null, new Error("Error retrieving the URI data"+event.targe.errorCode));
+    };
+    requestAdd.onerror = function(event){
+        callback(null, new Error("Error inserting the URI data"+event.target.errorCode));
     };
 };
 
@@ -273,27 +271,27 @@ Lexicon.prototype.registerLiteral = function(literal, callback) {
         if(literalData) {
             // found in index -> update
             literalData.counter++;
-            var oid = "l" + literalData.id;
+            var oid = literalData.id;
             var requestUpdate = objectStore.put(literalData);
-            requestUpdate.onsuccess(function (event) {
+            requestUpdate.onsuccess =function (event) {
                 callback(oid);
-            });
-            requestUpdate.onerror(function (event) {
-                callback(null, new Error("Error updating the literal data" + event.targe.errorCode));
-            });
+            };
+            requestUpdate.onerror = function (event) {
+                callback(null, new Error("Error updating the literal data" + event.target.errorCode));
+            };
         } else {
             // not found -> create
             var requestAdd = objectStore.add({literal: literal, counter:0});
-            requestAdd.onsuccess((function(event){
-                callback("l"+event.target.result);
-            }));
-            requestAdd.onerror(function(event){
-                callback(null, new Error("Error inserting the literal data"+event.targe.errorCode));
-            });
+            requestAdd.onsuccess = function(event){
+                callback(event.target.result);
+            };
+            requestAdd.onerror =function(event){
+                callback(null, new Error("Error inserting the literal data"+event.target.errorCode));
+            };
         }
     };
     request.onerror = function(event) {
-        callback(null, new Error("Error retrieving the literal data"+event.targe.errorCode));
+        callback(null, new Error("Error retrieving the literal data"+event.target.errorCode));
     };
 };
 
@@ -307,7 +305,7 @@ Lexicon.prototype.resolveLiteral = function (literal,callback) {
     var request = objectStore.index("literal").get(literal);
     request.onsuccess = function(event) {
         if(event.target.result != null)
-            callback("l"+event.target.result.id);
+            callback(event.target.result.id);
         else
             callback(-1);
     };

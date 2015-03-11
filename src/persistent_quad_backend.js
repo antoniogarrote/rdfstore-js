@@ -35,8 +35,8 @@ QuadBackend = function (configuration, callback) {
             OS:['object', 'subject', 'predicate', 'graph']
         };
 
-        that.dbName = configuration['dbName'] || "rdfstorejs";
-        var request = that.indexedDB.open(this.dbName, 1);
+        that.dbName = configuration['name'] || "rdfstorejs";
+        var request = that.indexedDB.open(this.dbName+"_db", 1);
         request.onerror = function(event) {
             callback(null,new Error("Error opening IndexedDB: " + event.target.errorCode));
         };
@@ -73,7 +73,6 @@ QuadBackend.prototype.index = function (quad, callback) {
     var objectStore = transaction.objectStore(that.dbName);
     var request = objectStore.add(quad);
     request.onsuccess = function(event) {
-        // event.target.result == customerData[i].ssn;
         callback(true)
     };
 };
@@ -106,8 +105,9 @@ QuadBackend.prototype.range = function (pattern, callback) {
 };
 
 QuadBackend.prototype.search = function (quad, callback) {
-    var objectStore = that.db.transaction([this.dbName]).objectStore(that.dbName);
-    var indexKey = that._genMinIndexKey(quad, 'SPOG');
+    var that = this;
+    var objectStore = that.db.transaction([that.dbName]).objectStore(that.dbName);
+    var indexKey = this._genMinIndexKey(quad, 'SPOG');
     var request = objectStore.get(indexKey);
     request.onerror = function(event) {
         callback(null, new Error(event.target.statusCode));
@@ -187,5 +187,13 @@ QuadBackend.prototype._indexForPattern = function (pattern) {
     return 'SPOG'; // If no other match, we return the more generic index
 };
 
+
+QuadBackend.prototype.clear = function(callback) {
+    var that = this;
+    var transaction = that.db.transaction([that.dbName],"readwrite"), request;
+    request = transaction.objectStore(that.dbName).clear();
+    request.onsuccess = function(){ callback(); };
+    request.onerror = function(){ callback(); };
+};
 
 module.exports.QuadBackend = QuadBackend;
