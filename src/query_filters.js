@@ -5,10 +5,13 @@ var async = require('async');
 QueryFilters = {};
 
 QueryFilters.checkFilters = function(pattern, bindings, nullifyErrors, dataset, queryEnv, queryEngine, callback) {
-    var filters = pattern.filter || [];
+
+    var filters = [];
+    if (pattern.filter && typeof(pattern.filter) !== 'function')
+        filters = pattern.filter;
     var nullified = [];
-    if(filters==null || pattern.length != null) {
-        callback(bindings);
+    if(filters==null || filters.length === 0 || pattern.length != null) {
+        return callback(bindings);
     }
 
     async.eachSeries(filters, function(filter,k){
@@ -314,8 +317,7 @@ QueryFilters.runFilter = function(filterExpr, bindings, queryEngine, dataset, en
         } else if(expressionType == 'atomic') {
             if(filterExpr.primaryexpression == 'var') {
                 // lookup the var in the bindings
-                var val = bindings[filterExpr.value.value];
-                return val;
+                return bindings[filterExpr.value.value];
             } else {
                 // numeric, literal, etc...
                 //return queryEngine.filterExpr.value;

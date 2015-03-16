@@ -1064,6 +1064,7 @@ QueryEngine.prototype.executeUNION = function(projection, dataset, patterns, env
     var error = null;
     var set1,set2;
 
+
     if(patterns.length != 2) {
         throw("SPARQL algebra UNION with more than two components");
     }
@@ -1364,8 +1365,6 @@ QueryEngine.prototype.executeUpdate = function(syntaxTree, callback) {
             var that = this;
             this.rdfLoader.load(aqt.sourceGraph.value, graph, function(err, result){
                 if(err) {
-                    console.log("Error loading graph");
-                    console.log(result);
                     callback(false, "error batch loading quads");
                 } else {
                     that.batchLoad(result,function(result){
@@ -1792,6 +1791,18 @@ QueryEngine.prototype.checkGroupSemantics = function(groupVars, projectionVars) 
     }
 
     return true;
+};
+
+QueryEngine.prototype.computeCosts = function (quads, env, callback) {
+    for (var i = 0; i < quads.length; i++) {
+        quads[i]['_cost'] = this.quadCost(quads[i], env);
+    }
+
+    callback(quads);
+};
+
+QueryEngine.prototype.quadCost = function(quad, env) {
+    return 1;
 };
 
 QueryEngine.prototype.registerDefaultNamespace = function(ns, prefix) {
