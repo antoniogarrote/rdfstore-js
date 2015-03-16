@@ -420,7 +420,7 @@ describe("QueryEngine", function(){
         });
     });
 
-    /*
+
     it("Test Limit1", function(done) {
         new Lexicon(function(lexicon){
             new QuadBackend({treeOrder: 2}, function(backend){
@@ -437,7 +437,7 @@ describe("QueryEngine", function(){
                                }", function(success, result) {
 
                     engine.execute("PREFIX foaf:    <http://xmlns.com/foaf/0.1/>\
-                                                   SELECT ?name WHERE { ?x foaf:name ?name } LIMIT 2",
+                                    SELECT ?name WHERE { ?x foaf:name ?name } LIMIT 2",
                         function(success, results) {
                             expect(results.length === 2);
                             expect(results[0].name.value === 'Alice');
@@ -537,7 +537,7 @@ describe("QueryEngine", function(){
     });
 
 
-    it("Test OrderBy3", function(done) {
+    it("Test OrderBy4", function(done) {
         new Lexicon(function(lexicon){
             new QuadBackend({treeOrder: 2}, function(backend){
                 var engine = new QueryEngine({backend: backend,
@@ -611,7 +611,7 @@ describe("QueryEngine", function(){
             })
         });
     });
-
+    /*
     it("Test InsertionDeletion2", function(done){
         new Lexicon(function(lexicon){
             new QuadBackend({treeOrder: 2}, function(backend){

@@ -434,9 +434,9 @@ module.exports = (function() {
               var acum = {};
               for(var i=0; i<cls.length; i++) {
                   var cl = cls[i];
-                  if(cl.limit != null) {
+                  if(cl != null && cl.limit != null) {
                       acum['limit'] = cl.limit;
-                  } else if(cl.offset != null){
+                  } else if(cl != null && cl.offset != null){
                       acum['offset'] = cl.offset;
                   }
               }

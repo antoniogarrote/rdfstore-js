@@ -125,14 +125,15 @@ QueryFilters.run = function(filterExpr, bindings, nullifyFilters, dataset, env, 
 };
 
 QueryFilters.collect = function(filterExpr, bindings, dataset, env, queryEngine, callback) {
-    var denormBindings = queryEngine.copyDenormalizedBindings(bindings, env.outCache);
-    var filteredBindings = [];
-    for(var i=0; i<denormBindings.length; i++) {
-        var thisDenormBindings = denormBindings[i];
-        var ebv = QueryFilters.runFilter(filterExpr, thisDenormBindings, queryEngine, dataset, env);
-        filteredBindings.push({binding:bindings[i], value:ebv});
-    }
-    return(filteredBindings);
+    queryEngine.copyDenormalizedBindings(bindings, env.outCache, function(denormBindings) {
+        var filteredBindings = [];
+        for(var i=0; i<denormBindings.length; i++) {
+            var thisDenormBindings = denormBindings[i];
+            var ebv = QueryFilters.runFilter(filterExpr, thisDenormBindings, queryEngine, dataset, env);
+            filteredBindings.push({binding:bindings[i], value:ebv});
+        }
+        return callback(filteredBindings);
+    });
 };
 
 QueryFilters.runDistinct = function(projectedBindings, projectionVariables) {

@@ -121,38 +121,43 @@ QueryEngine.prototype.applyLimitOffset = function(offset, limit, bindings) {
 };
 
 
-QueryEngine.prototype.applySingleOrderBy = function(orderFilters, modifiedBindings, dataset, outEnv) {
+QueryEngine.prototype.applySingleOrderBy = function(orderFilters, modifiedBindings, dataset, outEnv, callback) {
     var acum = [];
-    for(var i=0; i<orderFilters.length; i++) {
-        var orderFilter = orderFilters[i];
-        var results = QueryFilters.collect(orderFilter.expression, [modifiedBindings], dataset, outEnv, this);
-        acum.push(results[0].value);
-    }
-    return {binding:modifiedBindings, value:acum};
+    var that = this;
+    async.eachSeries(orderFilters, function(orderFilter,k){
+        QueryFilters.collect(orderFilter.expression, [modifiedBindings], dataset, outEnv, that, function(results) {
+            acum.push(results[0].value);
+            k()
+        });
+    }, function(){
+        callback({binding:modifiedBindings, value:acum})
+    });
 };
 
-QueryEngine.prototype.applyOrderBy = function(order, modifiedBindings, dataset, outEnv) {
+QueryEngine.prototype.applyOrderBy = function(order, modifiedBindings, dataset, outEnv, callback) {
     var that = this;
     var acum = [];
     if(order != null && order.length > 0) {
-        for(var i=0; i<modifiedBindings.length; i++) {
-            var bindings = modifiedBindings[i];
-            var results = that.applySingleOrderBy(order, bindings, dataset, outEnv);
-            acum.push(results);
-        }
+        async.eachSeries(modifiedBindings, function(bindings,k){
+            that.applySingleOrderBy(order, bindings, dataset, outEnv, function(results){
+                acum.push(results);
+                k();
+            });
+        }, function(){
+            acum.sort(function(a,b){
+                return that.compareFilteredBindings(a, b, order, outEnv);
+            });
 
-        acum.sort(function(a,b){
-            return that.compareFilteredBindings(a, b, order, outEnv);
+            var toReturn = [];
+            for(var i=0; i<acum.length; i++) {
+                toReturn.push(acum[i].binding);
+            }
+
+            callback(toReturn);
         });
 
-        var toReturn = [];
-        for(var i=0; i<acum.length; i++) {
-            toReturn.push(acum[i].binding);
-        }
-
-        return toReturn;
     } else {
-        return modifiedBindings;
+        callback(modifiedBindings);
     }
 };
 
@@ -759,13 +764,14 @@ QueryEngine.prototype.executeSelect = function(unit, env, defaultDataset, namedD
                                 callback(new Error("Incompatible Group and Projection variables"));
                             }
                         } else {
-                            var orderedBindings = that.applyOrderBy(order, result, dataset, env);
-                            var projectedBindings = that.projectBindings(projection, orderedBindings, dataset);
-                            var modifiedBindings = that.applyModifier(modifier, projectedBindings);
-                            var limitedBindings = that.applyLimitOffset(offset, limit, modifiedBindings);
-                            var filteredBindings = that.removeDefaultGraphBindings(limitedBindings, dataset);
+                            that.applyOrderBy(order, result, dataset, env, function(orderedBindings){
+                                var projectedBindings = that.projectBindings(projection, orderedBindings, dataset);
+                                var modifiedBindings = that.applyModifier(modifier, projectedBindings);
+                                var limitedBindings = that.applyLimitOffset(offset, limit, modifiedBindings);
+                                var filteredBindings = that.removeDefaultGraphBindings(limitedBindings, dataset);
 
-                            callback(null, filteredBindings);
+                                callback(null, filteredBindings);
+                            });
                         }
 
                     } else { // fail selectUnit
