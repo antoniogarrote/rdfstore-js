@@ -754,9 +754,10 @@ QueryEngine.prototype.executeSelect = function(unit, env, defaultDataset, namedD
                                 that.groupSolution(result, unit.group, dataset, env, function(groupedBindings){
                                     var aggregatedBindings = [];
                                     async.eachSeries(groupedBindings, function(groupedBindingsGroup, k){
-                                        var resultingBindings = that.aggregateBindings(projection, groupedBindingsGroup, dataset, env);
-                                        aggregatedBindings.push(resultingBindings);
-                                        k();
+                                        that.aggregateBindings(projection, groupedBindingsGroup, dataset, env, function(resultingBindings){
+                                            aggregatedBindings.push(resultingBindings);
+                                            k();
+                                        });
                                     }, function(){
                                         callback(null, {'bindings': aggregatedBindings, 'denorm': true});
                                     });
@@ -780,6 +781,7 @@ QueryEngine.prototype.executeSelect = function(unit, env, defaultDataset, namedD
                     }
                 });
             } catch(e) {
+                console.log(e);
                 callback(e);
             }
         });
@@ -1719,25 +1721,25 @@ QueryEngine.prototype._executeClearGraph = function(destinyGraph, queryEnv, call
     if(destinyGraph === 'default') {
         this.execute("DELETE { ?s ?p ?o } WHERE { ?s ?p ?o }", callback);
     } else if(destinyGraph === 'named') {
-        var that = this;
-        var graphs = this.lexicon.registeredGraphs(true);
-        if(graphs!=null) {
-            var foundErrorDeleting = false;
-            async.eachSeries(graphs, function(graph,k){
-                if(!foundErrorDeleting) {
-                    that.execute("DELETE { GRAPH <"+graph+"> { ?s ?p ?o } } WHERE { GRAPH <"+graph+"> { ?s ?p ?o } }", function(success, results){
-                        foundErrorDeleting = !success;
+        that.lexicon.registeredGraphs(true, function(graphs){
+            if(graphs!=null) {
+                var foundErrorDeleting = false;
+                async.eachSeries(graphs, function(graph,k){
+                    if(!foundErrorDeleting) {
+                        that.execute("DELETE { GRAPH <"+graph+"> { ?s ?p ?o } } WHERE { GRAPH <"+graph+"> { ?s ?p ?o } }", function(success, results){
+                            foundErrorDeleting = !success;
+                            k();
+                        });
+                    } else {
                         k();
-                    });
-                } else {
-                    k();
-                }
-            }, function(){
-                callback(!foundErrorDeleting);
-            });
-        } else {
-            callback(false, "Error deleting named graphs");
-        }
+                    }
+                }, function(){
+                    callback(!foundErrorDeleting);
+                });
+            } else {
+                callback(false, "Error deleting named graphs");
+            }
+        });
     } else if(destinyGraph === 'all') {
         var that = this;
         this.execute("CLEAR DEFAULT", function(err, result) {

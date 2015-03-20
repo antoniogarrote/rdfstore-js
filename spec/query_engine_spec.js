@@ -3,16 +3,12 @@ var QuadBackend = require("../src/quad_backend").QuadBackend;
 var Lexicon = require("../src/lexicon").Lexicon;
 var NonSupportedSparqlFeatureError = require("../src/abstract_query_tree").NonSupportedSparqlFeatureError;
 var fs = require('fs');
-var N3 = require('n3');
 var _ = require("lodash");
 var async = require("async");
-
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 60000;
 
 // basic
 
 describe("QueryEngine", function(){
-
 
     it("Should be able to parse a query.", function(done){
         new Lexicon(function(lexicon){
@@ -870,7 +866,6 @@ describe("QueryEngine", function(){
         });
     });
 
-    /*
     it("Test AliasedVar", function(done) {
         new Lexicon(function(lexicon){
             new QuadBackend({treeOrder: 2}, function(backend){
@@ -1084,10 +1079,11 @@ describe("QueryEngine", function(){
 
                                         engine.execute("SELECT * { GRAPH <http://example/president25> { ?s ?p ?o } }", function(success, results) {
                                             expect(results.length === 0);
-                                            var graphs = engine.lexicon.registeredGraphs(true);
-                                            expect(success);
-                                            expect(graphs.length === 0);
-                                            done();
+                                            engine.lexicon.registeredGraphs(true,function(graphs){
+                                                expect(success);
+                                                expect(graphs.length === 0);
+                                                done();
+                                            });
                                         });
                                     });
                                 });
@@ -1098,6 +1094,7 @@ describe("QueryEngine", function(){
             });
         });
     });
+
 
     it("Test Create", function(done){
         new Lexicon(function(lexicon){
@@ -1306,10 +1303,11 @@ describe("QueryEngine", function(){
                                         engine.execute("SELECT * { GRAPH <http://example/president25> { ?s ?p ?o } }", function(success, results) {
 
                                             expect(results.length === 0);
-                                            var graphs = engine.lexicon.registeredGraphs(true);
-                                            expect(success);
-                                            expect(graphs.length === 0);
-                                            done();
+                                            engine.lexicon.registeredGraphs(true, function(graphs){
+                                                expect(success);
+                                                expect(graphs.length === 0);
+                                                done();
+                                            });
                                         });
                                     });
                                 });
@@ -1421,8 +1419,8 @@ describe("QueryEngine", function(){
                     engine.execute('PREFIX : <http://example/> SELECT (COUNT(?v) AS ?count) {  ?s ?p ?v . } GROUP BY ?s', function(success, results){
                         expect(success);
                         expect(results.length===2);
-                        expect(results[0].count.value==='3')
-                        expect(results[1].count.value==='2')
+                        expect(results[0].count.value==='3');
+                        expect(results[1].count.value==='2');
 
                         done();
                     });
@@ -1598,7 +1596,7 @@ describe("QueryEngine", function(){
             });
         });
     });
- */
+
 
 
 });

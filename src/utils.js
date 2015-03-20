@@ -225,7 +225,36 @@ function guid() {
     }
     return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
         s4() + '-' + s4() + s4() + s4();
+}
+
+hashTerm = function(term) {
+    try {
+        if(term == null) {
+            return "";
+        } if(term.token==='uri') {
+            return "u"+term.value;
+        } else if(term.token === 'blank') {
+            return "b"+term.value;
+        } else if(term.token === 'literal') {
+            var l = "l"+term.value;
+            l = l + (term.type || "");
+            l = l + (term.lang || "");
+
+            return l;
+        }
+    } catch(e) {
+        if(typeof(term) === 'object') {
+            var key = "";
+            for(p in term) {
+                key = key + p + term[p];
+            }
+
+            return key;
+        }
+        return term;
+    }
 };
+
 
 
 module.exports = {
@@ -238,5 +267,6 @@ module.exports = {
     normalizeUnicodeLiterals: normalizeUnicodeLiterals,
     lexicalFormLiteral: lexicalFormLiteral,
     registerIndexedDB: registerIndexedDB,
-    guid: guid
+    guid: guid,
+    hashTerm: hashTerm
 };
