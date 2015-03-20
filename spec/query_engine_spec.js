@@ -7,6 +7,8 @@ var N3 = require('n3');
 var _ = require("lodash");
 var async = require("async");
 
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 60000;
+
 // basic
 
 describe("QueryEngine", function(){
@@ -611,7 +613,7 @@ describe("QueryEngine", function(){
             })
         });
     });
-    /*
+
     it("Test InsertionDeletion2", function(done){
         new Lexicon(function(lexicon){
             new QuadBackend({treeOrder: 2}, function(backend){
@@ -622,7 +624,6 @@ describe("QueryEngine", function(){
 
                     engine.execute('INSERT DATA {  GRAPH <b> { <http://example/book3> <http://example.com/vocab#title> <http://test.com/example> } }', function(result){
                         expect( result===true );
-
                         engine.execute('SELECT * FROM NAMED <a> { GRAPH <a> { ?s ?p ?o } }', function(success, result){
                             expect(success === true );
                             expect(result.length === 1);
@@ -639,7 +640,6 @@ describe("QueryEngine", function(){
                                 expect(result[0]['o'].value  === 'http://test.com/example');
 
                                 engine.execute('DELETE DATA { GRAPH <a> { <http://example/book3> <http://example.com/vocab#title> <http://test.com/example> }  }', function(result) {
-
                                     engine.execute('SELECT * FROM NAMED <a> { GRAPH <a> { ?s ?p ?o } }', function(success, result){
 
                                         expect(success === true );
@@ -750,12 +750,12 @@ describe("QueryEngine", function(){
                                         <http://example/president27> foaf:familyName "Taft" .\
                                         <http://example/president42> foaf:givenName "Bill" .\
                                         <http://example/president42> foaf:familyName "Clinton" .\
-                               }', function(result){
+                               }', function(){
                     engine.execute("PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
                               DELETE { ?person foaf:givenName 'Bill' }\
                               INSERT { ?person foaf:givenName 'William' }\
                               WHERE  { ?person foaf:givenName 'Bill' }",
-                        function(success, result){
+                        function(success){
                             engine.execute("PREFIX foaf:<http://xmlns.com/foaf/0.1/>\
                               SELECT * { ?s ?p ?o }\
                               ORDER BY ?s ?p", function(success, results){
@@ -801,7 +801,7 @@ describe("QueryEngine", function(){
                                         <http://example/president42> foaf:givenName "Bill" .\
                                         <http://example/president42> foaf:familyName "Clinton" .\
                                    } \
-                               }', function(result){
+                               }', function(){
                     engine.execute("PREFIX foaf:  <http://xmlns.com/foaf/0.1/>\
                               WITH <http://example/addresses_bis>\
                               INSERT { ?person foaf:givenName 'William' }\
@@ -812,7 +812,6 @@ describe("QueryEngine", function(){
                               SELECT * FROM <http://example/addresses_bis> \
                               { ?s ?p ?o }\
                               ORDER BY ?s ?p", function(success, results){
-
                                 expect(success === true);
                                 expect(results[0].s.value === "http://example/president25");
                                 expect(results[0].o.value === "William");
@@ -831,6 +830,7 @@ describe("QueryEngine", function(){
             });
         });
     });
+
 
 
     it("Test ModifyOnlyDelete", function(done){
@@ -870,6 +870,7 @@ describe("QueryEngine", function(){
         });
     });
 
+    /*
     it("Test AliasedVar", function(done) {
         new Lexicon(function(lexicon){
             new QuadBackend({treeOrder: 2}, function(backend){
@@ -1597,7 +1598,7 @@ describe("QueryEngine", function(){
             });
         });
     });
+ */
 
-*/
 
 });

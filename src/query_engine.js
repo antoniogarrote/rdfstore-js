@@ -280,18 +280,19 @@ QueryEngine.prototype.removeDefaultGraphBindings = function(bindingsList, datase
 };
 
 
-QueryEngine.prototype.aggregateBindings = function(projection, bindingsGroup, dataset, env) {
-    var denormBindings = this.copyDenormalizedBindings(bindingsGroup, env.outCache);
-    var aggregatedBindings = {};
-    for(var i=0; i<projection.length; i++) {
-        var aggregatedValue = QueryFilters.runAggregator(projection[i], denormBindings, this, dataset, env);
-        if(projection[i].alias) {
-            aggregatedBindings[projection[i].alias.value] = aggregatedValue;
-        } else {
-            aggregatedBindings[projection[i].value.value] = aggregatedValue;
+QueryEngine.prototype.aggregateBindings = function(projection, bindingsGroup, dataset, env, callback) {
+    this.copyDenormalizedBindings(bindingsGroup, env.outCache, function(denormBindings){
+        var aggregatedBindings = {};
+        for(var i=0; i<projection.length; i++) {
+            var aggregatedValue = QueryFilters.runAggregator(projection[i], denormBindings, this, dataset, env);
+            if(projection[i].alias) {
+                aggregatedBindings[projection[i].alias.value] = aggregatedValue;
+            } else {
+                aggregatedBindings[projection[i].value.value] = aggregatedValue;
+            }
         }
-    }
-    return(aggregatedBindings);
+        callback(aggregatedBindings);
+    });
 };
 
 
@@ -389,7 +390,7 @@ QueryEngine.prototype.normalizeDatasets = function(datasets, outerEnv, callback)
             dataset.oid = that.lexicon.defaultGraphOid;
             k();
         } else {
-            var oid = that.normalizeTerm(dataset, outerEnv, false, function(){
+            that.normalizeTerm(dataset, outerEnv, false, function(oid){
                 if(oid != null) {
                     dataset.oid = oid;
                 }
@@ -560,9 +561,8 @@ QueryEngine.prototype.denormalizeBindings = function(bindings, env, callback) {
             } else {
                 that.lexicon.retrieve(oid, function(val){
                     bindings[variable] = val;
-                    if(val.token === 'blank') {
+                    if(val.token === 'blank')
                         env.blanks[val.value] = oid;
-                    }
                     k();
                 });
             }
@@ -577,7 +577,6 @@ QueryEngine.prototype.denormalizeBindings = function(bindings, env, callback) {
 QueryEngine.prototype.execute = function(queryString, callback, defaultDataset, namedDataset){
     //try{
         queryString = Utils.normalizeUnicodeLiterals(queryString);
-
         var syntaxTree = this.abstractQueryTree.parseQueryString(queryString);
         if(syntaxTree == null) {
             callback(false,"Error parsing query string");
@@ -732,6 +731,7 @@ QueryEngine.prototype.executeSelect = function(unit, env, defaultDataset, namedD
             dataset.implicit.push(this.lexicon.defaultGraphUriTerm);
         }
 
+
         that.normalizeDatasets(dataset.implicit.concat(dataset.named), env, function(){
             try {
                 that.executeSelectUnit(projection, dataset, unit.pattern, env, function (result) {
@@ -751,15 +751,16 @@ QueryEngine.prototype.executeSelect = function(unit, env, defaultDataset, namedD
                         }
                         if (unit.group && unit.group != "") {
                             if (that.checkGroupSemantics(unit.group, projection)) {
-                                var groupedBindings = that.groupSolution(result, unit.group, dataset, env);
-
-                                var aggregatedBindings = [];
-
-                                for (var i = 0; i < groupedBindings.length; i++) {
-                                    var resultingBindings = that.aggregateBindings(projection, groupedBindings[i], dataset, env);
-                                    aggregatedBindings.push(resultingBindings);
-                                }
-                                callback(null, {'bindings': aggregatedBindings, 'denorm': true});
+                                that.groupSolution(result, unit.group, dataset, env, function(groupedBindings){
+                                    var aggregatedBindings = [];
+                                    async.eachSeries(groupedBindings, function(groupedBindingsGroup, k){
+                                        var resultingBindings = that.aggregateBindings(projection, groupedBindingsGroup, dataset, env);
+                                        aggregatedBindings.push(resultingBindings);
+                                        k();
+                                    }, function(){
+                                        callback(null, {'bindings': aggregatedBindings, 'denorm': true});
+                                    });
+                                });
                             } else {
                                 callback(new Error("Incompatible Group and Projection variables"));
                             }
@@ -788,28 +789,24 @@ QueryEngine.prototype.executeSelect = function(unit, env, defaultDataset, namedD
 };
 
 
-QueryEngine.prototype.groupSolution = function(bindings, group, dataset, queryEnv){
+QueryEngine.prototype.groupSolution = function(bindings, group, dataset, queryEnv, callback){
     var order = [];
     var filteredBindings = [];
     var initialized = false;
     var that = this;
     if(group === 'singleGroup') {
-        return [bindings];
+        callback([bindings]);
     } else {
-        for(var i=0; i<bindings.length; i++) {
-            var outFloop = arguments.callee;
-            var currentBindings = bindings[i];
+        async.eachSeries(bindings, function(currentBindings,k){
             var mustAddBindings = true;
 
             /**
-             * In this loop, we iterate through all the group clauses and tranform the current bindings
+             * In this loop, we iterate through all the group clauses and transform the current bindings
              * according to the group by clauses.
              * If it is the first iteration we also save in a different array the order for the
              * grouped variables that will be used later to build the final groups
              */
-            for(var j=0; j<group.length; j++) {
-                var floop = arguments.callee;
-                var currentOrderClause = group[j];
+            async.eachSeries(group, function(currentOrderClause, kk){
                 var orderVariable = null;
 
                 if(currentOrderClause.token === 'var') {
@@ -818,7 +815,7 @@ QueryEngine.prototype.groupSolution = function(bindings, group, dataset, queryEn
                     if(initialized == false) {
                         order.push(orderVariable);
                     }
-
+                    kk();
                 } else if(currentOrderClause.token === 'aliased_expression') {
                     orderVariable = currentOrderClause.alias.value;
                     if(initialized == false) {
@@ -828,7 +825,7 @@ QueryEngine.prototype.groupSolution = function(bindings, group, dataset, queryEn
                     if(currentOrderClause.expression.primaryexpression === 'var') {
                         currentBindings[currentOrderClause.alias.value] = currentBindings[currentOrderClause.expression.value.value];
                     } else {
-                        var denormBindings = this.copyDenormalizedBindings([currentBindings], queryEnv.outCache);
+                        var denormBindings = that.copyDenormalizedBindings([currentBindings], queryEnv.outCache);
                         var filterResultEbv = QueryFilters.runFilter(currentOrderClause.expression, denormBindings[0], that, dataset, queryEnv);
                         if(!QueryFilters.isEbvError(filterResultEbv)) {
                             if(filterResultEbv.value != null) {
@@ -839,69 +836,73 @@ QueryEngine.prototype.groupSolution = function(bindings, group, dataset, queryEn
                             mustAddBindings = false;
                         }
                     }
+                    kk();
                 } else {
                     // In this case, we create an additional variable in the binding to hold the group variable value
-                    var denormBindings = that.copyDenormalizedBindings([currentBindings], queryEnv.outCache);
-                    var filterResultEbv = QueryFilters.runFilter(currentOrderClause, denormBindings[0], that, queryEnv);
-                    if(!QueryFilters.isEbvError(filterResultEbv)) {
-                        currentBindings["groupCondition"+env._i] = filterResultEbv;
-                        orderVariable = "groupCondition"+env._i;
-                        if(initialized == false) {
-                            order.push(orderVariable);
+                    that.copyDenormalizedBindings([currentBindings], queryEnv.outCache, function(denormBindings){
+                        var filterResultEbv = QueryFilters.runFilter(currentOrderClause, denormBindings[0], that, queryEnv);
+                        if(!QueryFilters.isEbvError(filterResultEbv)) {
+                            currentBindings["groupCondition"+env._i] = filterResultEbv;
+                            orderVariable = "groupCondition"+env._i;
+                            if(initialized == false) {
+                                order.push(orderVariable);
+                            }
+
+                        } else {
+                            mustAddBindings = false;
                         }
-
+                        kk();
+                    });
+                }
+            }, function(){
+                if(initialized == false) {
+                    initialized = true;
+                }
+                if(mustAddBindings === true) {
+                    filteredBindings.push(currentBindings);
+                }
+                k();
+            });
+        }, function(){
+            /**
+             * After processing all the bindings, we build the group using the
+             * information stored about the order of the group variables.
+             */
+            var dups = {};
+            var groupMap = {};
+            var groupCounter = 0;
+            for(var i=0; i<filteredBindings.length; i++) {
+                var currentTransformedBinding = filteredBindings[i];
+                var key = "";
+                for(var j=0; j<order.length; j++) {
+                    var maybeObject = currentTransformedBinding[order[j]];
+                    if(typeof(maybeObject) === 'object') {
+                        key = key + maybeObject.value;
                     } else {
-                        mustAddBindings = false;
+                        key = key + maybeObject;
                     }
-
                 }
 
-            }
-            if(initialized == false) {
-                initialized = true;
-            }
-            if(mustAddBindings === true) {
-                filteredBindings.push(currentBindings);
-            }
-        }
-        /**
-         * After processing all the bindings, we build the group using the
-         * information stored about the order of the group variables.
-         */
-        var dups = {};
-        var groupMap = {};
-        var groupCounter = 0;
-        for(var i=0; i<filteredBindings.length; i++) {
-            var currentTransformedBinding = filteredBindings[i];
-            var key = "";
-            for(var j=0; j<order.length; j++) {
-                var maybeObject = currentTransformedBinding[order[j]];
-                if(typeof(maybeObject) === 'object') {
-                    key = key + maybeObject.value;
+                if(dups[key] == null) {
+                    //currentTransformedBinding["__group__"] = groupCounter;
+                    groupMap[key] = groupCounter;
+                    dups[key] = [currentTransformedBinding];
+                    //groupCounter++
                 } else {
-                    key = key + maybeObject;
+                    //currentTransformedBinding["__group__"] = dups[key][0]["__group__"];
+                    dups[key].push(currentTransformedBinding);
                 }
             }
 
-            if(dups[key] == null) {
-                //currentTransformedBinding["__group__"] = groupCounter;
-                groupMap[key] = groupCounter;
-                dups[key] = [currentTransformedBinding];
-                //groupCounter++
-            } else {
-                //currentTransformedBinding["__group__"] = dups[key][0]["__group__"];
-                dups[key].push(currentTransformedBinding);
+            // The final result is an array of arrays with all the groups
+            var groups = [];
+
+            for(var k in dups) {
+                groups.push(dups[k]);
             }
-        }
 
-        // The final result is an array of arrays with all the groups
-        var groups = [];
-
-        for(var k in dups) {
-            groups.push(dups[k]);
-        }
-
-        return groups;
+            callback(groups);
+        });
     }
 };
 

@@ -115,11 +115,9 @@ Lexicon.prototype.registerUri = function(uri, callback) {
                 });
 
             } else {
-                var oid = oidData[0];
-                var counter = oidData[1] + 1;
-                that.uris.insert(uri, [oid,counter], function(){
-                    callback(oid);
-                });
+                oid = oidData[0];
+                oidData[1] = oidData[1] + 1;
+                callback(oid);
             }
         });
     }
@@ -239,10 +237,8 @@ Lexicon.prototype.registerLiteral = function(literal, callback) {
 
             } else {
                 var oid = oidData[0];
-                var counter = oidData[1] + 1;
-                that.literals.insert(literal, [oid,counter], function(){
-                    callback(oid);
-                });
+                oidData[1] = oidData[1] + 1;
+                callback(oid);
             }
         });
 };

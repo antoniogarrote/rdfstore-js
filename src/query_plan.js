@@ -424,6 +424,8 @@ QueryPlanDPSize.executeBGPDatasets = function(bgp, dataset, queryEngine, queryEn
                         acum.push(results);
                         k();
                     });
+                } else {
+                    k();
                 }
             }, function(){
                 var acumBindings = QueryPlanDPSize.unionManyBindings(acum);
