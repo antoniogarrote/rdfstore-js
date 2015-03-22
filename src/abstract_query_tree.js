@@ -1,7 +1,7 @@
 // imports
 var SparqlParser = require("./parser");
 var Utils = require("./utils");
-var _ = require('lodash');
+var _ = Utils;
 
 function NonSupportedSparqlFeatureError(feature, message) {
     this.name = "NonSupportedSparqlFeatureError";

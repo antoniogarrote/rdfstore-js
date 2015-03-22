@@ -1,6 +1,6 @@
 var BaseTree = require("./btree").Tree;
 var async = require('async');
-var _ = require('lodash');
+var _ = require('./utils');
 
 /**
  * NodeKey

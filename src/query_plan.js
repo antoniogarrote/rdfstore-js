@@ -1,4 +1,4 @@
-var _ = require('lodash');
+var _ = require('./utils');
 var async = require('async');
 
 /**
@@ -72,6 +72,25 @@ QueryPlanDPSize.connected = function(leftPlan, rightPlan) {
     return false;
 };
 
+var intersection = function(arr1,arr2) {
+    var acc = {};
+    for(var i=0; i<arr1.lenght; i++) {
+        acc[arr1[i]] = 1;
+    }
+    for(i=0; i<arr2.length; i++) {
+        var val = acc[arr2[i]] || 0;
+        val++;
+        acc[arr2[i]] = val;
+    }
+    var intersect = [];
+    for(var p in acc) {
+        if(acc[p] == 2)
+        intersect.push(acc[p]);
+    }
+
+    return intersect;
+};
+
 /**
  * Computes the intersection for the bariables of two BGPs
  * @param bgpa
@@ -79,7 +98,7 @@ QueryPlanDPSize.connected = function(leftPlan, rightPlan) {
  * @returns {*}
  */
 QueryPlanDPSize.variablesIntersectionBGP = function(bgpa, bgpb) {
-    return _.intersection(
+    return intersection(
         QueryPlanDPSize.variablesInBGP(bgpa),
         QueryPlanDPSize.variablesInBGP(bgpb)
     );

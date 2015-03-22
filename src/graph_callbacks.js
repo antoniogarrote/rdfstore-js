@@ -1,5 +1,5 @@
 //imports
-var _ = require('lodash');
+var _ = require('./utils');
 var async = require('async');
 var QuadIndex = require('./quad_index').QuadIndex;
 var Pattern = require('./quad_index').Pattern;

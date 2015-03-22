@@ -1,8 +1,8 @@
 
 // imports
 var async = require('async');
-var _ = require('lodash');
 var utils = require('./utils');
+var _ = utils;
 
 /*
  * "perfect" indices for RDF indexing

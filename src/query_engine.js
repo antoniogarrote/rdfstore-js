@@ -9,7 +9,7 @@ var RDFModel = require("./rdf_model");
 var RDFLoader = require("./rdf_loader").RDFLoader;
 var Callbacks = require("./graph_callbacks").CallbacksBackend;
 var async = require('async');
-var _ = require('lodash');
+var _ = require('./utils');
 
 QueryEngine = function(params) {
     if(arguments.length != 0) {

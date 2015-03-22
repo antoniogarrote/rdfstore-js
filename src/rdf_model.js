@@ -1,5 +1,5 @@
 // imports
-var _ = require("lodash");
+var _ = require("./utils");
 var QueryFilters = require("./query_filters").QueryFilters;
 
 RDFModel = {};

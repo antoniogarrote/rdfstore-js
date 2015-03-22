@@ -5,7 +5,7 @@ var PersistentBackend = require("./persistent_quad_backend").QuadBackend;
 var InMemoryLexicon = require("./lexicon").Lexicon;
 var PersistentLexicon = require("./persistent_lexicon").Lexicon;
 var RDFModel = require("./rdf_model");
-var _ = require("lodash");
+var _ = require("./utils");
 
 
 /**

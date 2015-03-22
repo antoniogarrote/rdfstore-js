@@ -255,6 +255,95 @@ hashTerm = function(term) {
     }
 };
 
+var reject = function(xs,p) {
+    var acc = [];
+    for(var i=0; i<xs.length; i++) {
+        if(p(xs[i])) {
+            acc.push(xs[i]);
+        }
+    }
+
+    return acc;
+};
+
+var include = function(xs,p) {
+    for(var i=0; i<xs.length; i++){
+        if(xs[i] === p)
+            return true;
+    }
+
+    return false;
+};
+
+var each = function(xs,f) {
+    if(xs.forEach) {
+        xs.forEach(f);
+    } else {
+        for (var i = 0; i < xs.length; i++)
+            f(xs[i]);
+    }
+};
+
+var map = function(xs,f) {
+    if(xs.map) {
+        return xs.map(f);
+    } else {
+        var acc = [];
+        for (var i = 0; i < xs.length; i++)
+            acc[i] = f(xs[i]);
+
+        return acc;
+    }
+};
+
+var keys = function(xs) {
+    var acc = [];
+    for(var p in xs)
+        acc.push(p);
+    return acc;
+};
+
+var values = function(xs) {
+    var acc = [];
+    for(var p in xs)
+        acc.push(xs[p]);
+    return acc;
+};
+
+var size = function(xs) {
+    if(xs.length) {
+        return xs.length;
+    } else {
+        var acc = 0;
+        for(var p in xs)
+            acc++;
+        return acc;
+    }
+};
+
+clone = function(value) {
+    return JSON.parse(JSON.stringify(value));
+};
+
+var isObject = function(value) {
+    // Avoid a V8 JIT bug in Chrome 19-20.
+    // See https://code.google.com/p/v8/issues/detail?id=2291 for more details.
+    var type = typeof value;
+    return type == 'function' || (value && type == 'object') || false;
+};
+
+
+var create = (function() {
+    function Object() {}
+    return function(prototype) {
+        if (isObject(prototype)) {
+            Object.prototype = prototype;
+            var result = new Object;
+            Object.prototype = null;
+        }
+        return result || Object();
+    };
+}());
 
 
 module.exports = {
@@ -268,5 +357,16 @@ module.exports = {
     lexicalFormLiteral: lexicalFormLiteral,
     registerIndexedDB: registerIndexedDB,
     guid: guid,
-    hashTerm: hashTerm
+    hashTerm: hashTerm,
+    keys: keys,
+    values: values,
+    size: size,
+    map: map,
+    each: each,
+    forEach: each,
+    include: include,
+    reject: reject,
+    remove: reject,
+    clone: clone,
+    create: create
 };

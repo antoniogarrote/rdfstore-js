@@ -1,7 +1,7 @@
 "use strict";
 
-var _ = require('lodash');
 var utils = require('./../utils');
+var _ = utils;
 var nextTick = utils.nextTick;
 
 var Tree = function(keyFun, f) {

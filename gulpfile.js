@@ -10,7 +10,10 @@ var fs = require('fs');
 
 
 gulp.task('browserify', function() {
-    return browserify('./src/store.js')
+    return browserify('./src/store.js',{})
+        .exclude("sqlite3")
+        .exclude("indexeddb-js")
+        .external(["moment","async"])
         .bundle()
         .pipe(source('rdfstore.js'))
         .pipe(gulp.dest('./build'));
@@ -21,7 +24,6 @@ gulp.task('bowerify', function(){
         var b = browserify('./src/store.js');
         b.external(bowerResolve('moment'));
         b.external(bowerResolve('async'));
-        b.external(bowerResolve('lodash'));
         b.external(bowerResolve('n3js'));
         b.transform('debowerify');
 
@@ -56,10 +58,10 @@ gulp.task('minimize', function() {
             compilerPath: './node_modules/closure-compiler/lib/vendor/compiler.jar',
             fileName: 'dist/rdfstore.js',
             compilerFlags: {
-                'language_in': 'ECMASCRIPT5'
-//                'compilation_level': 'ADVANCED_OPTIMIZATIONS'
+                'language_in': 'ECMASCRIPT5',
+                'compilation_level': 'ADVANCED_OPTIMIZATIONS'
             }
         }))
 });
 
-gulp.task('default', ['parseGrammar', 'specs', 'browserify', 'minimize']);
+gulp.task('default', ['parseGrammar'/*, 'specs'*/, 'browserify', 'minimize']);
