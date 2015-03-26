@@ -8,7 +8,7 @@ var QueryFilters = require("./query_filters").QueryFilters;
 var RDFModel = require("./rdf_model");
 var RDFLoader = require("./rdf_loader").RDFLoader;
 var Callbacks = require("./graph_callbacks").CallbacksBackend;
-var async = require('async');
+var async = require('./utils');
 var _ = require('./utils');
 
 QueryEngine = function(params) {
@@ -491,12 +491,14 @@ QueryEngine.prototype.normalizeQuad = function(quad, queryEnv, shouldIndex, call
 
 QueryEngine.prototype.denormalizeBindingsList = function(bindingsList, env, callback) {
     var that = this;
+    var denormList = [];
 
-    async.mapSeries(bindingsList, function(bindings, k){
+    async.eachSeries(bindingsList, function(bindings, k){
         that.denormalizeBindings(bindings, env, function(denorm){
-            k(null,denorm);
+            denormList.push(denorm);
+            k();
         });
-    },function(_,denormList){
+    },function(){
         callback(denormList);
     });
 };
@@ -509,7 +511,8 @@ QueryEngine.prototype.denormalizeBindingsList = function(bindingsList, env, call
  */
 QueryEngine.prototype.copyDenormalizedBindings = function(bindingsList, out, callback) {
     var that = this;
-    async.mapSeries(bindingsList, function(bindings, k){
+    var denormList = [];
+    async.eachSeries(bindingsList, function(bindings, k){
         var denorm = {};
         var variables = _.keys(bindings);
         async.eachSeries(variables, function(variable, kk){
@@ -537,9 +540,10 @@ QueryEngine.prototype.copyDenormalizedBindings = function(bindingsList, out, cal
                 }
             }
         },function(){
-            k(null,denorm);
+            denormList.push(denorm);
+            k();
         });
-    }, function(_, denormList){
+    }, function(){
         callback(denormList);
     });
 };

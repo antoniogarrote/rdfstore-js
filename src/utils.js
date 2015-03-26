@@ -1,5 +1,3 @@
-var moment = require('moment');
-
 var nextTick = (function () {
 
     var global = null;
@@ -120,21 +118,46 @@ var lexicalFormBaseUri = function(term, env) {
     return uri;
 };
 
+
 parseISO8601 = function (str) {
-    return moment(str).toDate();
+    return Date.parse(str);
 };
 
+if (!Date.prototype.toISOString) {
+    (function() {
+
+        function pad(number) {
+            if (number < 10) {
+                return '0' + number;
+            }
+            return number;
+        }
+
+        Date.prototype.toISOString = function() {
+            return this.getUTCFullYear() +
+                '-' + pad(this.getUTCMonth() + 1) +
+                '-' + pad(this.getUTCDate()) +
+                'T' + pad(this.getUTCHours()) +
+                ':' + pad(this.getUTCMinutes()) +
+                ':' + pad(this.getUTCSeconds()) +
+                '.' + (this.getUTCMilliseconds() / 1000).toFixed(3).slice(2, 5) +
+                'Z';
+        };
+
+    }());
+}
+
 iso8601 = function(date) {
-    return moment(date).toISOString();
+    return date.toISOString();
 };
 
 compareDateComponents = function(stra,strb) {
-    var dateA = moment(stra);
-    var dateB = moment(strb);
+    var dateA = parseISO8601(stra);
+    var dateB = parseISO8601(strb);
 
-    if(dateA.isSame(dateB)) {
+    if(dateA == dateB) {
         return 0;
-    } else if(dateA.isBefore(dateB)) {
+    } else if(dateA < dateB) {
         return -1;
     } else {
         return 1;
@@ -345,6 +368,79 @@ var create = (function() {
     };
 }());
 
+var whilst = function (test, iterator, callback) {
+    if (test()) {
+        iterator(function (err) {
+            if (err) {
+                return callback(err);
+            }
+            whilst(test, iterator, callback);
+        });
+    }
+    else {
+        callback();
+    }
+};
+
+
+var eachSeries = function (arr, iterator, callback) {
+    callback = callback || function () {};
+    if (!arr.length) {
+        return callback();
+    }
+    var completed = 0;
+    var iterate = function () {
+        iterator(arr[completed], function (err) {
+            if (err) {
+                callback(err);
+                callback = function () {};
+            }
+            else {
+                completed += 1;
+                if (completed >= arr.length) {
+                    callback();
+                }
+                else {
+                    iterate();
+                }
+            }
+        });
+    };
+    iterate();
+};
+
+
+var reduce = function (arr, memo, iterator, callback) {
+    eachSeries(arr, function (x, callback) {
+        iterator(memo, x, function (err, v) {
+            memo = v;
+            callback(err);
+        });
+    }, function (err) {
+        callback(err, memo);
+    });
+};
+
+var seq = function (/* functions... */) {
+    var fns = arguments;
+    return function () {
+        var that = this;
+        var args = Array.prototype.slice.call(arguments);
+        var callback = args.pop();
+        reduce(fns, args, function (newargs, fn, cb) {
+                fn.apply(that, newargs.concat([function () {
+                    var err = arguments[0];
+                    var nextargs = Array.prototype.slice.call(arguments, 1);
+                    cb(err, nextargs);
+                }]))
+            },
+            function (err, results) {
+                callback.apply(that, [err].concat(results));
+            });
+    };
+};
+
+
 
 module.exports = {
     nextTick: nextTick,
@@ -368,5 +464,8 @@ module.exports = {
     reject: reject,
     remove: reject,
     clone: clone,
-    create: create
+    create: create,
+    whilst: whilst,
+    eachSeries: eachSeries,
+    seq: seq
 };

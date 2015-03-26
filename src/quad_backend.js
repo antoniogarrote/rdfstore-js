@@ -1,7 +1,7 @@
 
 // imports
 var QuadIndex = require("./quad_index").QuadIndex;
-var async = require('async');
+var async = require('./utils');
 var _ = require('./utils');
 
 /*

@@ -1,7 +1,7 @@
 var gulp = require('gulp');
 var browserify = require('browserify');
-var debowerify = require("debowerify");
-var bowerResolve = require('bower-resolve');
+//var browserify = require('gulp-browserify');
+var rename     = require('gulp-rename');
 var closureCompiler = require('gulp-closure-compiler');
 var source = require('vinyl-source-stream');
 var jasmine = require('gulp-jasmine');
@@ -10,25 +10,38 @@ var fs = require('fs');
 
 
 gulp.task('browserify', function() {
-    return browserify('./src/store.js',{})
+/*
+    return gulp.src(['./src/store.js'])
+        .pipe(browserify({
+            standalone: 'rdfstore',
+            exclude: ["sqlite3","indexeddb-js"]
+        }))
+        .pipe(rename('rdfstore.js'))
+        .pipe(gulp.dest('./dist'));
+*/
+
+    return browserify('./src/store.js',{standalone: 'rdfstore'})
         .exclude("sqlite3")
         .exclude("indexeddb-js")
-        .external(["moment","async"])
+        // Should we bundle this as dependencies?
+        //.external("jsonld")
+        //.external("n3")
         .bundle()
-        .pipe(source('rdfstore.js'))
-        .pipe(gulp.dest('./build'));
+     .pipe(source('rdfstore.js'))
+        .pipe(gulp.dest('./dist'));
+
 });
 
-gulp.task('bowerify', function(){
-    bowerResolve.init(function () {
-        var b = browserify('./src/store.js');
-        b.external(bowerResolve('moment'));
-        b.external(bowerResolve('async'));
-        b.external(bowerResolve('n3js'));
-        b.transform('debowerify');
-
-        b.bundle().pipe(fs.createWriteStream('./build/bundle.js'));
-    });
+gulp.task('minimize', function() {
+    return gulp.src('dist/*.js')
+        .pipe(closureCompiler({
+            compilerPath: './node_modules/closure-compiler/lib/vendor/compiler.jar',
+            fileName: 'dist/rdfstore_min.js',
+            compilerFlags: {
+                'language_in': 'ECMASCRIPT5'
+                //'compilation_level': 'ADVANCED_OPTIMIZATIONS'
+            }
+        }));
 });
 
 gulp.task('performance',function(){
@@ -52,16 +65,4 @@ gulp.task('parseGrammar', function(){
     })
 });
 
-gulp.task('minimize', function() {
-    return gulp.src('build/*.js')
-        .pipe(closureCompiler({
-            compilerPath: './node_modules/closure-compiler/lib/vendor/compiler.jar',
-            fileName: 'dist/rdfstore.js',
-            compilerFlags: {
-                'language_in': 'ECMASCRIPT5',
-                'compilation_level': 'ADVANCED_OPTIMIZATIONS'
-            }
-        }))
-});
-
-gulp.task('default', ['parseGrammar'/*, 'specs'*/, 'browserify', 'minimize']);
+gulp.task('default', ['parseGrammar', 'specs']);

@@ -1,8 +1,10 @@
 var Utils = require('./utils');
 var     _ = Utils;
-var async = require('async');
+var async = require('./utils');
 
 QueryFilters = {};
+
+var xmlSchema = "http://www.w3.org/2001/XMLSchema#";
 
 QueryFilters.checkFilters = function(pattern, bindings, nullifyErrors, dataset, queryEnv, queryEngine, callback) {
 
@@ -225,10 +227,10 @@ QueryFilters.runAggregator = function(aggregator, bindingsGroup, queryEngine, da
                     }
                 }
 
-                return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#integer", value:''+count};
+                return {token: 'literal', type:xmlSchema+"integer", value:''+count};
             } else if(aggregator.expression.aggregateType === 'avg') {
                 var distinct = {};
-                var aggregated = {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#integer", value:'0'};
+                var aggregated = {token: 'literal', type:xmlSchema+"integer", value:'0'};
                 var count = 0;
                 for(var i=0; i< bindingsGroup.length; i++) {
                     var bindings = bindingsGroup[i];
@@ -252,12 +254,12 @@ QueryFilters.runAggregator = function(aggregator, bindingsGroup, queryEngine, da
                     }
                 }
 
-                var result = QueryFilters.runDivFunction(aggregated, {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#integer", value:''+count});
+                var result = QueryFilters.runDivFunction(aggregated, {token: 'literal', type:xmlSchema+"integer", value:''+count});
                 result.value = ''+result.value;
                 return result;
             } else if(aggregator.expression.aggregateType === 'sum') {
                 var distinct = {};
-                var aggregated = {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#integer", value:'0'};
+                var aggregated = {token: 'literal', type:xmlSchema+"integer", value:'0'};
                 for(var i=0; i< bindingsGroup.length; i++) {
                     var bindings = bindingsGroup[i];
                     var ebv = QueryFilters.runFilter(aggregator.expression.expression, bindings, queryEngine, dataset, env);
@@ -415,21 +417,21 @@ QueryFilters.isInteger = function(val) {
         return false;
     }
     if(val.token === 'literal') {
-        if(val.type == "http://www.w3.org/2001/XMLSchema#integer" ||
-            val.type == "http://www.w3.org/2001/XMLSchema#decimal" ||
-            val.type == "http://www.w3.org/2001/XMLSchema#double" ||
-            val.type == "http://www.w3.org/2001/XMLSchema#nonPositiveInteger" ||
-            val.type == "http://www.w3.org/2001/XMLSchema#negativeInteger" ||
-            val.type == "http://www.w3.org/2001/XMLSchema#long" ||
-            val.type == "http://www.w3.org/2001/XMLSchema#int" ||
-            val.type == "http://www.w3.org/2001/XMLSchema#short" ||
-            val.type == "http://www.w3.org/2001/XMLSchema#byte" ||
-            val.type == "http://www.w3.org/2001/XMLSchema#nonNegativeInteger" ||
-            val.type == "http://www.w3.org/2001/XMLSchema#unsignedLong" ||
-            val.type == "http://www.w3.org/2001/XMLSchema#unsignedInt" ||
-            val.type == "http://www.w3.org/2001/XMLSchema#unsignedShort" ||
-            val.type == "http://www.w3.org/2001/XMLSchema#unsignedByte" ||
-            val.type == "http://www.w3.org/2001/XMLSchema#positiveInteger" ) {
+        if(val.type == xmlSchema+"integer" ||
+            val.type == xmlSchema+"decimal" ||
+            val.type == xmlSchema+"double" ||
+            val.type == xmlSchema+"nonPositiveInteger" ||
+            val.type == xmlSchema+"negativeInteger" ||
+            val.type == xmlSchema+"long" ||
+            val.type == xmlSchema+"int" ||
+            val.type == xmlSchema+"short" ||
+            val.type == xmlSchema+"byte" ||
+            val.type == xmlSchema+"nonNegativeInteger" ||
+            val.type == xmlSchema+"unsignedLong" ||
+            val.type == xmlSchema+"unsignedInt" ||
+            val.type == xmlSchema+"unsignedShort" ||
+            val.type == xmlSchema+"unsignedByte" ||
+            val.type == xmlSchema+"positiveInteger" ) {
             return true;
         } else {
             return false;
@@ -444,7 +446,7 @@ QueryFilters.isFloat = function(val) {
         return false;
     }
     if(val.token === 'literal') {
-        if(val.type == "http://www.w3.org/2001/XMLSchema#float") {
+        if(val.type == xmlSchema+"float") {
             return true;
         } else {
             return false;
@@ -459,7 +461,7 @@ QueryFilters.isDecimal = function(val) {
         return false;
     }
     if(val.token === 'literal') {
-        if(val.type == "http://www.w3.org/2001/XMLSchema#decimal") {
+        if(val.type == xmlSchema+"decimal") {
             return true;
         } else {
             return false;
@@ -474,7 +476,7 @@ QueryFilters.isDouble = function(val) {
         return false;
     }
     if(val.token === 'literal') {
-        if(val.type == "http://www.w3.org/2001/XMLSchema#double") {
+        if(val.type == xmlSchema+"double") {
             return true;
         } else {
             return false;
@@ -490,22 +492,22 @@ QueryFilters.isNumeric = function(val) {
         return false;
     }
     if(val.token === 'literal') {
-        if(val.type == "http://www.w3.org/2001/XMLSchema#integer" ||
-            val.type == "http://www.w3.org/2001/XMLSchema#decimal" ||
-            val.type == "http://www.w3.org/2001/XMLSchema#float" ||
-            val.type == "http://www.w3.org/2001/XMLSchema#double" ||
-            val.type == "http://www.w3.org/2001/XMLSchema#nonPositiveInteger" ||
-            val.type == "http://www.w3.org/2001/XMLSchema#negativeInteger" ||
-            val.type == "http://www.w3.org/2001/XMLSchema#long" ||
-            val.type == "http://www.w3.org/2001/XMLSchema#int" ||
-            val.type == "http://www.w3.org/2001/XMLSchema#short" ||
-            val.type == "http://www.w3.org/2001/XMLSchema#byte" ||
-            val.type == "http://www.w3.org/2001/XMLSchema#nonNegativeInteger" ||
-            val.type == "http://www.w3.org/2001/XMLSchema#unsignedLong" ||
-            val.type == "http://www.w3.org/2001/XMLSchema#unsignedInt" ||
-            val.type == "http://www.w3.org/2001/XMLSchema#unsignedShort" ||
-            val.type == "http://www.w3.org/2001/XMLSchema#unsignedByte" ||
-            val.type == "http://www.w3.org/2001/XMLSchema#positiveInteger" ) {
+        if(val.type == xmlSchema+"integer" ||
+            val.type == xmlSchema+"decimal" ||
+            val.type == xmlSchema+"float" ||
+            val.type == xmlSchema+"double" ||
+            val.type == xmlSchema+"nonPositiveInteger" ||
+            val.type == xmlSchema+"negativeInteger" ||
+            val.type == xmlSchema+"long" ||
+            val.type == xmlSchema+"int" ||
+            val.type == xmlSchema+"short" ||
+            val.type == xmlSchema+"byte" ||
+            val.type == xmlSchema+"nonNegativeInteger" ||
+            val.type == xmlSchema+"unsignedLong" ||
+            val.type == xmlSchema+"unsignedInt" ||
+            val.type == xmlSchema+"unsignedShort" ||
+            val.type == xmlSchema+"unsignedByte" ||
+            val.type == xmlSchema+"positiveInteger" ) {
             return true;
         } else {
             return false;
@@ -529,7 +531,7 @@ QueryFilters.isSimpleLiteral = function(val) {
 
 QueryFilters.isXsdType = function(type, val) {
     if(val && val.token == 'literal') {
-        return val.type == "http://www.w3.org/2001/XMLSchema#"+type;
+        return val.type == xmlSchema+""+type;
     } else {
         return false;
     }
@@ -540,32 +542,32 @@ QueryFilters.ebv = function (term) {
         return QueryFilters.ebvError();
     } else {
         if (term.token && term.token === 'literal') {
-            if (term.type == "http://www.w3.org/2001/XMLSchema#integer" ||
-                term.type == "http://www.w3.org/2001/XMLSchema#decimal" ||
-                term.type == "http://www.w3.org/2001/XMLSchema#double" ||
-                term.type == "http://www.w3.org/2001/XMLSchema#nonPositiveInteger" ||
-                term.type == "http://www.w3.org/2001/XMLSchema#negativeInteger" ||
-                term.type == "http://www.w3.org/2001/XMLSchema#long" ||
-                term.type == "http://www.w3.org/2001/XMLSchema#int" ||
-                term.type == "http://www.w3.org/2001/XMLSchema#short" ||
-                term.type == "http://www.w3.org/2001/XMLSchema#byte" ||
-                term.type == "http://www.w3.org/2001/XMLSchema#nonNegativeInteger" ||
-                term.type == "http://www.w3.org/2001/XMLSchema#unsignedLong" ||
-                term.type == "http://www.w3.org/2001/XMLSchema#unsignedInt" ||
-                term.type == "http://www.w3.org/2001/XMLSchema#unsignedShort" ||
-                term.type == "http://www.w3.org/2001/XMLSchema#unsignedByte" ||
-                term.type == "http://www.w3.org/2001/XMLSchema#positiveInteger") {
+            if (term.type == xmlSchema+"integer" ||
+                term.type == xmlSchema+"decimal" ||
+                term.type == xmlSchema+"double" ||
+                term.type == xmlSchema+"nonPositiveInteger" ||
+                term.type == xmlSchema+"negativeInteger" ||
+                term.type == xmlSchema+"long" ||
+                term.type == xmlSchema+"int" ||
+                term.type == xmlSchema+"short" ||
+                term.type == xmlSchema+"byte" ||
+                term.type == xmlSchema+"nonNegativeInteger" ||
+                term.type == xmlSchema+"unsignedLong" ||
+                term.type == xmlSchema+"unsignedInt" ||
+                term.type == xmlSchema+"unsignedShort" ||
+                term.type == xmlSchema+"unsignedByte" ||
+                term.type == xmlSchema+"positiveInteger") {
                 var tmp = parseFloat(term.value);
                 if (isNaN(tmp)) {
                     return false;
                 } else {
                     return parseFloat(term.value) != 0;
                 }
-            } else if (term.type === "http://www.w3.org/2001/XMLSchema#boolean") {
+            } else if (term.type === xmlSchema+"boolean") {
                 return (term.value === 'true' || term.value === true || term.value === 'True');
-            } else if (term.type === "http://www.w3.org/2001/XMLSchema#string") {
+            } else if (term.type === xmlSchema+"string") {
                 return term.value != "";
-            } else if (term.type === "http://www.w3.org/2001/XMLSchema#dateTime") {
+            } else if (term.type === xmlSchema+"dateTime") {
                 return (new Date(term.value)) != null;
             } else if (QueryFilters.isEbvError(term)) {
                 return term;
@@ -587,12 +589,12 @@ QueryFilters.ebv = function (term) {
 QueryFilters.effectiveBooleanValue = QueryFilters.ebv;
 
 QueryFilters.ebvTrue = function() {
-    var val = {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#boolean", value:true};
+    var val = {token: 'literal', type:xmlSchema+"boolean", value:true};
     return val;
 };
 
 QueryFilters.ebvFalse = function() {
-    var val = {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#boolean", value:false};
+    var val = {token: 'literal', type:xmlSchema+"boolean", value:false};
     return val;
 };
 
@@ -655,131 +657,131 @@ QueryFilters.runRelationalFilter = function(filterExpr, op1, op2, bindings, quer
  */
 QueryFilters.effectiveTypeValue = function(val){
     if(val.token == 'literal') {
-        if(val.type == "http://www.w3.org/2001/XMLSchema#integer") {
+        if(val.type == xmlSchema+"integer") {
             var tmp = parseInt(val.value);
             //if(isNaN(tmp)) {
             //    return false;
             //} else {
             return tmp;
             //}
-        } else if(val.type == "http://www.w3.org/2001/XMLSchema#decimal") {
+        } else if(val.type == xmlSchema+"decimal") {
             var tmp = parseFloat(val.value);
             //if(isNaN(tmp)) {
             //    return false;
             //} else {
             return tmp;
             //}
-        } else if (val.type == "http://www.w3.org/2001/XMLSchema#float") {
+        } else if (val.type == xmlSchema+"float") {
             var tmp = parseFloat(val.value);
             //if(isNaN(tmp)) {
             //    return false;
             //} else {
             return tmp;
             //}
-        } else if (val.type == "http://www.w3.org/2001/XMLSchema#double") {
+        } else if (val.type == xmlSchema+"double") {
             var tmp = parseFloat(val.value);
             //if(isNaN(tmp)) {
             //    return false;
             //} else {
             return tmp;
             //}
-        } else if (val.type == "http://www.w3.org/2001/XMLSchema#nonPositiveInteger") {
+        } else if (val.type == xmlSchema+"nonPositiveInteger") {
             var tmp = parseFloat(val.value);
             //if(isNaN(tmp)) {
             //    return false;
             //} else {
             return tmp;
             //}
-        } else if (val.type == "http://www.w3.org/2001/XMLSchema#negativeInteger") {
+        } else if (val.type == xmlSchema+"negativeInteger") {
             var tmp = parseInt(val.value);
             //if(isNaN(tmp)) {
             //    return false;
             //} else {
             return tmp;
             //}
-        } else if (val.type == "http://www.w3.org/2001/XMLSchema#long") {
+        } else if (val.type == xmlSchema+"long") {
             var tmp = parseInt(val.value);
             //if(isNaN(tmp)) {
             //    return false;
             //} else {
             return tmp;
             //}
-        } else if (val.type == "http://www.w3.org/2001/XMLSchema#int") {
+        } else if (val.type == xmlSchema+"int") {
             var tmp = parseInt(val.value);
             //if(isNaN(tmp)) {
             //    return false;
             //} else {
             return tmp;
             //}
-        } else if (val.type == "http://www.w3.org/2001/XMLSchema#short") {
+        } else if (val.type == xmlSchema+"short") {
             var tmp = parseInt(val.value);
             //if(isNaN(tmp)) {
             //    return false;
             //} else {
             return tmp;
             //}
-        } else if (val.type == "http://www.w3.org/2001/XMLSchema#byte") {
+        } else if (val.type == xmlSchema+"byte") {
             var tmp = parseInt(val.value);
             //if(isNaN(tmp)) {
             //    return false;
             //} else {
             return tmp;
             //}
-        } else if (val.type == "http://www.w3.org/2001/XMLSchema#nonNegativeInteger") {
+        } else if (val.type == xmlSchema+"nonNegativeInteger") {
             var tmp = parseInt(val.value);
             //if(isNaN(tmp)) {
             //    return false;
             //} else {
             return tmp;
             //}
-        } else if (val.type == "http://www.w3.org/2001/XMLSchema#unsignedLong") {
+        } else if (val.type == xmlSchema+"unsignedLong") {
             var tmp = parseInt(val.value);
             //if(isNaN(tmp)) {
             //    return false;
             //} else {
             return tmp;
             //}
-        } else if (val.type == "http://www.w3.org/2001/XMLSchema#unsignedInt") {
+        } else if (val.type == xmlSchema+"unsignedInt") {
             var tmp = parseInt(val.value);
             //if(isNaN(tmp)) {
             //    return false;
             //} else {
             return tmp;
             //}
-        } else if (val.type == "http://www.w3.org/2001/XMLSchema#unsignedShort") {
+        } else if (val.type == xmlSchema+"unsignedShort") {
             var tmp = parseInt(val.value);
             //if(isNaN(tmp)) {
             //    return false;
             //} else {
             return tmp;
             //}
-        } else if (val.type == "http://www.w3.org/2001/XMLSchema#unsignedByte") {
+        } else if (val.type == xmlSchema+"unsignedByte") {
             var tmp = parseInt(val.value);
             //if(isNaN(tmp)) {
             //    return false;
             //} else {
             return tmp;
             //}
-        } else if (val.type == "http://www.w3.org/2001/XMLSchema#positiveInteger" ) {
+        } else if (val.type == xmlSchema+"positiveInteger" ) {
             var tmp = parseInt(val.value);
             //if(isNaN(tmp)) {
             //    return false;
             //} else {
             return tmp;
             //}
-        } else if (val.type == "http://www.w3.org/2001/XMLSchema#date" ||
-            val.type == "http://www.w3.org/2001/XMLSchema#dateTime" ) {
+        } else if (val.type == xmlSchema+"date" ||
+            val.type == xmlSchema+"dateTime" ) {
             try {
                 var d = Utils.parseISO8601(val.value);
                 return(d);
             } catch(e) {
                 return null;
             }
-        } else if (val.type == "http://www.w3.org/2001/XMLSchema#boolean" ) {
+        } else if (val.type == xmlSchema+"boolean" ) {
             return val.value === true || val.value === 'true' || val.value === '1' || val.value === 1 || val.value === true ? true :
                 val.value === false || val.value === 'false' || val.value === '0' || val.value === 0 || val.value === false ? false :
                     undefined;
-        } else if (val.type == "http://www.w3.org/2001/XMLSchema#string" ) {
+        } else if (val.type == xmlSchema+"string" ) {
             return val.value === null || val.value === undefined ? undefined : ''+val.value;
         } else if (val.type == null) {
             // plain literal -> just manipulate the string
@@ -1127,13 +1129,13 @@ QueryFilters.runSumFunction = function(suma, sumb) {
     var val = QueryFilters.effectiveTypeValue(suma) + QueryFilters.effectiveTypeValue(sumb);
 
     if(QueryFilters.isDouble(suma) || QueryFilters.isDouble(sumb)) {
-        return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#double", value:val};
+        return {token: 'literal', type:xmlSchema+"double", value:val};
     } else if(QueryFilters.isFloat(suma) || QueryFilters.isFloat(sumb)) {
-        return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#float", value:val};
+        return {token: 'literal', type:xmlSchema+"float", value:val};
     } else if(QueryFilters.isDecimal(suma) || QueryFilters.isDecimal(sumb)) {
-        return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#decimal", value:val};
+        return {token: 'literal', type:xmlSchema+"decimal", value:val};
     } else {
-        return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#integer", value:val};
+        return {token: 'literal', type:xmlSchema+"integer", value:val};
     }
 };
 
@@ -1144,13 +1146,13 @@ QueryFilters.runSubFunction = function(suma, sumb) {
     var val = QueryFilters.effectiveTypeValue(suma) - QueryFilters.effectiveTypeValue(sumb);
 
     if(QueryFilters.isDouble(suma) || QueryFilters.isDouble(sumb)) {
-        return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#double", value:val};
+        return {token: 'literal', type:xmlSchema+"double", value:val};
     } else if(QueryFilters.isFloat(suma) || QueryFilters.isFloat(sumb)) {
-        return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#float", value:val};
+        return {token: 'literal', type:xmlSchema+"float", value:val};
     } else if(QueryFilters.isDecimal(suma) || QueryFilters.isDecimal(sumb)) {
-        return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#decimal", value:val};
+        return {token: 'literal', type:xmlSchema+"decimal", value:val};
     } else {
-        return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#integer", value:val};
+        return {token: 'literal', type:xmlSchema+"integer", value:val};
     }
 };
 
@@ -1190,13 +1192,13 @@ QueryFilters.runMulFunction = function(faca, facb) {
     var val = QueryFilters.effectiveTypeValue(faca) * QueryFilters.effectiveTypeValue(facb);
 
     if(QueryFilters.isDouble(faca) || QueryFilters.isDouble(facb)) {
-        return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#double", value:val};
+        return {token: 'literal', type:xmlSchema+"double", value:val};
     } else if(QueryFilters.isFloat(faca) || QueryFilters.isFloat(facb)) {
-        return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#float", value:val};
+        return {token: 'literal', type:xmlSchema+"float", value:val};
     } else if(QueryFilters.isDecimal(faca) || QueryFilters.isDecimal(facb)) {
-        return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#decimal", value:val};
+        return {token: 'literal', type:xmlSchema+"decimal", value:val};
     } else {
-        return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#integer", value:val};
+        return {token: 'literal', type:xmlSchema+"integer", value:val};
     }
 };
 
@@ -1207,13 +1209,13 @@ QueryFilters.runDivFunction = function(faca, facb) {
     var val = QueryFilters.effectiveTypeValue(faca) / QueryFilters.effectiveTypeValue(facb);
 
     if(QueryFilters.isDouble(faca) || QueryFilters.isDouble(facb)) {
-        return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#double", value:val};
+        return {token: 'literal', type:xmlSchema+"double", value:val};
     } else if(QueryFilters.isFloat(faca) || QueryFilters.isFloat(facb)) {
-        return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#float", value:val};
+        return {token: 'literal', type:xmlSchema+"float", value:val};
     } else if(QueryFilters.isDecimal(faca) || QueryFilters.isDecimal(facb)) {
-        return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#decimal", value:val};
+        return {token: 'literal', type:xmlSchema+"decimal", value:val};
     } else {
-        return {token: 'literal', type:"http://www.w3.org/2001/XMLSchema#integer", value:val};
+        return {token: 'literal', type:xmlSchema+"integer", value:val};
     }
 };
 
@@ -1254,7 +1256,7 @@ QueryFilters.runBuiltInCall = function(builtincall, args, bindings, queryEngine,
         if(builtincall === 'str') {
             if(ops[0].token === 'literal') {
                 // lexical form literals
-                return {token: 'literal', type:null, value:""+ops[0].value}; // type null? or "http://www.w3.org/2001/XMLSchema#string"
+                return {token: 'literal', type:null, value:""+ops[0].value}; // type null? or xmlSchema+"string"
             } else if(ops[0].token === 'uri'){
                 // codepoint URIs
                 return {token: 'literal', type:null, value:ops[0].value}; // idem
@@ -1466,39 +1468,39 @@ QueryFilters.runIriRefOrFunction = function(iriref, args, bindings,queryEngine, 
 
         var fun = Utils.lexicalFormBaseUri(iriref, env);
 
-        if(fun == "http://www.w3.org/2001/XMLSchema#integer" ||
-            fun == "http://www.w3.org/2001/XMLSchema#decimal" ||
-            fun == "http://www.w3.org/2001/XMLSchema#double" ||
-            fun == "http://www.w3.org/2001/XMLSchema#nonPositiveInteger" ||
-            fun == "http://www.w3.org/2001/XMLSchema#negativeInteger" ||
-            fun == "http://www.w3.org/2001/XMLSchema#long" ||
-            fun == "http://www.w3.org/2001/XMLSchema#int" ||
-            fun == "http://www.w3.org/2001/XMLSchema#short" ||
-            fun == "http://www.w3.org/2001/XMLSchema#byte" ||
-            fun == "http://www.w3.org/2001/XMLSchema#nonNegativeInteger" ||
-            fun == "http://www.w3.org/2001/XMLSchema#unsignedLong" ||
-            fun == "http://www.w3.org/2001/XMLSchema#unsignedInt" ||
-            fun == "http://www.w3.org/2001/XMLSchema#unsignedShort" ||
-            fun == "http://www.w3.org/2001/XMLSchema#unsignedByte" ||
-            fun == "http://www.w3.org/2001/XMLSchema#positiveInteger") {
+        if(fun == xmlSchema+"integer" ||
+            fun == xmlSchema+"decimal" ||
+            fun == xmlSchema+"double" ||
+            fun == xmlSchema+"nonPositiveInteger" ||
+            fun == xmlSchema+"negativeInteger" ||
+            fun == xmlSchema+"long" ||
+            fun == xmlSchema+"int" ||
+            fun == xmlSchema+"short" ||
+            fun == xmlSchema+"byte" ||
+            fun == xmlSchema+"nonNegativeInteger" ||
+            fun == xmlSchema+"unsignedLong" ||
+            fun == xmlSchema+"unsignedInt" ||
+            fun == xmlSchema+"unsignedShort" ||
+            fun == xmlSchema+"unsignedByte" ||
+            fun == xmlSchema+"positiveInteger") {
             var from = ops[0];
             if(from.token === 'literal') {
                 from = QueryFilters.normalizeLiteralDatatype(from, queryEngine, env);
-                if(from.type == "http://www.w3.org/2001/XMLSchema#integer" ||
-                    from.type == "http://www.w3.org/2001/XMLSchema#decimal" ||
-                    from.type == "http://www.w3.org/2001/XMLSchema#double" ||
-                    from.type == "http://www.w3.org/2001/XMLSchema#nonPositiveInteger" ||
-                    from.type == "http://www.w3.org/2001/XMLSchema#negativeInteger" ||
-                    from.type == "http://www.w3.org/2001/XMLSchema#long" ||
-                    from.type == "http://www.w3.org/2001/XMLSchema#int" ||
-                    from.type == "http://www.w3.org/2001/XMLSchema#short" ||
-                    from.type == "http://www.w3.org/2001/XMLSchema#byte" ||
-                    from.type == "http://www.w3.org/2001/XMLSchema#nonNegativeInteger" ||
-                    from.type == "http://www.w3.org/2001/XMLSchema#unsignedLong" ||
-                    from.type == "http://www.w3.org/2001/XMLSchema#unsignedInt" ||
-                    from.type == "http://www.w3.org/2001/XMLSchema#unsignedShort" ||
-                    from.type == "http://www.w3.org/2001/XMLSchema#unsignedByte" ||
-                    from.type == "http://www.w3.org/2001/XMLSchema#positiveInteger") {
+                if(from.type == xmlSchema+"integer" ||
+                    from.type == xmlSchema+"decimal" ||
+                    from.type == xmlSchema+"double" ||
+                    from.type == xmlSchema+"nonPositiveInteger" ||
+                    from.type == xmlSchema+"negativeInteger" ||
+                    from.type == xmlSchema+"long" ||
+                    from.type == xmlSchema+"int" ||
+                    from.type == xmlSchema+"short" ||
+                    from.type == xmlSchema+"byte" ||
+                    from.type == xmlSchema+"nonNegativeInteger" ||
+                    from.type == xmlSchema+"unsignedLong" ||
+                    from.type == xmlSchema+"unsignedInt" ||
+                    from.type == xmlSchema+"unsignedShort" ||
+                    from.type == xmlSchema+"unsignedByte" ||
+                    from.type == xmlSchema+"positiveInteger") {
                     from.type = fun;
                     return from;
                 } else if(from.type == 'http://www.w3.org/2001/XMLSchema#boolean') {
@@ -1527,14 +1529,14 @@ QueryFilters.runIriRefOrFunction = function(iriref, args, bindings,queryEngine, 
                     }
 
                     // @todo improve this with regular expressions for each lexical representation
-                    if(fun == "http://www.w3.org/2001/XMLSchema#decimal") {
+                    if(fun == xmlSchema+"decimal") {
                         if(from.value.indexOf("e") != -1 || from.value.indexOf("E") != -1) {
                             return QueryFilters.ebvError();
                         }
                     }
 
                     // @todo improve this with regular expressions for each lexical representation
-                    if(fun == "http://www.w3.org/2001/XMLSchema#int" || fun == "http://www.w3.org/2001/XMLSchema#integer") {
+                    if(fun == xmlSchema+"int" || fun == xmlSchema+"integer") {
                         if(from.value.indexOf("e") != -1 || from.value.indexOf("E") != -1 || from.value.indexOf(".") != -1) {
                             return QueryFilters.ebvError();
                         }
@@ -1557,7 +1559,7 @@ QueryFilters.runIriRefOrFunction = function(iriref, args, bindings,queryEngine, 
             } else {
                 return QueryFilters.ebvError();
             }
-        } else if(fun == "http://www.w3.org/2001/XMLSchema#boolean") {
+        } else if(fun == xmlSchema+"boolean") {
             var from = ops[0];
             if(from.token === "literal" && from.type == null) {
                 if(from.value === "true" || from.value === "1") {
@@ -1576,32 +1578,32 @@ QueryFilters.runIriRefOrFunction = function(iriref, args, bindings,queryEngine, 
             } else {
                 return QueryFilters.ebvError();
             }
-        } else if(fun == "http://www.w3.org/2001/XMLSchema#string") {
+        } else if(fun == xmlSchema+"string") {
             var from = ops[0];
             if(from.token === 'literal') {
                 from = QueryFilters.normalizeLiteralDatatype(from, queryEngine, env);
-                if(from.type == "http://www.w3.org/2001/XMLSchema#integer" ||
-                    from.type == "http://www.w3.org/2001/XMLSchema#decimal" ||
-                    from.type == "http://www.w3.org/2001/XMLSchema#double" ||
-                    from.type == "http://www.w3.org/2001/XMLSchema#nonPositiveInteger" ||
-                    from.type == "http://www.w3.org/2001/XMLSchema#negativeInteger" ||
-                    from.type == "http://www.w3.org/2001/XMLSchema#long" ||
-                    from.type == "http://www.w3.org/2001/XMLSchema#int" ||
-                    from.type == "http://www.w3.org/2001/XMLSchema#short" ||
-                    from.type == "http://www.w3.org/2001/XMLSchema#byte" ||
-                    from.type == "http://www.w3.org/2001/XMLSchema#nonNegativeInteger" ||
-                    from.type == "http://www.w3.org/2001/XMLSchema#unsignedLong" ||
-                    from.type == "http://www.w3.org/2001/XMLSchema#unsignedInt" ||
-                    from.type == "http://www.w3.org/2001/XMLSchema#unsignedShort" ||
-                    from.type == "http://www.w3.org/2001/XMLSchema#unsignedByte" ||
-                    from.type == "http://www.w3.org/2001/XMLSchema#positiveInteger" ||
-                    from.type == "http://www.w3.org/2001/XMLSchema#float") {
+                if(from.type == xmlSchema+"integer" ||
+                    from.type == xmlSchema+"decimal" ||
+                    from.type == xmlSchema+"double" ||
+                    from.type == xmlSchema+"nonPositiveInteger" ||
+                    from.type == xmlSchema+"negativeInteger" ||
+                    from.type == xmlSchema+"long" ||
+                    from.type == xmlSchema+"int" ||
+                    from.type == xmlSchema+"short" ||
+                    from.type == xmlSchema+"byte" ||
+                    from.type == xmlSchema+"nonNegativeInteger" ||
+                    from.type == xmlSchema+"unsignedLong" ||
+                    from.type == xmlSchema+"unsignedInt" ||
+                    from.type == xmlSchema+"unsignedShort" ||
+                    from.type == xmlSchema+"unsignedByte" ||
+                    from.type == xmlSchema+"positiveInteger" ||
+                    from.type == xmlSchema+"float") {
                     from.type = fun;
                     from.value = ""+from.value;
                     return from;
-                } else if(from.type == "http://www.w3.org/2001/XMLSchema#string") {
+                } else if(from.type == xmlSchema+"string") {
                     return from;
-                } else if(from.type == "http://www.w3.org/2001/XMLSchema#boolean") {
+                } else if(from.type == xmlSchema+"boolean") {
                     if(QueryFilters.ebv(from)) {
                         from.type = fun;
                         from.value = 'true';
@@ -1610,8 +1612,8 @@ QueryFilters.runIriRefOrFunction = function(iriref, args, bindings,queryEngine, 
                         from.value = 'false';
                     }
                     return from;
-                } else if(from.type == "http://www.w3.org/2001/XMLSchema#dateTime" ||
-                    from.type == "http://www.w3.org/2001/XMLSchema#date") {
+                } else if(from.type == xmlSchema+"dateTime" ||
+                    from.type == xmlSchema+"date") {
                     from.type = fun;
                     if(typeof(from.value) != 'string') {
                         from.value = Utils.iso8601(from.value);
@@ -1632,11 +1634,11 @@ QueryFilters.runIriRefOrFunction = function(iriref, args, bindings,queryEngine, 
             } else {
                 return QueryFilters.ebvError();
             }
-        } else if(fun == "http://www.w3.org/2001/XMLSchema#dateTime" || fun == "http://www.w3.org/2001/XMLSchema#date") {
+        } else if(fun == xmlSchema+"dateTime" || fun == xmlSchema+"date") {
             from = ops[0];
-            if(from.type == "http://www.w3.org/2001/XMLSchema#dateTime" || from.type == "http://www.w3.org/2001/XMLSchema#date") {
+            if(from.type == xmlSchema+"dateTime" || from.type == xmlSchema+"date") {
                 return from;
-            } else if(from.type == "http://www.w3.org/2001/XMLSchema#string" || from.type == null) {
+            } else if(from.type == xmlSchema+"string" || from.type == null) {
                 try {
                     from.value = Utils.iso8601(Utils.parseISO8601(from.value));
                     from.type = fun;
@@ -1647,7 +1649,7 @@ QueryFilters.runIriRefOrFunction = function(iriref, args, bindings,queryEngine, 
             } else {
                 return QueryFilters.ebvError();
             }
-        } else if(fun == "http://www.w3.org/2001/XMLSchema#float") {
+        } else if(fun == xmlSchema+"float") {
             var from = ops[0];
             if(from.token === 'literal') {
                 from = QueryFilters.normalizeLiteralDatatype(from, queryEngine, env);

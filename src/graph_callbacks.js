@@ -1,6 +1,6 @@
 //imports
 var _ = require('./utils');
-var async = require('async');
+var async = require('./utils');
 var QuadIndex = require('./quad_index').QuadIndex;
 var Pattern = require('./quad_index').Pattern;
 var RDFModel = require('./rdf_model');

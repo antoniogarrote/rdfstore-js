@@ -946,7 +946,6 @@ this.suite_store.testRegisterCustomFunction = function(test) {
 
 
 this.suite_store.testPersistence = function(test) {
-    debugger;
     new Store({persistent: true, name: 'simplyTest', overwrite: true}, function(err, store){
         store.execute('INSERT DATA {  <http://example/book3> <http://example.com/vocab#title> <http://test.com/example> }', function(){
             store.execute('SELECT * { ?s ?p ?o }', function(err,results) {

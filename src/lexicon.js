@@ -1,4 +1,4 @@
-var async = require('async');
+var async = require('./utils');
 var Tree = require('./btree').Tree;
 
 /**

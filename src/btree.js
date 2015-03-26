@@ -1,7 +1,7 @@
 "use strict";
 
-var async = require('async');
 var utils = require('./utils');
+var async = utils;
 var nextTick = utils.nextTick;
 
 var left = -1;

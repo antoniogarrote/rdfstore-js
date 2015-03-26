@@ -1,6 +1,6 @@
 var HashTree = require('btree_hash').Tree;
 var MemBTree = require('../btree').Tree;
-var async = require('async');
+var async = require('../utils');
 
 var shuffle = function(o){ //v1.0
     for(var j, x, i = o.length; i; j = parseInt(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);

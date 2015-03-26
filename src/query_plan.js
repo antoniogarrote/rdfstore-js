@@ -1,5 +1,5 @@
 var _ = require('./utils');
-var async = require('async');
+var async = require('./utils');
 
 /**
  * A new query plan object
