@@ -1288,8 +1288,8 @@ QueryEngine.prototype.executeJOIN = function(projection, dataset, patterns, env,
 
                 if(commonVars.length == 0) {
                     result = QueryPlan.joinBindings(set1,set2);
-                } else if(this.abstractQueryTree.treeWithUnion(setQuery1) ||
-                    this.abstractQueryTree.treeWithUnion(setQuery2)) {
+                } else if(that.abstractQueryTree.treeWithUnion(setQuery1) ||
+                    that.abstractQueryTree.treeWithUnion(setQuery2)) {
                     result = QueryPlan.joinBindings(set1,set2);
                 } else {
                     result = QueryPlan.joinBindings2(commonVars, set1, set2);

@@ -1128,7 +1128,63 @@ describe("Store", function () {
 
     });
 
+    it("Should be able to use GRAPH variables", function (done) {
+        new Store.Store({name: 'test', overwrite: true}, function (err, store) {
+            store.load(
+                'text/n3',
+                '@prefix dc: <http://purl.org/dc/elements/1.1/> .\
+                 <http://example.org/bob>    dc:publisher  "Bob Hacker" .\
+                <http://example.org/alice>  dc:publisher  "Alice Hacker" .',
+                function (err) {
 
+                    store.load(
+                        'text/n3',
+                        '@prefix foaf: <http://xmlns.com/foaf/0.1/> .\
+                            _:a foaf:name "Bob" .\
+                        _:a foaf:mbox <mailto:bob@oldcorp.example.org> .',
+                        'http://example.org/bob',
+                        function (err) {
+
+
+                            store.load(
+                                'text/n3',
+                                '@prefix foaf: <http://xmlns.com/foaf/0.1/> .\
+                                _:a foaf:name "Alice" .\
+                                _:a foaf:mbox <mailto:alice@work.example.org> .',
+                                'http://example.org/alice',
+                                function (err) {
+
+                                    store.execute(
+                                        'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
+                                            PREFIX dc: <http://purl.org/dc/elements/1.1/>\
+                                            SELECT ?who ?g ?mbox\
+                                        FROM <http://example.org/dft.ttl>\
+                                            FROM NAMED <http://example.org/alice>\
+                                            FROM NAMED <http://example.org/bob>\
+                                            WHERE\
+                                        {\
+                                            ?g dc:publisher ?who .\
+                                            GRAPH ?g { ?x foaf:mbox ?mbox }\
+                                    }',
+                                        ["https://github.com/antoniogarrote/rdfstore-js#default_graph"],
+                                        ["http://example.org/alice","http://example.org/bob"],
+                                        function (err, results) {
+                                            expect(results.length === 2);
+                                            expect(results[0].who.value === 'Alice Hacker');
+                                            expect(results[0].g.value === 'http://example.org/alice');
+                                            expect(results[0].mbox.value === 'mailto:alice@work.example.org');
+
+                                            expect(results[1].who.value === 'Bob Hacker');
+                                            expect(results[1].g.value === 'http://example.org/bob');
+                                            expect(results[1].mbox.value === 'mailto:bob@oldcorp.example.org');
+
+                                            done();
+                                        });
+                                });
+                        });
+                });
+        });
+    });
 });
 
 /*

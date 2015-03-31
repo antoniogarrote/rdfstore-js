@@ -466,7 +466,7 @@ QueryPlanDPSize.executeBGPDatasets = function(bgp, dataset, queryEngine, queryEn
                                 results = QueryPlanDPSize.buildBindingsFromRange(results, bgp);
                                 // add the graph bound variable to the result
                                 for (var j = 0; j < results.length; j++) {
-                                    results[j][graphVar] = dataset.named[i].oid;
+                                    results[j][graphVar] = graph.oid;
                                 }
                                 acum.push(results);
                             } else {
