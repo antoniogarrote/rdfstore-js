@@ -25,7 +25,7 @@ gulp.task('browserify', ['clean-dist'], function() {
         .pipe(gulp.dest('./dist'));
 });
 
-gulp.task('minimize',/* ['browserify'],*/ function() {
+gulp.task('minimize', ['browserify'], function() {
     return gulp.src('dist/*.js')
         .pipe(closureCompiler({
             compilerPath: './node_modules/closure-compiler/lib/vendor/compiler.jar',

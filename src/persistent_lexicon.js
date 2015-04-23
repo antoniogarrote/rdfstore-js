@@ -32,6 +32,7 @@ Lexicon = function(callback, dbName){
 
         // graphs
         var graphStore = that.db.createObjectStore('knownGraphs', { keyPath: 'oid'});
+        graphStore.createIndex("uriToken","uriToken",{unique: true});
         // uris mapping
         var uriStore = that.db.createObjectStore('uris', { keyPath: 'id', autoIncrement : true });
         uriStore.createIndex("uri","uri",{unique: true});
@@ -40,7 +41,7 @@ Lexicon = function(callback, dbName){
         blankStore.createIndex("label","label",{unique: true});
         // literals mapping
         var literalStore = that.db.createObjectStore('literals', { keyPath: 'id', autoIncrement : true });
-        literalStore.createIndex("value","value",{unique: true});
+        literalStore.createIndex("literal","literal",{unique: true});
 
         //setTimeout(function(){ callback(that); },0);
     };
@@ -54,17 +55,13 @@ Lexicon = function(callback, dbName){
  * @param callback
  */
 Lexicon.prototype.registerGraph = function(oid, uriToken, callback){
-
     if(oid != this.defaultGraphOid) {
-        that.db.transaction(['knownGraphs'], 'readwrite');
-        transaction.oncomplete = function (event) {
-            callback();
-        };
+        var transaction = this.db.transaction(['knownGraphs'], 'readwrite');
         transaction.onerror = function (event) {
             callback(null, new Error(event.target.statusCode));
         };
         var objectStore = transaction.objectStore('knownGraphs');
-        var request = objectStore.add({oid: oid, utiToken: uriToken});
+        var request = objectStore.add({oid: oid, uriToken: uriToken});
         request.onsuccess = function (event) {
             callback(true);
         };
@@ -80,7 +77,7 @@ Lexicon.prototype.registerGraph = function(oid, uriToken, callback){
  */
 Lexicon.prototype.registeredGraphs = function(returnUris, callback) {
     var graphs = [];
-    var objectStore = that.db.transaction(['knownGraphs'],'readwrite').objectStore("customers");
+    var objectStore = this.db.transaction(['knownGraphs'],'readwrite').objectStore("knownGraphs");
 
     var request = objectStore.openCursor();
     request.onsuccess = function(event) {
@@ -97,7 +94,7 @@ Lexicon.prototype.registeredGraphs = function(returnUris, callback) {
         }
     };
     request.onerror = function(event) {
-        callback(null,new Error("Error retrieving adta from the cursor: " + event.target.errorCode));
+        callback(null,new Error("Error retrieving data from the cursor: " + event.target.errorCode));
     };
 };
 
@@ -155,7 +152,7 @@ Lexicon.prototype.resolveUri = function(uri,callback) {
     if(uri === this.defaultGraphUri) {
         callback(this.defaultGraphOid);
     } else {
-        var objectStore = that.db.transaction(["uris"]).objectStore("uris");
+        var objectStore = this.db.transaction(["uris"]).objectStore("uris");
         var request = objectStore.index("uri").get(uri);
         request.onsuccess = function(event) {
             if(event.target.result != null)
@@ -265,7 +262,7 @@ Lexicon.prototype.registerLiteral = function(literal, callback) {
     var that = this;
 
     var objectStore = that.db.transaction(["literals"],"readwrite").objectStore("literals");
-    var request = objectStore.index("iteral").get(literal);
+    var request = objectStore.index("literal").get(literal);
     request.onsuccess = function(event) {
         var literalData = event.target.result;
         if(literalData) {
@@ -488,29 +485,29 @@ Lexicon.prototype.unregister = function (quad, key, callback) {
  */
 Lexicon.prototype._unregisterTerm = function (kind, oid, callback) {
     var that = this;
-    var transaction = that.db.transaction(["uris","literals","blanks"],"readwrite"), request;
+    var transaction = that.db.transaction(["uris","literals","blanks", "knownGraphs"],"readwrite"), request;
     if (kind === 'uri') {
         if (oid != this.defaultGraphOid) {
             var removeKnownGraphs = function() {
                 var request = transaction.objectStore("knownGraphs").delete(oid);
                 request.onsuccess = function() { callback(); };
-                request.onerror = function(){ callback(); };
+                //request.onerror = function(){ callback(); };
             };
             var request = transaction.objectStore("uris").delete(oid);
             request.onsuccess = removeKnownGraphs();
-            request.onerror = removeKnownGraphs();
+            //request.onerror = removeKnownGraphs();
         } else {
             callback();
         }
     } else if (kind === 'literal') {
         var request = transaction.objectStore("literals").delete(oid);
         request.onsuccess = function() { callback(); };
-        request.onerror = function() { callback(); };
+        //request.onerror = function() { callback(); };
 
     } else if (kind === 'blank') {
         var request = transaction.objectStore("blanks").delete(oid);
         request.onsuccess = function() { callback(); };
-        request.onerror = function() { callback(); };
+        //request.onerror = function() { callback(); };
     } else {
         callback();
     }
