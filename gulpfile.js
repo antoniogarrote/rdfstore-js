@@ -1,6 +1,6 @@
 var gulp = require('gulp');
-var browserify = require('browserify');
-//var browserify = require('gulp-browserify');
+var clean = require('gulp-clean');
+var browserify = require('gulp-browserify');
 var rename     = require('gulp-rename');
 var closureCompiler = require('gulp-closure-compiler');
 var source = require('vinyl-source-stream');
@@ -9,8 +9,13 @@ var PEG = require('pegjs');
 var fs = require('fs');
 
 
-gulp.task('browserify', function() {
-/*
+gulp.task('clean-dist', function(){
+    return gulp.src('dist', {read: false})
+        .pipe(clean());
+});
+
+gulp.task('browserify', ['clean-dist'], function() {
+
     return gulp.src(['./src/store.js'])
         .pipe(browserify({
             standalone: 'rdfstore',
@@ -18,21 +23,9 @@ gulp.task('browserify', function() {
         }))
         .pipe(rename('rdfstore.js'))
         .pipe(gulp.dest('./dist'));
-*/
-
-    return browserify('./src/store.js',{standalone: 'rdfstore'})
-        .exclude("sqlite3")
-        .exclude("indexeddb-js")
-        // Should we bundle this as dependencies?
-        //.external("jsonld")
-        //.external("n3")
-        .bundle()
-     .pipe(source('rdfstore.js'))
-        .pipe(gulp.dest('./dist'));
-
 });
 
-gulp.task('minimize', function() {
+gulp.task('minimize',/* ['browserify'],*/ function() {
     return gulp.src('dist/*.js')
         .pipe(closureCompiler({
             compilerPath: './node_modules/closure-compiler/lib/vendor/compiler.jar',
@@ -66,3 +59,4 @@ gulp.task('parseGrammar', function(){
 });
 
 gulp.task('default', ['parseGrammar', 'specs']);
+gulp.task('browser', ['parseGrammar','clean-dist','browserify','minimize']);
