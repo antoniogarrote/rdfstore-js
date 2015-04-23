@@ -96,7 +96,11 @@ The library can be installed using NPM:
 $ npm install rdfstore
 ```
 
-Bower package will be pusblished for the library soon.
+The library can also be installed via bower using a global module:
+
+```bash
+$ bower install rdfstore
+```
 
 ##Building
 
@@ -110,6 +114,12 @@ The library can be built using gulp:
 
 ```bash
 $ gulp
+```
+
+The browser version can be built using the 'browser' gulp target:
+
+```bash
+$ gulp browser
 ```
 
 ## Tests
