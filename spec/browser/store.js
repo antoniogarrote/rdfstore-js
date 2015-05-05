@@ -1,5 +1,35 @@
 this.suite_store = {};
 
+this.suite_store.testBlankNodesQuery = function(test) {
+    rdfstore.create(function(err,store) {
+
+        var insertQuery = 'PREFIX  foaf:  <http://xmlns.com/foaf/0.1/> \
+                       PREFIX dcterms: <http://purl.org/dc/terms/> \
+                       INSERT DATA { \
+                         <http://example.org/> dcterms:contributor <http://example.org/c1>, _:c2 .\
+                         <http://example.org/c1> foaf:name "Foo" .\
+                         _:c2 foaf:name "Bar" \
+                       }';
+        store.execute(insertQuery, function(){
+            var query = "PREFIX  foaf:  <http://xmlns.com/foaf/0.1/>\
+                     PREFIX dcterms: <http://purl.org/dc/terms/> \
+                     SELECT ?contributorName\
+                     WHERE {\
+                       <http://example.org/> dcterms:contributor ?contributorIRI .\
+                       ?contributorIRI foaf:name ?contributorName \
+                     }";
+            store.execute(query, function (err, results) {
+                console.log("RESULTS:");
+                console.log(results);
+                test.ok(results.length === 2);
+                test.ok(results[0]['contributorName'].value === 'Foo');
+                test.ok(results[1]['contributorName'].value === 'Bar');
+                test.done()
+            });
+        });
+    });
+};
+
 var testIntegration1Fn = function(store, test) {
     store.execute('INSERT DATA {  <http://example/book3> <http://example.com/vocab#title> <http://test.com/example> }', function(err, msg){
         store.execute('SELECT * { ?s ?p ?o }', function(err,results) {
