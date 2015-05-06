@@ -1180,6 +1180,74 @@ this.suite_store.testPersistence = function(test) {
     })
 };
 
+
+this.suite_store.testPersistence = function(test) {
+    new Store({persistent: true, name: 'testPersistence', overwrite: true}, function(err, store){
+        store.execute('INSERT DATA {  <http://example/book3> <http://example.com/vocab#title> <http://test.com/example> }', function(){
+            store.execute('SELECT * { ?s ?p ?o }', function(err,results) {
+                test.ok(err === null);
+                test.ok(results.length === 1);
+                test.ok(results[0].s.value === "http://example/book3");
+                test.ok(results[0].p.value === "http://example.com/vocab#title");
+                test.ok(results[0].o.value === "http://test.com/example");
+
+                test.done();
+            });
+        });
+    })
+};
+
+this.suite_store.testUnknown = function(test) {
+
+    var db = "testFailing"
+    var request = indexedDB.open(db+"_lexicon",1);
+    var that = this;
+    request.onupgradeneeded = function(event) {
+        that.db = event.target.result;
+
+        // graphs
+        // literals mapping
+        var literalStore = that.db.createObjectStore('blah', { keyPath: 'id', autoIncrement : true });
+        literalStore.createIndex("blah","blah",{unique: true});
+
+        //setTimeout(function(){ callback(that); },0);
+    };
+
+    new Store({name:db, overwrite:false, persistent:true}, function(err,store) {
+        var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
+                     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
+                     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\
+                     PREFIX : <http://example.org/people/>\
+                     INSERT DATA {\
+                     :alice\
+                         rdf:type        foaf:Person ;\
+                         foaf:name       "Alice" ;\
+                         foaf:mbox       <mailto:alice@work> ;\
+                         foaf:knows      :bob \
+                         .\
+                     :bob\
+                         rdf:type        foaf:Person ;\
+                         foaf:name       "Bob" ; \
+                         foaf:knows      :alice ;\
+                         foaf:mbox       <mailto:bob@home> \
+                         .\
+                     }';
+        store.execute(query, function (err, results) {
+            store.graph(function (err, graph) {
+                var results = graph.filter(store.rdf.filters.describes("http://example.org/people/alice"));
+
+                var resultsCount = results.toArray().length;
+
+                var resultsSubject = results.filter(store.rdf.filters.s("http://example.org/people/alice"))
+                var resultsObject = results.filter(store.rdf.filters.o("http://example.org/people/alice"))
+
+                console.log(resultsObject.toNT());
+                test.done();
+            });
+        });
+    });
+};
+
 this.suite_store.testPackageEntryPoints = function(test) {
     test.ok(rdfstore.create != null);
     test.ok(rdfstore.connect != null);
