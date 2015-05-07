@@ -5,3 +5,4 @@ exclude_paths:
   - spec/*
   - pegjs/*
   - frontend/*
+  - src/perftest/*
