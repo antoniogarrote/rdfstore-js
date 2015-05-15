@@ -391,32 +391,32 @@ Callbacks.CallbacksBackend.prototype.observeQuery = function(query, callback, en
             quad.graph = that.engine.lexicon.defaultGraphUriTerm;
         }
 
-        var normalized = that.engine.normalizeQuad(quad, queryEnv, true);
-        pattern =  new Pattern(normalized);
-        indexKey = that._indexForPattern(pattern);
-        indexOrder = that.componentOrders[indexKey];
-        index = that.queriesIndexMap[indexKey];
+        that.engine.normalizeQuad(quad, queryEnv, true, function(normalized) {
+          var pattern =  new Pattern(normalized);
+          var indexKey = that._indexForPattern(pattern);
+          var indexOrder = that.componentOrders[indexKey];
+          var index = that.queriesIndexMap[indexKey];
 
-        for(var j=0; j<indexOrder.length; j++) {
+          for(var j=0; j<indexOrder.length; j++) {
             var component = indexOrder[j];
             var quadValue = normalized[component];
             if(typeof(quadValue) === 'string') {
-                if(index['_'] == null) {
-                    index['_'] = [];
-                }
-                index['_'].push(counter);
-                break;
+              if(index['_'] == null) {
+                index['_'] = [];
+              }
+              index['_'].push(counter);
+              break;
             } else {
-                if(j===indexOrder.length-1) {
-                    index[quadValue] = index[quadValue] || {'_':[]};
-                    index[quadValue]['_'].push(counter);
-                } else {
-                    index[quadValue] = index[quadValue] || {};
-                    index = index[quadValue];
-                }
+              if(j===indexOrder.length-1) {
+                index[quadValue] = index[quadValue] || {'_':[]};
+                index[quadValue]['_'].push(counter);
+              } else {
+                index[quadValue] = index[quadValue] || {};
+                index = index[quadValue];
+              }
             }
-        }
-
+          }
+        });
     }
 
     this.engine.execute(query, function(err, results){
