@@ -376,7 +376,6 @@ Callbacks.CallbacksBackend.prototype.observeQuery = function(query, callback, en
     var that = this;
     var queryEnv = {blanks:{}, outCache:{}};
     this.engine.registerNsInEnvironment(null, queryEnv);
-    var pattern, quad, indexKey, indexOrder, index;
 
     var counter = this.queryCounter;
     this.queryCounter++;
@@ -386,7 +385,7 @@ Callbacks.CallbacksBackend.prototype.observeQuery = function(query, callback, en
     this.queriesCallbacksMap[counter] = callback;
 
     for(var i=0; i<patterns.length; i++) {
-        quad = patterns[i];
+        var quad = patterns[i];
         if(quad.graph == null) {
             quad.graph = that.engine.lexicon.defaultGraphUriTerm;
         }
