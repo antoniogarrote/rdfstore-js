@@ -12,16 +12,16 @@ Please read this README file carefully to find the current set of features.
 rdfstore-js is a pure Javascript implementation of a RDF graph store with support for the SPARQL query and data manipulation language.
 ```javascript
 var rdfstore = require('rdfstore');
-    
+
 rdfstore.create(function(err, store) {
   store.execute('LOAD <http://dbpedia.org/resource/Tim_Berners-Lee> INTO GRAPH <http://example.org/people>', function() {
 
     store.setPrefix('dbp', 'http://dbpedia.org/resource/');
-        
+
     store.node(store.rdf.resolve('dbp:Tim_Berners-Lee'),  "http://example.org/people", function(err, graph) {
 
       var peopleGraph = graph.filter(store.rdf.filters.type(store.rdf.resolve("foaf:Person")));
-          
+
       store.execute('PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
                      PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
                      PREFIX : <http://example.org/>\
@@ -36,7 +36,7 @@ rdfstore.create(function(err, store) {
   });
 });
 ```
-    
+
 rdfstore-js can be executed in a web browser or can be included as a library in a node.js application. It can also be executed as a stand-alone SPARQL end-point accepting SPARQL RDF Protocol HTTP requests. Go to the bottom of this page to find some application examples using the library.
 
 The current implementation is far from complete but it already passes all the test cases for the SPARQL 1.0 query language and supports data manipulation operations from the SPARQL 1.1/Update version of the language.
@@ -63,7 +63,7 @@ rdfstore-js supports at the moment SPARQL 1.0 and most of SPARQL 1.1/Update.
 Only some parts of SPARQL 1.1 query have been implemented yet.
 
 This is a list of the different kind of queries currently implemented:
-  
+
 - SELECT queries
 - UNION, OPTIONAL clauses
 - NAMED GRAPH identifiers
@@ -109,7 +109,7 @@ Before running the build script, you must install JavaScript dependencies with [
 ```bash
 $ npm install
 ```
-    
+
 The library can be built using gulp:
 
 ```bash
@@ -165,10 +165,10 @@ new rdfstore.Store(function(err, store) {
 // simple query execution
 store.execute("SELECT * { ?s ?p ?o }", function(err, results){
   if(!err) {
-    // process results        
+    // process results
     if(results[0].s.token === 'uri') {
       console.log(results[0].s.value);
-    }       
+    }
   }
 });
 
@@ -184,7 +184,7 @@ store.executeWithEnvironment("SELECT * { ?s ?p ?o }",defaultGraph,
   }
 });
 ```
-    
+
 ###Construct queries RDF Interfaces API
 
 ```javascript
@@ -193,13 +193,13 @@ var query = "CONSTRUCT { <http://example.org/people/Alice> ?p ?o } \
 
 store.execute(query, function(err, graph){
   if(graph.some(store.rdf.filters.p(store.rdf.resolve('foaf:name)))) {
-    nameTriples = graph.match(null, 
+    nameTriples = graph.match(null,
                               store.rdf.createNamedNode(rdf.resolve('foaf:name')),
                               null);
 
     nameTriples.forEach(function(triple) {
       console.log(triple.object.valueOf());
-    });                                  
+    });
   }
 });
 ```
@@ -223,7 +223,7 @@ store.execute('LOAD <http://dbpedialite.org/titles/Lisp_%28programming_language%
   }
 })
 ```
-    
+
 ###High level interface
 
 The following interface is a convenience API to work with Javascript code instead of using SPARQL query strings. It is built on top of the RDF Interfaces W3C API.
@@ -241,19 +241,19 @@ store.graph(graphUri, function(graph){
   var serialized = graph.toNT();
 });
 
-     
+
 /* retrieving a single node in the graph as a JS Interface API graph object */
 
 store.node(subjectUri, function(graph) {
   //process node
 });
-     
+
 store.node(subjectUri, graphUri, function(graph) {
   //process node
 });
 
 
-     
+
 /* inserting a JS Interface API graph object into the store */
 
 // inserted in the default graph
@@ -275,7 +275,7 @@ store.delete(graph, graphUri, function(err){});
 
 
 /* clearing a graph */
-    
+
 // clears the default graph
 store.clear(function(err){});
 
@@ -301,7 +301,7 @@ store.load('remote', remoteGraphUri, function(err, results) {});
 
 store.registerParser("application/rdf+xml", rdXmlParser);
 ```
-    
+
 ###RDF Interface API
 
 The store object includes a 'rdf' object implementing a RDF environment as described in the [RDF Interfaces 1.0](http://www.w3.org/TR/rdf-interfaces/) W3C's working draft.
@@ -311,7 +311,7 @@ This object can be used to access to the full RDF Interfaces 1.0 API.
 var graph = store.rdf.createGraph();
 graph.addAction(rdf.createAction(store.rdf.filters.p(store.rdf.resolve("foaf:name")),
                                  function(triple){ var name = triple.object.valueOf();
-                                                   var name = name.slice(0,1).toUpperCase() 
+                                                   var name = name.slice(0,1).toUpperCase()
                                                    + name.slice(1, name.length);
                                                    triple.object = store.rdf.createNamedNode(name);
                                                    return triple;}));
@@ -325,7 +325,7 @@ var triples = graph.match(null, store.rdf.createNamedNode(store.rdf.resolve("foa
 
 console.log("worked? "+(triples[0].object.valueOf() === 'Alice'));
 ```
-    
+
 ###Default Prefixes
 
 Default RDF name-spaces can be specified using the *registerDefaultNamespace*. These names will be included automatically in all queries. If the same name-space is specified by the client in the query string the new prefix will shadow the default one.
@@ -351,7 +351,7 @@ rdfstore-js implements parsers for Turtle and JSON-LD. The specification of JSON
 
 ```javascript
         jsonld = {
-          "@context": 
+          "@context":
           {  
              "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
              "xsd": "http://www.w3.org/2001/XMLSchema#",
@@ -364,7 +364,7 @@ rdfstore-js implements parsers for Turtle and JSON-LD. The specification of JSON
           "name": "John Smith",
           "age": "41",
           "homepage": "http://example.org/home/"
-        };    
+        };
 
 store.setPrefix("ex", "http://example.org/people/");
 
@@ -374,14 +374,14 @@ store.load("application/ld+json", jsonld, "ex:test", function(err,results) {
   });
 });
 ```
-    
+
 ###Events API
 
 rdfstore-js implements an experimental events API that allows clients to observe changes in the RDF graph and receive notifications when parts of this graph changes.
 The two main event functions are *subscribe* that makes possible to set up a callback function that will be invoked each time triples matching a certain pattern passed as an argument are added or removed, and the function *startObservingNode* that will be invoked with the modified version of the node each time triples are added or removed from the node.
 
 ```javascript
-var cb = function(event, triples){ 
+var cb = function(event, triples){
   // it will receive a notifications where a triple matching
   // the pattern s:http://example/boogk, p:*, o:*, g:*
   // is inserted or removed.
@@ -389,41 +389,41 @@ var cb = function(event, triples){
     console.log(triples.length+" triples have been added");  
   } else if(event === 'deleted') {
     console.log(triples.length+" triples have been deleted");  
-  } 
+  }
 }
-     
+
 store.subscribe("http://example/book",null,null,null,cb);
-     
-     
+
+
 // .. do something;
-     
+
 // stop receiving notifications
 store.unsubscribe(cb);
 ```
-    
+
 The main difference between both methods is that *subscribe* receives the triples that have changed meanwhile *startObservingNode* receives alway the whole node with its updated triples. *startObservingNode* receives the node as a RDF Interface graph object.
 
 ```javascript
-var cb = function(node){ 
+var cb = function(node){
   // it will receive the updated version of the node each
   // time it is modified.
   // If the node does not exist, the graph received will
   // not contain triples.
   console.log("The node has now "+node.toArray().length+" nodes");
 }
-     
+
 // if only tow arguments are passed, the default graph will be used.
 // A graph uri can be passed as an optional second argument.
 store.startObservingNode("http://example/book",cb);
-     
-     
+
+
 // .. do something;
-     
+
 // stop receiving notifications
 store.stopObservingNode(cb);
 ```
 
-In the same way, there are *startObservingQuery* and *stopObservingQuery* functions that makes possible to set up callbacks for whole SPARQL queries. 
+In the same way, there are *startObservingQuery* and *stopObservingQuery* functions that makes possible to set up callbacks for whole SPARQL queries.
 The store will try to be smart and not perform unnecessary evaluations of these query after quad insertion/deletions. Nevertheless too broad queries must be used carefully with the events API.
 
 ###Custom Filter Functions
@@ -478,7 +478,7 @@ new Store({name:'test', overwrite:true}, function(err,store) {
 ###Persistence
 
 The store can be persisted in the browser using IndexedDB as the backend. In order to make the store persistent,
-the 'persistent' flat must be set to true in the store creation options.
+the 'persistent' flag must be set to true in the store creation options.
 Additionally, a 'name' option can also be passed for the store. Different persistent instances of the store can be
 opened using different names.
 
