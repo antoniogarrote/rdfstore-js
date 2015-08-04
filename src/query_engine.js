@@ -1466,7 +1466,7 @@ QueryEngine.prototype.batchLoad = function(quads, callback) {
             that.backend.search(key, function(result){
                 if(!result) {
                     that.backend.index(key, function(result){
-                        if(result == true){
+                        if(result){
                             if(that.eventsOnBatchLoad)
                                 that.callbacksBackend.nextGraphModification(Callbacks.added, [originalQuad,quad]);
                             counter = counter + 1;
