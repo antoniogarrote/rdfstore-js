@@ -313,6 +313,11 @@
         rgb(173,189,212) 100%
     )
 }
+.rdf-store-graph-item a {
+    width: 100%;
+    display: block;
+    position: relative;
+}
 
 #rdf-store-graphs-list {
     padding: 0px;
@@ -333,7 +338,7 @@
 #rdf-store-graphs-list li.rdf-store-selected-graph-item  a {
     color: white;
     text-shadow: 0px 1px 0px #C8D0E7;
-    text-decoration: none
+    text-decoration: none;
 }
 
 #rdfstore-frontend-menu {

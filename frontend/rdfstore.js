@@ -24347,6 +24347,7 @@ QueryEngine.prototype.normalizeQuad = function(quad, queryEnv, shouldIndex, call
                 if(oid != null) {
                     graph = oid;
                     if(shouldIndex === true && quad.graph.token!='var') {
+                        debugger;
                         that.lexicon.registerGraph(oid, graphUriValue, function(){
                             k();
                         });
@@ -25339,13 +25340,24 @@ QueryEngine.prototype.batchLoad = function(quads, callback) {
         var maybeBlankOid, oid, quad;
 
         if (quad[component]['uri'] || quad[component].token === 'uri') {
-            that.lexicon.registerUri(quad[component].uri || quad[component].value, function(oid){
-                if (quad[component].uri != null) {
-                    quad[component] = {'token': 'uri', 'value': quad[component].uri};
-                    delete quad[component]['uri'];
+            var uriValue = (quad[component].uri || quad[component].value);
+            that.lexicon.registerUri(uriValue, function(oid){
+                var returnUriComponent = function(){
+                    if (quad[component].uri != null) {
+                        quad[component] = {'token': 'uri', 'value': quad[component].uri};
+                        delete quad[component]['uri'];
+                    }
+                    newQuad[component] = oid;
+                    k();
+                };
+
+                if(component === 'graph') {
+                    that.lexicon.registerGraph(oid, uriValue, function(){
+                        returnUriComponent();
+                    });
+                } else {
+                    returnUriComponent();
                 }
-                newQuad[component] = oid;
-                k();
             });
         } else if (quad[component]['literal'] || quad[component].token === 'literal') {
             that.lexicon.registerLiteral(quad[component].literal || quad[component].value, function(oid){

@@ -22,12 +22,12 @@
   <script type='text/javascript' src="https://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
   <script type='text/javascript' src='./js/jquery-ui.min.js'></script>
   <script type='text/javascript' src='http://ajax.aspnetcdn.com/ajax/jquery.templates/beta1/jquery.tmpl.js'></script>
-  <script type='text/javascript' src='./js/rdf_store.js'></script>
+  <script type='text/javascript' src='./rdfstore.js'></script>
   <script type='text/javascript' src='./js/rdfquery.js'></script>
   <script type='text/javascript' src='./js/knockout-1.2.1.js'></script>
   <script type='text/javascript' src='./js/rdfstore_frontend.js'></script>
   <script type='text/javascript'>
-    jQuery(document).ready(function(){   
+    jQuery(document).ready(function(){
     frontend = null;
     var startDemo = function(cb) {
       rdfstore.create({"communication": {
@@ -36,13 +36,8 @@
                            "application/rdf+xml":  rdfstore_frontend.rdfParser
                          },
                         "precedences": ["text/n3", "text/turtle", "application/rdf+xml", "text/html", "application/json"] }
-                      }, 
-                      function(store) {
-
-                         // original network transport
-                         var originalNetworkTransport = store.getNetworkTransport();
-                         rdfstore_frontend.ProxyNetworkTransport.proxyUri = "http://localhost:3000/rdfstoreproxy";
-                         store.setNetworkTransport(rdfstore_frontend.ProxyNetworkTransport);
+                      },
+                      function(err, store) {
 
                          store.execute("PREFIX : <http://example.org/ns#> \
                           INSERT DATA { \
@@ -78,7 +73,7 @@
         jQuery("#demo2").remove();
         var runDemo = function() {
           frontend.viewModel.newLoadGraphDialog();
-          jQuery("#rdf-store-graph-to-load").val('http://oreilly.com/catalog/9781934356333/');
+          jQuery("#rdf-store-graph-to-load").val('http://shop.oreilly.com/product/9781934356333.do');
         };
         if(jQuery("#rdfstore-frontend").length==0) {
           startDemo(function() {
@@ -156,22 +151,17 @@
   <p>
     You can use the the store and the frontend to store data
     retrieved from the whole web of linked data. <br/>
-    
+
     Some examples:
 
     <ul>
       <li>
-        Retrieve information from a product annotated with RDFa 
-        <a href='http://oreilly.com/catalog/9781934356333/' target='_blank'>browse</a>
+        Retrieve information from a product annotated with RDFa
+        <a href='http://shop.oreilly.com/product/9781934356333.do' target='_blank'>browse</a>
         <a id='demo2' href='#'>run example</a>
       </li>
       <li>
-        Check my public WebID profile:
-        <a href='http://foaf.me/index.php?webid=http%3A%2F%2Ffoaf.me%2Fantoniogarrote%23me' target='_blank'>browse</a>
-        <a id='demo4' href='#'>run example</a>
-      </li>
-      <li>
-        Load RDF data from DBPedia 
+        Load RDF data from DBPedia
         <a href='http://dbpedia.org/data/Tim_Berners-Lee.n3' target='_blank'>browse</a>
         <a id='demo1' href='#'>run example</a>
       </li>
@@ -198,10 +188,6 @@
   Additionally, it uses a modified version of RDFQuery to parse RDFa
   and RDF/XML serializations of RDF.<br/>
 
-  
-  You can download the code of the frontend
-  from <a href='https://github.com/antoniogarrote/rdfstore-js/tree/master/frontend'>github</a>
-  with all the dependencies.<br/>
 
   In order to use it, add the JavaScript and CSS files to you HTML and start the frontend
   passing as parameters a RDFStore-js instance and a target HTML DOM
@@ -220,8 +206,6 @@
   demo. Some of the differences are:
 
   <ul>
-    <li>Use of a proxy service to resolve URIs instead of using
-    only native XMLHTTP + CORS requests.</li>
     <li>Capacity to parse RDFa and RDF/XML documents using a modified
     version of <a href='http://code.google.com/p/rdfquery/'>RDFQuery</a></li>
   </ul>
@@ -238,16 +222,9 @@
                            "application/rdf+xml":  rdfstore_frontend.rdfParser
                          },
                         "precedences": ["application/rdf+xml", "text/html"] }
-                      }, 
+                      },
 
-                      function(store) {
-
-                         // original network transport
- 
-                        var originalNetworkTransport = store.getNetworkTransport();
-                        var proxy = rdfstore_frontend.ProxyNetworkTransport;
-                        proxy.proxyUri = "http://antoniogarrote.com/rdfstoreproxy";
-                        store.setNetworkTransport(proxy);
+                      function(err, store) {
 
                         // use the store
       });

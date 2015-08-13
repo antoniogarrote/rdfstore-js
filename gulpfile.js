@@ -7,7 +7,8 @@ var source = require('vinyl-source-stream');
 var jasmine = require('gulp-jasmine');
 var PEG = require('pegjs');
 var fs = require('fs');
-
+var electron = require('gulp-electron');
+var packageJson = require('./package.json');
 
 gulp.task('clean-dist', function(){
     return gulp.src('dist', {read: false})
@@ -55,7 +56,37 @@ gulp.task('parseGrammar', function(){
             fs.unlinkSync('src/parser.js');
             fs.writeFileSync('src/parser.js',"module.exports = "+parser);
         }
-    })
+    });
+});
+
+gulp.task('frontend', function() {
+
+    gulp.src("")
+        .pipe(electron({
+            src: './frontend',
+            packageJson: packageJson,
+            release: './release',
+            cache: './cache',
+            version: 'v0.30.4',
+            packaging: true,
+            platforms: ['win32-ia32', 'darwin-x64'],
+            platformResources: {
+                darwin: {
+                    CFBundleDisplayName: packageJson.name,
+                    CFBundleIdentifier: packageJson.name,
+                    CFBundleName: packageJson.name,
+                    CFBundleVersion: packageJson.version,
+                    icon: './frontend/icons/rdfstore.icns'
+                },
+                win: {
+                    "version-string": packageJson.version,
+                    "file-version": packageJson.version,
+                    "product-version": packageJson.version,
+                    "icon": './frontend/icons/rdfstore.ico'
+                }
+            }
+        }))
+        .pipe(gulp.dest(""));
 });
 
 gulp.task('default', ['parseGrammar', 'specs']);

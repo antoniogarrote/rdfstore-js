@@ -7,8 +7,8 @@
         if(currentUri.indexOf("#") != -1) {
             currentUri = currentUri.split("#")[0];
         }
+
         if(resource.type === 'uri') {
-            console.log("VALUE:"+resource.value._string);
             if(resource.value._string.indexOf(currentUri) != -1) {
                 var suffix = resource.value._string.split(currentUri)[1];
                 var defaultPrefix = defaultSubject.toString();
@@ -17,7 +17,11 @@
                 }
                 return {'uri': defaultPrefix+suffix};
             } else {
-                return {'uri': resource.value._string };
+                var uri = resource.value._string;
+                if(uri.indexOf('file:') === 0){
+                    uri = defaultSubject.scheme + '://' + defaultSubject.authority + uri.replace('file:','');
+                }
+                return {'uri': uri};
             }
         } else if(resource.type === 'bnode') {
             var tmp = resource.toString();
@@ -42,7 +46,7 @@
         return quad;
     };
 
-    RDFaParser.parse = function(data, graph) {
+    RDFaParser.parse = function(data, graph, options, callback) {
         var nsRegExp = /\s*xmlns:(\w*)="([^"]+)"\s*/i;
         var ns = {};
 
@@ -67,15 +71,16 @@
         }
 
         window['globalNs'] = ns;
-        
-        var parsed = jQuery(data).rdfa().databank.triples();
+
+        var rdfa = jQuery(data).rdfa();
+        var parsed = rdfa.databank.triples();
         var quads = [];
         var prefix = ""+(new Date()).getTime();
         for(var i=0; i<parsed.length; i++) {
             quads.push(RDFaParser.parseQuad(graph,parsed[i],prefix, window['rdfaCurrentSubject']));
         }
-        
-        return quads;
+
+        callback(null, quads);
     };
 
     // RDFParser
@@ -88,59 +93,8 @@
         for(var i=0; i<parsed.length; i++) {
             quads.push(RDFaParser.parseQuad(graph,parsed[i],prefix, window['rdfaCurrentSubject']));
         }
-        
+
         return quads;
-    };
-    
-    // Proxy network transport
-    NetworkTransport = {};
-
-    // URI to connect
-    NetworkTransport.proxyUri = null;
-
-    NetworkTransport.load = function(uri, accept, callback, redirect) {
-        var transport = jQuery;
-        // encoding URI
-        uri = NetworkTransport.proxyUri+"?uri="+escape(uri);
-
-        transport.ajax({
-            url: uri,
-
-            beforeSend: function(xhr) {
-                xhr.setRequestHeader('Accept', accept);
-            },
-
-            success: function(data, status, xhr){
-                if((""+xhr.status)[0] == '2') {
-                    var headers = xhr.getAllResponseHeaders().split("\n");
-                    var acum = {};
-                    for(var i=0; i<headers.length; i++) {
-                        var header = headers[i].split(":");
-                        acum[header[0]] = header[1];
-                    }
-
-                    callback(true, {headers: acum, 
-                                    data: data});
-                }
-            },
-
-            error: function(xhr, textStatus, ex){
-                if((""+xhr.status)[0] == '3'){                            
-                    if(redirection == 0) {
-                        callback(false, 500);
-                    } else {
-                        var location = (xhr.getAllResponseHeaders()["Location"] || xhr.getAllResponseHeaders()["location"])
-                        if(location != null) {
-                            NetworkTransport.load(location, accept, callback, (redirection -1));
-                        } else {
-                            callback(false, 500);
-                        }
-                    } 
-                } else {
-                    callback(false, xhr.statusCode());
-                }
-            }
-        });
     };
 
     jQuery.fn.center = function () {
@@ -216,7 +170,7 @@
                                                                   return array;
                                                               },this.viewModel);
 
-        //jQuery("#rdfstore-frontend").draggable({handle: "rdf-store-menu"});
+        jQuery("#rdfstore-frontend").draggable({handle: "rdf-store-menu"});
         ko.applyBindings(this.viewModel, jQuery(node).get(0));
     };
 
@@ -225,7 +179,7 @@
         html = html + "<ul id='rdf-store-graphs-list'>{{each graphs}} {{if selectedGraph()==$value}}";
         html = html + "<li class='rdf-store-graph-item rdf-store-selected-graph-item'><a href='#' data-bind='event: {click:selectGraph}'>${$value}</a></li>";
         html = html + "{{else}}<li class='rdf-store-graph-item'><a href='#' data-bind='event: {click:selectGraph}'>${$value}</a></li>{{/if}}{{/each}}</ul></script>";
-        
+
         jQuery(node).append(html);
 
         html = "<script id='sparql-results-template' type='text/html'><table id='sparql-results-table-headers'><thead><tr>{{each bindingsVariables}}";
@@ -295,10 +249,10 @@
             html = html + "<input type='submit' value='cancel' style='float:none; min-width:100px' data-bind='click:closeDialog'></input>";
             html = html + "</div>";
             html = html + "</div>";
-     
+
             jQuery(viewModel.rootNode).append(html);
             jQuery("#"+this.id).css("min-height", "280px").css("height", "280px").center();
-     
+
             ko.applyBindings(this, jQuery("#"+this.id).get(0));
             jQuery("#"+this.id).draggable({handle: "div.rdfstore-dialog-title"});
         },
@@ -311,7 +265,7 @@
         },
 
         browseUri: function() {
-            window.open(this.value, "Browse: "+this.value);            
+            window.open(this.value, "Browse: "+this.value);
         },
 
         storeUri: function() {
@@ -337,10 +291,10 @@
             html = html + "<input type='submit' value='cancel' style='float:none; min-width:100px' data-bind='click:closeDialog'></input>";
             html = html + "</div>";
             html = html + "</div>";
-     
+
             jQuery(viewModel.rootNode).append(html);
             jQuery("#"+this.id).css("min-height", "380px").css("height", "380px").center();
-     
+
             ko.applyBindings(this, jQuery("#"+this.id).get(0));
             jQuery("#"+this.id).draggable({handle: "div.rdfstore-dialog-title"});
         },
@@ -353,7 +307,7 @@
         },
 
         browseUri: function() {
-            window.open(this.value, "Browse: "+this.value);            
+            window.open(this.value, "Browse: "+this.value);
         },
 
         storeUri: function() {
@@ -411,34 +365,37 @@
             window['rdfaCurrentSubject'] = jQuery.uri(remoteUri);
 
             jQuery("#rdfstore-dialog-load-submit-btn").attr('disabled',true);
+
             this.store.load('remote',
                             remoteUri,
                             uriToStore,
-                            function(success, quads) {
+                            function(err, quads) {
                                 jQuery("#rdfstore-dialog-load-submit-btn").attr('disabled',false);
-                                if(success) {
-                                    that.store.registeredGraphs(function(success, tmp){
+                                if(!err) {
+                                    debugger;
+                                    that.store.registeredGraphs(function(err, tmp){
+                                        debugger;
                                         var graphs = ['default'];
                                         for(var i=0; i<tmp.length; i++) {
                                             graphs.push(tmp[i].valueOf());
                                         }
                                         that.viewModel.graphs(graphs);
                                         that.closeDialog();
-                                        alert("Graph successfully loaded: "+quads+" added.");
+                                        alert("Graph successfully loaded: "+quads+" triples added.");
                                     });
                                 } else {
-                                    alert("Error loading graph: "+quads);                                     
+                                    alert("Error loading graph: "+quads);
                                 }
                             });
-        },
+        }
 
     };
-    
+
     RDFStoreFrontend.prototype.viewModel = {
         rootNode: null,
         graphs: ko.observable(['default']),
         selectedGraph: ko.observable('default'),
-        
+
         selectGraph: function(event) {
             var graphText = event.currentTarget.text;
             this.displayGraph();
@@ -450,7 +407,7 @@
 
          queryModified: function(event) {
              if(this.modified === false && this.lastQuery != null) {
-                 var prevs = this.prevHistory();                 
+                 var prevs = this.prevHistory();
                  var nexts = this.nextHistory();
                  prevs.push(this.lastQuery);
                  prevs = prevs.concat(nexts);
@@ -472,14 +429,14 @@
          allBindings: ko.observable([]),
 
          bindings: ko.observable([]),
-        
+
          totalResultPages: ko.observable(0),
 
          currentResultPage: ko.observable(0),
 
          prevResultPage: function() {
-            var height = jQuery("#rdfstore-frontend-query-results").height();           
-            var tableHeight = jQuery("#sparql-results-table-rows").height();           
+            var height = jQuery("#rdfstore-frontend-query-results").height();
+            var tableHeight = jQuery("#sparql-results-table-rows").height();
              var currentResultPage = this.currentResultPage();
              if(currentResultPage > 1) {
                  currentResultPage = currentResultPage - 1;
@@ -524,15 +481,15 @@
         },
 
         nextResultPage: function() {
-            var height = jQuery("#rdfstore-frontend-query-results").height();           
-            var tableHeight = jQuery("#sparql-results-table-rows").height();           
+            var height = jQuery("#rdfstore-frontend-query-results").height();
+            var tableHeight = jQuery("#sparql-results-table-rows").height();
             var currentResultPage = this.currentResultPage();
             var maxPages = Math.ceil(this.allBindings().length / this.bindingsPerPage());
             if(currentResultPage<maxPages) {
                 var startBindings = currentResultPage * this.bindingsPerPage();
                 currentResultPage = currentResultPage + 1;
                 this.currentResultPage(currentResultPage);
-                this.bindings(this.allBindings().slice(startBindings, startBindings+this.bindingsPerPage()));             
+                this.bindings(this.allBindings().slice(startBindings, startBindings+this.bindingsPerPage()));
                 jQuery("#rdfstore-frontend-query-results").height(height);
                 jQuery("#rdfstore-frontend-results-area").height(height);
                 jQuery("#sparql-results-table-rows").height(tableHeight);
@@ -635,16 +592,15 @@
         submitQuery: function() {
             var query = jQuery('#sparql-query-text').val();
             var that = this;
-            console.log("QUERYING...");
-            var callback = function(success,results){
-                if(success) {
-                    console.log("SUCCESS!");
+            var callback = function(err,results){
+                if(!err) {
                     if(that.lastQuery == null) {
                         that.lastQuery = query;
                         that.modified = false;
                     }
 
-                    that.store.registeredGraphs(function(results, tmp){
+                    debugger;
+                    that.store.registeredGraphs(function(err, tmp){
                         var graphs = ['default'];
                         for(var i=0; i<tmp.length; i++) {
                             graphs.push(tmp[i].valueOf());
@@ -668,7 +624,7 @@
             if(this.selectedGraph() === 'default') {
                 this.store.execute(query, callback);
             } else {
-                this.store.execute(query,[{'token':'uri','value':this.selectedGraph()}],[],callback);
+                this.store.execute(query,[this.selectedGraph()],[],callback);
             }
         },
 
@@ -735,9 +691,6 @@
     // parsers
     RDFStoreFrontend.rdfaParser = RDFaParser;
     RDFStoreFrontend.rdfParser = RDFParser;
-
-    // Proxy Network Transport
-    RDFStoreFrontend.ProxyNetworkTransport = NetworkTransport;
 
     window['rdfstore_frontend'] = RDFStoreFrontend;
 })();
