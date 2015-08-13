@@ -28,7 +28,7 @@ Please read this README file carefully to find the current set of features.
 	- [Custom Filter Functions](#)
 	- [Persistence](#)
 - [Dependencies](#)
-  - [Frontend](#)
+- [Frontend](#)
 - [Contributing](#)
 - [Author](#)
 - [License](#)

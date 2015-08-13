@@ -1378,7 +1378,7 @@ QueryEngine.prototype.executeUpdate = function(syntaxTree, callback) {
             var that = this;
             this.rdfLoader.load(aqt.sourceGraph.value, graph, function(err, result){
                 if(err) {
-                    callback(new Error("error batch loading quads");
+                    callback(new Error("error batch loading quads"));
                 } else {
                     that.batchLoad(result,function(result){
                         if(result !== null) {
