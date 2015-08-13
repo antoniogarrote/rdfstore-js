@@ -24347,7 +24347,6 @@ QueryEngine.prototype.normalizeQuad = function(quad, queryEnv, shouldIndex, call
                 if(oid != null) {
                     graph = oid;
                     if(shouldIndex === true && quad.graph.token!='var') {
-                        debugger;
                         that.lexicon.registerGraph(oid, graphUriValue, function(){
                             k();
                         });

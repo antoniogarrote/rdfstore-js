@@ -372,9 +372,7 @@
                             function(err, quads) {
                                 jQuery("#rdfstore-dialog-load-submit-btn").attr('disabled',false);
                                 if(!err) {
-                                    debugger;
                                     that.store.registeredGraphs(function(err, tmp){
-                                        debugger;
                                         var graphs = ['default'];
                                         for(var i=0; i<tmp.length; i++) {
                                             graphs.push(tmp[i].valueOf());
@@ -599,7 +597,6 @@
                         that.modified = false;
                     }
 
-                    debugger;
                     that.store.registeredGraphs(function(err, tmp){
                         var graphs = ['default'];
                         for(var i=0; i<tmp.length; i++) {
