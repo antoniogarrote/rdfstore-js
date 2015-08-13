@@ -7,6 +7,35 @@ Many features present in versions 0.8.X have been removed. Some of them, will be
 
 Please read this README file carefully to find the current set of features.
 
+## Table of Contents
+
+- [rdfstore-js  ](#)
+	- [Important Note](#)
+	- [Introduction](#)
+	- [Documentation](#)
+	- [SPARQL support](#)
+	- [Installation](#)
+	- [Building](#)
+	- [Tests](#)
+	- [API](#)
+		- [Store creation](#)
+		- [Query execution](#)
+		- [Construct queries RDF Interfaces API](#)
+		- [Loading remote graphs](#)
+		- [High level interface](#)
+		- [RDF Interface API](#)
+		- [Default Prefixes](#)
+		- [JSON-LD Support](#)
+		- [Events API](#)
+		- [Custom Filter Functions](#)
+		- [Persistence](#)
+	- [Dependencies](#)
+    - [Frontend](#)
+	- [Contributing](#)
+	- [Author](#)
+	- [License](#)
+
+
 ## Introduction
 
 rdfstore-js is a pure Javascript implementation of a RDF graph store with support for the SPARQL query and data manipulation language.
@@ -492,7 +521,7 @@ parsing:
 
 - [jsonld](https://github.com/digitalbazaar/jsonld.js), developed by Digital Bazaar and released under the New BSD license.
 
-###Frontend
+##Frontend
 
 A stand-along frontend for the store built using electron has been added in version 0.9.7.
 You can build the frontend running the command:
