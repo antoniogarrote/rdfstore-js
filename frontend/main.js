@@ -27,6 +27,8 @@ app.on('ready', function() {
     'web-preferences': {'web-security': false}
   });
 
+  mainWindow.maximize();
+
   // and load the index.html of the app.
   mainWindow.loadUrl('file://' + __dirname + '/index.html');
 
