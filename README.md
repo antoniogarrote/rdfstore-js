@@ -258,24 +258,24 @@ The following interface is a convenience API to work with Javascript code instea
 ```javascript
 /* retrieving a whole graph as JS Interafce API graph object */
 
-store.graph(graphUri, function(graph){
+store.graph(graphUri, function(err, graph){
   // process graph
 });
 
 
 /* Exporting a graph to N3 (this function is not part of W3C's API)*/
-store.graph(graphUri, function(graph){
+store.graph(graphUri, function(err, graph){
   var serialized = graph.toNT();
 });
 
 
 /* retrieving a single node in the graph as a JS Interface API graph object */
 
-store.node(subjectUri, function(graph) {
+store.node(subjectUri, function(err, node) {
   //process node
 });
 
-store.node(subjectUri, graphUri, function(graph) {
+store.node(subjectUri, graphUri, function(err, node) {
   //process node
 });
 
