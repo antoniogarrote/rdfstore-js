@@ -6,7 +6,7 @@ var QuadIndex = require("./quad_index");
 var QueryPlan = require("./query_plan").QueryPlan;
 var QueryFilters = require("./query_filters").QueryFilters;
 var RDFModel = require("./rdf_model");
-var RDFLoader = require("./rdf_loader").RDFLoader;
+var RDFLoader = require("./rdf_loader");
 var Callbacks = require("./graph_callbacks").CallbacksBackend;
 var async = require('./utils');
 var _ = require('./utils');
@@ -1382,7 +1382,7 @@ QueryEngine.prototype.executeUpdate = function(syntaxTree, callback) {
                 } else {
                     that.batchLoad(result,function(result){
                         if(result !== null) {
-                            callback(null, rsult);
+                            callback(null, result);
                         } else {
                             callback(new Error("Error batch loading quads"));
                         }
