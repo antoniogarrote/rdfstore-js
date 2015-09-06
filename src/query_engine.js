@@ -370,7 +370,7 @@ QueryEngine.prototype.normalizeTerm = function(term, env, shouldIndex, callback)
             } else {
                 // should never get here...
                 // is resolveBlank useful?
-                this.lexicon.resolveBlank(function(oid) {
+                this.lexicon.resolveBlank(label, function(oid) {
                     env.blanks[label] = oid;
                     callback(oid);
                 });
