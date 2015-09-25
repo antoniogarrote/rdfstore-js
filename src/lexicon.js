@@ -184,7 +184,7 @@ Lexicon.prototype.registerBlank = function(callback) {
  * @param callback
  */
 Lexicon.prototype.resolveBlank = function(label,callback) {
-    var that = thi
+    var that = this;
     this.oidBlanks.search(label, function(oidData){
         if(oidData != null) {
             callback(oidData);
