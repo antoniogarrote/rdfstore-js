@@ -219,7 +219,7 @@ var query = "CONSTRUCT { <http://example.org/people/Alice> ?p ?o } \
              WHERE { <http://example.org/people/Alice> ?p ?o  }";
 
 store.execute(query, function(err, graph){
-  if(graph.some(store.rdf.filters.p(store.rdf.resolve('foaf:name)))) {
+  if(graph.some(store.rdf.filters.p(store.rdf.resolve('foaf:name')))) {
     nameTriples = graph.match(null,
                               store.rdf.createNamedNode(rdf.resolve('foaf:name')),
                               null);
