@@ -1,6 +1,7 @@
 var Utils = require('./utils');
 var     _ = Utils;
 var async = require('./utils');
+var Promise = require('es6-promise').Promise;
 
 QueryFilters = {};
 
@@ -94,49 +95,61 @@ QueryFilters.boundVars = function(filterExpr) {
 
 QueryFilters.run = function(filterExpr, bindings, nullifyFilters, dataset, env, queryEngine, callback) {
     queryEngine.copyDenormalizedBindings(bindings, env.outCache, function(denormBindings){
-        var filteredBindings = [];
-        for(var i=0; i<bindings.length; i++) {
-            var thisDenormBindings = denormBindings[i];
-            var ebv = QueryFilters.runFilter(filterExpr, thisDenormBindings, queryEngine, dataset, env);
-            // ebv can be directly a RDFTerm (e.g. atomic expression in filter)
-            // this additional call to ebv will return -> true/false/error
-            var ebv = QueryFilters.ebv(ebv);
-            //console.log("EBV:")
-            //console.log(ebv)
-            //console.log("FOR:")
-            //console.log(thisDenormBindings)
-            if(QueryFilters.isEbvError(ebv)) {
-                // error
-                if(nullifyFilters) {
-                    var thisBindings = {"__nullify__": true, "bindings": bindings[i]};
-                    filteredBindings.push(thisBindings);
-                }
-            } else if(ebv === true) {
-                // true
-                filteredBindings.push(bindings[i]);
-            } else {
-                // false
-                if(nullifyFilters) {
-                    var thisBindings = {"__nullify__": true, "bindings": bindings[i]};
-                    filteredBindings.push(thisBindings);
-                }
-            }
-        }
-        callback(filteredBindings);
+        var filteredBindings = bindings.reduce(function (filteredBindings, ignored, i) {
+           return filteredBindings.then(function (filteredBindings) {
+               var thisDenormBindings = denormBindings[i];
+               var ebv = QueryFilters.runFilter(filterExpr, thisDenormBindings, queryEngine, dataset, env);
+               return Promise.resolve(ebv).then(function (ebv) {
+                   // ebv can be directly a RDFTerm (e.g. atomic expression in filter)
+                   // this additional call to ebv will return -> true/false/error
+                   var ebv = QueryFilters.ebv(ebv);
+                   //console.log("EBV:")
+                   //console.log(ebv)
+                   //console.log("FOR:")
+                   //console.log(thisDenormBindings)
+                   if(QueryFilters.isEbvError(ebv)) {
+                       // error
+                       if(nullifyFilters) {
+                            var thisBindings = {"__nullify__": true, "bindings": bindings[i]};
+                            filteredBindings.push(thisBindings);
+                       }
+                   } else if(ebv === true) {
+                        // true
+                        filteredBindings.push(bindings[i]);
+                   } else {
+                       // false
+                       if(nullifyFilters) {
+                            var thisBindings = {"__nullify__": true, "bindings": bindings[i]};
+                            filteredBindings.push(thisBindings);
+                       }
+                   }
+                   return filteredBindings;
+              });
+           });
+        }, Promise.resolve([]));
+        filteredBindings.then(function (filteredBindings) {
+            callback(filteredBindings);
+        });
     });
 };
 
 QueryFilters.collect = function(filterExpr, bindings, dataset, env, queryEngine, callback) {
     queryEngine.copyDenormalizedBindings(bindings, env.outCache, function(denormBindings) {
-        var filteredBindings = [];
-        for(var i=0; i<denormBindings.length; i++) {
-            var thisDenormBindings = denormBindings[i];
-            var ebv = QueryFilters.runFilter(filterExpr, thisDenormBindings, queryEngine, dataset, env);
-            filteredBindings.push({binding:bindings[i], value:ebv});
-        }
-        return callback(filteredBindings);
-    });
-};
+       var filteredBindings = bindings.reduce(function (filteredBindings, ignored, i) {
+           return filteredBindings.then(function (filteredBindings) {
+               var thisDenormBindings = denormBindings[i];
+               var ebv = QueryFilters.runFilter(filterExpr, thisDenormBindings, queryEngine, dataset, env);
+               return Promise.resolve(ebv).then(function (ebv) {
+                   filteredBindings.push({binding:bindings[i], value:ebv});
+                   return filteredBindings;
+               });
+           });
+       }, Promise.resolve([]));
+       filteredBindings.then(function (filteredBindings) {
+           callback(filteredBindings);
+       });
+     });
+}
 
 QueryFilters.runDistinct = function(projectedBindings, projectionVariables) {
 };
@@ -151,52 +164,32 @@ QueryFilters.runAggregator = function(aggregator, bindingsGroup, queryEngine, da
         if(aggregator.expression.expressionType === 'atomic' && aggregator.expression.primaryexpression === 'var') {
             return bindingsGroup[0][aggregator.expression.value.value];
         } else if(aggregator.expression.expressionType === 'aggregate') {
-            if(aggregator.expression.aggregateType === 'max') {
-                var max = null;
-                for(var i=0; i< bindingsGroup.length; i++) {
-                    var bindings = bindingsGroup[i];
-                    var ebv = QueryFilters.runFilter(aggregator.expression.expression, bindings, queryEngine, dataset, env);
-                    if(!QueryFilters.isEbvError(ebv)) {
-                        if(max === null) {
-                            max = ebv;
-                        } else {
-                            if(QueryFilters.runLtFunction(max, ebv).value === true) {
-                                max = ebv;
+            var type = aggregator.expression.aggregateType;
+            if(type === 'max' || type == 'min') {
+                var isMax = type === 'max';
+                return bindingsGroup.reduce(function (prev, bindings) {
+                    return prev.then(function (prev) {
+                        var ebv = QueryFilters.runFilter(aggregator.expression.expression, bindings, queryEngine, dataset, env);
+                        return Promise.resolve(ebv).then(function(ebv) {
+                            if(!QueryFilters.isEbvError(ebv)) {
+                                if (prev === null) {
+                                    return ebv;
+                                } else {
+                                    // use > or < according to aggregate type
+                                    var comp = isMax ? QueryFilters.runLtFunction(prev, ebv) : QueryFilters.runGtFunction(prev, ebv);
+                                    return comp.value === true ? ebv : prev;
+                                }
                             }
-                        }
-                    }
-                }
-
-                if(max===null) {
-                    return QueryFilters.ebvError();
-                } else {
-                    return max;
-                }
-            } else if(aggregator.expression.aggregateType === 'min') {
-                var min = null;
-                for(var i=0; i< bindingsGroup.length; i++) {
-                    var bindings = bindingsGroup[i];
-                    var ebv = QueryFilters.runFilter(aggregator.expression.expression, bindings, queryEngine, dataset, env);
-                    if(!QueryFilters.isEbvError(ebv)) {
-                        if(min === null) {
-                            min = ebv;
-                        } else {
-                            if(QueryFilters.runGtFunction(min, ebv).value === true) {
-                                min = ebv;
-                            }
-                        }
-                    }
-                }
-
-                if(min===null) {
-                    return QueryFilters.ebvError();
-                } else {
-                    return min;
-                }
-            } else if(aggregator.expression.aggregateType === 'count') {
+                            return prev;
+                        });
+                    });
+                }, Promise.resolve(null)).then(function (val) {
+                    return val === null ? QueryFilters.ebvError() : val;
+                });
+            } else if(type === 'count') {
                 var distinct = {};
-                var count = 0;
                 if(aggregator.expression.expression === '*') {
+                    var count = 0;
                     if(aggregator.expression.distinct != null && aggregator.expression.distinct != '') {
                         for(var i=0; i< bindingsGroup.length; i++) {
                             var bindings = bindingsGroup[i];
@@ -209,79 +202,69 @@ QueryFilters.runAggregator = function(aggregator, bindingsGroup, queryEngine, da
                     } else {
                         count = bindingsGroup.length;
                     }
+                    return {token: 'literal', type:xmlSchema+"integer", value:''+count};
                 } else {
-                    for(var i=0; i< bindingsGroup.length; i++) {
-                        var bindings = bindingsGroup[i];
-                        var ebv = QueryFilters.runFilter(aggregator.expression.expression, bindings, queryEngine, dataset, env);
-                        if(!QueryFilters.isEbvError(ebv)) {
-                            if(aggregator.expression.distinct != null && aggregator.expression.distinct != '') {
-                                var key = Utils.hashTerm(ebv);
-                                if(distinct[key] == null) {
-                                    distinct[key] = true;
-                                    count++;
+                    return bindingsGroup.reduce(function (count, bindings) {
+                        return count.then(function (count) {
+                            var ebv = QueryFilters.runFilter(aggregator.expression.expression, bindings, queryEngine, dataset, env);
+                            return Promise.resolve(ebv).then(function(ebv) {
+                                if(!QueryFilters.isEbvError(ebv)) {
+                                    if(aggregator.expression.distinct != null && aggregator.expression.distinct != '') {
+                                        var key = Utils.hashTerm(ebv);
+                                        if(distinct[key] == null) {
+                                            distinct[key] = true;
+                                            count++;
+                                        }
+                                    } else {
+                                        count++;
+                                    }
                                 }
-                            } else {
-                                count++;
-                            }
-                        }
-                    }
+                                return count;
+                            });
+                        });
+                    }, Promise.resolve(0)).then(function (count) {
+                        return {token: 'literal', type:xmlSchema+"integer", value:''+count};
+                    });
                 }
-
-                return {token: 'literal', type:xmlSchema+"integer", value:''+count};
-            } else if(aggregator.expression.aggregateType === 'avg') {
+            } else if(type === 'avg' || type === 'sum') {
                 var distinct = {};
-                var aggregated = {token: 'literal', type:xmlSchema+"integer", value:'0'};
                 var count = 0;
-                for(var i=0; i< bindingsGroup.length; i++) {
-                    var bindings = bindingsGroup[i];
-                    var ebv = QueryFilters.runFilter(aggregator.expression.expression, bindings, queryEngine, dataset, env);
-                    if(!QueryFilters.isEbvError(ebv)) {
-                        if(aggregator.expression.distinct != null && aggregator.expression.distinct != '') {
-                            var key = Utils.hashTerm(ebv);
-                            if(distinct[key] == null) {
-                                distinct[key] = true;
-                                if(QueryFilters.isNumeric(ebv)) {
-                                    aggregated = QueryFilters.runSumFunction(aggregated, ebv);
+                var aggregate = {token: 'literal', type:xmlSchema+"integer", value:'0'};
+                return bindingsGroup.reduce(function (aggregate, bindings) {
+                    return aggregate.then(function (aggregate) {
+                        var ebv = QueryFilters.runFilter(aggregator.expression.expression, bindings, queryEngine, dataset, env);
+                        return Promise.resolve(ebv).then(function(ebv) {
+                            if(!QueryFilters.isEbvError(ebv)) {
+                                var addValue = false;
+                                if(aggregator.expression.distinct != null && aggregator.expression.distinct != '') {
+                                    var key = Utils.hashTerm(ebv);
+                                    if(distinct[key] == null) {
+                                        distinct[key] = true;
+                                        addValue = QueryFilters.isNumeric(ebv);
+                                    }
+                                } else {
+                                    addValue = QueryFilters.isNumeric(ebv);
+                                }
+                                if (addValue) {
                                     count++;
+                                    return QueryFilters.runSumFunction(aggregate, ebv)
+                                } else {
+                                    return aggregate;
                                 }
                             }
-                        } else {
-                            if(QueryFilters.isNumeric(ebv)) {
-                                aggregated = QueryFilters.runSumFunction(aggregated, ebv);
-                                count++;
-                            }
-                        }
+                            return aggregate;
+                        });
+                    });
+                }, Promise.resolve(aggregate)).then(function (aggregate) {
+                    if (type == 'sum') {
+                        return aggregate;
+                    } else {
+                        return QueryFilters.runDivFunction(aggregate, {token: 'literal', type:xmlSchema+"integer", value:''+count});
                     }
-                }
-
-                var result = QueryFilters.runDivFunction(aggregated, {token: 'literal', type:xmlSchema+"integer", value:''+count});
-                result.value = ''+result.value;
-                return result;
-            } else if(aggregator.expression.aggregateType === 'sum') {
-                var distinct = {};
-                var aggregated = {token: 'literal', type:xmlSchema+"integer", value:'0'};
-                for(var i=0; i< bindingsGroup.length; i++) {
-                    var bindings = bindingsGroup[i];
-                    var ebv = QueryFilters.runFilter(aggregator.expression.expression, bindings, queryEngine, dataset, env);
-                    if(!QueryFilters.isEbvError(ebv)) {
-                        if(aggregator.expression.distinct != null && aggregator.expression.distinct != '') {
-                            var key = Utils.hashTerm(ebv);
-                            if(distinct[key] == null) {
-                                distinct[key] = true;
-                                if(QueryFilters.isNumeric(ebv)) {
-                                    aggregated = QueryFilters.runSumFunction(aggregated, ebv);
-                                }
-                            }
-                        } else {
-                            if(QueryFilters.isNumeric(ebv)) {
-                                aggregated = QueryFilters.runSumFunction(aggregated, ebv);
-                            }
-                        }
-                    }
-                }
-
-                aggregated.value =''+aggregated.value;
-                return aggregated;
+                }).then(function (result) {
+                    result.value = ''+result.value;
+                    return result;
+                });
             } else {
                 var ebv = QueryFilters.runFilter(aggregate.expression, bindingsGroup[0], dataset, {blanks:{}, outCache:{}});
                 return ebv;
@@ -631,13 +614,14 @@ QueryFilters.runRelationalFilter = function(filterExpr, op1, op2, bindings, quer
     if(operator === '=') {
         return QueryFilters.runEqualityFunction(op1, op2, bindings, queryEngine, dataset, env);
     } else if(operator === '!=') {
-        var res = QueryFilters.runEqualityFunction(op1, op2, bindings, queryEngine, dataset, env);
-        if(QueryFilters.isEbvError(res)) {
-            return res;
-        } else {
-            res.value = !res.value;
-            return res;
-        }
+        return Promise.resolve(QueryFilters.runEqualityFunction(op1, op2, bindings, queryEngine, dataset, env)).then(function (res) {
+            if(QueryFilters.isEbvError(res)) {
+                return res;
+            } else {
+                res.value = !res.value;
+                return res;
+            }
+        });
     } else if(operator === '<') {
         return QueryFilters.runLtFunction(op1, op2, bindings);
     } else if(operator === '>') {
@@ -1058,7 +1042,6 @@ QueryFilters.runGtEqFunction = function(op1, op2, bindings) {
     }
 };
 
-
 QueryFilters.runLtEqFunction = function(op1, op2, bindings) {
     if(QueryFilters.isEbvError(op1) || QueryFilters.isEbvError(op2)) {
         return QueryFilters.ebvError();
@@ -1097,29 +1080,26 @@ QueryFilters.runLtEqFunction = function(op1, op2, bindings) {
 };
 
 QueryFilters.runAddition = function(summand, summands, bindings, queryEngine, dataset, env) {
-    var summandOp = QueryFilters.runFilter(summand,bindings,queryEngine, dataset, env);
-    if(QueryFilters.isEbvError(summandOp)) {
-        return QueryFilters.ebvError();
-    }
-
-    var acum = summandOp;
-    if(QueryFilters.isNumeric(summandOp)) {
-        for(var i=0; i<summands.length; i++) {
-            var nextSummandOp = QueryFilters.runFilter(summands[i].expression, bindings,queryEngine, dataset, env);
-            if(QueryFilters.isNumeric(nextSummandOp)) {
-                if(summands[i].operator === '+') {
-                    acum = QueryFilters.runSumFunction(acum, nextSummandOp);
-                } else if(summands[i].operator === '-') {
-                    acum = QueryFilters.runSubFunction(acum, nextSummandOp);
-                }
-            } else {
-                return QueryFilters.ebvFalse();
-            }
-        }
-        return acum;
-    } else {
-        return QueryFilters.ebvFalse();
-    }
+    var first = QueryFilters.runFilter(summand, bindings, queryEngine, dataset, env);
+    first = Promise.resolve(first).then(function (first) {
+        return QueryFilters.isNumeric(first) ? first : QueryFilters.ebvFalse();
+    });
+    return summands.reduce(function (prev, summand) {
+        return prev.then(function(prev) {
+             var next = QueryFilters.runFilter(summand.expression, bindings,queryEngine, dataset, env);
+             return Promise.resolve(next).then(function (next) {
+                 if (QueryFilters.isNumeric(next)) {
+                     if (summand.operator === '+') {
+                         return QueryFilters.runSumFunction(prev, next);
+                     } else {
+                         return QueryFilters.runSubFunction(prev, next);
+                     }
+                 } else {
+                     return QueryFilters.ebvFalse();
+                 }
+             });
+        });
+    }, first);
 };
 
 QueryFilters.runSumFunction = function(suma, sumb) {
@@ -1157,32 +1137,26 @@ QueryFilters.runSubFunction = function(suma, sumb) {
 };
 
 QueryFilters.runMultiplication = function(factor, factors, bindings, queryEngine, dataset, env) {
-    var factorOp = QueryFilters.runFilter(factor,bindings,queryEngine, dataset, env);
-    if(QueryFilters.isEbvError(factorOp)) {
-        return factorOp;
-    }
-
-    var acum = factorOp;
-    if(QueryFilters.isNumeric(factorOp)) {
-        for(var i=0; i<factors.length; i++) {
-            var nextFactorOp = QueryFilters.runFilter(factors[i].expression, bindings,queryEngine, dataset, env);
-            if(QueryFilters.isEbvError(nextFactorOp)) {
-                return factorOp;
-            }
-            if(QueryFilters.isNumeric(nextFactorOp)) {
-                if(factors[i].operator === '*') {
-                    acum = QueryFilters.runMulFunction(acum, nextFactorOp);
-                } else if(factors[i].operator === '/') {
-                    acum = QueryFilters.runDivFunction(acum, nextFactorOp);
-                }
-            } else {
-                return QueryFilters.ebvFalse();
-            }
-        }
-        return acum;
-    } else {
-        return QueryFilters.ebvFalse();
-    }
+    var first = QueryFilters.runFilter(factor, bindings, queryEngine, dataset, env);
+    first = Promise.resolve(first).then(function (first) {
+        return QueryFilters.isNumeric(first) ? first : QueryFilters.ebvFalse();
+    });
+    return factors.reduce(function (prev, factor) {
+        return prev.then(function(prev) {
+             var next = QueryFilters.runFilter(factors.expression, bindings,queryEngine, dataset, env);
+             return Promise.resolve(next).then(function (next) {
+                 if (QueryFilters.isNumeric(next)) {
+                     if (factor.operator === '*') {
+                         return QueryFilters.runMulFunction(prev, next);
+                     } else if (factor.operator === '/') {
+                         return QueryFilters.runDivFunction(prev, next);
+                     }
+                 } else {
+                     return QueryFilters.ebvFalse();
+                 }
+             });
+        });
+    }, first);
 };
 
 QueryFilters.runMulFunction = function(faca, facb) {
@@ -1227,19 +1201,18 @@ QueryFilters.runBuiltInCall = function(builtincall, args, bindings, queryEngine,
         var ast = queryEngine.abstractQueryTree.parseSelect({pattern:cloned}, bindings);
         ast = queryEngine.abstractQueryTree.bind(ast.pattern, bindings);
 
-        var result = queryEngine.executeSelectUnit([ {kind:'*'} ],
-            dataset,
-            ast,
-            env);
-
-        if(builtincall === 'exists') {
-            return QueryFilters.ebvBoolean(result.length!==0);
-        } else {
-            return QueryFilters.ebvBoolean(result.length===0);
-        }
-
+        return new Promise(function (resolve, reject) {
+            queryEngine.executeSelectUnit([ {
+                kind : '*'
+            } ], dataset, ast, env, function(result) {
+                if (builtincall === 'exists') {
+                    resolve(QueryFilters.ebvBoolean(result.length !== 0));
+                } else {
+                    resolve(QueryFilters.ebvBoolean(result.length === 0));
+                }
+            });
+        });
     }  else {
-
         var ops = [];
         for(var i=0; i<args.length; i++) {
             if(args[i].token === 'var') {
@@ -1349,47 +1322,49 @@ QueryFilters.runBuiltInCall = function(builtincall, args, bindings, queryEngine,
 
 QueryFilters.runUnaryExpression = function(unaryexpression, expression, bindings, queryEngine, dataset, env) {
     var op = QueryFilters.runFilter(expression, bindings,queryEngine, dataset, env);
-    if(QueryFilters.isEbvError(op)) {
-        return op;
-    }
-
-    if(unaryexpression === '!') {
-        var res = QueryFilters.ebv(op);
-        //console.log("** Unary ! ");
-        //console.log(op)
-        if(QueryFilters.isEbvError(res)) {
-            //console.log("--- ERROR")
-            //console.log(QueryFilters.ebvFalse())
-            //console.log("\r\n")
-
-            // ??
-            return QueryFilters.ebvFalse();
-        } else {
-            res = !res;
-            //console.log("--- BOOL")
-            //console.log(QueryFilters.ebvBoolean(res))
-            //console.log("\r\n")
-
-            return QueryFilters.ebvBoolean(res);
-        }
-    } else if(unaryexpression === '+') {
-        if(QueryFilters.isNumeric(op)) {
-            return op;
-        } else {
-            return QueryFilters.ebvError();
-        }
-    } else if(unaryexpression === '-') {
-        if(QueryFilters.isNumeric(op)) {
-            var clone = {};
-            for(var p in op) {
-                clone[p] = op[p];
+    return Promise.resolve(op).then(function(op) {
+            if(QueryFilters.isEbvError(op)) {
+                return op;
             }
-            clone.value = -clone.value;
-            return clone;
-        } else {
-            return QueryFilters.ebvError();
-        }
-    }
+
+            if(unaryexpression === '!') {
+                var res = QueryFilters.ebv(op);
+                //console.log("** Unary ! ");
+                //console.log(op)
+                if(QueryFilters.isEbvError(res)) {
+                    //console.log("--- ERROR")
+                    //console.log(QueryFilters.ebvFalse())
+                    //console.log("\r\n")
+
+                    // ??
+                    return QueryFilters.ebvFalse();
+                } else {
+                    res = !res;
+                    //console.log("--- BOOL")
+                    //console.log(QueryFilters.ebvBoolean(res))
+                    //console.log("\r\n")
+
+                    return QueryFilters.ebvBoolean(res);
+                }
+            } else if(unaryexpression === '+') {
+                if(QueryFilters.isNumeric(op)) {
+                    return op;
+                } else {
+                    return QueryFilters.ebvError();
+                }
+            } else if(unaryexpression === '-') {
+                if(QueryFilters.isNumeric(op)) {
+                    var clone = {};
+                    for(var p in op) {
+                        clone[p] = op[p];
+                    }
+                    clone.value = -clone.value;
+                    return clone;
+                } else {
+                    return QueryFilters.ebvError();
+                }
+            }
+    });
 };
 
 QueryFilters.runRegex = function(text, pattern, flags, bindings, queryEngine, dataset, env) {
@@ -1410,41 +1385,46 @@ QueryFilters.runRegex = function(text, pattern, flags, bindings, queryEngine, da
         flags = QueryFilters.runFilter(flags, bindings, queryEngine, dataset, env);
     }
 
+    return Promise.all([text, pattern, flags]).then(function(values) {
+        text = values[0];
+        pattern = values[1];
+        flags = values[2];
 
-    if(pattern != null && pattern.token === 'literal' && (flags == null || flags.token === 'literal')) {
-        pattern = pattern.value;
-        flags = (flags == null) ? null : flags.value;
-    } else {
-        return QueryFilters.ebvError();
-    }
-
-    if(text!= null && text.token == 'var') {
-        if(bindings[text.value] != null) {
-            text = bindings[text.value];
+        if(pattern != null && pattern.token === 'literal' && (flags == null || flags.token === 'literal')) {
+            pattern = pattern.value;
+            flags = (flags == null) ? null : flags.value;
         } else {
             return QueryFilters.ebvError();
         }
-    } else if(text!=null && text.token === 'literal') {
-        if(text.type == null || QueryFilters.isXsdType("string",text)) {
-            text = text.value
+
+        if(text!= null && text.token == 'var') {
+            if(bindings[text.value] != null) {
+                text = bindings[text.value];
+            } else {
+                return QueryFilters.ebvError();
+            }
+        } else if(text!=null && text.token === 'literal') {
+            if(text.type == null || QueryFilters.isXsdType("string",text)) {
+                text = text.value
+            } else {
+                return QueryFilters.ebvError();
+            }
         } else {
             return QueryFilters.ebvError();
         }
-    } else {
-        return QueryFilters.ebvError();
-    }
 
-    var regex;
-    if(flags == null) {
-        regex = new RegExp(pattern);
-    } else {
-        regex = new RegExp(pattern,flags.toLowerCase());
-    }
-    if(regex.exec(text)) {
-        return QueryFilters.ebvTrue();
-    } else {
-        return QueryFilters.ebvFalse();
-    }
+        var regex;
+        if(flags == null) {
+            regex = new RegExp(pattern);
+        } else {
+            regex = new RegExp(pattern,flags.toLowerCase());
+        }
+        if(regex.exec(text)) {
+            return QueryFilters.ebvTrue();
+        } else {
+            return QueryFilters.ebvFalse();
+        }
+    });
 };
 
 QueryFilters.normalizeLiteralDatatype = function(literal, queryEngine, env) {

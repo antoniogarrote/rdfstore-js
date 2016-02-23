@@ -29,7 +29,7 @@ gulp.task('browserify', ['clean-dist'], function() {
 gulp.task('minimize', ['browserify'], function() {
     return gulp.src('dist/*.js')
         .pipe(closureCompiler({
-            compilerPath: './node_modules/closure-compiler/lib/vendor/compiler.jar',
+            compilerPath: './node_modules/google-closure-compiler/compiler.jar',
             fileName: 'dist/rdfstore_min.js',
             compilerFlags: {
                 'language_in': 'ECMASCRIPT5'

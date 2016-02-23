@@ -31,17 +31,16 @@
     "async": "^0.9.0",
     "bower-resolve": "^2.2.1",
     "browserify": "7.0.0",
-    "closure-compiler": "^0.2.6",
     "debowerify": "^1.2.0",
     "escodegen": "^1.6.1",
     "glob": "^5.0.3",
     "gulp": "3.8.11",
-    "gulp-browserify": "^0.5.1",
-    "gulp-clean": "^0.3.1",
-    "gulp-closure-compiler": "^0.2.17",
+    "gulp-browserify": "~0.5.1",
+    "gulp-clean": "~0.3.1",
+    "gulp-closure-compiler": "~0.4.0",
     "gulp-electron": "0.0.8",
-    "gulp-jasmine": "^1.0.1",
-    "gulp-rename": "^1.2.0",
+    "gulp-jasmine": "^2.3.0",
+    "gulp-rename": "~1.2.2",
     "lodash": "^2.4.1",
     "minimatch": "^2.0.4",
     "moment": "^2.9.0",
@@ -52,6 +51,7 @@
     "sqlite3": "^3.0.5",
     "indexeddb-js": "0.0.14",
     "jsonld": "^0.3.22",
-    "n3": "^0.4.2"
+    "n3": "^0.4.2",
+    "es6-promise": "^3.0.2"
   }
 }
