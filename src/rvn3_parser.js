@@ -1,5 +1,5 @@
-//var N3Parser = require('n3').Parser;
-var N3Parser = require('../node_modules/n3/lib/N3Parser');
+var N3Parser = require('n3').Parser;
+//var N3Parser = require('../node_modules/n3/lib/N3Parser');
 
 // Add a wrapper around the N3.js parser
 var RVN3Parser = {};
