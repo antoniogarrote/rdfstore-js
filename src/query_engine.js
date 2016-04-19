@@ -1382,7 +1382,7 @@ QueryEngine.prototype.executeUpdate = function(syntaxTree, callback) {
                 } else {
                     that.batchLoad(result,function(result){
                         if(result !== null) {
-                            callback(null, rsult);
+                            callback(null, result);
                         } else {
                             callback(new Error("Error batch loading quads"));
                         }
