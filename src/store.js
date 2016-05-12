@@ -30,60 +30,60 @@ Store = function(arg1, arg2) {
     var params   = null;
 
     if(arguments.length == 0) {
-        params ={};
+	params ={};
     } else if(arguments.length == 1) {
-        params   = {};
-        callback = arg1;
+	params   = {};
+	callback = arg1;
     } else if(arguments.length > 1) {
-        params   = arg1;
-        callback = arg2;
+	params   = arg1;
+	callback = arg2;
     } else {
-        throw("An optional argument map and a callback must be provided");
+	throw("An optional argument map and a callback must be provided");
     }
 
     if(params['treeOrder'] == null) {
-        params['treeOrder'] = 15;
+	params['treeOrder'] = 15;
     }
 
     var Lexicon = InMemoryLexicon;
     var QuadBackend = InMemoryQuadBackend;
     if(params['persistent'] === true){
-        Lexicon = PersistentLexicon;
-        QuadBackend = PersistentBackend;
+	Lexicon = PersistentLexicon;
+	QuadBackend = PersistentBackend;
     }
     this.functionMap = {};
 
     var that = this;
     this.customFns = {};
     new Lexicon(function(lexicon){
-        var createQuadBackend = function() {
-            new QuadBackend(params, function (backend) {
-                /*
-                 if(params['overwrite'] === true) {
-                 // delete index values
-                 backend.clear();
-                 }
-                 */
-                var createEngine = function() {
-                    params.backend = backend;
-                    params.lexicon = lexicon;
-                    that.engine = new QueryEngine(params);
+	var createQuadBackend = function() {
+	    new QuadBackend(params, function (backend) {
+		/*
+		 if(params['overwrite'] === true) {
+		 // delete index values
+		 backend.clear();
+		 }
+		 */
+		var createEngine = function() {
+		    params.backend = backend;
+		    params.lexicon = lexicon;
+		    that.engine = new QueryEngine(params);
 
-                    callback(null, that);
-                }
-                if(params['overwrite']) {
-                    backend.clear(createEngine)
-                } else {
-                    createEngine();
-                }
-            });
-        }
-        if(params['overwrite'] === true) {
-            // delete lexicon values
-            lexicon.clear(createQuadBackend);
-        } else {
-            createQuadBackend();
-        }
+		    callback(null, that);
+		}
+		if(params['overwrite']) {
+		    backend.clear(createEngine)
+		} else {
+		    createEngine();
+		}
+	    });
+	}
+	if(params['overwrite'] === true) {
+	    // delete lexicon values
+	    lexicon.clear(createQuadBackend);
+	} else {
+	    createQuadBackend();
+	}
 
     },params['name']);
 };
@@ -161,27 +161,27 @@ Store.prototype.registerCustomFunction = function(name, fn) {
  */
 Store.prototype.execute = function() {
     if(arguments.length === 3) {
-        this.executeWithEnvironment(arguments[0],
-            arguments[1],
-            arguments[2]);
+	this.executeWithEnvironment(arguments[0],
+	    arguments[1],
+	    arguments[2]);
     } else if(arguments.length === 4) {
-        this.executeWithEnvironment(arguments[0],
-            arguments[1],
-            arguments[2],
-            arguments[3]);
+	this.executeWithEnvironment(arguments[0],
+	    arguments[1],
+	    arguments[2],
+	    arguments[3]);
     } else {
 
-        var queryString;
-        var callback;
+	var queryString;
+	var callback;
 
-        if(arguments.length === 1) {
-            queryString = arguments[0];
-            var callback = function(){};
-        } else if(arguments.length === 2) {
-            queryString = arguments[0];
-            callback = arguments [1];
-        }
-        this.engine.execute(queryString, callback);
+	if(arguments.length === 1) {
+	    queryString = arguments[0];
+	    var callback = function(){};
+	} else if(arguments.length === 2) {
+	    queryString = arguments[0];
+	    callback = arguments [1];
+	}
+	this.engine.execute(queryString, callback);
     }
 };
 
@@ -201,23 +201,23 @@ Store.prototype.executeWithEnvironment = function() {
     var queryString, defaultGraphs, namedGraphs;
 
     if(arguments.length === 3) {
-        queryString   = arguments[0];
-        // JSDoc fails if this is pushed outside
-        var callback  = function(){};
-        defaultGraphs = arguments[1];
-        namedGraphs   = arguments[2];
+	queryString   = arguments[0];
+	// JSDoc fails if this is pushed outside
+	var callback  = function(){};
+	defaultGraphs = arguments[1];
+	namedGraphs   = arguments[2];
     } else if(arguments.length === 4) {
-        queryString   = arguments[0];
-        var callback      = arguments [3];
-        defaultGraphs = arguments[1];
-        namedGraphs   = arguments[2];
+	queryString   = arguments[0];
+	var callback      = arguments [3];
+	defaultGraphs = arguments[1];
+	namedGraphs   = arguments[2];
     }
 
     defaultGraphs = _.map(defaultGraphs, function(graph){
-        return {'token':'uri','value':graph};
+	return {'token':'uri','value':graph};
     });
     namedGraphs = _.map(namedGraphs, function(graph){
-        return {'token':'uri','value':graph};
+	return {'token':'uri','value':graph};
     });
 
     this.engine.execute(queryString, callback, defaultGraphs, namedGraphs);
@@ -242,17 +242,17 @@ Store.prototype.graph = function() {
     var graphUri = null;
     var callback = null;
     if(arguments.length === 1) {
-        callback = arguments[0] || function(){};
-        graphUri = this.engine.lexicon.defaultGraphUri;
+	callback = arguments[0] || function(){};
+	graphUri = this.engine.lexicon.defaultGraphUri;
     } else if(arguments.length === 2) {
-        callback = arguments[1] || function(){};
-        graphUri = arguments[0];
+	callback = arguments[1] || function(){};
+	graphUri = arguments[0];
     } else {
-        throw("An optional graph URI and a callback function must be provided");
+	throw("An optional graph URI and a callback function must be provided");
     }
 
     if(this.rdf.resolve(graphUri) != null) {
-        graphUri = this.rdf.resolve(graphUri);
+	graphUri = this.rdf.resolve(graphUri);
     }
 
     this.engine.execute("CONSTRUCT { ?s ?p ?o } WHERE { GRAPH <" + graphUri + "> { ?s ?p ?o } }", callback);
@@ -283,23 +283,23 @@ Store.prototype.node = function() {
     var callback = null;
     var nodeUri  = null;
     if(arguments.length === 2) {
-        nodeUri = arguments[0];
-        callback = arguments[1] || function(){};
-        graphUri = this.engine.lexicon.defaultGraphUri;
+	nodeUri = arguments[0];
+	callback = arguments[1] || function(){};
+	graphUri = this.engine.lexicon.defaultGraphUri;
     } else if(arguments.length === 3) {
-        nodeUri = arguments[0];
-        graphUri = arguments[1];
-        callback = arguments[2] || function(){};
+	nodeUri = arguments[0];
+	graphUri = arguments[1];
+	callback = arguments[2] || function(){};
     } else {
-        throw("An optional graph URI, node URI and a callback function must be provided");
+	throw("An optional graph URI, node URI and a callback function must be provided");
     }
 
     if(this.rdf.resolve(graphUri) != null) {
-        graphUri = this.rdf.resolve(graphUri);
+	graphUri = this.rdf.resolve(graphUri);
     }
 
     if(this.rdf.resolve(nodeUri) != null) {
-        nodeUri = this.rdf.resolve(nodeUri);
+	nodeUri = this.rdf.resolve(nodeUri);
     }
 
     this.engine.execute("CONSTRUCT { <" + nodeUri + "> ?p ?o } WHERE { GRAPH <" + graphUri + "> { <" + nodeUri + "> ?p ?o } }", callback);
@@ -333,14 +333,14 @@ Store.prototype.startObservingNode = function() {
     var uri, graphUri, callback;
 
     if(arguments.length === 2) {
-        uri = arguments[0];
-        callback = arguments[1];
-        this.engine.callbacksBackend.observeNode(uri, callback, function(){});
+	uri = arguments[0];
+	callback = arguments[1];
+	this.engine.callbacksBackend.observeNode(uri, callback, function(){});
     } else if(arguments.length === 3) {
-        uri = arguments[0];
-        graphUri = arguments[1];
-        callback = arguments[2];
-        this.engine.callbacksBackend.observeNode(uri, graphUri, callback, function(){});
+	uri = arguments[0];
+	graphUri = arguments[1];
+	callback = arguments[2];
+	this.engine.callbacksBackend.observeNode(uri, graphUri, callback, function(){});
     }
 };
 
@@ -381,9 +381,9 @@ Store.prototype.startObservingQuery = function() {
     var callback = arguments[1];
     var endCallback = arguments[2];
     if(endCallback!=null) {
-        this.engine.callbacksBackend.observeQuery(query, callback, endCallback);
+	this.engine.callbacksBackend.observeQuery(query, callback, endCallback);
     } else {
-        this.engine.callbacksBackend.observeQuery(query, callback, function(){});
+	this.engine.callbacksBackend.observeQuery(query, callback, function(){});
     }
 };
 
@@ -424,21 +424,21 @@ Store.prototype.stopObservingQuery = function(query) {
 Store.prototype.subscribe = function(s, p, o, g, callback) {
     var that = this;
     var adapterCb = function(event,triples){
-        var acum = [];
-        var queryEnv = {blanks:{}, outCache:{}};
-        var bindings = [];
+	var acum = [];
+	var queryEnv = {blanks:{}, outCache:{}};
+	var bindings = [];
 
-        _.each(triples, function(triple){
-            var s = RDFModel.buildRDFResource(triple.subject,bindings,that.engine,queryEnv);
-            var p = RDFModel.buildRDFResource(triple.predicate,bindings,that.engine,queryEnv);
-            var o = RDFModel.buildRDFResource(triple.object,bindings,that.engine,queryEnv);
-            if(s!=null && p!=null && o!=null) {
-                triple = new RDFModel.Triple(s,p,o);
-                acum.push(triple);
-            }
-        });
+	_.each(triples, function(triple){
+	    var s = RDFModel.buildRDFResource(triple.subject,bindings,that.engine,queryEnv);
+	    var p = RDFModel.buildRDFResource(triple.predicate,bindings,that.engine,queryEnv);
+	    var o = RDFModel.buildRDFResource(triple.object,bindings,that.engine,queryEnv);
+	    if(s!=null && p!=null && o!=null) {
+		triple = new RDFModel.Triple(s,p,o);
+		acum.push(triple);
+	    }
+	});
 
-        callback(event,acum);
+	callback(event,acum);
     };
 
     this.functionMap[callback] = adapterCb;
@@ -506,29 +506,29 @@ Store.prototype.insert = function() {
     var triples;
     var callback;
     if(arguments.length === 1) {
-        triples = arguments[0];
-        callback= function(){};
+	triples = arguments[0];
+	callback= function(){};
     } else if(arguments.length === 2) {
-        triples = arguments[0];
-        callback= arguments[1] || function(){};
+	triples = arguments[0];
+	callback= arguments[1] || function(){};
     } else if(arguments.length === 3) {
-        triples = arguments[0];
-        graph = this.rdf.createNamedNode(arguments[1]);
-        callback= arguments[2] || function(){};
+	triples = arguments[0];
+	graph = this.rdf.createNamedNode(arguments[1]);
+	callback= arguments[2] || function(){};
     } else {
-        throw("The triples to insert, an optional graph and callback must be provided");
+	throw("The triples to insert, an optional graph and callback must be provided");
     }
 
     var query = "";
     var that = this;
     triples.forEach(function(triple) {
-        query = query + that._nodeToQuery(triple.subject) + that._nodeToQuery(triple.predicate) + that._nodeToQuery(triple.object) + ".";
+	query = query + that._nodeToQuery(triple.subject) + that._nodeToQuery(triple.predicate) + that._nodeToQuery(triple.object) + ".";
     });
 
     if(graph != null) {
-        query = "INSERT DATA { GRAPH " + this._nodeToQuery(graph) +" { "+ query + " } }";
+	query = "INSERT DATA { GRAPH " + this._nodeToQuery(graph) +" { "+ query + " } }";
     } else {
-        query = "INSERT DATA { "+ query + " }";
+	query = "INSERT DATA { "+ query + " }";
     }
 
     this.engine.execute(query, callback);
@@ -536,14 +536,14 @@ Store.prototype.insert = function() {
 
 Store.prototype._nodeToQuery = function(term) {
     if(term.interfaceName === 'NamedNode') {
-        var resolvedUri = this.rdf.resolve(term.valueOf());
-        if(resolvedUri != null) {
-            return "<" + resolvedUri + ">";
-        } else {
-            return "<" + term.valueOf() + ">";
-        }
+	var resolvedUri = this.rdf.resolve(term.valueOf());
+	if(resolvedUri != null) {
+	    return "<" + resolvedUri + ">";
+	} else {
+	    return "<" + term.valueOf() + ">";
+	}
     } else {
-        return term.toString();
+	return term.toString();
     }
 };
 
@@ -570,29 +570,29 @@ Store.prototype.delete = function() {
     var triples;
     var callback;
     if(arguments.length === 1) {
-        triples = arguments[0];
-        callback= function(){};
+	triples = arguments[0];
+	callback= function(){};
     } else if(arguments.length === 2) {
-        triples = arguments[0];
-        callback= arguments[1] || function(){};
+	triples = arguments[0];
+	callback= arguments[1] || function(){};
     } else if(arguments.length === 3) {
-        triples = arguments[0];
-        graph = this.rdf.createNamedNode(arguments[1]);
-        callback= arguments[2] || function(){};
+	triples = arguments[0];
+	graph = this.rdf.createNamedNode(arguments[1]);
+	callback= arguments[2] || function(){};
     } else {
-        throw("The triples to delete, an optional graph and callback must be provided");
+	throw("The triples to delete, an optional graph and callback must be provided");
     }
 
     var query = "";
     var that = this;
     triples.forEach(function(triple) {
-        query = query + that._nodeToQuery(triple.subject) + that._nodeToQuery(triple.predicate) + that._nodeToQuery(triple.object) + ".";
+	query = query + that._nodeToQuery(triple.subject) + that._nodeToQuery(triple.predicate) + that._nodeToQuery(triple.object) + ".";
     });
 
     if(graph != null) {
-        query = "DELETE DATA { GRAPH " + this._nodeToQuery(graph) +" { "+ query + " } }";
+	query = "DELETE DATA { GRAPH " + this._nodeToQuery(graph) +" { "+ query + " } }";
     } else {
-        query = "DELETE DATA { "+ query + " }";
+	query = "DELETE DATA { "+ query + " }";
     }
 
     this.engine.execute(query, callback);
@@ -616,16 +616,16 @@ Store.prototype.clear = function() {
     var callback;
 
     if(arguments.length === 0) {
-        graph = this.rdf.createNamedNode(this.engine.lexicon.defaultGraphUri);
-        var callback= function(){};
+	graph = this.rdf.createNamedNode(this.engine.lexicon.defaultGraphUri);
+	var callback= function(){};
     } else if(arguments.length === 1) {
-        graph = this.rdf.createNamedNode(this.engine.lexicon.defaultGraphUri);
-        callback= arguments[0] || function(){};
+	graph = this.rdf.createNamedNode(this.engine.lexicon.defaultGraphUri);
+	callback= arguments[0] || function(){};
     } else if(arguments.length === 2) {
-        graph = this.rdf.createNamedNode(arguments[0]);
-        callback= arguments[1] || function(){};
+	graph = this.rdf.createNamedNode(arguments[0]);
+	callback= arguments[1] || function(){};
     } else {
-        throw("The optional graph and a callback must be provided");
+	throw("The optional graph and a callback must be provided");
     }
 
     var query = "CLEAR GRAPH " + this._nodeToQuery(graph);
@@ -667,7 +667,7 @@ Store.prototype.registerDefaultNamespace = function(ns, prefix) {
 Store.prototype.registerDefaultProfileNamespaces = function() {
     var defaultNsMap = this.rdf.prefixes.values();
     for (var p in defaultNsMap) {
-        this.registerDefaultNamespace(p,defaultNsMap[p]);
+	this.registerDefaultNamespace(p,defaultNsMap[p]);
     }
 };
 
@@ -704,59 +704,59 @@ Store.prototype.load = function(){
     var options = {};
 
     if(arguments.length === 3) {
-        graph = this.rdf.createNamedNode(this.engine.lexicon.defaultGraphUri);
-        mediaType = arguments[0];
-        data = arguments[1];
-        callback= arguments[2] || function(){};
+	graph = this.rdf.createNamedNode(this.engine.lexicon.defaultGraphUri);
+	mediaType = arguments[0];
+	data = arguments[1];
+	callback= arguments[2] || function(){};
     } else if(arguments.length === 4) {
-        mediaType = arguments[0];
-        data = arguments[1];
-        options = arguments[2];
-        if(typeof(options) === 'string') {
-            graph = this.rdf.createNamedNode(options);
-            options = {};
-        } else {
-            graph = this.rdf.createNamedNode(options.graph || this.engine.lexicon.defaultGraphUri);
-            delete options['graph'];
-        }
-        callback= arguments[3] || function(){};
+	mediaType = arguments[0];
+	data = arguments[1];
+	options = arguments[2];
+	if(typeof(options) === 'string') {
+	    graph = this.rdf.createNamedNode(options);
+	    options = {};
+	} else {
+	    graph = this.rdf.createNamedNode(options.graph || this.engine.lexicon.defaultGraphUri);
+	    delete options['graph'];
+	}
+	callback= arguments[3] || function(){};
     } else if(arguments.length === 2) {
-        throw("The mediaType of the parser, the data a callback and an optional graph must be provided");
+	throw("The mediaType of the parser, the data a callback and an optional graph must be provided");
     }
 
     if(mediaType === 'remote') {
-        data = this.rdf.createNamedNode(data);
-        var query = "LOAD <"+data.valueOf()+"> INTO GRAPH <"+graph.valueOf()+">";
-        this.engine.execute(query, callback);
+	data = this.rdf.createNamedNode(data);
+	var query = "LOAD <"+data.valueOf()+"> INTO GRAPH <"+graph.valueOf()+">";
+	this.engine.execute(query, callback);
     } else {
 
-        var that = this;
+	var that = this;
 
-        var parser = this.engine.rdfLoader.parsers[mediaType];
+	var parser = this.engine.rdfLoader.parsers[mediaType];
 
-        if (!parser) return callback(new Error("Cannot find parser for the provided media type:"+mediaType));
+	if (!parser) return callback(new Error("Cannot find parser for the provided media type:"+mediaType));
 
-        var cb = function(err, quads) {
-            if(err) {
-                callback(err, quads);
-            } else {
-                that.engine.batchLoad(quads,function(success){
-                    if(success != null){
-                        callback(null,success);
-                    } else {
-                        callback(new Error("Erro batch-loading triples."));
-                    }
-                });
-            }
-        };
+	var cb = function(err, quads) {
+	    if(err) {
+		callback(err, quads);
+	    } else {
+		that.engine.batchLoad(quads,function(success){
+		    if(success != null){
+			callback(null,success);
+		    } else {
+			callback(new Error("Erro batch-loading triples."));
+		    }
+		});
+	    }
+	};
 
-        var args = [parser, {'token':'uri', 'value':graph.valueOf()}, data, options, cb];
+	var args = [parser, {'token':'uri', 'value':graph.valueOf()}, data, options, cb];
 
-        if(data && typeof(data)==='string' && data.indexOf('file://')=== 0) {
-            this.engine.rdfLoader.loadFromFile.apply(null, args);
-        } else {
-            this.engine.rdfLoader.tryToParse.apply(null, args);
-        }
+	if(data && typeof(data)==='string' && data.indexOf('file://')=== 0) {
+	    this.engine.rdfLoader.loadFromFile.apply(null, args);
+	} else {
+	    this.engine.rdfLoader.tryToParse.apply(null, args);
+	}
     }
 };
 
@@ -797,11 +797,11 @@ Store.prototype.registerParser = function(mediaType, parser) {
  */
 Store.prototype.registeredGraphs = function(callback) {
     this.engine.lexicon.registeredGraphs(true, function(graphs){
-        var graphNodes = _.map(graphs, function(graph){
-            return new RDFModel.NamedNode(graph);
-        });
+	var graphNodes = _.map(graphs, function(graph){
+	    return new RDFModel.NamedNode(graph);
+	});
 
-        callback(null, graphNodes);
+	callback(null, graphNodes);
     });
 };
 
@@ -846,17 +846,17 @@ Store.prototype.setNetworkTransport = function(networkTransportImpl) {
  */
 Store.prototype.close = function(cb) {
     if(cb == null)
-        cb = function(){};
+	cb = function(){};
     if(this.engine.close)
-        this.engine.close(cb);
+	this.engine.close(cb);
     else
-        cb();
+	cb();
 };
 
 /**
  * Version of the store
  */
-Store.VERSION = "0.9.7";
+Store.VERSION = "0.9.8";
 
 /**
  * Create a new RDFStore instance that will be
@@ -884,22 +884,22 @@ Store.VERSION = "0.9.7";
 var connect = function() {
     var path, args, callback;
     if(arguments.length == 1) {
-        path = __dirname;
-        args = {};
-        callback = arguments[0];
+	path = __dirname;
+	args = {};
+	callback = arguments[0];
     } else if(arguments.length == 2) {
-        if(typeof(arguments[0]) === 'string') {
-            path = arguments[0];
-            args = {};
-        } else {
-            path = __dirname+"/index.js";
-            args = arguments[0];
-        }
-        callback = arguments[1];
+	if(typeof(arguments[0]) === 'string') {
+	    path = arguments[0];
+	    args = {};
+	} else {
+	    path = __dirname+"/index.js";
+	    args = arguments[0];
+	}
+	callback = arguments[1];
     } else {
-        path = arguments[0];
-        args = arguments[1];
-        callback = arguments[2];
+	path = arguments[0];
+	args = arguments[1];
+	callback = arguments[2];
     }
     callback(new Error("Store#connect is not supported in the 1.x series of the library"));
 };
@@ -925,11 +925,11 @@ var connect = function() {
  */
 var create = function(){
     if(arguments.length == 1) {
-        return new Store(arguments[0]);
+	return new Store(arguments[0]);
     } else if(arguments.length == 2) {
-        return new Store(arguments[0], arguments[1]);
+	return new Store(arguments[0], arguments[1]);
     } else {
-        return new Store();
+	return new Store();
     };
 };
 
