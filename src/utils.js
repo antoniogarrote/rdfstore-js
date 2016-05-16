@@ -6,7 +6,7 @@ var nextTick = (function () {
     else if(typeof process !== 'undefined')
         global = process;
 
-
+    var canPromise = typeof global !== 'undefined' && global.Promise;
     var canSetImmediate = typeof global !== 'undefined' && global.setImmediate;
     var canPost = typeof global !== 'undefined' && global.postMessage && global.addEventListener;
 
@@ -20,6 +20,12 @@ var nextTick = (function () {
             return require('timers').setImmediate;
         else
             return global.nextTick;
+    }
+    if (canPromise) {
+        var promise = global.Promise.resolve();
+        return function (f) {
+            promise.then(f);
+        }
     }
 
     // postMessage
