@@ -933,6 +933,10 @@ var create = function(){
     };
 };
 
+Store.yieldFrequency = function(val) {
+    Utils.yieldFrequency(val);
+};
+
 module.exports.Store = Store;
 module.exports.create = create;
 module.exports.connect = connect;

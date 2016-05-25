@@ -508,6 +508,18 @@ the 'persistent' flag must be set to true in the store creation options.
 Additionally, a 'name' option can also be passed for the store. Different persistent instances of the store can be
 opened using different names.
 
+###Controlling the frequency of function yielding
+
+Performance of the store can be improved by reducing the frequency the 'nexTick' mechanism is used to cancel the the calls stack.
+You can reduce this frequency by invoking the `yieldFrequency` function on the Store object and passing a bigger number:
+
+``` javascript
+var rdfstore = require('rdfstore')
+rdfstore.Store.yieldFrequency(200); // will only yield after 200 invocations of nextTick
+
+```
+If the number is too big a number can produce stack overflow errors during execution. If you find this problem, reduce the value provided for `yieldFrequency`.
+
 ##Dependencies
 
 The library include dependencies to two semantic-web libraries for

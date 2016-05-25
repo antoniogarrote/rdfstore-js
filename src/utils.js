@@ -1,53 +1,30 @@
-var nextTick = (function () {
+var slowNextTick = (function () {
 
-    var global = null;
-    if(typeof window !== 'undefined')
-        global = window;
-    else if(typeof process !== 'undefined')
-        global = process;
-
-
-    var canSetImmediate = typeof global !== 'undefined' && global.setImmediate;
-    var canPost = typeof global !== 'undefined' && global.postMessage && global.addEventListener;
-
-    // setImmediate
-    if (canSetImmediate)
-        return function (f) { return global.setImmediate(f) };
-
-    // Node.js specific
-    if(global !== 'undefined' && global.nextTick && typeof require === 'function') {
-        if(require('timers') && require('timers').setImmediate)
-            return require('timers').setImmediate;
-        else
-            return global.nextTick;
+    if(typeof(process) !== 'undefined' && process.nextTick) {
+        return process.nextTick;
     }
 
-    // postMessage
-    if (canPost) {
-        var queue = [];
-        global.addEventListener('message', function (ev) {
-            var source = ev.source;
-            if ((source === global || source === null) && ev.data === 'process-tick') {
-                ev.stopPropagation();
-                if (queue.length > 0) {
-                    var fn = queue.shift();
-                    fn();
-                }
-            }
-        }, true);
-        return function nextTick(fn) {
-            queue.push(fn);
-            global.postMessage('process-tick', '*');
-        };
+    if(typeof(window) !== 'undefined' && window.setImmediate) {
+        return window.setImmediate;
     }
 
-
-    // setTimeout
     return function nextTick(fn) {
         setTimeout(fn, 0);
     };
 
 })();
+
+var spin = 0;
+var yieldFrequency = 100;
+var nextTick = function(f) {
+    spin++;
+    if(spin < yieldFrequency) {
+        f();
+    } else {
+        spin = 0;
+        slowNextTick(f);
+    }
+};
 
 /**
  * Function that generates a hash key for a bound term.
@@ -432,7 +409,7 @@ var seq = function (/* functions... */) {
                     var err = arguments[0];
                     var nextargs = Array.prototype.slice.call(arguments, 1);
                     cb(err, nextargs);
-                }]))
+                }]));
             },
             function (err, results) {
                 callback.apply(that, [err].concat(results));
@@ -467,5 +444,8 @@ module.exports = {
     create: create,
     whilst: whilst,
     eachSeries: eachSeries,
-    seq: seq
+    seq: seq,
+    yieldFrequency: function(value){
+        yieldFrequency = value;
+    }
 };
