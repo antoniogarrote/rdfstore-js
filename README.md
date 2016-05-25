@@ -2,9 +2,7 @@
 
 ## Important Note
 
-The library is going right now through a major rewrite. Versions > 0.9.X must be considered development versions until version 1.0.0 is finished.
-Many features present in versions 0.8.X have been removed. Some of them, will be added in the next versions, other like the MongoDB backend will be discarded.
-
+Many features present in versions 0.8.X have been removed in the 0.9.X. Some of them, will be added in the next versions, other like the MongoDB backend will be discarded.
 Please read this README file carefully to find the current set of features.
 
 ## Table of Contents
@@ -112,6 +110,7 @@ This is a list of the different kind of queries currently implemented:
 - DROP DEFAULT/NAMED/ALL/GRAPH clauses
 - CLEAR DEFAULT/NAMED/ALL/Graph clauses
 - FILTER EXISTS / NOT EXISTS operators
+- BIND
 - FILTER IN / NOT IN operators
 
 

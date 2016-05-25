@@ -879,9 +879,10 @@ GroupGraphPatternSub "[51] GroupGraphPatternSub"
 
     var currentBasicGraphPatterns = [];
     var currentFilters = [];
+    var currentBinds = [];
 
     for(var i=0; i<subpatterns.length; i++) {
-	if(subpatterns[i].token!='triplespattern' && subpatterns[i].token != 'filter') {
+	if(subpatterns[i].token!=='triplespattern' && subpatterns[i].token !== 'filter' && subpatterns[i].token !== 'bind') {
 	    if(currentBasicGraphPatterns.length != 0 || currentFilters.length != 0) {
 		var triplesContext = [];
 		for(var j=0; j<currentBasicGraphPatterns.length; j++) {
@@ -897,6 +898,9 @@ GroupGraphPatternSub "[51] GroupGraphPatternSub"
 	} else {
 	    if(subpatterns[i].token === 'triplespattern') {
 		currentBasicGraphPatterns.push(subpatterns[i]);
+            } else if(subpatterns[i].token === 'bind') {
+                currentBinds.push(subpatterns[i]);
+
 	    } else {
 		currentFilters.push(subpatterns[i]);
 	    }
@@ -920,7 +924,9 @@ GroupGraphPatternSub "[51] GroupGraphPatternSub"
 //      } else  {
     return { token: 'groupgraphpattern',
 	patterns: compactedSubpatterns,
-	filters: currentFilters }
+        filters: currentFilters,
+        binds: currentBinds
+    }
 //      }
 }
 
@@ -1051,7 +1057,7 @@ Filter "[59] Filter"
 Bind "[60] Bind"
     = WS* ('BIND'/'bind') WS* '(' WS* ex:Expression WS* ('as'/'AS') WS* v:Var WS* ')' {
     return {token: 'bind',
-	    expresision: ex,
+	    expression: ex,
 	    as: v};
 }
 

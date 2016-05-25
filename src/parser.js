@@ -789,9 +789,10 @@ module.exports = (function() {
 
               var currentBasicGraphPatterns = [];
               var currentFilters = [];
+              var currentBinds = [];
 
               for(var i=0; i<subpatterns.length; i++) {
-          	if(subpatterns[i].token!='triplespattern' && subpatterns[i].token != 'filter') {
+          	if(subpatterns[i].token!=='triplespattern' && subpatterns[i].token !== 'filter' && subpatterns[i].token !== 'bind') {
           	    if(currentBasicGraphPatterns.length != 0 || currentFilters.length != 0) {
           		var triplesContext = [];
           		for(var j=0; j<currentBasicGraphPatterns.length; j++) {
@@ -807,6 +808,9 @@ module.exports = (function() {
           	} else {
           	    if(subpatterns[i].token === 'triplespattern') {
           		currentBasicGraphPatterns.push(subpatterns[i]);
+                      } else if(subpatterns[i].token === 'bind') {
+                          currentBinds.push(subpatterns[i]);
+
           	    } else {
           		currentFilters.push(subpatterns[i]);
           	    }
@@ -830,7 +834,9 @@ module.exports = (function() {
           //      } else  {
               return { token: 'groupgraphpattern',
           	patterns: compactedSubpatterns,
-          	filters: currentFilters }
+                  filters: currentFilters,
+                  binds: currentBinds
+              }
           //      }
           },
           { type: "other", description: "[54] TriplesBlock" },
@@ -934,7 +940,7 @@ module.exports = (function() {
           { type: "literal", value: "bind", description: "\"bind\"" },
           function(ex, v) {
               return {token: 'bind',
-          	    expresision: ex,
+          	    expression: ex,
           	    as: v};
           },
           { type: "other", description: "[60] Constraint" },

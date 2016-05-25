@@ -11,6 +11,15 @@ var Callbacks = require("./graph_callbacks").CallbacksBackend;
 var async = require('./utils');
 var _ = require('./utils');
 
+function BindExpressionError(message, bind, error) {
+    this.name = "BindExpressionError";
+    this.bind = bind;
+    this.error = error;
+    this.message = message;
+}
+BindExpressionError.prototype = new Error();
+BindExpressionError.constructor = BindExpressionError;
+
 QueryEngine = function(params) {
     if(arguments.length != 0) {
         this.backend = params.backend;
@@ -558,6 +567,10 @@ QueryEngine.prototype.denormalizeBindings = function(bindings, env, callback) {
             // this can be null, e.g. union different variables (check SPARQL recommendation examples UNION)
             bindings[variable] = null;
             k();
+        } else if(typeof(oid) === 'object') {
+            // the binding is already denormalized, this can happen for example because the value of the
+            // binding is the result a BIND(expression AS ?new_var) binding.
+            k();
         } else {
             if(envOut[oid] != null) {
                 bindings[variable] = envOut[oid];
@@ -785,7 +798,6 @@ QueryEngine.prototype.executeSelect = function(unit, env, defaultDataset, namedD
                     }
                 });
             } catch(e) {
-                console.log(e);
                 callback(e);
             }
         });
@@ -941,7 +953,7 @@ QueryEngine.prototype.executeSelectUnit = function(projection, dataset, pattern,
     //} else if(pattern.kind === "ZERO_OR_MORE_PATH" || pattern.kind === 'ONE_OR_MORE_PATH') {
     //    return this.executeZeroOrMorePath(pattern, dataset, env);
     } else {
-        throw(new NonSupportedSparqlFeatureError(pattern.kind))
+        throw(new NonSupportedSparqlFeatureError(pattern.kind));
     }
 };
 
@@ -1114,16 +1126,28 @@ QueryEngine.prototype.executeUNION = function(projection, dataset, patterns, env
             callback(error);
         } else {
             var result = QueryPlan.unionBindings(set1, set2);
-            QueryFilters.checkFilters(patterns, result, false, dataset, env, that, callback);
+            that.runBinds(patterns.binds, result, dataset, env, function(err, bindings){
+                if(err != null) {
+                    throw(new BindExpressionError("Error processing bind expressions", patterns.binds, err));
+                } else {
+                    QueryFilters.checkFilters(patterns, bindings, false, dataset, env, that, callback);
+                }
+            });
         }
     });
 };
 
-QueryEngine.prototype.executeAndBGP = function(projection, dataset, patterns, env, callback) {
+QueryEngine.prototype.executeAndBGP = function(projection, dataset, pattern, env, callback) {
     var that = this;
-    QueryPlan.executeAndBGPsDPSize(patterns.value, dataset, this, env, function(result){
+    QueryPlan.executeAndBGPsDPSize(pattern.value, dataset, this, env, function(result){
         if(result!=null) {
-            QueryFilters.checkFilters(patterns, result, false, dataset, env, that, callback);
+            that.runBinds(pattern.binds, result, dataset, env, function(err, bindings){
+                if(err != null) {
+                    throw(new BindExpressionError("Error processing bind expressions", pattern.binds, err));
+                } else {
+                    QueryFilters.checkFilters(pattern, bindings, false, dataset, env, that, callback);
+                }
+            });
         } else {
             callback(null);
         }
@@ -1173,60 +1197,66 @@ QueryEngine.prototype.executeLEFT_JOIN = function(projection, dataset, patterns,
                 callback(error);
             } else {
                 var result = QueryPlan.leftOuterJoinBindings(set1, set2);
-                QueryFilters.checkFilters(patterns, result, true, dataset, env, that, function(bindings){
-                    if(set1.length>1 && set2.length>1) {
-                        var vars = [];
-                        var vars1 = {};
-                        for(var p in set1[0]) {
-                            vars1[p] = true;
-                        }
-                        for(p in set2[0]) {
-                            if(vars1[p] != true) {
-                                vars.push(p);
-                            }
-                        }
-                        acum = [];
-                        duplicates = {};
-                        for(var i=0; i<bindings.length; i++) {
-                            if(bindings[i]["__nullify__"] === true) {
-                                for(var j=0; j<vars.length; j++) {
-                                    bindings[i]["bindings"][vars[j]] = null;
-                                }
-                                var idx = [];
-                                var idxColl = [];
-                                for(var p in bindings[i]["bindings"]) {
-                                    if(bindings[i]["bindings"][p] != null) {
-                                        idx.push(p+bindings[i]["bindings"][p]);
-                                        idx.sort();
-                                        idxColl.push(idx.join(""));
-                                    }
-                                }
-                                // reject duplicates -> (set union)
-                                if(duplicates[idx.join("")]==null) {
-                                    for(j=0; j<idxColl.length; j++) {
-                                        //console.log(" - "+idxColl[j])
-                                        duplicates[idxColl[j]] = true;
-                                    }
-                                    ////duplicates[idx.join("")]= true
-                                    acum.push(bindings[i]["bindings"]);
-                                }
-                            } else {
-                                acum.push(bindings[i]);
-                                var idx = [];
-                                var idxColl = [];
-                                for(var p in bindings[i]) {
-                                    idx.push(p+bindings[i][p]);
-                                    idx.sort();
-                                    //console.log(idx.join("") + " -> ok");
-                                    duplicates[idx.join("")] = true;
-                                }
-
-                            }
-                        }
-
-                        callback(acum);
+                that.runBinds(patterns.binds, result, dataset, env, function(err, bindings){
+                    if(err != null) {
+                        throw(new BindExpressionError("Error processing bind expressions", patterns.binds, err));
                     } else {
-                        callback(bindings);
+                        QueryFilters.checkFilters(patterns, result, true, dataset, env, that, function(bindings){
+                            if(set1.length>1 && set2.length>1) {
+                                var vars = [];
+                                var vars1 = {};
+                                for(var p in set1[0]) {
+                                    vars1[p] = true;
+                                }
+                                for(p in set2[0]) {
+                                    if(vars1[p] != true) {
+                                        vars.push(p);
+                                    }
+                                }
+                                acum = [];
+                                duplicates = {};
+                                for(var i=0; i<bindings.length; i++) {
+                                    if(bindings[i]["__nullify__"] === true) {
+                                        for(var j=0; j<vars.length; j++) {
+                                            bindings[i]["bindings"][vars[j]] = null;
+                                        }
+                                        var idx = [];
+                                        var idxColl = [];
+                                        for(var p in bindings[i]["bindings"]) {
+                                            if(bindings[i]["bindings"][p] != null) {
+                                                idx.push(p+bindings[i]["bindings"][p]);
+                                                idx.sort();
+                                                idxColl.push(idx.join(""));
+                                            }
+                                        }
+                                        // reject duplicates -> (set union)
+                                        if(duplicates[idx.join("")]==null) {
+                                            for(j=0; j<idxColl.length; j++) {
+                                                //console.log(" - "+idxColl[j])
+                                                duplicates[idxColl[j]] = true;
+                                            }
+                                            ////duplicates[idx.join("")]= true
+                                            acum.push(bindings[i]["bindings"]);
+                                        }
+                                    } else {
+                                        acum.push(bindings[i]);
+                                        var idx = [];
+                                        var idxColl = [];
+                                        for(var p in bindings[i]) {
+                                            idx.push(p+bindings[i][p]);
+                                            idx.sort();
+                                            //console.log(idx.join("") + " -> ok");
+                                            duplicates[idx.join("")] = true;
+                                        }
+
+                                    }
+                                }
+
+                                callback(acum);
+                            } else {
+                                callback(bindings);
+                            }
+                        });
                     }
                 });
             }
@@ -1238,7 +1268,7 @@ QueryEngine.prototype.executeJOIN = function(projection, dataset, patterns, env,
     var setQuery2 = patterns.rvalue;
     var set1 = null;
     var set2 = null;
-    var error = null
+    var error = null;
 
     var that = this;
 
@@ -1294,7 +1324,13 @@ QueryEngine.prototype.executeJOIN = function(projection, dataset, patterns, env,
                 } else {
                     result = QueryPlan.joinBindings2(commonVars, set1, set2);
                 }
-                QueryFilters.checkFilters(patterns, result, false, dataset, env, that, callback);
+                that.runBinds(patterns.binds, result, dataset, env, function(err, bindings){
+                    if(err != null) {
+                        throw(new BindExpressionError("Error processing bind expressions", patterns.binds, err));
+                    } else {
+                        QueryFilters.checkFilters(patterns, bindings, false, dataset, env, that, callback);
+                    }
+                });
             }
         });
 };
@@ -1819,6 +1855,31 @@ QueryEngine.prototype.checkGroupSemantics = function(groupVars, projectionVars) 
     }
 
     return true;
+};
+
+QueryEngine.prototype.runBinds = function(binds, bindings, dataset, env, callback) {
+    var that = this;
+    var originalBindings = bindings;
+    if(binds != null && binds.length > 0) {
+        that.copyDenormalizedBindings(bindings, env.outCache, function(denormBindings){
+            for(var i=0; i<bindings.length; i++) {
+                for(var j=0; j<binds.length; j++) {
+                    var bind = binds[j];
+                    var thisDenormBindings = denormBindings[i];
+                    var ebv = QueryFilters.runFilter(bind.expression, thisDenormBindings, that, dataset, env);
+                    if(QueryFilters.isEbvError(ebv)) {
+                        callback(ebv);
+                    } else {
+                        // we set the value for the new binding
+                        originalBindings[i][bind.as.value] = ebv;
+                    }
+                }
+            }
+            callback(null, bindings);
+        });
+    } else {
+        callback(null, bindings);
+    }
 };
 
 QueryEngine.prototype.computeCosts = function (quads, env, callback) {

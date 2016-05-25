@@ -1,7 +1,7 @@
 var QuadBackend = require('../src/persistent_quad_backend').QuadBackend;
 var Pattern = require('../src/quad_index').Pattern;
 var NodeKey = require('../src/quad_index').NodeKey;
-
+/*
 describe("PersistentQuadBackend", function(){
 
 
@@ -23,4 +23,6 @@ describe("PersistentQuadBackend", function(){
             });
         });
     });
+
 });
+*/

@@ -270,6 +270,7 @@ AbstractQueryTree.translatePathExpression  = function(pathExpression, env) {
 
 AbstractQueryTree.prototype._buildGroupGraphPattern = function(node, env) {
     var f = (node.filters || []);
+    var b = (node.binds || []);
     var g = {kind: "EMPTY_PATTERN"};
 
     for(var i=0; i<node.patterns.length; i++) {
@@ -298,6 +299,9 @@ AbstractQueryTree.prototype._buildGroupGraphPattern = function(node, env) {
             }
         }
     }
+
+    // set the binds back
+    g.binds = b;
 
     if(f.length != 0) {
         if(g.kind === 'EMPTY_PATTERN') {
