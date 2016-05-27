@@ -295,4 +295,16 @@ describe("Parser", function() {
         expect(result.pattern.filter[0].value.name).toBe('hey');
         expect(result.pattern.filter[0].value.args.length).toBe(2);
     });
+
+    it("Should be possible to parse isUri isURI and ISURI functions", function(){
+        expect(function() {
+            var query1 = "SELECT ?givenName WHERE { ?x foaf:givenName  ?givenName . filter(isURI(?x)) }";
+            var query2 = "SELECT ?givenName WHERE { ?x foaf:givenName  ?givenName . filter(isuri(?x)) }";
+            var query3 = "SELECT ?givenName WHERE { ?x foaf:givenName  ?givenName . filter(ISURI(?x)) }";
+            var queries = [query1, query2, query3];
+            for(var i=0; i<queries.length; i++) {
+                var parsed = aqt.parseQueryString(queries[i]);
+            }
+        }).not.toThrow();
+    });
 });

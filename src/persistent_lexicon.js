@@ -430,24 +430,28 @@ Lexicon.prototype.clear = function(callback) {
     this.defaultGraphOid = 0;
     this.defaultGraphUri = "https://github.com/antoniogarrote/rdfstore-js#default_graph";
     this.defaultGraphUriTerm = {"token":"uri","prefix":null,"suffix":null,"value":this.defaultGraphUri};
-    var transaction = that.db.transaction(["uris","literals","blanks"],"readwrite"), request;
 
-    async.seq(function(k){
-        request = transaction.objectStore("uris").clear();
-        request.onsuccess = function(){ k(); };
-        request.onerror = function(){ k(); };
-    }, function(k){
-        request = transaction.objectStore("literals").clear();
-        request.onsuccess = function(){ k(); };
-        request.onerror = function(){ k(); };
-    }, function(k){
-        request = transaction.objectStore("blanks").clear();
-        request.onsuccess = function(){ k(); };
-        request.onerror = function(){ k(); };
-    })(function(){
+    var transaction = that.db.transaction(["uris","literals","blanks"],"readwrite"), request;
+    var uris= transaction.objectStore("uris");
+    var literals = transaction.objectStore("literals");
+    var blanks = transaction.objectStore("blanks");
+
+    var k = function() {
         if(callback != null)
             callback();
-    });
+    };
+
+    request = uris.clear();
+    request.onsuccess = function(){
+        request = literals.clear();
+        request.onsuccess = function(){
+            request = blanks.clear();
+            request.onsuccess = k;
+            request.onerror = k;
+        };
+        request.onerror = k;
+    };
+    request.onerror =k;
 };
 
 /**

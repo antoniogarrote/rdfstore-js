@@ -2425,7 +2425,7 @@ BuiltInCall "[106] BuiltInCall"
 
     return ex;
 }
-/ ('ISLITERAL'/'isliteral') WS* '(' WS* arg:Expression WS* ')' {
+/ ('ISLITERAL'/'isliteral'/'isLITERAL') WS* '(' WS* arg:Expression WS* ')' {
     var ex = {};
     ex.token = 'expression';
     ex.expressionType = 'builtincall';
@@ -2434,7 +2434,7 @@ BuiltInCall "[106] BuiltInCall"
 
     return ex;
 }
-/ ('ISBLANK'/'isblank') WS* '(' WS* arg:Expression WS* ')' {
+/ ('ISBLANK'/'isblank'/'isBLANK') WS* '(' WS* arg:Expression WS* ')' {
     var ex = {};
     ex.token = 'expression';
     ex.expressionType = 'builtincall';
@@ -2451,7 +2451,7 @@ BuiltInCall "[106] BuiltInCall"
     ex.args = [e1, e2];
     return ex;
 }
-/ ('ISURI'/'isuri'/'ISIRI'/'isiri') WS* '(' WS* arg:Expression WS* ')' {
+/ ('ISURI'/'isuri'/'isURI'/'ISIRI'/'isiri'/'isIRI') WS* '(' WS* arg:Expression WS* ')' {
     var ex = {};
     ex.token = 'expression';
     ex.expressionType = 'builtincall';
