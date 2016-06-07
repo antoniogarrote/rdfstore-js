@@ -1,4 +1,4 @@
-#rdfstore-js [![Build Status](https://travis-ci.org/antoniogarrote/rdfstore-js.svg?branch=master)](https://travis-ci.org/antoniogarrote/rdfstore-js) [![Join the chat at https://gitter.im/antoniogarrote/rdfstore-js](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/antoniogarrote/rdfstore-js?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+#rdfstore-js [![Build Status](https://travis-ci.org/antoniogarrote/rdfstore-js.svg?branch=master)](https://travis-ci.org/antoniogarrote/rdfstore-js)
 
 ## Important Note
 
