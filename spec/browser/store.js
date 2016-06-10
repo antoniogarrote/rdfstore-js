@@ -668,13 +668,13 @@ this.suite_store.testLoad3 = function(test) {
     });
 };
 
-/*
+
 this.suite_store.testLoad3Persistent = function(test) {
     rdfstore.create({name:'testLoad3', persistent:true, overwrite:true}, function(err,store) {
         testLoad3Fn(store,test);
     });
 };
-*/
+
 //this.suite_store.testLoadRDFXML = function(test) {
 //    rdfstore.create({name:'test', overwrite:true}, function(err,store) {
 //
@@ -716,7 +716,7 @@ this.suite_store.testEventsAPI1 = function(test){
                     counter++;
                     test.ok(graph.toArray().length === 1);
                     store.stopObservingNode(observerFn);
-                    store.execute('INSERT DATA {  <http://example/book> <http://example.com/vocab#title2> <http://test.com/example3> }');                    
+                    store.execute('INSERT DATA {  <http://example/book> <http://example.com/vocab#title2> <http://test.com/example3> }');
                     test.done();
                 } else if(counter === 3) {
                     test.ok(false);
@@ -744,7 +744,7 @@ this.suite_store.testEventsAPI2 = function(test){
                     counter++;
                     test.ok(graph.toArray().length === 1);
                     store.stopObservingNode(observerFn);
-                    store.execute('INSERT DATA { GRAPH <http://example/graph> { <http://example/book> <http://example.com/vocab#title2> <http://test.com/example3> } }');                    
+                    store.execute('INSERT DATA { GRAPH <http://example/graph> { <http://example/book> <http://example.com/vocab#title2> <http://test.com/example3> } }');
                     test.done();
                 } else if(counter === 3) {
                     test.ok(false);
@@ -780,14 +780,14 @@ this.suite_store.testEventsAPI3 = function(test){
                 test.ok(false);
             }
         });
-        
+
         store.execute('INSERT DATA {  <http://example/book> <http://example.com/vocab#title> <http://test.com/example> }', function(){
             store.execute('INSERT DATA {  <http://example/book> <http://example.com/vocab#title2> <http://test.com/example2>.\
                                           <http://example/book> <http://example.com/vocab#title3> <http://test.com/example3> }', function(){
                 store.execute('DELETE DATA {  <http://example/book> <http://example.com/vocab#title2> <http://test.com/example2> }',function(){
                     store.execute('INSERT DATA {  <http://example/book> <http://example.com/vocab#title2> <http://test.com/example3> }', function(){
                         test.done();
-                    });                    
+                    });
                 });
             });
         });
@@ -1117,7 +1117,7 @@ this.suite_store.testShouldLoadJSONLDWithAllMediaTypes = function(test) {
 					function(err, results) {
 					    jsonldmedia = results.length;
 					    test.ok(jsonldmedia > 0);
-					    
+
 					    test.ok(jsonldmedia === jsonmedia);
 					    test.done();
 					});
@@ -1127,7 +1127,7 @@ this.suite_store.testShouldLoadJSONLDWithAllMediaTypes = function(test) {
                 );
             });
     });
-    
+
 };
 
 this.suite_store.testRegisterCustomFunction = function(test) {
@@ -1180,23 +1180,7 @@ this.suite_store.testPersistence = function(test) {
     })
 };
 
-
-this.suite_store.testPersistence = function(test) {
-    new Store({persistent: true, name: 'testPersistence', overwrite: true}, function(err, store){
-        store.execute('INSERT DATA {  <http://example/book3> <http://example.com/vocab#title> <http://test.com/example> }', function(){
-            store.execute('SELECT * { ?s ?p ?o }', function(err,results) {
-                test.ok(err === null);
-                test.ok(results.length === 1);
-                test.ok(results[0].s.value === "http://example/book3");
-                test.ok(results[0].p.value === "http://example.com/vocab#title");
-                test.ok(results[0].o.value === "http://test.com/example");
-
-                test.done();
-            });
-        });
-    })
-};
-
+/*
 this.suite_store.testUnknown = function(test) {
 
     var db = "testFailing"
@@ -1238,8 +1222,8 @@ this.suite_store.testUnknown = function(test) {
 
                 var resultsCount = results.toArray().length;
 
-                var resultsSubject = results.filter(store.rdf.filters.s("http://example.org/people/alice"))
-                var resultsObject = results.filter(store.rdf.filters.o("http://example.org/people/alice"))
+                var resultsSubject = results.filter(store.rdf.filters.s("http://example.org/people/alice"));
+                var resultsObject = results.filter(store.rdf.filters.o("http://example.org/people/alice"));
 
                 console.log(resultsObject.toNT());
                 test.done();
@@ -1247,7 +1231,7 @@ this.suite_store.testUnknown = function(test) {
         });
     });
 };
-
+*/
 this.suite_store.testPackageEntryPoints = function(test) {
     test.ok(rdfstore.create != null);
     test.ok(rdfstore.connect != null);
