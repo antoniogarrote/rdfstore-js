@@ -290,23 +290,24 @@ QueryFilters.runAggregator = function(aggregator, bindingsGroup, queryEngine, da
     }
 };
 
-QueryFilters.runFilter = function(filterExpr, bindings, queryEngine, dataset, env) {
-    //console.log("RUNNING FILTER");
-    //console.log(filterExpr);
+QueryFilters.runFilter = function(filterExpr, bindings, queryEngine, dataset, env, callback) {
+    /** @todo make completely async */
     if(filterExpr.expressionType != null) {
         var expressionType = filterExpr.expressionType;
         if(expressionType == 'relationalexpression') {
-            var op1 = QueryFilters.runFilter(filterExpr.op1, bindings,queryEngine, dataset, env);
-            var op2 = QueryFilters.runFilter(filterExpr.op2, bindings,queryEngine, dataset, env);
-            return QueryFilters.runRelationalFilter(filterExpr, op1, op2, bindings, queryEngine, dataset, env);
+            var op1, op2;
+            QueryFilters.runFilters([filterExpr.op1, filterExpr.op2], bindings, queryEngine, dataset, env, function(res) {
+                QueryFilters.runRelationalFilter(filterExpr, res[0], res[1], bindings, queryEngine, dataset, env, callback);
+            })
+            return;
         } else if(expressionType == 'conditionalor') {
-            return QueryFilters.runOrFunction(filterExpr, bindings, queryEngine, dataset, env);
+            return QueryFilters.runOrFunction(filterExpr, bindings, queryEngine, dataset, env, callback);
         } else if (expressionType == 'conditionaland') {
-            return QueryFilters.runAndFunction(filterExpr, bindings, queryEngine, dataset, env);
+            return QueryFilters.runAndFunction(filterExpr, bindings, queryEngine, dataset, env, callback);
         } else if(expressionType == 'additiveexpression') {
-            return QueryFilters.runAddition(filterExpr.summand, filterExpr.summands, bindings, queryEngine, dataset, env);
+            return QueryFilters.runAddition(filterExpr.summand, filterExpr.summands, bindings, queryEngine, dataset, env, callback);
         } else if(expressionType == 'builtincall') {
-            return QueryFilters.runBuiltInCall(filterExpr.builtincall, filterExpr.args, bindings, queryEngine, dataset, env);
+            QueryFilters.runBuiltInCall(filterExpr.builtincall, filterExpr.args, bindings, queryEngine, dataset, env, callback);
         } else if(expressionType == 'multiplicativeexpression') {
             return QueryFilters.runMultiplication(filterExpr.factor, filterExpr.factors, bindings, queryEngine, dataset, env);
         } else if(expressionType == 'unaryexpression') {
@@ -314,36 +315,53 @@ QueryFilters.runFilter = function(filterExpr, bindings, queryEngine, dataset, en
         } else if(expressionType == 'irireforfunction') {
             return QueryFilters.runIriRefOrFunction(filterExpr.iriref, filterExpr.args, bindings, queryEngine, dataset, env);
         } else if(expressionType == 'regex') {
-            return QueryFilters.runRegex(filterExpr.text, filterExpr.pattern, filterExpr.flags, bindings, queryEngine, dataset, env)
+            QueryFilters.runRegex(filterExpr.text, filterExpr.pattern, filterExpr.flags, bindings, queryEngine, dataset, env, callback)
         } else if(expressionType == 'custom') {
             return QueryFilters.runBuiltInCall(filterExpr.name, filterExpr.args, bindings, queryEngine, dataset, env);
         } else if(expressionType == 'atomic') {
             if(filterExpr.primaryexpression == 'var') {
                 // lookup the var in the bindings
-                return bindings[filterExpr.value.value];
+                callback(bindings[filterExpr.value.value]);
+                return;
             } else {
                 // numeric, literal, etc...
                 //return queryEngine.filterExpr.value;
                 if(typeof(filterExpr.value) != 'object') {
-                    return filterExpr.value
+                    callback(filterExpr.value);
+                    return;
                 } else {
                     if(filterExpr.value.type == null || typeof(filterExpr.value.type) != 'object') {
-                        return filterExpr.value
+                        callback(filterExpr.value);
+                        return;
                     } else {
                         // type can be parsed as a hash using namespaces
 
                         filterExpr.value.type =  Utils.lexicalFormBaseUri(filterExpr.value.type, env);
-                        return filterExpr.value
+                        callback(filterExpr.value);
+                        return;
                     }
                 }
             }
         } else {
-            throw("Unknown filter expression type");
+            throw("Unknown filter expression type"); /** @todo how to make async? */
         }
     } else {
         throw("Cannot find bound expressions in a no expression token");
     }
 };
+
+QueryFilters.runFilters = function(filters, bindings, queryEngine, dataset, env, callback) {
+    var results = [];
+    /** @todo parallel computing */
+    _.eachSeries(filters, function(f, k) {
+      QueryFilters.runFilter(f, bindings, queryEngine, dataset, env, function(res) {
+          results.push(res);
+          k();
+      })
+    }, function() {
+      callback(results);
+    })
+}
 
 QueryFilters.isRDFTerm = function(val) {
     if(val==null) {
@@ -626,26 +644,34 @@ QueryFilters.ebvBoolean = function (bool) {
 };
 
 
-QueryFilters.runRelationalFilter = function(filterExpr, op1, op2, bindings, queryEngine, dataset, env) {
+QueryFilters.runRelationalFilter = function(filterExpr, op1, op2, bindings, queryEngine, dataset, env, callback) {
     var operator = filterExpr.operator;
     if(operator === '=') {
-        return QueryFilters.runEqualityFunction(op1, op2, bindings, queryEngine, dataset, env);
+        QueryFilters.runEqualityFunction(op1, op2, bindings, queryEngine, dataset, env, callback);
+        return;
     } else if(operator === '!=') {
-        var res = QueryFilters.runEqualityFunction(op1, op2, bindings, queryEngine, dataset, env);
-        if(QueryFilters.isEbvError(res)) {
-            return res;
-        } else {
-            res.value = !res.value;
-            return res;
-        }
+        var res = QueryFilters.runEqualityFunction(op1, op2, bindings, queryEngine, dataset, env, function(res) {
+            if(QueryFilters.isEbvError(res)) {
+                callback(res);
+            }
+            else {
+                res.value = !res.value;
+                callback(res);
+            }
+        });
+        return;
     } else if(operator === '<') {
-        return QueryFilters.runLtFunction(op1, op2, bindings);
+        QueryFilters.runLtFunction(op1, op2, bindings, callback);
+        return;
     } else if(operator === '>') {
-        return QueryFilters.runGtFunction(op1, op2, bindings);
+        QueryFilters.runGtFunction(op1, op2, bindings, callback);
+        return;
     } else if(operator === '<=') {
-        return QueryFilters.runLtEqFunction(op1, op2, bindings);
+        QueryFilters.runLtEqFunction(op1, op2, bindings, callback);
+        return;
     } else if(operator === '>=') {
-        return QueryFilters.runGtEqFunction(op1, op2, bindings);
+        QueryFilters.runGtEqFunction(op1, op2, bindings, callback);
+        return;
     } else {
         throw("Error applying relational filter, unknown operator");
     }
@@ -801,46 +827,69 @@ QueryFilters.effectiveTypeValue = function(val){
  A logical-or that encounters an error on only one branch will return TRUE if the other branch is TRUE and an error if the other branch is FALSE.
  A logical-or or logical-and that encounters errors on both branches will produce either of the errors.
  */
-QueryFilters.runOrFunction = function(filterExpr, bindings, queryEngine, dataset, env) {
+/** @todo how about lazy evaluation? */
+QueryFilters.runOrFunction = function(filterExpr, bindings, queryEngine, dataset, env, callback) {
 
     var acum = null;
 
-    for(var i=0; i< filterExpr.operands.length; i++) {
-        var ebv = QueryFilters.runFilter(filterExpr.operands[i], bindings, queryEngine, dataset, env);
-        if(QueryFilters.isEbvError(ebv) == false) {
-            ebv = QueryFilters.ebv(ebv);
-        }
-        if(acum == null) {
-            acum = ebv;
-        } else if(QueryFilters.isEbvError(ebv)) {
-            if(QueryFilters.isEbvError(acum)) {
-                acum = QueryFilters.ebvError();
-            } else if(acum === true) {
-                acum = true;
-            } else {
-                acum = QueryFilters.ebvError();
-            }
-        } else if(ebv === true) {
-            acum = true;
-        } else {
-            if(QueryFilters.isEbvError(acum)) {
-                acum = QueryFilters.ebvError();
-            }
-        }
-    }
+    QueryFilters.runFilters(filterExpr.operands, bindings, queryEngine, dataset, env, function(results) {
+        for(var i=0; i < results.length; ++i) {
+          var ebv = results[i];
+          if(QueryFilters.isEbvError(ebv) == false) ebv = QueryFilters.ebv(ebv);
 
-    return QueryFilters.ebvBoolean(acum);
+          if(acum == null) acum = ebv;
+          else if(QueryFilters.isEbvError(ebv)) {
+              if(QueryFilters.isEbvError(acum) || acum !== true) {
+                acum = QueryFilters.ebvError();
+              }
+          }
+          else if(ebv === true) {
+            acum = true;
+          }
+          else if(QueryFilters.isEbvError(acum)) {
+            acum = QueryFilters.ebvError();
+          }
+        }
+        callback(QueryFilters.ebvBoolean(acum));
+    })
 };
 
 /*
  A logical-and that encounters an error on only one branch will return an error if the other branch is TRUE and FALSE if the other branch is FALSE.
  A logical-or or logical-and that encounters errors on both branches will produce either of the errors.
  */
-QueryFilters.runAndFunction = function(filterExpr, bindings, queryEngine, dataset, env) {
+QueryFilters.runAndFunction = function(filterExpr, bindings, queryEngine, dataset, env, callback) {
 
     var acum = null;
 
-    for(var i=0; i< filterExpr.operands.length; i++) {
+    QueryFilters.runFilters(filterExpr.operands, bindings, queryEngine, dataset, env, function(results) {
+        for(var i=0; i < results.length; ++i) {
+            var ebv = results[i];
+            if(QueryFilters.isEbvError(ebv) == false) ebv = QueryFilters.ebv(ebv);
+
+            if(acum == null) acum = ebv;
+            else if(QueryFilters.isEbvError(ebv)) {
+              if(QueryFilters.isEbvError(acum)) {
+                acum = QueryFilters.ebvError();
+              }
+              else if(acum === true) {
+                acum = QueryFilters.ebvError();
+              }
+              else {
+                acum = false;
+              }
+            }
+            else if(ebv === true) {
+              if(QueryFilters.isEbvError(acum)) {
+                acum = QueryFilters.ebvError();
+              }
+            }
+            else acum = false;
+        }
+        callback(QueryFilters.ebvBoolean(acum));
+    })
+
+    /*for(var i=0; i< filterExpr.operands.length; i++) {
 
         var ebv = QueryFilters.runFilter(filterExpr.operands[i], bindings, queryEngine, dataset, env);
 
@@ -867,86 +916,60 @@ QueryFilters.runAndFunction = function(filterExpr, bindings, queryEngine, datase
         }
     }
 
-    return QueryFilters.ebvBoolean(acum);
+    return QueryFilters.ebvBoolean(acum);*/
 };
 
 
-QueryFilters.runEqualityFunction = function(op1, op2, bindings, queryEngine, dataset, env) {
+QueryFilters.runEqualityFunction = function(op1, op2, bindings, queryEngine, dataset, env, callback) {
     if(QueryFilters.isEbvError(op1) || QueryFilters.isEbvError(op2)) {
-        return QueryFilters.ebvError();
+        callback(QueryFilters.ebvError());
+        return;
     }
     if(QueryFilters.isNumeric(op1) && QueryFilters.isNumeric(op2)) {
         var eop1 = QueryFilters.effectiveTypeValue(op1);
         var eop2 = QueryFilters.effectiveTypeValue(op2);
         if(isNaN(eop1) || isNaN(eop2)) {
-            return QueryFilters.ebvBoolean(QueryFilters.RDFTermEquality(op1, op2, queryEngine, env));
+            callback(QueryFilters.ebvBoolean(QueryFilters.RDFTermEquality(op1, op2, queryEngine, env)));
         } else {
-            return QueryFilters.ebvBoolean(eop1 == eop2);
+            callback(QueryFilters.ebvBoolean(eop1 == eop2));
         }
+        return;
     } else if((QueryFilters.isSimpleLiteral(op1) || QueryFilters.isXsdType("string", op1)) &&
         (QueryFilters.isSimpleLiteral(op2) || QueryFilters.isXsdType("string", op2))) {
-        return QueryFilters.ebvBoolean(QueryFilters.effectiveTypeValue(op1) == QueryFilters.effectiveTypeValue(op2));
+        callback(QueryFilters.ebvBoolean(QueryFilters.effectiveTypeValue(op1) == QueryFilters.effectiveTypeValue(op2)));
+        return;
     } else if(QueryFilters.isXsdType("boolean", op1) && QueryFilters.isXsdType("boolean", op2)) {
-        return QueryFilters.ebvBoolean(QueryFilters.effectiveTypeValue(op1) == QueryFilters.effectiveTypeValue(op2));
+        callback(QueryFilters.ebvBoolean(QueryFilters.effectiveTypeValue(op1) == QueryFilters.effectiveTypeValue(op2)));
+        return;
     } else if((QueryFilters.isXsdType("dateTime", op1)||QueryFilters.isXsdType("date", op1)) && (QueryFilters.isXsdType("dateTime", op2)||QueryFilters.isXsdType("date", op2))) {
         if(QueryFilters.isXsdType("dateTime", op1) && QueryFilters.isXsdType("date", op2)) {
-            return QueryFilters.ebvFalse();
+            callback(QueryFilters.ebvFalse());
+            return;
         }
         if(QueryFilters.isXsdType("date", op1) && QueryFilters.isXsdType("dateTime", op2)) {
-            return QueryFilters.ebvFalse();
+            callback(QueryFilters.ebvFalse());
+            return;
         }
 
         var comp = Utils.compareDateComponents(op1.value, op2.value);
         if(comp != null) {
             if(comp == 0) {
-                return QueryFilters.ebvTrue();
+                callback(QueryFilters.ebvTrue());
+                return;
             } else {
-                return QueryFilters.ebvFalse();
+                callback(QueryFilters.ebvFalse());
+                return;
             }
         } else {
-            return QueryFilters.ebvError();
+            callback(QueryFilters.ebvError());
+            return;
         }
     } else if(QueryFilters.isRDFTerm(op1) && QueryFilters.isRDFTerm(op2)) {
-        return QueryFilters.ebvBoolean(QueryFilters.RDFTermEquality(op1, op2, queryEngine, env));
+        callback(QueryFilters.ebvBoolean(QueryFilters.RDFTermEquality(op1, op2, queryEngine, env)));
+        return;
     } else {
-        return QueryFilters.ebvFalse();
-    }
-};
-
-QueryFilters.runGtFunction = function(op1, op2, bindings) {
-    if(QueryFilters.isEbvError(op1) || QueryFilters.isEbvError(op2)) {
-        return QueryFilters.ebvError();
-    }
-
-    if(QueryFilters.isNumeric(op1) && QueryFilters.isNumeric(op2)) {
-        return QueryFilters.ebvBoolean(QueryFilters.effectiveTypeValue(op1) > QueryFilters.effectiveTypeValue(op2));
-    } else if(QueryFilters.isSimpleLiteral(op1) && QueryFilters.isSimpleLiteral(op2)) {
-        return QueryFilters.ebvBoolean(QueryFilters.effectiveTypeValue(op1) > QueryFilters.effectiveTypeValue(op2));
-    } else if(QueryFilters.isXsdType("string", op1) && QueryFilters.isXsdType("string", op2)) {
-        return QueryFilters.ebvBoolean(QueryFilters.effectiveTypeValue(op1) > QueryFilters.effectiveTypeValue(op2));
-    } else if(QueryFilters.isXsdType("boolean", op1) && QueryFilters.isXsdType("boolean", op2)) {
-        return QueryFilters.ebvBoolean(QueryFilters.effectiveTypeValue(op1) > QueryFilters.effectiveTypeValue(op2));
-    } else if((QueryFilters.isXsdType("dateTime", op1) || QueryFilters.isXsdType("date", op1)) &&
-        (QueryFilters.isXsdType("dateTime", op2) || QueryFilters.isXsdType("date", op2))) {
-        if(QueryFilters.isXsdType("dateTime", op1) && QueryFilters.isXsdType("date", op2)) {
-            return QueryFilters.ebvFalse();
-        }
-        if(QueryFilters.isXsdType("date", op1) && QueryFilters.isXsdType("dateTime", op2)) {
-            return QueryFilters.ebvFalse();
-        }
-
-        var comp = Utils.compareDateComponents(op1.value, op2.value);
-        if(comp != null) {
-            if(comp == 1) {
-                return QueryFilters.ebvTrue();
-            } else {
-                return QueryFilters.ebvFalse();
-            }
-        } else {
-            return QueryFilters.ebvError();
-        }
-    } else {
-        return QueryFilters.ebvFalse();
+        callback(QueryFilters.ebvFalse());
+        return;
     }
 };
 
@@ -955,8 +978,9 @@ QueryFilters.runGtFunction = function(op1, op2, bindings) {
  *
  * @todo
  * Some criteria are not clear
+ * @todo make it async
  */
-QueryFilters.runTotalGtFunction = function(op1,op2) {
+QueryFilters.runTotalGtFunction = function(op1, op2) {
     if(QueryFilters.isEbvError(op1) || QueryFilters.isEbvError(op2)) {
         return QueryFilters.ebvError();
     }
@@ -981,83 +1005,80 @@ QueryFilters.runTotalGtFunction = function(op1,op2) {
     }
 };
 
-
-QueryFilters.runLtFunction = function(op1, op2, bindings) {
+QueryFilters.runComparisonFunction = function(op1, op2, compareFn, dateCompareFn, bindings, callback) {
     if(QueryFilters.isEbvError(op1) || QueryFilters.isEbvError(op2)) {
-        return QueryFilters.ebvError();
+        callback(QueryFilters.ebvError());
+        return;
     }
 
     if(QueryFilters.isNumeric(op1) && QueryFilters.isNumeric(op2)) {
-        return QueryFilters.ebvBoolean(QueryFilters.effectiveTypeValue(op1) < QueryFilters.effectiveTypeValue(op2));
+        callback(QueryFilters.ebvBoolean(compareFn(QueryFilters.effectiveTypeValue(op1), QueryFilters.effectiveTypeValue(op2))));
+        return;
     } else if(QueryFilters.isSimpleLiteral(op1) && QueryFilters.isSimpleLiteral(op2)) {
-        return QueryFilters.ebvBoolean(QueryFilters.effectiveTypeValue(op1) < QueryFilters.effectiveTypeValue(op2));
+        callback(QueryFilters.ebvBoolean(compareFn(QueryFilters.effectiveTypeValue(op1), QueryFilters.effectiveTypeValue(op2))));
+        return;
     } else if(QueryFilters.isXsdType("string", op1) && QueryFilters.isXsdType("string", op2)) {
-        return QueryFilters.ebvBoolean(QueryFilters.effectiveTypeValue(op1) < QueryFilters.effectiveTypeValue(op2));
+        callback(QueryFilters.ebvBoolean(compareFn(QueryFilters.effectiveTypeValue(op1), QueryFilters.effectiveTypeValue(op2))));
+        return;
     } else if(QueryFilters.isXsdType("boolean", op1) && QueryFilters.isXsdType("boolean", op2)) {
-        return QueryFilters.ebvBoolean(QueryFilters.effectiveTypeValue(op1) < QueryFilters.effectiveTypeValue(op2));
+        callback(QueryFilters.ebvBoolean(compareFn(QueryFilters.effectiveTypeValue(op1), QueryFilters.effectiveTypeValue(op2))));
+        return;
     } else if((QueryFilters.isXsdType("dateTime", op1) || QueryFilters.isXsdType("date", op1)) &&
         (QueryFilters.isXsdType("dateTime", op2) || QueryFilters.isXsdType("date", op2))) {
         if(QueryFilters.isXsdType("dateTime", op1) && QueryFilters.isXsdType("date", op2)) {
-            return QueryFilters.ebvFalse();
+            callback(QueryFilters.ebvFalse());
+            return;
         }
         if(QueryFilters.isXsdType("date", op1) && QueryFilters.isXsdType("dateTime", op2)) {
-            return QueryFilters.ebvFalse();
+            callback(QueryFilters.ebvFalse());
+            return;
         }
 
         var comp = Utils.compareDateComponents(op1.value, op2.value);
         if(comp != null) {
-            if(comp == -1) {
-                return QueryFilters.ebvTrue();
-            } else {
-                return QueryFilters.ebvFalse();
-            }
+            callback(QueryFilters.ebvBoolean(dateCompareFn(comp)));
+            return;
         } else {
-            return QueryFilters.ebvError();
+            callback(QueryFilters.ebvError());
+            return;
         }
     } else {
-        return QueryFilters.ebvFalse();
+        callback(QueryFilters.ebvFalse());
+        return;
     }
 };
 
-
-QueryFilters.runGtEqFunction = function(op1, op2, bindings) {
-    if(QueryFilters.isEbvError(op1) || QueryFilters.isEbvError(op2)) {
-        return QueryFilters.ebvError();
-    }
-
-    if(QueryFilters.isNumeric(op1) && QueryFilters.isNumeric(op2)) {
-        return QueryFilters.ebvBoolean(QueryFilters.effectiveTypeValue(op1) >= QueryFilters.effectiveTypeValue(op2));
-    } else if(QueryFilters.isSimpleLiteral(op1) && QueryFilters.isSimpleLiteral(op2)) {
-        return QueryFilters.ebvBoolean(QueryFilters.effectiveTypeValue(op1) >= QueryFilters.effectiveTypeValue(op2));
-    } else if(QueryFilters.isXsdType("string", op1) && QueryFilters.isXsdType("string", op2)) {
-        return QueryFilters.ebvBoolean(QueryFilters.effectiveTypeValue(op1) >= QueryFilters.effectiveTypeValue(op2));
-    } else if(QueryFilters.isXsdType("boolean", op1) && QueryFilters.isXsdType("boolean", op2)) {
-        return QueryFilters.ebvBoolean(QueryFilters.effectiveTypeValue(op1) >= QueryFilters.effectiveTypeValue(op2));
-    } else if((QueryFilters.isXsdType("dateTime", op1) || QueryFilters.isXsdType("date", op1)) &&
-        (QueryFilters.isXsdType("dateTime", op2) || QueryFilters.isXsdType("date", op2))) {
-        if(QueryFilters.isXsdType("dateTime", op1) && QueryFilters.isXsdType("date", op2)) {
-            return QueryFilters.ebvFalse();
-        }
-        if(QueryFilters.isXsdType("date", op1) && QueryFilters.isXsdType("dateTime", op2)) {
-            return QueryFilters.ebvFalse();
-        }
-
-        var comp = Utils.compareDateComponents(op1.value, op2.value);
-        if(comp != null) {
-            if(comp != -1) {
-                return QueryFilters.ebvTrue();
-            } else {
-                return QueryFilters.ebvFalse();
-            }
-        } else {
-            return QueryFilters.ebvError();
-        }
-
-    } else {
-        return QueryFilters.ebvFalse();
-    }
+QueryFilters.runLtFunction = function(op1, op2, bindings, callback) {
+    QueryFilters.runComparisonFunction(op1, op2, function(v1, v2) {
+        return v1 < v2;
+    }, function(compReslt) {
+        return compResult == -1;
+    }, bindings, callback);
 };
 
+QueryFilters.runGtEqFunction = function(op1, op2, bindings, callback) {
+    QueryFilters.runComparisonFunction(op1, op2, function(v1, v2) {
+        return v1 >= v2;
+    }, function(compResult) {
+        return compResult != -1;
+    }, bindings, callback);
+};
+
+QueryFilters.runLtEqFunction = function(op1, op2, bindings, callback) {
+    QueryFilters.runComparisonFunction(op1, op2, function(v1, v2) {
+        return v1 <= v2;
+    }, function(compResult) {
+        return compResult != 1;
+    }, bindings, callback);
+};
+
+QueryFilters.runGtFunction = function(op1, op2, bindings, callback) {
+    QueryFilters.runComparisonFunction(op1, op2, function(v1, v2) {
+        return v1 > v2;
+    }, function(compResult) {
+        return compResult == 1;
+    }, bindings, callback);
+};
 
 QueryFilters.runLtEqFunction = function(op1, op2, bindings) {
     if(QueryFilters.isEbvError(op1) || QueryFilters.isEbvError(op2)) {
@@ -1096,30 +1117,29 @@ QueryFilters.runLtEqFunction = function(op1, op2, bindings) {
     }
 };
 
-QueryFilters.runAddition = function(summand, summands, bindings, queryEngine, dataset, env) {
-    var summandOp = QueryFilters.runFilter(summand,bindings,queryEngine, dataset, env);
-    if(QueryFilters.isEbvError(summandOp)) {
-        return QueryFilters.ebvError();
-    }
-
-    var acum = summandOp;
-    if(QueryFilters.isNumeric(summandOp)) {
-        for(var i=0; i<summands.length; i++) {
-            var nextSummandOp = QueryFilters.runFilter(summands[i].expression, bindings,queryEngine, dataset, env);
-            if(QueryFilters.isNumeric(nextSummandOp)) {
-                if(summands[i].operator === '+') {
-                    acum = QueryFilters.runSumFunction(acum, nextSummandOp);
-                } else if(summands[i].operator === '-') {
-                    acum = QueryFilters.runSubFunction(acum, nextSummandOp);
-                }
-            } else {
-                return QueryFilters.ebvFalse();
-            }
+QueryFilters.runAddition = function(summand, summands, bindings, queryEngine, dataset, env, callback) {
+    var summandOp = QueryFilters.runFilter(summand,bindings,queryEngine, dataset, env, function(summandOp) {
+        if(QueryFilters.isEbvError(summandOp)) {
+            callback(QueryFilters.ebvError()); return;
         }
-        return acum;
-    } else {
-        return QueryFilters.ebvFalse();
-    }
+        if(!QueryFilters.isNumeric(summandOp)) {
+            console.log(summandOp)
+            callback(QueryFilters.ebvFalse()); return;
+        }
+        QueryFilters.runFilters(summands.map(function(s) { return s.expression }), bindings, queryEngine, dataset, env, function(summandOps) {
+          var acum = summandOp;
+          for(var i=0; i < summands.length; ++i) {
+            var nextSummandOp = summandOps[i];
+            if(summands[i].operator === '+') {
+              acum = QueryFilters.runSumFunction(acum, nextSummandOp);
+            }
+            else if(summands[i].operator === '-') {
+              acum = QueryFilters.runSubFunction(acum, nextSummandOp);
+            }
+          }
+          callback(acum);
+        })
+    });
 };
 
 QueryFilters.runSumFunction = function(suma, sumb) {
@@ -1219,7 +1239,7 @@ QueryFilters.runDivFunction = function(faca, facb) {
     }
 };
 
-QueryFilters.runBuiltInCall = function(builtincall, args, bindings, queryEngine, dataset, env) {
+QueryFilters.runBuiltInCall = function(builtincall, args, bindings, queryEngine, dataset, env, callback) {
     if(builtincall === 'notexists' || builtincall === 'exists') {
         // Run the query in the filter applying bindings
 
@@ -1227,18 +1247,20 @@ QueryFilters.runBuiltInCall = function(builtincall, args, bindings, queryEngine,
         var ast = queryEngine.abstractQueryTree.parseSelect({pattern:cloned}, bindings);
         ast = queryEngine.abstractQueryTree.bind(ast.pattern, bindings);
 
-        var result = queryEngine.executeSelectUnit([ {kind:'*'} ],
+        queryEngine.executeSelectUnit([ {kind:'*'} ],
             dataset,
             ast,
-            env);
+            env,
+            function(result) {
+              if(builtincall === 'exists') {
+                callback(QueryFilters.ebvBoolean(result.length !== 0));
+              }
+              else {
+                callback(QueryFilters.ebvBoolean(result.length === 0));
+              }
+            });
 
-        if(builtincall === 'exists') {
-            return QueryFilters.ebvBoolean(result.length!==0);
-        } else {
-            return QueryFilters.ebvBoolean(result.length===0);
-        }
-
-    }  else {
+    }  else { /** @construction */
 
         var ops = [];
         for(var i=0; i<args.length; i++) {
@@ -1392,59 +1414,81 @@ QueryFilters.runUnaryExpression = function(unaryexpression, expression, bindings
     }
 };
 
-QueryFilters.runRegex = function(text, pattern, flags, bindings, queryEngine, dataset, env) {
-
-    if(text != null) {
-        text = QueryFilters.runFilter(text, bindings, queryEngine, dataset, env);
-    } else {
-        return QueryFilters.ebvError();
-    }
-
-    if(pattern != null) {
-        pattern = QueryFilters.runFilter(pattern, bindings, queryEngine, dataset, env);
-    } else {
-        return QueryFilters.ebvError();
-    }
-
-    if(flags != null) {
-        flags = QueryFilters.runFilter(flags, bindings, queryEngine, dataset, env);
-    }
-
-
-    if(pattern != null && pattern.token === 'literal' && (flags == null || flags.token === 'literal')) {
+QueryFilters.runRegex = function(text, pattern, flags, bindings, queryEngine, dataset, env, callback) {
+    var regex;
+    _.seq(
+    function(k) {
+      if(text != null) {
+        QueryFilters.runFilter(text, bindings, queryEngine, dataset, env, function(result) {
+          text = result; k();
+        });
+      }
+      else {
+        callback(QueryFilters.ebvError());
+      }
+    },
+    function(k) {
+      if(pattern != null) {
+        QueryFilters.runFilter(pattern, bindings, queryEngine, dataset, env, function(result) {
+          pattern = result; k();
+        });
+      }
+      else {
+        callback(QueryFilters.ebvError());
+      }
+    },
+    function(k) {
+      if(flags != null) {
+        QueryFilters.runFilter(flags, bindings, queryEngine, dataset, env, function(result) {
+          flags = result; k();
+        })
+      }
+      else k();
+    },
+    function(k) {
+      if(pattern != null && pattern.token === 'literal' && (flags == null || flags.token === 'literal')) {
         pattern = pattern.value;
         flags = (flags == null) ? null : flags.value;
-    } else {
-        return QueryFilters.ebvError();
-    }
-
-    if(text!= null && text.token == 'var') {
+        k();
+      }
+      else {
+        callback(QueryFilters.ebvError());
+      }
+    },
+    function(k) {
+      if(text != null && text.token == 'var') {
         if(bindings[text.value] != null) {
-            text = bindings[text.value];
+          text = bindings[text.value]; k();
         } else {
-            return QueryFilters.ebvError();
+          callback(QueryFilters.ebvError());
         }
-    } else if(text!=null && text.token === 'literal') {
-        if(text.type == null || QueryFilters.isXsdType("string",text)) {
-            text = text.value
-        } else {
-            return QueryFilters.ebvError();
+      }
+      else if(text != null && text.token === 'literal') {
+        if(text.type == null || QueryFilters.isXsdType('string', text)) {
+          text = text.value; k();
         }
-    } else {
-        return QueryFilters.ebvError();
-    }
-
-    var regex;
-    if(flags == null) {
+        else {
+          callback(QueryFilters.ebvError());
+        }
+      }
+      else {
+        callback(QueryFilters.ebvError());
+      }
+    },
+    function(k) {
+      if(flags == null) {
         regex = new RegExp(pattern);
-    } else {
-        regex = new RegExp(pattern,flags.toLowerCase());
-    }
-    if(regex.exec(text)) {
-        return QueryFilters.ebvTrue();
-    } else {
-        return QueryFilters.ebvFalse();
-    }
+      }
+      else {
+        regex = new RegExp(pattern, flags.toLowerCase());
+      }
+      if(regex.exec(text)) {
+        callback(QueryFilters.ebvTrue());
+      }
+      else {
+        callback(QueryFilters.ebvFalse());
+      }
+    })();
 };
 
 QueryFilters.normalizeLiteralDatatype = function(literal, queryEngine, env) {
