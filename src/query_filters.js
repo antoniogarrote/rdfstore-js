@@ -7,7 +7,6 @@ QueryFilters = {};
 var xmlSchema = "http://www.w3.org/2001/XMLSchema#";
 
 QueryFilters.checkFilters = function(pattern, bindings, nullifyErrors, dataset, queryEnv, queryEngine, callback) {
-
     var filters = [];
     if (pattern.filter && typeof(pattern.filter) !== 'function')
         filters = pattern.filter;
@@ -95,46 +94,45 @@ QueryFilters.boundVars = function(filterExpr) {
 QueryFilters.run = function(filterExpr, bindings, nullifyFilters, dataset, env, queryEngine, callback) {
     queryEngine.copyDenormalizedBindings(bindings, env.outCache, function(denormBindings){
         var filteredBindings = [];
-        for(var i=0; i<bindings.length; i++) {
+        _.eachSeries(_.range(bindings.length), function(i, k) {
             var thisDenormBindings = denormBindings[i];
-            var ebv = QueryFilters.runFilter(filterExpr, thisDenormBindings, queryEngine, dataset, env);
-            // ebv can be directly a RDFTerm (e.g. atomic expression in filter)
-            // this additional call to ebv will return -> true/false/error
-            var ebv = QueryFilters.ebv(ebv);
-            //console.log("EBV:")
-            //console.log(ebv)
-            //console.log("FOR:")
-            //console.log(thisDenormBindings)
-            if(QueryFilters.isEbvError(ebv)) {
-                // error
-                if(nullifyFilters) {
-                    var thisBindings = {"__nullify__": true, "bindings": bindings[i]};
-                    filteredBindings.push(thisBindings);
+            QueryFilters.runFilter(filterExpr, thisDenormBindings, queryEngine, dataset, env, function(ebv) {
+                ebv = QueryFilters.ebv(ebv);
+                if(QueryFilters.isEbvError(ebv)) {
+                    if(nullifyFilters) {
+                        var thisBindings = { __nullify__: true, bindings: bindings[i] };
+                        filteredBindings.push(thisBindings);
+                    }
                 }
-            } else if(ebv === true) {
-                // true
-                filteredBindings.push(bindings[i]);
-            } else {
-                // false
-                if(nullifyFilters) {
-                    var thisBindings = {"__nullify__": true, "bindings": bindings[i]};
-                    filteredBindings.push(thisBindings);
+                else if(ebv === true) {
+                    filteredBindings.push(bindings[i]);
                 }
-            }
-        }
-        callback(filteredBindings);
+                else {
+                    if(nullifyFilters) {
+                        var thisBindings = { __nullify__: true, bindings: bindings[i] };
+                        filteredBindings.push(bindings[i]);
+                    }
+                }
+                k();
+            })
+        }, function() {
+            callback(filteredBindings);
+        })
     });
 };
 
 QueryFilters.collect = function(filterExpr, bindings, dataset, env, queryEngine, callback) {
     queryEngine.copyDenormalizedBindings(bindings, env.outCache, function(denormBindings) {
         var filteredBindings = [];
-        for(var i=0; i<denormBindings.length; i++) {
+        _.eachSeries(_.range(denormBindings.length), function(i, k) {
             var thisDenormBindings = denormBindings[i];
-            var ebv = QueryFilters.runFilter(filterExpr, thisDenormBindings, queryEngine, dataset, env);
-            filteredBindings.push({binding:bindings[i], value:ebv});
-        }
-        return callback(filteredBindings);
+            QueryFilters.runFilter(filterExpr, thisDenormBindings, queryEngine, dataset, env, function(ebv) {
+                filteredBindings.push({ binding: bindings[i] });
+                k();
+            })
+        }, function() {
+            callback(filteredBindings);
+        })
     });
 };
 
@@ -142,18 +140,45 @@ QueryFilters.runDistinct = function(projectedBindings, projectionVariables) {
 };
 
 // @todo add more aggregation functions here
-QueryFilters.runAggregator = function(aggregator, bindingsGroup, queryEngine, dataset, env) {
+QueryFilters.runAggregator = function(aggregator, bindingsGroup, queryEngine, dataset, env, callback) {
     if(bindingsGroup == null || bindingsGroup.length === 0) {
-        return QueryFilters.ebvError();
+        callback(QueryFilters.ebvError());
+        return;
     } else if(aggregator.token === 'variable' && aggregator.kind == 'var') {
-        return bindingsGroup[0][aggregator.value.value];
+        callback(bindingsGroup[0][aggregator.value.value]);
+        return;
     } else if(aggregator.token === 'variable' && aggregator.kind === 'aliased') {
         if(aggregator.expression.expressionType === 'atomic' && aggregator.expression.primaryexpression === 'var') {
-            return bindingsGroup[0][aggregator.expression.value.value];
+            callback(bindingsGroup[0][aggregator.expression.value.value]);
+            return;
         } else if(aggregator.expression.expressionType === 'aggregate') {
             if(aggregator.expression.aggregateType === 'max') {
                 var max = null;
-                for(var i=0; i< bindingsGroup.length; i++) {
+                _.eachSeries(bindingsGroup, function(bindings, k) {
+                    QueryFilters.runFilter(aggregator.expression.expression, bindings, queryEngine, dataset, env, function(ebv) {
+                        if(!QueryFilters.isEbvError(ebv)) {
+                            if(max === null) {
+                                max = ebv; k();
+                            }
+                            else {
+                                QueryFilters.runLtFunction(max, ebv, undefined, function(result) {
+                                  if(result === true) max = ebv;
+                                  k();
+                                })
+                            }
+                        }
+                    })
+                }, function() {
+                  if(max === null) {
+                      callback(QueryFilters.ebvError());
+                      return;
+                  }
+                  else {
+                      callback(max);
+                      return;
+                  }
+                })
+                /*for(var i=0; i< bindingsGroup.length; i++) {
                     var bindings = bindingsGroup[i];
                     var ebv = QueryFilters.runFilter(aggregator.expression.expression, bindings, queryEngine, dataset, env);
                     if(!QueryFilters.isEbvError(ebv)) {
@@ -171,9 +196,34 @@ QueryFilters.runAggregator = function(aggregator, bindingsGroup, queryEngine, da
                     return QueryFilters.ebvError();
                 } else {
                     return max;
-                }
+                }*/
             } else if(aggregator.expression.aggregateType === 'min') {
                 var min = null;
+                _.eachSeries(bindingsGroup, function(bindings, k) {
+                    QueryFilters.runFilter(aggregator.expression.expression, bindings, queryEngine, dataset, env, function(ebv) {
+                        if(!QueryFilters.isEbvError(ebv)) {
+                            if(min === null) {
+                                min = ebv; k();
+                            }
+                            else {
+                                QueryFilters.runGtFunction(min, ebv, undefined, function(result) {
+                                  if(result === true) min = ebv;
+                                  k();
+                                })
+                            }
+                        }
+                    })
+                }, function() {
+                  if(min === null) {
+                      callback(QueryFilters.ebvError());
+                      return;
+                  }
+                  else {
+                      callback(min);
+                      return;
+                  }
+                })
+                /*var min = null;
                 for(var i=0; i< bindingsGroup.length; i++) {
                     var bindings = bindingsGroup[i];
                     var ebv = QueryFilters.runFilter(aggregator.expression.expression, bindings, queryEngine, dataset, env);
@@ -192,7 +242,7 @@ QueryFilters.runAggregator = function(aggregator, bindingsGroup, queryEngine, da
                     return QueryFilters.ebvError();
                 } else {
                     return min;
-                }
+                }*/
             } else if(aggregator.expression.aggregateType === 'count') {
                 var distinct = {};
                 var count = 0;
@@ -209,82 +259,88 @@ QueryFilters.runAggregator = function(aggregator, bindingsGroup, queryEngine, da
                     } else {
                         count = bindingsGroup.length;
                     }
+                    callback({ token: 'literal', type: xmlSchema+'integer', value:''+count });
                 } else {
-                    for(var i=0; i< bindingsGroup.length; i++) {
-                        var bindings = bindingsGroup[i];
-                        var ebv = QueryFilters.runFilter(aggregator.expression.expression, bindings, queryEngine, dataset, env);
+                    _.eachSeries(bindingsGroup, function(bindings, k) {
+                        QueryFilters.runFilter(aggregator.expression.expression, bindings, queryEngine, dataset, env, function(ebv) {
+                            if(!QueryFilters.isEbvError(ebv)) {
+                                if(aggregator.expression.distinct != null && aggregator.expression.distinct != '') {
+                                    var key = Utils.hashTerm(ebv);
+                                    if(distinct[key] == null) {
+                                        distinct[key] = true;
+                                        count++;
+                                    }
+                                }
+                                else count++;
+                            }
+                            k();
+                        })
+                    }, function() {
+                        callback({ token: 'literal', type: xmlSchema+'integer', value: ''+count });
+                    })
+                }
+                return;
+            } else if(aggregator.expression.aggregateType === 'avg') {
+                var distinct = {};
+                var aggregated = {token: 'literal', type:xmlSchema+"integer", value:'0'};
+                var count = 0;
+                _.eachSeries(bindingsGroup, function(bindings, k) {
+                    QueryFilters.runFilter(aggregator.expression.expression, bindings, queryEngine, dataset, env, function(ebv) {
                         if(!QueryFilters.isEbvError(ebv)) {
                             if(aggregator.expression.distinct != null && aggregator.expression.distinct != '') {
                                 var key = Utils.hashTerm(ebv);
                                 if(distinct[key] == null) {
                                     distinct[key] = true;
-                                    count++;
+                                    if(QueryFilters.isNumeric(ebv)) {
+                                        aggregated = QueryFilters.runSumFunction(aggregated, ebv);
+                                        count++;
+                                    }
                                 }
                             } else {
-                                count++;
-                            }
-                        }
-                    }
-                }
-
-                return {token: 'literal', type:xmlSchema+"integer", value:''+count};
-            } else if(aggregator.expression.aggregateType === 'avg') {
-                var distinct = {};
-                var aggregated = {token: 'literal', type:xmlSchema+"integer", value:'0'};
-                var count = 0;
-                for(var i=0; i< bindingsGroup.length; i++) {
-                    var bindings = bindingsGroup[i];
-                    var ebv = QueryFilters.runFilter(aggregator.expression.expression, bindings, queryEngine, dataset, env);
-                    if(!QueryFilters.isEbvError(ebv)) {
-                        if(aggregator.expression.distinct != null && aggregator.expression.distinct != '') {
-                            var key = Utils.hashTerm(ebv);
-                            if(distinct[key] == null) {
-                                distinct[key] = true;
                                 if(QueryFilters.isNumeric(ebv)) {
                                     aggregated = QueryFilters.runSumFunction(aggregated, ebv);
                                     count++;
                                 }
                             }
-                        } else {
-                            if(QueryFilters.isNumeric(ebv)) {
-                                aggregated = QueryFilters.runSumFunction(aggregated, ebv);
-                                count++;
-                            }
                         }
-                    }
-                }
-
-                var result = QueryFilters.runDivFunction(aggregated, {token: 'literal', type:xmlSchema+"integer", value:''+count});
-                result.value = ''+result.value;
-                return result;
+                        k();
+                    })
+                }, function() {
+                    var result = QueryFilters.runDivFunction(aggregated, { token: 'literal', type: xmlSchema+'integer', value: ''+count });
+                    result.value = ''+result.value;
+                    callback(result);
+                })
+                return;
             } else if(aggregator.expression.aggregateType === 'sum') {
                 var distinct = {};
                 var aggregated = {token: 'literal', type:xmlSchema+"integer", value:'0'};
-                for(var i=0; i< bindingsGroup.length; i++) {
-                    var bindings = bindingsGroup[i];
-                    var ebv = QueryFilters.runFilter(aggregator.expression.expression, bindings, queryEngine, dataset, env);
-                    if(!QueryFilters.isEbvError(ebv)) {
-                        if(aggregator.expression.distinct != null && aggregator.expression.distinct != '') {
-                            var key = Utils.hashTerm(ebv);
-                            if(distinct[key] == null) {
-                                distinct[key] = true;
+                _.eachSeries(bindingsGroup, function(bindings, k) {
+                    QueryFilters.runFilter(aggregator.expression.expression, bindings, queryEngine, dataset, env, function(ebv) {
+                        if(!QueryFilters.isEbvError(ebv)) {
+                            if(aggregator.expression.distinct != null && aggregator.expression.distinct != '') {
+                                var key = Utils.hashTerm(ebv);
+                                if(distinct[key] == null) {
+                                    distinct[key] = true;
+                                    if(QueryFilters.isNumeric(ebv)) {
+                                        aggregated = QueryFilters.runSumFunction(aggregated, ebv);
+                                    }
+                                }
+                            } else {
                                 if(QueryFilters.isNumeric(ebv)) {
                                     aggregated = QueryFilters.runSumFunction(aggregated, ebv);
                                 }
                             }
-                        } else {
-                            if(QueryFilters.isNumeric(ebv)) {
-                                aggregated = QueryFilters.runSumFunction(aggregated, ebv);
-                            }
                         }
-                    }
-                }
-
-                aggregated.value =''+aggregated.value;
-                return aggregated;
+                        k();
+                    })
+                }, function() {
+                    aggregated.value = ''+aggregated.value;
+                    callback(aggregated);
+                })
+                return;
             } else {
-                var ebv = QueryFilters.runFilter(aggregate.expression, bindingsGroup[0], dataset, {blanks:{}, outCache:{}});
-                return ebv;
+                QueryFilters.runFilter(aggregate.expression, bindingsGroup[0], dataset, {blanks:{}, outCache:{}}, callback);
+                return;
             }
         }
     }
@@ -309,7 +365,7 @@ QueryFilters.runFilter = function(filterExpr, bindings, queryEngine, dataset, en
         } else if(expressionType == 'builtincall') {
             QueryFilters.runBuiltInCall(filterExpr.builtincall, filterExpr.args, bindings, queryEngine, dataset, env, callback);
         } else if(expressionType == 'multiplicativeexpression') {
-            return QueryFilters.runMultiplication(filterExpr.factor, filterExpr.factors, bindings, queryEngine, dataset, env);
+            QueryFilters.runMultiplication(filterExpr.factor, filterExpr.factors, bindings, queryEngine, dataset, env, callback);
         } else if(expressionType == 'unaryexpression') {
             return QueryFilters.runUnaryExpression(filterExpr.unaryexpression, filterExpr.expression, bindings, queryEngine, dataset, env);
         } else if(expressionType == 'irireforfunction') {
@@ -319,6 +375,7 @@ QueryFilters.runFilter = function(filterExpr, bindings, queryEngine, dataset, en
         } else if(expressionType == 'custom') {
             return QueryFilters.runBuiltInCall(filterExpr.name, filterExpr.args, bindings, queryEngine, dataset, env);
         } else if(expressionType == 'atomic') {
+            /** @todo might lead to big stacks without using setTimeout when doing eachSeries */
             if(filterExpr.primaryexpression == 'var') {
                 // lookup the var in the bindings
                 callback(bindings[filterExpr.value.value]);
@@ -1130,6 +1187,7 @@ QueryFilters.runAddition = function(summand, summands, bindings, queryEngine, da
           var acum = summandOp;
           for(var i=0; i < summands.length; ++i) {
             var nextSummandOp = summandOps[i];
+            /** @todo test isNumeric */
             if(summands[i].operator === '+') {
               acum = QueryFilters.runSumFunction(acum, nextSummandOp);
             }
@@ -1176,33 +1234,38 @@ QueryFilters.runSubFunction = function(suma, sumb) {
     }
 };
 
-QueryFilters.runMultiplication = function(factor, factors, bindings, queryEngine, dataset, env) {
-    var factorOp = QueryFilters.runFilter(factor,bindings,queryEngine, dataset, env);
-    if(QueryFilters.isEbvError(factorOp)) {
-        return factorOp;
-    }
-
-    var acum = factorOp;
-    if(QueryFilters.isNumeric(factorOp)) {
-        for(var i=0; i<factors.length; i++) {
-            var nextFactorOp = QueryFilters.runFilter(factors[i].expression, bindings,queryEngine, dataset, env);
-            if(QueryFilters.isEbvError(nextFactorOp)) {
-                return factorOp;
-            }
-            if(QueryFilters.isNumeric(nextFactorOp)) {
-                if(factors[i].operator === '*') {
-                    acum = QueryFilters.runMulFunction(acum, nextFactorOp);
-                } else if(factors[i].operator === '/') {
-                    acum = QueryFilters.runDivFunction(acum, nextFactorOp);
-                }
-            } else {
-                return QueryFilters.ebvFalse();
-            }
+QueryFilters.runMultiplication = function(factor, factors, bindings, queryEngine, dataset, env, callback) {
+    QueryFilters.runFilter(factor,bindings,queryEngine, dataset, env, function(factorOp) {
+        if(QueryFilters.isEbvError(factorOp)) {
+            callback(factorOp);
+            return;
         }
-        return acum;
-    } else {
-        return QueryFilters.ebvFalse();
-    }
+        if(!QueryFilters.isNumeric(factorOp)) {
+            callback(QueryFilters.ebvFalse());
+        }
+        QueryFilters.runFilters(factors.map(function(f) { return f.expression }), bindings, queryEngine, dataset, env, function(results) {
+            var acum = factorOp;
+            for(var i=0; i<results.length; ++i) {
+                if(QueryFilters.isEbvError(results[i])) {
+                    callback(factorOp);
+                    return;
+                }
+                else if(QueryFilters.isNumeric(results[i])) {
+                    if(factors[i].operator === '*') {
+                        acum = QueryFilters.runMulFunction(acum, results[i]);
+                    }
+                    else if(factors[i].operator === '/') {
+                        acum = QueryFilters.runDivFunction(acum, results[i]);
+                    }
+                }
+                else {
+                    callback(QueryFilters.ebvFalse());
+                    return;
+                }
+            }
+            callback(acum);
+        })
+    });
 };
 
 QueryFilters.runMulFunction = function(faca, facb) {
@@ -1261,7 +1324,6 @@ QueryFilters.runBuiltInCall = function(builtincall, args, bindings, queryEngine,
             });
 
     }  else { /** @construction */
-
         var ops = [];
         for(var i=0; i<args.length; i++) {
             if(args[i].token === 'var') {

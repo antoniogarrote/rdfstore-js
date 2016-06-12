@@ -71,6 +71,17 @@ describe('QueryFilters (async)', function() {
       done();
     })
   })
+  it('should run multiplication', function(done) {
+    var expr = {
+      expressionType: 'multiplicativeexpression',
+      factor: createIntegerExpression(2),
+      factors: [ { operator: '*', expression: createIntegerExpression(3) } ]
+    }
+    QueryFilters.runFilter(expr, {}, null, null, null, function(result) {
+      expect(result.value).toEqual(6);
+      done();
+    })
+  })
   it('should run filter-exists (built-in call)', function(done) {
     var queryEngine = {
       executeSelectUnit: function(projection, dataset, pattern, env, callback) {
@@ -117,6 +128,29 @@ describe('QueryFilters (async)', function() {
       expect(result.value).toEqual(true);
       done();
     });
+  })
+  it('should run another relational expression', function(done) {
+    var expr = {
+      token: 'expression',
+      expressionType: 'relationalexpression',
+      operator: '<',
+      op1: {
+        token: 'expression',
+        expressionType: 'atomic',
+        primaryexpression: 'var',
+        value: { token: 'var', value: 'price' }
+      },
+      op2: {
+        token: 'expression',
+        expressionType: 'atomic',
+        primaryexpression: 'numericliteral',
+        value: { token: 'literal', lang: null, type: 'http://www.w3.org/2001/XMLSchema#integer', value: '20' }
+      }
+    };
+    QueryFilters.runFilter(expr, { price: { token: 'literal', type: 'http://www.w3.org/2001/XMLSchema#integer', value: '21' } }, null, null, null, function(result) {
+      expect(result.value).toEqual(false);
+      done();
+    })
   })
 })
 

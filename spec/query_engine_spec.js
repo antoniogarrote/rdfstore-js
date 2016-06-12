@@ -1,3 +1,4 @@
+Error.stackTraceLimit = 20;
 var QueryEngine = require("../src/query_engine").QueryEngine;
 var QuadBackend = require("../src/quad_backend").QuadBackend;
 var Lexicon = require("../src/lexicon").Lexicon;
@@ -464,7 +465,8 @@ describe("QueryEngine", function(){
                                }", function(success, result) {
                     engine.execute("PREFIX foaf:    <http://xmlns.com/foaf/0.1/>\
                                                    SELECT ?name WHERE { ?x foaf:name ?name } ORDER BY ?name",
-                        function(success, results) {
+                        function(error, results) {
+                            if(error) console.log(error.stack);
                             expect(results.length === 3);
                             expect(results[0].name.value === 'Alice');
                             expect(results[1].name.value === 'Bob');
