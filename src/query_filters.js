@@ -373,7 +373,7 @@ QueryFilters.runFilter = function(filterExpr, bindings, queryEngine, dataset, en
         } else if(expressionType == 'regex') {
             QueryFilters.runRegex(filterExpr.text, filterExpr.pattern, filterExpr.flags, bindings, queryEngine, dataset, env, callback)
         } else if(expressionType == 'custom') {
-            return QueryFilters.runBuiltInCall(filterExpr.name, filterExpr.args, bindings, queryEngine, dataset, env);
+            QueryFilters.runBuiltInCall(filterExpr.name, filterExpr.args, bindings, queryEngine, dataset, env, callback);
         } else if(expressionType == 'atomic') {
             /** @todo might lead to big stacks without using setTimeout when doing eachSeries */
             if(filterExpr.primaryexpression == 'var') {
@@ -1323,111 +1323,116 @@ QueryFilters.runBuiltInCall = function(builtincall, args, bindings, queryEngine,
               }
             });
 
-    }  else { /** @construction */
+    }  else {
         var ops = [];
-        for(var i=0; i<args.length; i++) {
-            if(args[i].token === 'var') {
-                ops.push(args[i]);
-            } else {
-                var op = QueryFilters.runFilter(args[i], bindings, queryEngine, dataset, env);
+        _.eachSeries(args, function(arg, k) {
+            if(arg.token === 'var') {
+                ops.push(arg);
+                k();
+            }
+            else QueryFilters.runFilter(arg, bindings, queryEngine, dataset, env, function(op) {
                 if(QueryFilters.isEbvError(op)) {
-                    return op;
+                    callback(op);
                 }
-                ops.push(op);
-            }
-        }
+                else {
+                    ops.push(op);
+                    k();
+                }
+            })
+        }, function() {
 
-        if(builtincall === 'str') {
-            if(ops[0].token === 'literal') {
-                // lexical form literals
-                return {token: 'literal', type:null, value:""+ops[0].value}; // type null? or xmlSchema+"string"
-            } else if(ops[0].token === 'uri'){
-                // codepoint URIs
-                return {token: 'literal', type:null, value:ops[0].value}; // idem
-            } else {
-                return QueryFilters.ebvFalse();
-            }
-        } else if(builtincall === 'lang') {
-            if(ops[0].token === 'literal'){
-                if(ops[0].lang != null) {
-                    return {token: 'literal', value:""+ops[0].lang};
+            if(builtincall === 'str') {
+                if(ops[0].token === 'literal') {
+                    // lexical form literals
+                    callback({token: 'literal', type:null, value:""+ops[0].value}); // type null? or xmlSchema+"string"
+                } else if(ops[0].token === 'uri'){
+                    // codepoint URIs
+                    callback({token: 'literal', type:null, value:ops[0].value}); // idem
                 } else {
-                    return {token: 'literal', value:""};
+                    callback(QueryFilters.ebvFalse());
                 }
-            } else {
-                return QueryFilters.ebvError();
-            }
-        } else if(builtincall === 'datatype') {
-            if(ops[0].token === 'literal'){
-                var lit = ops[0];
-                if(lit.type != null) {
-                    if(typeof(lit.type) === 'string') {
-                        return {token: 'uri', value:lit.type, prefix:null, suffix:null};
+            } else if(builtincall === 'lang') {
+                if(ops[0].token === 'literal'){
+                    if(ops[0].lang != null) {
+                        callback({token: 'literal', value:""+ops[0].lang});
                     } else {
-                        return lit.type;
+                        callback({token: 'literal', value:""});
                     }
-                } else if(lit.lang == null) {
-                    return {token: 'uri', value:'http://www.w3.org/2001/XMLSchema#string', prefix:null, suffix:null};
                 } else {
-                    return QueryFilters.ebvError();
+                    callback(QueryFilters.ebvError());
                 }
-            } else {
-                return QueryFilters.ebvError();
-            }
-        } else if(builtincall === 'isliteral') {
-            if(ops[0].token === 'literal'){
-                return QueryFilters.ebvTrue();
-            } else {
-                return QueryFilters.ebvFalse();
-            }
-        } else if(builtincall === 'isblank') {
-            if(ops[0].token === 'blank'){
-                return QueryFilters.ebvTrue();
-            } else {
-                return QueryFilters.ebvFalse();
-            }
-        } else if(builtincall === 'isuri' || builtincall === 'isiri') {
-            if(ops[0].token === 'uri'){
-                return QueryFilters.ebvTrue();
-            } else {
-                return QueryFilters.ebvFalse();
-            }
-        } else if(builtincall === 'sameterm') {
-            var op1 = ops[0];
-            var op2 = ops[1];
-            var res = QueryFilters.RDFTermEquality(op1, op2, queryEngine, env);
-            if(QueryFilters.isEbvError(res)) {
-                res = false;
-            }
-            return QueryFilters.ebvBoolean(res);
-        } else if(builtincall === 'langmatches') {
-            var lang = ops[0];
-            var langRange = ops[1];
+            } else if(builtincall === 'datatype') {
+                if(ops[0].token === 'literal'){
+                    var lit = ops[0];
+                    if(lit.type != null) {
+                        if(typeof(lit.type) === 'string') {
+                            callback({token: 'uri', value:lit.type, prefix:null, suffix:null});
+                        } else {
+                            callback(lit.type);
+                        }
+                    } else if(lit.lang == null) {
+                        callback({token: 'uri', value:'http://www.w3.org/2001/XMLSchema#string', prefix:null, suffix:null});
+                    } else {
+                        callback(QueryFilters.ebvError());
+                    }
+                } else {
+                    callback(QueryFilters.ebvError());
+                }
+            } else if(builtincall === 'isliteral') {
+                if(ops[0].token === 'literal'){
+                    callback(QueryFilters.ebvTrue());
+                } else {
+                    callback(QueryFilters.ebvFalse());
+                }
+            } else if(builtincall === 'isblank') {
+                if(ops[0].token === 'blank'){
+                    callback(QueryFilters.ebvTrue());
+                } else {
+                    callback(QueryFilters.ebvFalse());
+                }
+            } else if(builtincall === 'isuri' || builtincall === 'isiri') {
+                if(ops[0].token === 'uri'){
+                    callback(QueryFilters.ebvTrue());
+                } else {
+                    callback(QueryFilters.ebvFalse());
+                }
+            } else if(builtincall === 'sameterm') {
+                var op1 = ops[0];
+                var op2 = ops[1];
+                var res = QueryFilters.RDFTermEquality(op1, op2, queryEngine, env);
+                if(QueryFilters.isEbvError(res)) {
+                    res = false;
+                }
+                callback(QueryFilters.ebvBoolean(res));
+            } else if(builtincall === 'langmatches') {
+                var lang = ops[0];
+                var langRange = ops[1];
 
-            if(lang.token === 'literal' && langRange.token === 'literal'){
-                if(langRange.value === '*' && lang.value != '') {
-                    return QueryFilters.ebvTrue();
+                if(lang.token === 'literal' && langRange.token === 'literal'){
+                    if(langRange.value === '*' && lang.value != '') {
+                        callback(QueryFilters.ebvTrue());
+                    } else {
+                        callback(QueryFilters.ebvBoolean(lang.value.toLowerCase().indexOf(langRange.value.toLowerCase()) === 0));
+                    }
                 } else {
-                    return QueryFilters.ebvBoolean(lang.value.toLowerCase().indexOf(langRange.value.toLowerCase()) === 0)
+                    callback(QueryFilters.ebvError());
                 }
+            } else if(builtincall === 'bound') {
+                var boundVar = ops[0].value;
+                var acum = [];
+                if(boundVar == null) {
+                    callback(QueryFilters.ebvError());
+                } else  if(bindings[boundVar] != null) {
+                    callback(QueryFilters.ebvTrue());
+                } else {
+                    callback(QueryFilters.ebvFalse());
+                }
+            } else if(queryEngine.customFns[builtincall] != null) {
+                callback(queryEngine.customFns[builtincall](QueryFilters, ops));
             } else {
-                return QueryFilters.ebvError();
+                throw ("Builtin call "+builtincall+" not implemented yet");
             }
-        } else if(builtincall === 'bound') {
-            var boundVar = ops[0].value;
-            var acum = [];
-            if(boundVar == null) {
-                return QueryFilters.ebvError();
-            } else  if(bindings[boundVar] != null) {
-                return QueryFilters.ebvTrue();
-            } else {
-                return QueryFilters.ebvFalse();
-            }
-        } else if(queryEngine.customFns[builtincall] != null) {
-            return queryEngine.customFns[builtincall](QueryFilters, ops);
-        } else {
-            throw ("Builtin call "+builtincall+" not implemented yet");
-        }
+        })
     }
 };
 
