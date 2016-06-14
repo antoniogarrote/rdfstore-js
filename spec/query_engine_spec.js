@@ -1,3 +1,4 @@
+Error.stackTraceLimit = 20;
 var QueryEngine = require("../src/query_engine").QueryEngine;
 var QuadBackend = require("../src/quad_backend").QuadBackend;
 var Lexicon = require("../src/lexicon").Lexicon;
@@ -464,7 +465,8 @@ describe("QueryEngine", function(){
                                }", function(success, result) {
                     engine.execute("PREFIX foaf:    <http://xmlns.com/foaf/0.1/>\
                                                    SELECT ?name WHERE { ?x foaf:name ?name } ORDER BY ?name",
-                        function(success, results) {
+                        function(error, results) {
+                            if(error) console.log(error.stack);
                             expect(results.length === 3);
                             expect(results[0].name.value === 'Alice');
                             expect(results[1].name.value === 'Bob');
@@ -1638,4 +1640,39 @@ describe("QueryEngine", function(){
         });
     });
 
+    it('Test FILTER EXISTS', function(done) {
+        new Lexicon(function(lexicon){
+            new QuadBackend({treeOrder: 15}, function(backend){
+                var engine = new QueryEngine({backend: backend,
+                    lexicon: lexicon});
+                var query = 'BASE <http://example.org/book/>\
+                             PREFIX dc:  <http://purl.org/dc/elements/1.1/> \
+                             PREFIX ns:  <http://example.org/ns#>\
+                             INSERT DATA {\
+                               <book1>  dc:title     "SPARQL Tutorial" .\
+                               <book1>  ns:price     42 .\
+                               <book1>  ns:discount  0.2 .\
+                               <book1>  ns:relatedTo <book2> .\
+                               <book2>  dc:title     "The Semantic Web" .\
+                               <book2>  ns:price     23 .\
+                               <book2>  ns:discount  0.25 .\
+                             }';
+                engine.execute(query, function(success, result) {
+                    var query = 'PREFIX  dc:  <http://purl.org/dc/elements/1.1/>\
+                                 PREFIX  ns:  <http://example.org/ns#>\
+                                 SELECT  * \
+                                 { ?x ns:discount ?discount .\
+                                   ?x dc:title ?title .\
+                                    FILTER EXISTS { ?x ns:price ?p FILTER (?p = 23) } .\
+                                 }';
+                    engine.execute(query, function(success, result) {
+                        expect(success);
+                        expect(result.length).toEqual(1);
+                        expect(result[0].title.value).toEqual('The Semantic Web');
+                        done();
+                    })
+                })
+            });
+        });
+    })
 });

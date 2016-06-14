@@ -417,7 +417,10 @@ AbstractQueryTree.prototype.bind = function(aqt, bindings) {
         aqt.lvalue = this.bind(aqt.lvalue, bindings);
         aqt.rvalue = this.bind(aqt.rvalue, bindings);
     } else if(aqt.kind === 'FILTER') {
-        aqt.filter = this._bindFilter(aqt.filter[i].value, bindings);
+        /** @todo I changed something here to fix a bug with FILTER EXISTS */
+        var that = this;
+        aqt.value = this.bind(aqt.value, bindings);
+        aqt.filter = aqt.filter.map(function(f) { return { token: 'filter', value: that._bindFilter(f.value, bindings) } });
     } else if(aqt.kind === 'EMPTY_PATTERN') {
         // nothing
     } else {
