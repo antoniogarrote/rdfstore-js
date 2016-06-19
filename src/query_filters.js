@@ -7,7 +7,6 @@ QueryFilters = {};
 var xmlSchema = "http://www.w3.org/2001/XMLSchema#";
 
 QueryFilters.checkFilters = function(pattern, bindings, nullifyErrors, dataset, queryEnv, queryEngine, callback) {
-
     var filters = [];
     if (pattern.filter && typeof(pattern.filter) !== 'function')
         filters = pattern.filter;
@@ -15,24 +14,68 @@ QueryFilters.checkFilters = function(pattern, bindings, nullifyErrors, dataset, 
     if(filters==null || filters.length === 0 || pattern.length != null) {
         return callback(bindings);
     }
-
-    async.eachSeries(filters, function(filter,k){
-        QueryFilters.run(filter.value, bindings, nullifyErrors, dataset, queryEnv, queryEngine, function(filteredBindings){
-            var acum = [];
-            async.eachSeries(filteredBindings, function(filteredBinding,kk) {
-                if(filteredBinding["__nullify__"]!=null) {
-                    nullified.push(filteredBinding);
-                } else {
-                    acum.push(filteredBinding);
+    QueryFilters.preprocessExistentialFilters(filters, bindings, queryEngine, dataset, queryEnv, function(preProcessedFilters){
+        async.eachSeries(preProcessedFilters, function(filter,k){
+            QueryFilters.run(filter.value, bindings, nullifyErrors, dataset, queryEnv, queryEngine, function(filteredBindings){
+                var acum = [];
+                for(var i=0; i<filteredBindings.length; i++) {
+                    var filteredBinding = filteredBindings[i];
+                    if(filteredBinding["__nullify__"]!=null) {
+                        nullified.push(filteredBinding);
+                    } else {
+                        acum.push(filteredBinding);
+                    }
                 }
-                kk();
-            },function(){
                 bindings = acum;
                 k();
-            })
+            });
+        },function(){
+            callback(bindings.concat(nullified));
         });
-    },function(){
-        callback(bindings.concat(nullified))
+    });
+};
+
+QueryFilters.preprocessExistentialFilters = function(filters, bindings, queryEngine, dataset, env ,cb) {
+    var preProcessedFilters = [];
+    async.eachSeries(filters, function(filter, k){
+        if(filter.value.expressionType === 'builtincall' &&
+           (filter.value.builtincall === 'exists' ||
+            filter.value.builtincall === 'notexists')) {
+            var builtincall = filter.value.builtincall;
+            var args = filter.value.args;
+
+            var bindingsResults = {};
+            queryEngine.copyDenormalizedBindings(bindings, env.outCache, function(denormBindings){
+                async.eachSeries(denormBindings, function(bindings, kk) {
+                    var cloned = _.clone(args[0],true);
+                    var ast = queryEngine.abstractQueryTree.parseSelect({pattern:cloned}, bindings);
+                    ast = queryEngine.abstractQueryTree.bind(ast.pattern, bindings);
+                    queryEngine.executeSelectUnit([ {kind:'*'} ], dataset, ast, env, function(result){
+                        var success = null;
+                        if(builtincall === 'exists') {
+                            success = QueryFilters.ebvBoolean(result.length!==0);
+                        } else {
+                            success = QueryFilters.ebvBoolean(result.length===0);
+                        }
+                        var bindingsKey = [];
+                        for(var p in bindings) { bindingsKey.push(JSON.stringify(bindings[p]));}
+                        bindingsKey = bindingsKey.sort().join("");
+                        bindingsResults[bindingsKey] = success;
+                        kk();
+                    });
+                }, function(){
+                    filter.value.origArgs = filter.value.args;
+                    filter.value.args = bindingsResults;
+                    preProcessedFilters.push(filter);
+                    k();
+                });
+            });
+        } else {
+            preProcessedFilters.push(filter);
+            k();
+        }
+    }, function(){
+        cb(preProcessedFilters);
     });
 };
 
@@ -86,8 +129,6 @@ QueryFilters.boundVars = function(filterExpr) {
             }
         }
     } else {
-        console.log("ERROR");
-        console.log(filterExpr);
         throw("Cannot find bound expressions in a no expression token");
     }
 };
@@ -1221,23 +1262,12 @@ QueryFilters.runDivFunction = function(faca, facb) {
 
 QueryFilters.runBuiltInCall = function(builtincall, args, bindings, queryEngine, dataset, env) {
     if(builtincall === 'notexists' || builtincall === 'exists') {
-        // Run the query in the filter applying bindings
+        // args hast to be the boolean value preprocessed already so we can keep this function sync
+        var bindingsKey = [];
+        for(var p in bindings) { bindingsKey.push(JSON.stringify(bindings[p]));}
+        bindingsKey = bindingsKey.sort().join("");
 
-        var cloned = _.clone(args[0],true);
-        var ast = queryEngine.abstractQueryTree.parseSelect({pattern:cloned}, bindings);
-        ast = queryEngine.abstractQueryTree.bind(ast.pattern, bindings);
-
-        var result = queryEngine.executeSelectUnit([ {kind:'*'} ],
-            dataset,
-            ast,
-            env);
-
-        if(builtincall === 'exists') {
-            return QueryFilters.ebvBoolean(result.length!==0);
-        } else {
-            return QueryFilters.ebvBoolean(result.length===0);
-        }
-
+        return args[bindingsKey];
     }  else {
 
         var ops = [];

@@ -1185,6 +1185,42 @@ describe("Store", function () {
                 });
         });
     });
+
+    it("Should process EXISTS/NOT EXISTS filters", function(done){
+        var query="SELECT ?s WHERE { \
+                     FILTER NOT EXISTS {\
+                       ?s <c> ?c\
+                     }\
+                     { ?s <b> ?a }\
+                     UNION\
+                     {\
+                      ?s <d> ?a\
+                     }\
+                   }";
+
+        new Store.Store({name: 'test', overwrite: true}, function (err, store) {
+            expect(err == null);
+            store.execute('INSERT DATA {  <a> <b> <b1> . \
+                                          <a> <c> <c1> . \
+                                          <a2> <b> <b2> . \
+                                          <a3> <d> <d1> . \
+                                          <a4> <d> <d3> . \
+                                          <a4> <b> <b> . \
+                                          <a4> <c> <c1 > }', function(){
+                store.execute(query, function(err, results) {
+                    expect(err == null);
+                    expect(results.length === 2);
+                    var vars = {};
+                    for(var i=0; i<results.length; i++) {
+                        vars[results[i]['s'].value] = true;
+                    }
+                    expect(vars['a2']);
+                    expect(vars['a3']);
+                    done();
+                });
+            });
+        });
+    });
 });
 
 /*
