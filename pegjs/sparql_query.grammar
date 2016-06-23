@@ -2537,7 +2537,7 @@ Aggregate "[110] Aggregate"
 exp.token = 'expression';
 exp.expressionType = 'aggregate';
 exp.aggregateType = 'count';
-exp.distinct = (d != "" ? 'DISTINCT' : d);
+exp.distinct = ((d != "" && d != null) ? 'DISTINCT' : d);
 exp.expression = e;
 
 return exp;
@@ -2548,7 +2548,7 @@ return exp;
     exp.token = 'expression';
     exp.expressionType = 'aggregate';
     exp.aggregateType = 'group_concat';
-    exp.distinct = (d != "" ? 'DISTINCT' : d);
+    exp.distinct = ((d != "" && d != null) ? 'DISTINCT' : d);
     exp.expression = e;
     exp.separator = s;
 
@@ -2561,7 +2561,7 @@ return exp;
 exp.token = 'expression';
 exp.expressionType = 'aggregate';
 exp.aggregateType = 'sum';
-exp.distinct = (d != "" ? 'DISTINCT' : d);
+exp.distinct = ((d != "" && d != null) ? 'DISTINCT' : d);
 exp.expression = e;
 
 return exp;
@@ -2572,7 +2572,7 @@ return exp;
 exp.token = 'expression';
 exp.expressionType = 'aggregate';
 exp.aggregateType = 'min';
-exp.distinct = (d != "" ? 'DISTINCT' : d);
+exp.distinct = ((d != "" && d != null) ? 'DISTINCT' : d);
 exp.expression = e;
 
 return exp;
@@ -2583,7 +2583,7 @@ return exp;
 exp.token = 'expression'
 exp.expressionType = 'aggregate'
 exp.aggregateType = 'max'
-exp.distinct = (d != "" ? 'DISTINCT' : d);
+exp.distinct = ((d != "" && d != null) ? 'DISTINCT' : d);
 exp.expression = e
 
 return exp
@@ -2594,7 +2594,7 @@ return exp
 exp.token = 'expression'
 exp.expressionType = 'aggregate'
 exp.aggregateType = 'avg'
-exp.distinct = (d != "" ? 'DISTINCT' : d);
+exp.distinct = ((d != "" && d != null) ? 'DISTINCT' : d);
 exp.expression = e
 
 return exp

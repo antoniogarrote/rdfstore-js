@@ -8,32 +8,33 @@ describe("JSONLDParser#parse", function(){
             "foaf:homepage": "http://manu.sporny.org/",
             "sioc:avatar": "http://twitter.com/account/profile_image/manusporny",
             "@context": {
+                "foaf": "http://xmlns.com/foaf/0.1/",
+                "sioc": "http://rdfs.org/sioc/ns#",
                 "sioc:avatar" : {"@type": "@id"},
                 "foaf:homepage": {"@type": "@id"}}
         };
 
         JSONLDParser.parser.parse(input,null,{},function(err, result){
-            expect(err == null);
+            expect(err).toBe(null);
             expect(result.length).toBe(4);
             for(var i=0; i<result.length; i++) {
                 var triple = result[i];
-                expect(triple.subject['blank'] != null);
+                expect(triple.subject['blank'] != null).toBe(true);
                 expect(triple.subject['blank'].indexOf("_:")).toBe(0);
-                if(triple.predicate['uri'] === 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type') {
-                    expect(triple.object.uri).toBe("http://xmlns.com/foaf/0.1/Person");
-                } else if(triple.predicate.uri === 'http://xmlns.com/foaf/0.1/name') {
-                    expect(triple.object.literal).toBe('"Manu Sporny"');
-                } else if(triple.predicate.uri === 'http://xmlns.com/foaf/0.1/homepage') {
+                if(triple.predicate['value'] === 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type') {
+                    expect(triple.object.value).toBe("http://xmlns.com/foaf/0.1/Person");
+                } else if(triple.predicate.value === 'http://xmlns.com/foaf/0.1/name') {
+                    expect(triple.object.literal).toBe('"Manu Sporny"^^<http://www.w3.org/2001/XMLSchema#string>');
+                } else if(triple.predicate.value === 'http://xmlns.com/foaf/0.1/homepage') {
                     // uri because of default context coercion
-                    expect(triple.object.uri).toBe("http://manu.sporny.org/");
-                } else if(triple.predicate.uri === 'http://rdfs.org/sioc/ns#avatar') {
-                    expect(triple.object.uri).toBe("http://twitter.com/account/profile_image/manusporny");
+                    expect(triple.object.value).toBe("http://manu.sporny.org/");
+                } else if(triple.predicate.value === 'http://rdfs.org/sioc/ns#avatar') {
+                    expect(triple.object.value).toBe("http://twitter.com/account/profile_image/manusporny");
                 } else {
-                    expect(false);
+                    expect(false).toBe(true);
                 }
             }
             done();
-
         });
     });
 
@@ -53,22 +54,22 @@ describe("JSONLDParser#parse", function(){
 
         JSONLDParser.parser.parse(input,null, {}, function(err, result){
 
-            expect(err==null);
+            expect(err).toBe(null);
             expect(result.length).toBe(5);
             for(var i=0; i<result.length; i++) {
                 var triple = result[i];
                 expect(triple.subject.blank.indexOf("_:")).toBe(0);
                 if(triple.predicate.uri === 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type') {
-                    expect(triple.object.uri === "http://xmlns.com/foaf/0.1/Person");
+                    expect(triple.object.uri).toBe("http://xmlns.com/foaf/0.1/Person");
                 } else if(triple.predicate.uri === 'http://xmlns.com/foaf/0.1/name') {
-                    expect(triple.object.literal === '"Manu Sporny"');
+                    expect(triple.object.literal).toBe('"Manu Sporny"');
                 } else if(triple.predicate.uri === 'http://xmlns.com/foaf/0.1/homepage') {
                     // uri because of default context coercion
-                    expect(triple.object.uri === "http://manu.sporny.org/");
+                    expect(triple.object.uri).toBe("http://manu.sporny.org/");
                 } else if(triple.predicate.uri === 'http://rdfs.org/sioc/ns#avatar') {
-                    expect(triple.object.uri === "http://twitter.com/account/profile_image/manusporny");
+                    expect(triple.object.uri).toBe("http://twitter.com/account/profile_image/manusporny");
                 } else if(triple.predicate.uri === 'http://example.org/myvocab#personality') {
-                    expect(triple.object.literal === '"friendly"');
+                    expect(triple.object.literal).toBe('"friendly"');
                 } else {
                     expect(false);
                 }
@@ -102,17 +103,17 @@ describe("JSONLDParser#parse", function(){
 
         JSONLDParser.parser.parse(input, null, {}, function(err,result){
 
-            expect(result.length === 9);
+            expect(result.length).toBe(9);
 
             for(var i=0; i<result.length; i++) {
                 var triple = result[i];
                 if(triple.predicate.uri === 'http://xmlns.com/foaf/0.1/name') {
                     if(triple.subject.blank === '_:bnode1') {
-                        expect(triple.object.literal === '"Bob"');
+                        expect(triple.object.literal).toBe('"Bob"');
                     } else if(triple.subject.blank === '_:bnode2') {
-                        expect(triple.object.literal === '"Eve"');
+                        expect(triple.object.literal).toBe('"Eve"');
                     } else if(triple.subject.blank === '_:bnode3') {
-                        expect(triple.object.literal === '"Manu"');
+                        expect(triple.object.literal).toBe('"Manu"');
                     }
                 } else {
                     expect(triple.predicate.literal == null);
@@ -138,14 +139,14 @@ describe("JSONLDParser#parse", function(){
         };
 
         JSONLDParser.parser.parse(input, null, {}, function(err, result){
-            expect(result.length === 3);
+            expect(result.length).toBe(3);
 
             for(var i=0; i<result.length; i++) {
-                expect(result[i].subject.blank[0] === "_");
+                expect(result[i].subject.blank[0]).toBe("_");
                 if(result[i].predicate.uri === 'http://microformats.org/profile/hcard#url') {
-                    expect(result[i].object.uri === 'http://tantek.com/');
+                    expect(result[i].object.uri).toBe('http://tantek.com/');
                 } else if(result[i].predicate.uri === 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type') {
-                    expect(result[i].object.uri === 'http://microformats.org/profile/hcard#vcard');
+                    expect(result[i].object.uri).toBe('http://microformats.org/profile/hcard#vcard');
                 }
             }
 
@@ -186,16 +187,16 @@ describe("JSONLDParser#parse", function(){
             for(var i=0; i<result.length; i++) {
                 var triple = result[i];
 
-                if(triple.predicate.uri === 'http://purl.org/vocab/frbr/core#realization') {
+                if(triple.predicate.value === 'http://purl.org/vocab/frbr/core#realization') {
                     counter++;
-                    expect(triple.object.uri === 'http://purl.oreilly.com/products/9780596007683.BOOK' ||
-                    triple.object.uri=== 'http://purl.oreilly.com/products/9780596802189.EBOOK');
-                    expect(previous !== triple.object.uri);
-                    previous = triple.object.uri;
+                    expect(triple.object.value ==='http://purl.oreilly.com/products/9780596007683.BOOK' ||
+                           triple.object.value === 'http://purl.oreilly.com/products/9780596802189.EBOOK').toBe(true);
+                    expect(previous !== triple.object.value);
+                    previous = triple.object.value;
                 }
             }
 
-            expect(counter === 2);
+            expect(counter).toBe(2);
             done();
 
         });
@@ -203,34 +204,34 @@ describe("JSONLDParser#parse", function(){
     });
 
     it("Should parse JSON-LD json objects - 6", function(done){
-        var input = {"foaf:name": "Manu Sporny"};
+        var input = {"http://xmlns.com/foaf/0.1/name": "Manu Sporny"};
         JSONLDParser.parser.parse(input, null, {}, function(err, result){
-            expect(result.length === 1);
-            expect(result[0].predicate.uri === 'http://xmlns.com/foaf/0.1/name');
+            expect(result.length).toBe(1);
+            expect(result[0].predicate.value).toBe('http://xmlns.com/foaf/0.1/name');
 
 
             input = { "foaf:homepage": { "@id": "http://manu.sporny.org" } };
             JSONLDParser.parser.parse(input, null, {}, function(err,result){
-                expect(result.length === 1);
-                expect(result[0].object.uri === 'http://manu.sporny.org');
+                expect(result.length).toBe(1);
+                expect(result[0].object.value).toBe('http://manu.sporny.org');
 
                 input = { "@context": {"foaf:homepage": {"@type": "@id"} },
                           "foaf:homepage": "http://manu.sporny.org" };
 
                 JSONLDParser.parser.parse(input, null, {}, function(err,result){
-                    expect(result.length === 1);
-                    expect(result[0].object.uri === "http://manu.sporny.org");
+                    expect(result.length).toBe(1);
+                    expect(result[0].object.value).toBe("http://manu.sporny.org");
 
                     input = {"foaf:name": { "@value": "花澄", "@language": "ja"  } };
                     JSONLDParser.parser.parse(input, null, {}, function(err, result){
-                        expect(result.length === 1);
-                        expect(result[0].object.literal === '"花澄"@ja');
+                        expect(result.length).toBe(1);
+                        expect(result[0].object.literal).toBe('"花澄"@ja');
 
-                        input = {  "@context": {   "dc:modified": {'@type': "xsd:dateTime"}	 }, "dc:modified": "2010-05-29T14:17:39+02:00"};
+                        input = {  "@context": {   "dc:modified": {'@type': "http://www.w3.org/2001/XMLSchema#dateTime"}	 }, "dc:modified": "2010-05-29T14:17:39+02:00"};
 
                         JSONLDParser.parser.parse(input, null, {}, function(err, result){
-                            expect(result.length === 1);
-                            expect(result[0].object.literal === '"2010-05-29T14:17:39+02:00"^^<http://www.w3.org/2001/XMLSchema#dateTime>');
+                            expect(result.length).toBe(1);
+                            expect(result[0].object.literal).toBe('"2010-05-29T14:17:39+02:00"^^<http://www.w3.org/2001/XMLSchema#dateTime>');
 
                             input = {
                                 "@context":
@@ -249,13 +250,13 @@ describe("JSONLDParser#parse", function(){
                             JSONLDParser.parser.parse(input, {uri: 'http://test.com/graph'}, {}, function(err, result){
                                 var found = false;
                                 for(var i=0; i<result.length; i++) {
-                                    if(result[i].predicate.uri === 'http://xmlns.com/foaf/0.1/age') {
+                                    if(result[i].predicate.value === 'http://xmlns.com/foaf/0.1/age') {
                                         found = true;
-                                        expect(result[i].object.literal === '"41"^^<http://www.w3.org/2001/XMLSchema#integer>');
-                                        expect(result[i].graph.uri === 'http://test.com/graph');
+                                        expect(result[i].object.literal).toBe('"41"^^<http://www.w3.org/2001/XMLSchema#integer>');
+                                        expect(result[i].graph.uri).toBe('http://test.com/graph');
                                     }
                                 }
-                                expect(found === true);
+                                expect(found).toBe(true);
                                 done();
                             });
 
@@ -268,6 +269,6 @@ describe("JSONLDParser#parse", function(){
 
 
         });
-        
+
     })
 });

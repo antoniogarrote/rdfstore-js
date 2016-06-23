@@ -2152,7 +2152,7 @@ module.exports = (function() {
           exp.token = 'expression';
           exp.expressionType = 'aggregate';
           exp.aggregateType = 'count';
-          exp.distinct = (d != "" ? 'DISTINCT' : d);
+          exp.distinct = ((d != "" && d != null) ? 'DISTINCT' : d);
           exp.expression = e;
 
           return exp;
@@ -2169,7 +2169,7 @@ module.exports = (function() {
               exp.token = 'expression';
               exp.expressionType = 'aggregate';
               exp.aggregateType = 'group_concat';
-              exp.distinct = (d != "" ? 'DISTINCT' : d);
+              exp.distinct = ((d != "" && d != null) ? 'DISTINCT' : d);
               exp.expression = e;
               exp.separator = s;
 
@@ -2185,7 +2185,7 @@ module.exports = (function() {
           exp.token = 'expression';
           exp.expressionType = 'aggregate';
           exp.aggregateType = 'sum';
-          exp.distinct = (d != "" ? 'DISTINCT' : d);
+          exp.distinct = ((d != "" && d != null) ? 'DISTINCT' : d);
           exp.expression = e;
 
           return exp;
@@ -2200,7 +2200,7 @@ module.exports = (function() {
           exp.token = 'expression';
           exp.expressionType = 'aggregate';
           exp.aggregateType = 'min';
-          exp.distinct = (d != "" ? 'DISTINCT' : d);
+          exp.distinct = ((d != "" && d != null) ? 'DISTINCT' : d);
           exp.expression = e;
 
           return exp;
@@ -2215,7 +2215,7 @@ module.exports = (function() {
           exp.token = 'expression'
           exp.expressionType = 'aggregate'
           exp.aggregateType = 'max'
-          exp.distinct = (d != "" ? 'DISTINCT' : d);
+          exp.distinct = ((d != "" && d != null) ? 'DISTINCT' : d);
           exp.expression = e
 
           return exp
@@ -2230,7 +2230,7 @@ module.exports = (function() {
           exp.token = 'expression'
           exp.expressionType = 'aggregate'
           exp.aggregateType = 'avg'
-          exp.distinct = (d != "" ? 'DISTINCT' : d);
+          exp.distinct = ((d != "" && d != null) ? 'DISTINCT' : d);
           exp.expression = e
 
           return exp

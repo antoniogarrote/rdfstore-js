@@ -7,13 +7,13 @@ describe("Store", function () {
         new Store.Store({name: 'test', overwrite: true}, function (err, store) {
             expect(err == null);
             store.execute('INSERT DATA {  <http://example/book3> <http://example.com/vocab#title> <http://test.com/example> }', function (err, result) {
-                expect(err == null)
+                expect(err).toBe(null);
                 store.execute('SELECT * { ?s ?p ?o }', function (err, results) {
-                    expect(err == null);
+                    expect(err).toBe(null);
                     expect(results.length).toBe(1);
-                    expect(results[0].s.value === "http://example/book3");
-                    expect(results[0].p.value === "http://example.com/vocab#title");
-                    expect(results[0].o.value === "http://test.com/example");
+                    expect(results[0].s.value).toBe("http://example/book3");
+                    expect(results[0].p.value).toBe("http://example.com/vocab#title");
+                    expect(results[0].o.value).toBe("http://test.com/example");
                     store.close(function () {
                         done()
                     });
@@ -24,15 +24,15 @@ describe("Store", function () {
 
     it("Should pass integration test #2", function (done) {
         new Store.Store({treeOrder: 50, name: 'test', overwrite: true}, function (err, store) {
-            expect(err == null);
+            expect(err).toBe(null);
             store.execute('INSERT DATA {  <http://example/book3> <http://example.com/vocab#title> <http://test.com/example> }', function (err) {
-                expect(err == null);
+                expect(err).toBe(null);
                 store.execute('SELECT * { ?s ?p ?o }', function (err, results) {
-                    expect(err === true);
-                    expect(results.length === 1);
-                    expect(results[0].s.value === "http://example/book3");
-                    expect(results[0].p.value === "http://example.com/vocab#title");
-                    expect(results[0].o.value === "http://test.com/example");
+                    expect(err).toBe(null);
+                    expect(results.length).toBe(1);
+                    expect(results[0].s.value).toBe("http://example/book3");
+                    expect(results[0].p.value).toBe("http://example.com/vocab#title");
+                    expect(results[0].o.value).toBe("http://test.com/example");
 
                     store.close(function () {
                         done()
@@ -44,7 +44,7 @@ describe("Store", function () {
 
     it("Should pass integration test graph #1", function (done) {
         new Store.Store({name: 'test', overwrite: true}, function (err, store) {
-            expect(err == null);
+            expect(err).toBe(null);
             var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
                      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
                      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\
@@ -64,9 +64,9 @@ describe("Store", function () {
                          .\
                      }';
             store.execute(query, function (err) {
-                expect(err == null);
+                expect(err).toBe(null);
                 store.graph(function (err, graph) {
-                    expect(err == null);
+                    expect(err).toBe(null);
                     var results = graph.filter(store.rdf.filters.describes("http://example.org/people/alice"));
 
                     var resultsCount = results.toArray().length;
@@ -74,8 +74,8 @@ describe("Store", function () {
                     var resultsSubject = results.filter(store.rdf.filters.s("http://example.org/people/alice"))
                     var resultsObject = results.filter(store.rdf.filters.o("http://example.org/people/alice"))
 
-                    expect(resultsObject.toArray().length === 1);
-                    expect((resultsObject.toArray().length + resultsSubject.toArray().length) === resultsCount);
+                    expect(resultsObject.toArray().length).toBe(1);
+                    expect((resultsObject.toArray().length + resultsSubject.toArray().length)).toBe(resultsCount);
 
                     store.close(function () {
                         done()
@@ -87,7 +87,7 @@ describe("Store", function () {
 
     it("Should pass integration test graph #2", function (done) {
         new Store.Store({name: 'test', overwrite: true}, function (err, store) {
-            expect(err == null);
+            expect(err).toBe(null);
             var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
                      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
                      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\
@@ -103,7 +103,7 @@ describe("Store", function () {
                        }\
                      }';
             store.execute(query, function (err) {
-                expect(err == null);
+                expect(err).toBe(null);
                 var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
                          PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
                          PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\
@@ -119,13 +119,13 @@ describe("Store", function () {
                            }\
                          }'
                 store.execute(query, function (err, results) {
-                    expect(err == null);
+                    expect(err).toBe(null);
                     store.graph(function (succes, graph) {
-                        expect(graph.toArray().length === 0);
+                        expect(graph.toArray().length).toBe(0);
 
                         store.graph("http://example.org/people/alice", function (succes, results) {
 
-                            expect(results.toArray().length === 4);
+                            expect(results.toArray().length).toBe(4);
                             store.close(function () {
                                 done()
                             });
@@ -138,7 +138,7 @@ describe("Store", function () {
 
     it("Should pass integration test subject #1", function (done) {
         new Store.Store({name: 'test', overwrite: true}, function (err, store) {
-            expect(err == null);
+            expect(err).toBe(null);
             var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
                      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
                      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\
@@ -158,9 +158,9 @@ describe("Store", function () {
                          .\
                      }';
             store.execute(query, function (err, results) {
-                expect(err == null);
+                expect(err).toBe(null);
                 store.node("http://example.org/people/alice", function (err, graph) {
-                    expect(err == null);
+                    expect(err).toBe(null);
                     expect(graph.toArray().length).toBe(4);
                     store.close(function () {
                         done()
@@ -172,7 +172,7 @@ describe("Store", function () {
 
     it("Should pass integration test subject #2", function (done) {
         new Store.Store({name: 'test', overwrite: true}, function (err, store) {
-            expect(err == null);
+            expect(err).toBe(null);
             var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
                      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
                      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\
@@ -188,7 +188,7 @@ describe("Store", function () {
                        }\
                      }';
             store.execute(query, function (err) {
-                expect(err == null);
+                expect(err).toBe(null);
                 var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
                          PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
                          PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\
@@ -204,9 +204,9 @@ describe("Store", function () {
                            }\
                          }'
                 store.execute(query, function (err) {
-                    expect(err == null);
+                    expect(err).toBe(null);
                     store.graph(function (err, graph) {
-                        expect(err == null);
+                        expect(err).toBe(null);
                         expect(graph.toArray().length).toBe(0);
 
                         store.node("http://example.org/people/alice", "http://example.org/people/alice", function (err, results) {
@@ -224,7 +224,7 @@ describe("Store", function () {
 
     it("Should pass integration test prefixes", function (done) {
         new Store.Store({name: 'test', overwrite: true}, function (err, store) {
-            expect(err == null);
+            expect(err).toBe(null);
             var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
                      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
                      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\
@@ -240,7 +240,7 @@ describe("Store", function () {
                        }\
                      }';
             store.execute(query, function (err) {
-                expect(err == null);
+                expect(err).toBe(null);
                 var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
                          PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
                          PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\
@@ -256,14 +256,14 @@ describe("Store", function () {
                            }\
                          }';
                 store.execute(query, function (err) {
-                    expect(err == null);
+                    expect(err).toBe(null);
                     store.setPrefix("ex", "http://example.org/people/");
                     store.graph(function (err, graph) {
-                        expect(err == null);
+                        expect(err).toBe(null);
                         expect(graph.toArray().length).toBe(0);
 
                         store.node("ex:alice", "ex:alice", function (err, results) {
-                            expect(err == null);
+                            expect(err).toBe(null);
                             expect(results.toArray().length).toBe(4);
                             store.close(function () {
                                 done()
@@ -277,7 +277,7 @@ describe("Store", function () {
 
     it("Should pass integration test default prefixes", function (done) {
         new Store.Store({name: 'test', overwrite: true}, function (err, store) {
-            expect(err == null);
+            expect(err).toBe(null);
             var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
                      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
                      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\
@@ -293,7 +293,7 @@ describe("Store", function () {
                        }\
                      }';
             store.execute(query, function (err) {
-                expect(err == null);
+                expect(err).toBe(null);
                 var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
                          PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
                          PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\
@@ -309,14 +309,14 @@ describe("Store", function () {
                            }\
                          }';
                 store.execute(query, function (err, results) {
-                    expect(err == null);
+                    expect(err).toBe(null);
                     store.setDefaultPrefix("http://example.org/people/");
                     store.graph(function (err, graph) {
-                        expect(err == null);
+                        expect(err).toBe(null);
                         expect(graph.toArray().length).toBe(0);
 
                         store.node(":alice", ":alice", function (err, results) {
-                            expect(err == null);
+                            expect(err).toBe(null);
                             expect(results.toArray().length).toBe(4);
                             store.close(function () {
                                 done()
@@ -347,7 +347,7 @@ describe("Store", function () {
             store.insert(graph, function (err, results) {
 
                 store.node("ex:Alice", function (err, graph) {
-                    expect(graph.toArray().length === 2);
+                    expect(graph.toArray().length).toBe(2);
                     store.close(function () {
                         done()
                     });
@@ -376,7 +376,7 @@ describe("Store", function () {
             store.insert(graph, "ex:alice", function (err, results) {
 
                 store.node("ex:Alice", "ex:alice", function (err, graph) {
-                    expect(graph.toArray().length === 2);
+                    expect(graph.toArray().length).toBe(2);
                     store.close(function () {
                         done()
                     });
@@ -404,10 +404,10 @@ describe("Store", function () {
             store.insert(graph, function (err, results) {
 
                 store.node("ex:Alice", function (err, graph) {
-                    expect(graph.toArray().length === 2);
+                    expect(graph.toArray().length).toBe(2);
                     store.delete(graph, function (err, result) {
                         store.node("ex:Alice", function (err, graph) {
-                            expect(graph.toArray().length === 0);
+                            expect(graph.toArray().length).toBe(0);
                             store.close(function () {
                                 done()
                             });
@@ -437,10 +437,10 @@ describe("Store", function () {
 
             store.insert(graph, "ex:alice", function (err, results) {
                 store.node("ex:Alice", "ex:alice", function (err, graph) {
-                    expect(graph.toArray().length === 2);
+                    expect(graph.toArray().length).toBe(2);
                     store.delete(graph, "ex:alice", function (err, result) {
                         store.node("ex:Alice", function (err, graph) {
-                            expect(graph.toArray().length === 0);
+                            expect(graph.toArray().length).toBe(0);
                             store.close(function () {
                                 done()
                             });
@@ -469,10 +469,10 @@ describe("Store", function () {
 
             store.insert(graph, "ex:alice", function (err, results) {
                 store.node("ex:Alice", "ex:alice", function (err, graph) {
-                    expect(graph.toArray().length === 2);
+                    expect(graph.toArray().length).toBe(2);
                     store.clear("ex:alice", function (err, result) {
                         store.node("ex:Alice", function (err, graph) {
-                            expect(graph.toArray().length === 0);
+                            expect(graph.toArray().length).toBe(0);
                             store.close(function () {
                                 done()
                             });
@@ -508,9 +508,9 @@ describe("Store", function () {
             };
             store.load("application/json", input, "ex:test", function (err, results) {
                 store.node("ex:john_smith", "ex:test", function (err, graph) {
-                    expect(graph.toArray().length === 3);
+                    expect(graph.toArray().length).toBe(3);
                     store.close(function () {
-                        done()
+                        done();
                     });
                 });
 
@@ -531,7 +531,7 @@ describe("Store", function () {
                 //    expect(err);
                 //    var tmp = graph.toArray();
                 //    var results = graph.filter(store.rdf.filters.type(store.rdf.resolve("foaf:Person")));
-                //    expect(results.toArray().length === 1);
+                //    expect(results.toArray().length).toBe(1);
                 //    store.close(function(){ done() });
                 //});
             });
@@ -561,7 +561,7 @@ describe("Store", function () {
                         counter++;
                     }
 
-                    expect(counter === 2);
+                    expect(counter).toBe(2);
                     store.close(function () {
                         done()
                     });
@@ -594,7 +594,7 @@ describe("Store", function () {
                         counter++;
                     }
 
-                    expect(counter === 2);
+                    expect(counter).toBe(2);
                     store.close(function () {
                         done()
                     });
@@ -625,7 +625,7 @@ describe("Store", function () {
                         counter++;
                     }
 
-                    expect(counter === 2);
+                    expect(counter).toBe(2);
                     store.close(function () {
                         done()
                     });
@@ -660,7 +660,7 @@ describe("Store", function () {
                         counter++;
                     }
 
-                    expect(counter === 2);
+                    expect(counter).toBe(2);
                     store.close(function () {
                         done()
                     });
@@ -677,15 +677,15 @@ describe("Store", function () {
                     var observerFn = arguments.callee;
                     if (counter === 0) {
                         counter++;
-                        expect(graph.toArray().length === 1);
+                        expect(graph.toArray().length).toBe(1);
                         store.execute('INSERT DATA {  <http://example/book> <http://example.com/vocab#title2> <http://test.com/example2> }');
                     } else if (counter === 1) {
                         counter++;
-                        expect(graph.toArray().length === 2);
+                        expect(graph.toArray().length).toBe(2);
                         store.execute('DELETE DATA {  <http://example/book> <http://example.com/vocab#title2> <http://test.com/example2> }');
                     } else if (counter === 2) {
                         counter++;
-                        expect(graph.toArray().length === 1);
+                        expect(graph.toArray().length).toBe(1);
                         store.stopObservingNode(observerFn);
                         store.execute('INSERT DATA {  <http://example/book> <http://example.com/vocab#title2> <http://test.com/example3> }');
                         store.close(function () {
@@ -707,15 +707,15 @@ describe("Store", function () {
                     var observerFn = arguments.callee;
                     if (counter === 0) {
                         counter++;
-                        expect(graph.toArray().length === 1);
+                        expect(graph.toArray().length).toBe(1);
                         store.execute('INSERT DATA { GRAPH <http://example/graph> { <http://example/book> <http://example.com/vocab#title2> <http://test.com/example2> } }');
                     } else if (counter === 1) {
                         counter++;
-                        expect(graph.toArray().length === 2);
+                        expect(graph.toArray().length).toBe(2);
                         store.execute('DELETE DATA { GRAPH <http://example/graph> { <http://example/book> <http://example.com/vocab#title2> <http://test.com/example2> } }');
                     } else if (counter === 2) {
                         counter++;
-                        expect(graph.toArray().length === 1);
+                        expect(graph.toArray().length).toBe(1);
                         store.stopObservingNode(observerFn);
                         store.execute('INSERT DATA { GRAPH <http://example/graph> { <http://example/book> <http://example.com/vocab#title2> <http://test.com/example3> } }');
                         store.close(function () {
@@ -737,19 +737,19 @@ describe("Store", function () {
                 var observerFn = arguments.callee;
                 if (counter === 0) {
                     counter++;
-                    expect(event === 'added');
-                    expect(triples.length === 1);
+                    expect(event).toBe('added');
+                    expect(triples.length).toBe(1);
 
-                    expect(triples[0].subject.valueOf() === 'http://example/book');
-                    expect(triples[0].object.valueOf() === 'http://test.com/example');
+                    expect(triples[0].subject.valueOf()).toBe('http://example/book');
+                    expect(triples[0].object.valueOf()).toBe('http://test.com/example');
                 } else if (counter === 1) {
                     counter++;
-                    expect(event === 'added');
-                    expect(triples.length === 2);
+                    expect(event).toBe('added');
+                    expect(triples.length).toBe(2);
                 } else if (counter === 2) {
                     counter++;
-                    expect(event === 'deleted');
-                    expect(triples.length === 1);
+                    expect(event).toBe('deleted');
+                    expect(triples.length).toBe(1);
                     store.unsubscribe(observerFn);
                 } else if (counter === 3) {
                     expect(false);
@@ -806,14 +806,14 @@ describe("Store", function () {
                 store.execute(query, function (err, results) {
 
                     store.registeredGraphs(function (results, graphs) {
-                        expect(graphs.length === 2);
+                        expect(graphs.length).toBe(2);
                         var values = [];
                         for (var i = 0; i < graphs.length; i++) {
                             values.push(graphs[i].valueOf());
                         }
                         values.sort();
-                        expect(values[0] === 'http://example.org/people/alice');
-                        expect(values[1] === 'http://example.org/people/bob');
+                        expect(values[0]).toBe('http://example.org/people/alice');
+                        expect(values[1]).toBe('http://example.org/people/bob');
                         store.close(function () {
                             done()
                         });
@@ -852,15 +852,15 @@ describe("Store", function () {
         new Store.Store({name: 'test', overwrite: true}, function (err, store) {
             store.execute('INSERT DATA {  <http://example/person1> <http://xmlns.com/foaf/0.1/name> "Celia" }', function (result, msg) {
                 store.execute('SELECT * { ?s foaf:name ?name }', function (err, results) {
-                    expect(err === true);
-                    expect(results.length === 0);
+                    expect(err).toBe(null);
+                    expect(results.length).toBe(0);
 
                     store.registerDefaultProfileNamespaces();
 
                     store.execute('SELECT * { ?s foaf:name ?name }', function (err, results) {
-                        expect(err === true);
-                        expect(results.length === 1);
-                        expect(results[0].name.value === "Celia");
+                        expect(err).toBe(null);
+                        expect(results.length).toBe(1);
+                        expect(results[0].name.value).toBe("Celia");
                         store.close(function () {
                             done()
                         });
@@ -875,11 +875,11 @@ describe("Store", function () {
             store.execute('INSERT DATA {  <http://example/book3> <http://example.com/vocab#title> <http://test.com/example> }', function (result, msg) {
                 store.execute('INSERT DATA {  <http://example/book3> <http://example.com/vocab#title> <http://test.com/example> }', function (result, msg) {
                     store.execute('SELECT * { ?s ?p ?o }', function (err, results) {
-                        expect(err === true);
-                        expect(results.length === 1);
-                        expect(results[0].s.value === "http://example/book3");
-                        expect(results[0].p.value === "http://example.com/vocab#title");
-                        expect(results[0].o.value === "http://test.com/example");
+                        expect(err).toBe(null);
+                        expect(results.length).toBe(1);
+                        expect(results[0].s.value).toBe("http://example/book3");
+                        expect(results[0].p.value).toBe("http://example.com/vocab#title");
+                        expect(results[0].o.value).toBe("http://test.com/example");
 
                         store.close(function () {
                             done()
@@ -897,9 +897,9 @@ describe("Store", function () {
             store.load('application/json', data, function (result, msg) {
                 store.load('application/json', data, function (result, msg) {
                     store.execute('SELECT * { ?s ?p ?o }', function (err, results) {
-                        expect(err === true);
-                        expect(results.length === 1);
-                        expect(results[0].s.value === 'http://test.com/me');
+                        expect(err).toBe(null);
+                        expect(results.length).toBe(1);
+                        expect(results[0].s.value).toBe('http://test.com/me');
                         store.close(function () {
                             done()
                         });
@@ -937,15 +937,15 @@ describe("Store", function () {
                     var foundUris = false;
                     var triples = graph.toArray();
                     var triple;
-                    expect(triples.length === 4);
+                    expect(triples.length).toBe(4);
                     for (var i = 0; i < triples.length; i++) {
                         triple = triples[i];
                         if (triple.subject.interfaceName === 'BlankNode') {
                             numBlankSubjects++;
                             distinctBlankSubjects[triple.subject.bnodeId] = true;
                         } else {
-                            expect(triple.subject.valueOf() === 'http://www.example.com/resource/12645');
-                            expect(triple.object.interfaceName === 'BlankNode');
+                            expect(triple.subject.valueOf()).toBe('http://www.example.com/resource/12645');
+                            expect(triple.object.interfaceName).toBe('BlankNode');
                             distinctBlankSubjects[triple.object.bnodeId] = true;
                         }
                     }
@@ -955,7 +955,7 @@ describe("Store", function () {
                         numDistinctBlankSujects++;
                     }
 
-                    expect(numDistinctBlankSujects === 1);
+                    expect(numDistinctBlankSujects).toBe(1);
                     store.close(function () {
                         done()
                     });
@@ -973,7 +973,7 @@ describe("Store", function () {
                     store.execute(
                         'SELECT *  WHERE { ?x ?p ?x }',
                         function (err, results) {
-                            expect(results.length === 0);
+                            expect(results.length).toBe(0);
                             done()
                         }
                     );
@@ -992,7 +992,7 @@ describe("Store", function () {
                     store.execute(
                         'SELECT *  WHERE { ?x ?p ?x }',
                         function (err, results) {
-                            expect(results.length === 1);
+                            expect(results.length).toBe(1);
                             done()
                         }
                     );
@@ -1015,7 +1015,7 @@ describe("Store", function () {
                                 counter++;
                             });
 
-                            expect(counter === 0);
+                            expect(counter).toBe(0);
                             done()
                         }
                     );
@@ -1039,7 +1039,7 @@ describe("Store", function () {
                                 counter++;
                             });
 
-                            expect(counter === 1);
+                            expect(counter).toBe(1);
                             done()
                         }
                     );
@@ -1083,7 +1083,7 @@ describe("Store", function () {
                                                 jsonldmedia = results.length;
                                                 expect(jsonldmedia > 0);
 
-                                                expect(jsonldmedia === jsonmedia);
+                                                expect(jsonldmedia).toBe(jsonmedia);
                                                 done();
                                             });
                                     });
@@ -1115,7 +1115,7 @@ describe("Store", function () {
                     store.execute(
                         'PREFIX test: <http://test.com/> SELECT * { ?x test:prop ?v1 . ?y test:prop ?v2 . filter(custom:my_addition(?v1,?v2)) }',
                         function (err, results) {
-                            expect(results.length === 3);
+                            expect(results.length).toBe(3);
                             for (var i = 0; i < results.length; i++) {
                                 expect(parseInt(results[i].v1.value) + parseInt(results[i].v2.value) < 5);
                             }
@@ -1169,14 +1169,14 @@ describe("Store", function () {
                                         ["https://github.com/antoniogarrote/rdfstore-js#default_graph"],
                                         ["http://example.org/alice","http://example.org/bob"],
                                         function (err, results) {
-                                            expect(results.length === 2);
-                                            expect(results[0].who.value === 'Alice Hacker');
-                                            expect(results[0].g.value === 'http://example.org/alice');
-                                            expect(results[0].mbox.value === 'mailto:alice@work.example.org');
+                                            expect(results.length).toBe(2);
+                                            expect(results[0].who.value).toBe('Alice Hacker');
+                                            expect(results[0].g.value).toBe('http://example.org/alice');
+                                            expect(results[0].mbox.value).toBe('mailto:alice@work.example.org');
 
-                                            expect(results[1].who.value === 'Bob Hacker');
-                                            expect(results[1].g.value === 'http://example.org/bob');
-                                            expect(results[1].mbox.value === 'mailto:bob@oldcorp.example.org');
+                                            expect(results[1].who.value).toBe('Bob Hacker');
+                                            expect(results[1].g.value).toBe('http://example.org/bob');
+                                            expect(results[1].mbox.value).toBe('mailto:bob@oldcorp.example.org');
 
                                             done();
                                         });
@@ -1199,7 +1199,7 @@ describe("Store", function () {
                    }";
 
         new Store.Store({name: 'test', overwrite: true}, function (err, store) {
-            expect(err == null);
+            expect(err).toBe(null);
             store.execute('INSERT DATA {  <a> <b> <b1> . \
                                           <a> <c> <c1> . \
                                           <a2> <b> <b2> . \
@@ -1208,8 +1208,8 @@ describe("Store", function () {
                                           <a4> <b> <b> . \
                                           <a4> <c> <c1 > }', function(){
                 store.execute(query, function(err, results) {
-                    expect(err == null);
-                    expect(results.length === 2);
+                    expect(err).toBe(null);
+                    expect(results.length).toBe(2);
                     var vars = {};
                     for(var i=0; i<results.length; i++) {
                         vars[results[i]['s'].value] = true;
@@ -1252,7 +1252,7 @@ describe("Store", function () {
  //  store.node("http://purl.bioontology.org/ontology/RXNORM/309054",  function(err, graph) {
  //      console.log(graph);
  //      console.log(graph.toArray());
- //      expect(graph.toArray().length === 3);
+ //      expect(graph.toArray().length).toBe(3);
  //      done();
  //  });
 

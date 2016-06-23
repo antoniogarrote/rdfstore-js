@@ -14,10 +14,10 @@ var toTriples = function (input, graph, cb) {
                 } else if (term.type === 'IRI') {
                     return {'token': 'uri', 'value': term.value};
                 } else if (term.type === 'literal') {
-                    if (term.datatype !== null) {
-                        return {'literal': '"' + term.value + '"^^<' + term.datatype + ">"};
-                    } else if (term.language != null) {
+                    if (term.language != null) {
                         return {'literal': '"' + term.value + '"@' + term.language};
+                    } else if (term.datatype !== null) {
+                        return {'literal': '"' + term.value + '"^^<' + term.datatype + ">"};
                     } else {
                         return {'literal': '"' + term.value + '"'};
 
@@ -78,5 +78,3 @@ JSONLDParser.parser = {
 module.exports = {
     JSONLDParser: JSONLDParser
 };
-
-

@@ -143,6 +143,7 @@ Lexicon.prototype.resolveUri = function(uri,callback) {
     }
 };
 
+
 /**
  * Returns the cost associated to the URI.
  * If the URI hasn't been associated in the lexicon, -1 is returned.
@@ -474,7 +475,7 @@ Lexicon.prototype._unregisterTerm = function (kind, oid, callback) {
                                 }) ;
                             })(function(){
                                 callback();
-                            })
+                            });
                         } else {
                             that.uris.insert(uri,[oid, counter - 1], function(){
                                 callback();

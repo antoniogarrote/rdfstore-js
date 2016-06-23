@@ -36,7 +36,7 @@ describe("Parser", function() {
 
         var query = aqt.parseQueryString(query);
         var result = aqt.parseSelect(query.units[0]);
-        expect(result.pattern.kind === 'UNION');
+        expect(result.pattern.kind).toBe('UNION');
         expect(result.pattern.value.length).toBe(2);
         expect(result.pattern.value[0].kind).toBe('BGP');
         expect(result.pattern.value[0].value.length).toBe(1);
@@ -51,7 +51,7 @@ describe("Parser", function() {
         var query = aqt.parseQueryString(query);
         var result = aqt.parseSelect(query.units[0]);
 
-        expect(result.pattern.kind === 'UNION');
+        expect(result.pattern.kind).toBe('UNION');
         expect(result.pattern.value.length).toBe(2);
 
         expect(result.pattern.value[0].kind).toBe('UNION');
@@ -188,7 +188,7 @@ describe("Parser", function() {
         var patterns = aqt.collectBasicTriples(parsed);
 
         expect(patterns.length).toBe(1);
-        expect(patterns[0].graph != null);
+        expect(patterns[0].graph != null).toBe(true);
     });
 
     it("Should be possible to collect basic triples for 'SELECT * { GRAPH <http://test.com/graph1> { ?s ?p ?o } }'", function () {
@@ -272,7 +272,7 @@ describe("Parser", function() {
         var query = aqt.parseQueryString(query);
         var result = aqt.parseSelect(query.units[0]);
 
-        expect(result.pattern.kind==='BGP');
+        expect(result.pattern.kind).toBe('BGP');
         expect(result.pattern.value.length).toBe(3);
         expect(result.pattern.value[0].subject.value).toBe('s');
         expect(result.pattern.value[0].object.value.indexOf("fresh:")).toBe(0);

@@ -30,14 +30,14 @@ describe("RDFModel", function(){
                              .\
                          }';
                 engine.execute(query, function(err, result){
-                    expect(err == null);
+                    expect(err).toBe(null);
                     engine.execute('PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
                                 PREFIX  foaf:       <http://xmlns.com/foaf/0.1/>\
                                 CONSTRUCT { ?s ?p ?o . }\
                                 WHERE {\
                                   ?s ?p ?o .\
                                 }', function(err, graph){
-                        expect(err == null);
+                        expect(err).toBe(null);
                         expect(graph.length).toBe(9);
 
                         var rdf = RDFModel.rdf;
@@ -130,28 +130,28 @@ describe("RDFModel", function(){
 
         var parts = graph.toNT().split("\r\n");
 
-        expect(parts[0]==='_:0 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://test.com/MyClass> . ')
-        expect(parts[1]==='<http://www.w3.org/ns/earl#test> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://test.com/MyClass> . ');
-        expect(parts[2]==='<http://www.w3.org/ns/earl#test> <http://www.w3.org/ns/earl#test> "alice" . ');
-        expect(parts[3]==='');
+        expect(parts[0]).toBe('_:0 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://test.com/MyClass> . ');
+        expect(parts[1]).toBe('<http://www.w3.org/ns/earl#test> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://test.com/MyClass> . ');
+        expect(parts[2]).toBe('<http://www.w3.org/ns/earl#test> <http://www.w3.org/ns/earl#test> "alice" . ');
+        expect(parts[3]).toBe('');
     });
 
     it("Should be possible to serialize a literal.", function(){
         var rdf = RDFModel.rdf;
         var literal = rdf.createLiteral("alice", null, "http://www.w3.org/2001/XMLSchema#string");
-        expect(literal.toString()==="\"alice\"^^<http://www.w3.org/2001/XMLSchema#string>");
+        expect(literal.toString()).toBe("\"alice\"^^<http://www.w3.org/2001/XMLSchema#string>");
     });
 
 
     it("Should be possible to resolve URIs using the default name space", function(){
         var rdf = RDFModel.rdf;
         rdf.prefixes.defaultNs = undefined;
-        expect(rdf.prefixes.defaultNs==null);
-        expect(rdf.prefixes.resolve(":test")==null);
-        expect(rdf.prefixes.shrink("http://something.com/vocab/test")==="http://something.com/vocab/test");
+        expect(rdf.prefixes.defaultNs).toBe(undefined);
+        expect(rdf.prefixes.resolve(":test")).toBe(null);
+        expect(rdf.prefixes.shrink("http://something.com/vocab/test")).toBe("http://something.com/vocab/test");
         rdf.prefixes.setDefault("http://something.com/vocab/");
-        expect(rdf.prefixes.shrink("http://something.com/vocab/test")==="http://something.com/vocab/test");
-        expect(rdf.prefixes.resolve(":test")==="http://something.com/vocab/test");
+        expect(rdf.prefixes.shrink("http://something.com/vocab/test")).toBe("http://something.com/vocab/test");
+        expect(rdf.prefixes.resolve(":test")).toBe("http://something.com/vocab/test");
     });
 
     it("Should be possible to serialize a named node", function(){
