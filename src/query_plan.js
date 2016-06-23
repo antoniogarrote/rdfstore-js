@@ -477,7 +477,9 @@ QueryPlanDPSize.executeBGPDatasets = function(bgp, dataset, queryEngine, queryEn
                     } else {
                         k();
                     }
-                }
+                } else {
+		    k();
+		}
             }, function(){
                 if(acum == null) {
                     callback(null);
