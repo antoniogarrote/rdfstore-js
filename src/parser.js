@@ -2110,7 +2110,9 @@ module.exports = (function() {
           regex.expressionType = 'regex';
           regex.text = e1;
           regex.pattern = e2;
-          regex.flags = eo[2];
+          if(eo != null) {
+            regex.flags = eo[2];
+          }
 
           return regex;
           },

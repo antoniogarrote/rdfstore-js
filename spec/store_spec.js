@@ -581,7 +581,7 @@ describe("Store", function () {
             input = '_:a <http://test.com/p1> "test". _:a <http://test.com/p2> "test2". _:b <http://test.com/p1> "test" .';
             store.load("text/n3", input, {graph: "ex:test"}, function (err, results) {
                 store.execute("select ?s { GRAPH <http://example.org/examples/test> { ?s ?p ?o } }", function (err, results) {
-                    expect(err);
+                    expect(err).toBe(null);
 
                     var blankIds = {};
 
@@ -613,7 +613,7 @@ describe("Store", function () {
             input = '<#me> <http://test.com/p1> "test". <http://test.com/something#me> <http://test.com/p2> "test2". _:b <http://test.com/p1> "test" .';
             store.load("text/n3", input, {baseURI: "http://test.com/something"}, function (err, results) {
                 store.execute("select ?s { ?s ?p ?o }", function (err, results) {
-                    expect(err);
+                    expect(err).toBe(null);
                     var blankIds = {};
 
                     for (var i = 0; i < results.length; i++) {
@@ -647,7 +647,7 @@ describe("Store", function () {
                 graph: "ex:test"
             }, function (err, results) {
                 store.execute("select ?s { GRAPH <http://example.org/examples/test> { ?s ?p ?o }  }", function (err, results) {
-                    expect(err);
+                    expect(err).toBe(null);
 
                     var blankIds = {};
 
@@ -692,7 +692,7 @@ describe("Store", function () {
                             done()
                         });
                     } else if (counter === 3) {
-                        expect(false);
+                        expect(false).toBe(true);
                     }
                 });
             });
@@ -1206,7 +1206,7 @@ describe("Store", function () {
                                           <a3> <d> <d1> . \
                                           <a4> <d> <d3> . \
                                           <a4> <b> <b> . \
-                                          <a4> <c> <c1 > }', function(){
+                                          <a4> <c> <c1> }', function(){
                 store.execute(query, function(err, results) {
                     expect(err).toBe(null);
                     expect(results.length).toBe(2);
@@ -1214,8 +1214,38 @@ describe("Store", function () {
                     for(var i=0; i<results.length; i++) {
                         vars[results[i]['s'].value] = true;
                     }
-                    expect(vars['a2']);
-                    expect(vars['a3']);
+                    expect(vars['a2']).toBe(true);
+                    expect(vars['a3']).toBe(true);
+                    done();
+                });
+            });
+        });
+    });
+
+    it("Should process regex filters", function(done){
+        var query="SELECT ?s { \
+                     ?s ?p ?o .\
+                     FILTER regex(?o, \"test\")\
+                   }";
+
+        new Store.Store({name: 'test', overwrite: true}, function (err, store) {
+            expect(err).toBe(null);
+            store.execute('INSERT DATA {  <a1> <b> "atestofsomething" . \
+                                          <a11> <c> "test" . \
+                                          <a2> <b> "other" . \
+                                          <a3> <d> "someother" . \
+                                          <a4> <d> 1 . \
+                                          <a4> <b> 2 . \
+                                          <a4> <c> 3 }', function(){
+                store.execute(query, function(err, results) {
+                    expect(err).toBe(null);
+                    expect(results.length).toBe(2);
+                    var vars = {};
+                    for(var i=0; i<results.length; i++) {
+                        vars[results[i]['s'].value] = true;
+                    }
+                    expect(vars['a1']).toBe(true);
+                    expect(vars['a11']).toBe(true);
                     done();
                 });
             });
