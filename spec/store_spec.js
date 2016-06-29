@@ -1128,6 +1128,39 @@ describe("Store", function () {
 
     });
 
+    it("Should pass integration test RegisterCustomFunction with a URI for the function", function (done) {
+        new Store.Store({name: 'test', overwrite: true}, function (err, store) {
+            store.load(
+                'text/n3',
+                '@prefix test: <http://test.com/> .\
+                 test:A test:prop 5.\
+                 test:B test:prop 4.\
+                 test:C test:prop 1.\
+                 test:D test:prop 3.',
+                function (err) {
+
+                    var invoked = false;
+                    store.registerCustomFunction('http://test.com/my_addition', function (engine, args) {
+                        var v1 = engine.effectiveTypeValue(args[0]);
+                        var v2 = engine.effectiveTypeValue(args[1]);
+                        return engine.ebvBoolean(v1 + v2 < 5);
+                    });
+                    store.execute(
+                        'PREFIX test: <http://test.com/> SELECT * { ?x test:prop ?v1 . ?y test:prop ?v2 . filter(<http://test.com/my_addition>(?v1,?v2)) }',
+                        function (err, results) {
+                            expect(results.length).toBe(3);
+                            for (var i = 0; i < results.length; i++) {
+                                expect(parseInt(results[i].v1.value) + parseInt(results[i].v2.value) < 5);
+                            }
+                            done();
+                        }
+                    );
+
+                });
+        });
+
+    });
+
     it("Should be able to use GRAPH variables", function (done) {
         new Store.Store({name: 'test', overwrite: true}, function (err, store) {
             store.load(
@@ -1246,6 +1279,37 @@ describe("Store", function () {
                     }
                     expect(vars['a1']).toBe(true);
                     expect(vars['a11']).toBe(true);
+                    done();
+                });
+            });
+        });
+    });
+
+    it("Should process numeric filters", function(done){
+        var query="PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\
+                   SELECT ?s { \
+                     ?s ?p ?o .\
+                     FILTER (xsd:double(?o) > \"10.0\"^^<http://www.w3.org/2001/XMLSchema#double>)\
+                   }";
+
+        new Store.Store({name: 'test', overwrite: true}, function (err, store) {
+            expect(err).toBe(null);
+            store.execute('INSERT DATA {  <a1> <b> 16.0 . \
+                                          <a2> <b> 3.0 . \
+                                          <a3> <d> "11.4"^^<http://www.w3.org/2001/XMLSchema#double> . \
+                                          <a4> <d> "0.3"^^<http://www.w3.org/2001/XMLSchema#double> . \
+                                          <a5> <c> 13 .\
+                                          <a6> <c> "3"^^<http://www.w3.org/2001/XMLSchema#integer> }', function(){
+                store.execute(query, function(err, results) {
+                    expect(err).toBe(null);
+                    expect(results.length).toBe(3);
+                    var vars = {};
+                    for(var i=0; i<results.length; i++) {
+                        vars[results[i]['s'].value] = true;
+                    }
+                    expect(vars['a1']).toBe(true);
+                    expect(vars['a3']).toBe(true);
+                    expect(vars['a5']).toBe(true);
                     done();
                 });
             });

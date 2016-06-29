@@ -19426,7 +19426,7 @@ Store.prototype.close = function(cb) {
 /**
  * Version of the store
  */
-Store.VERSION = "0.9.12";
+Store.VERSION = "0.9.13";
 
 /**
  * Create a new RDFStore instance that will be
@@ -22817,7 +22817,9 @@ module.exports = (function() {
           regex.expressionType = 'regex';
           regex.text = e1;
           regex.pattern = e2;
-          regex.flags = eo[2];
+          if(eo != null) {
+            regex.flags = eo[2];
+          }
 
           return regex;
           },
@@ -28446,7 +28448,7 @@ QueryFilters.runIriRefOrFunction = function(iriref, args, bindings,queryEngine, 
     } else {
         var ops = [];
         for(var i=0; i<args.length; i++) {
-            ops.push(QueryFilters.runFilter(args[i], bindings, queryEngine, dataset, env))
+            ops.push(QueryFilters.runFilter(args[i], bindings, queryEngine, dataset, env));
         }
 
         var fun = Utils.lexicalFormBaseUri(iriref, env);
@@ -28696,7 +28698,10 @@ QueryFilters.runIriRefOrFunction = function(iriref, args, bindings,queryEngine, 
             } else {
                 return QueryFilters.ebvError();
             }
+        }  else if(queryEngine.customFns[fun] != null) {
+            return queryEngine.customFns[fun](QueryFilters, ops);
         } else {
+
             // unknown function
             return QueryFilters.ebvError();
         }

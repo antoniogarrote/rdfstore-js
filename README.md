@@ -455,9 +455,10 @@ The store will try to be smart and not perform unnecessary evaluations of these 
 ###Custom Filter Functions
 
 Custom filter function can be registered into the store using the *registerCustomFunction* function. This function receives two argument, the name of the custom function and the associated implementation. This functions will be available in a SPARQL query using the prefix *custom*.
+You can also use a full URI to identify the function that is going to be registered.
 The function implementation will receive two arguments, an object linking to the store query filters engine and a list with the actual arguments. Arguments will consist of literal or URIs objects. Results from the function must also be literal or URI objects.
 
-The query filters engine can be used to access auxiliary function to transform literals into JavaScript types using the *effectiveTypeValue* function, boolean values using the *effectiveBooleanValue*, to build boolean litearl objects (*ebvTrue*, *ebvFalse*) or return an error with the *ebvError*. Documentation and source code for the *QueryFilters* object n the 'js-query-engine' module can be consulted to find information about additional helper functions.
+The query filters engine can be used to access auxiliary function to transform literals into JavaScript types using the *effectiveTypeValue* function, boolean values using the *effectiveBooleanValue*, to build boolean literal objects (*ebvTrue*, *ebvFalse*) or return an error with the *ebvError*. Documentation and source code for the *QueryFilters* object n the 'js-query-engine' module can be consulted to find information about additional helper functions.
 
 The following test shows a simple examples of how custom functions can be invoked:
 
@@ -473,8 +474,9 @@ new Store({name:'test', overwrite:true}, function(err,store) {
 		function(err) {
 
 			var invoked = false;
+            // instead of 'my_addition_check' a full URI can be used 'http://test.com/my_fns/my_addition_check'
 			store.registerCustomFunction('my_addition_check', function(engine,args) {
-		// equivalent to var v1 = parseInt(args[0].value), v2 = parseInt(args[1]);
+		// equivalent to var v1 = parseInt(args[0].value), v2 = parseInt(args[1].value);
 
 		var v1 = engine.effectiveTypeValue(args[0]);
 		var v2 = engine.effectiveTypeValue(args[1]);
