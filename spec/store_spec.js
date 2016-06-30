@@ -1161,6 +1161,39 @@ describe("Store", function () {
 
     });
 
+    it("Should pass integration test RegisterCustomFunction with a CURIE for the function", function (done) {
+        new Store.Store({name: 'test', overwrite: true}, function (err, store) {
+            store.load(
+                'text/n3',
+                '@prefix test: <http://test.com/> .\
+                 test:A test:prop 5.\
+                 test:B test:prop 4.\
+                 test:C test:prop 1.\
+                 test:D test:prop 3.',
+                function (err) {
+
+                    var invoked = false;
+                    store.registerCustomFunction('http://test.com/my_addition2', function (engine, args) {
+                        var v1 = engine.effectiveTypeValue(args[0]);
+                        var v2 = engine.effectiveTypeValue(args[1]);
+                        return engine.ebvBoolean(v1 + v2 < 5);
+                    });
+                    store.execute(
+                        'PREFIX test: <http://test.com/> SELECT * { ?x test:prop ?v1 . ?y test:prop ?v2 . filter(test:my_addition2(?v1,?v2)) }',
+                        function (err, results) {
+                            expect(results.length).toBe(3);
+                            for (var i = 0; i < results.length; i++) {
+                                expect(parseInt(results[i].v1.value) + parseInt(results[i].v2.value) < 5);
+                            }
+                            done();
+                        }
+                    );
+
+                });
+        });
+
+    });
+
     it("Should be able to use GRAPH variables", function (done) {
         new Store.Store({name: 'test', overwrite: true}, function (err, store) {
             store.load(
@@ -1315,6 +1348,38 @@ describe("Store", function () {
             });
         });
     });
+
+    it("Should process functions in BIND expressions", function(done){
+        new Store.Store({name: 'test', overwrite: false}, function (err, store) {
+            store.load(
+                'text/n3',
+                '@prefix test: <http://test.com/> .\
+                 test:A test:prop 5.\
+                 test:B test:prop 4.\
+                 test:C test:prop 1.\
+                 test:D test:prop 3.',
+                function (err) {
+
+                    var invoked = false;
+                    store.registerCustomFunction('http://test.com/my_default_value', function (engine, args) {
+                        var v1 = engine.effectiveTypeValue(args[0]);
+                        return {"token":"literal", "value":"test_value", "type":"http://www.w3.org/2001/XMLSchema#string"};
+                    });
+                    store.execute(
+                        'PREFIX test: <http://test.com/> SELECT * { OPTIONAL { ?x test:prop ?v1 . BIND(test:my_default_value(?v1) AS ?default_value) } }',
+                        function (err, results) {
+                            expect(results.length).toBe(4);
+                            for (var i = 0; i < results.length; i++) {
+                                expect(results[i].default_value.value).toBe("test_value");
+                            }
+                            done();
+                        }
+                    );
+
+                });
+        });
+    });
+
 });
 
 /*
