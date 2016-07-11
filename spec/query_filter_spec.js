@@ -1,29 +1,26 @@
 var QueryFilters = require('../src/query_filters').QueryFilters;
 
-describe('QueryFilters (async)', function() {
+describe('QueryFilters', function() {
   it('should run the equality function', function(done) {
     var op1 = createLiteral('123');
     var op2 = createLiteral('1234');
-    QueryFilters.runEqualityFunctionAsync(op1, op2, { }, null, null, null, function(result) {
-      expect(result.value).toEqual(false);
-      done();
-    })
+    var result = QueryFilters.runEqualityFunctionOnPreprocessedOperandsSync(op1, op2, { }, null, null, null);
+    expect(result.value).toEqual(false);
+    done();
   })
   it('should run the lt function', function(done) {
     var op1 = createLiteral('1');
     var op2 = createLiteral('2');
-    QueryFilters.runLtFunction(op1, op2, {}, function(result) {
-      expect(result.value).toEqual(true);
-      done();
-    })
+    var result = QueryFilters.runLtFunctionOnPreprocessedOperandsSync(op1, op2, {});
+    expect(result.value).toEqual(true);
+    done();
   })
   it('should run a relational filter (runRelationalFilter)', function(done) {
     var op1 = createLiteral('1');
     var op2 = createLiteral('2');
-    QueryFilters.runRelationalFilter({ operator: '>'}, op1, op2, {}, null, null, null, function(result) {
-      expect(result.value).toEqual(false);
-      done();
-    })
+    var result = QueryFilters.runRelationalFilterOnPreprocessedOperandsSync({ operator: '>'}, op1, op2, {}, null, null, null);
+    expect(result.value).toEqual(false);
+    done();
   })
   it('should run a relational filter (runFilter)', function(done) {
     var op1 = createLiteralExpression('1');

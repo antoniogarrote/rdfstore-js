@@ -202,7 +202,7 @@ QueryEngine.prototype.compareFilteredBindings = function(a, b, order, env) {
 
         // uris
         if(a.value[i].token === 'uri' && b.value[i].token === 'uri') {
-            if(QueryFilters.runEqualityFunctionSync(a.value[i], b.value[i], [], this, env).value == true) {
+            if(QueryFilters.runEqualityFunctionOnPreprocessedOperandsSync(a.value[i], b.value[i], [], this, env).value == true) {
                 i++;
                 continue;
             } else {
@@ -216,7 +216,7 @@ QueryEngine.prototype.compareFilteredBindings = function(a, b, order, env) {
 
         // simple literals
         if(a.value[i].token === 'literal' && b.value[i].token === 'literal' && a.value[i].type == null && b.value[i].type == null) {
-            if(QueryFilters.runEqualityFunctionSync(a.value[i], b.value[i], [], this, env).value == true) {
+            if(QueryFilters.runEqualityFunctionOnPreprocessedOperandsSync(a.value[i], b.value[i], [], this, env).value == true) {
                 i++;
                 continue;
             } else {
@@ -229,7 +229,7 @@ QueryEngine.prototype.compareFilteredBindings = function(a, b, order, env) {
         } else
 
         // literals
-        if(QueryFilters.runEqualityFunctionSync(a.value[i], b.value[i], [], this, env).value == true) {
+        if(QueryFilters.runEqualityFunctionOnPreprocessedOperandsSync(a.value[i], b.value[i], [], this, env).value == true) {
             i++;
             continue;
         } else {
