@@ -251,13 +251,13 @@ QueryFilters.runAggregator = function(aggregator, bindingsGroup, queryEngine, da
                                 if(distinct[key] == null) {
                                     distinct[key] = true;
                                     if(QueryFilters.isNumeric(ebv)) {
-                                        aggregated = QueryFilters.runSumFunction(aggregated, ebv);
+                                        aggregated = QueryFilters.runSumFunctionOnPreprocessedOperandsSync(aggregated, ebv);
                                         count++;
                                     }
                                 }
                             } else {
                                 if(QueryFilters.isNumeric(ebv)) {
-                                    aggregated = QueryFilters.runSumFunction(aggregated, ebv);
+                                    aggregated = QueryFilters.runSumFunctionOnPreprocessedOperandsSync(aggregated, ebv);
                                     count++;
                                 }
                             }
@@ -265,7 +265,7 @@ QueryFilters.runAggregator = function(aggregator, bindingsGroup, queryEngine, da
                         k();
                     })
                 }, function() {
-                    var result = QueryFilters.runDivFunction(aggregated, { token: 'literal', type: xmlSchema+'integer', value: ''+count });
+                    var result = QueryFilters.runDivFunctionOnPreprocessedOperandsSync(aggregated, { token: 'literal', type: xmlSchema+'integer', value: ''+count });
                     result.value = ''+result.value;
                     callback(result);
                 })
@@ -281,12 +281,12 @@ QueryFilters.runAggregator = function(aggregator, bindingsGroup, queryEngine, da
                                 if(distinct[key] == null) {
                                     distinct[key] = true;
                                     if(QueryFilters.isNumeric(ebv)) {
-                                        aggregated = QueryFilters.runSumFunction(aggregated, ebv);
+                                        aggregated = QueryFilters.runSumFunctionOnPreprocessedOperandsSync(aggregated, ebv);
                                     }
                                 }
                             } else {
                                 if(QueryFilters.isNumeric(ebv)) {
-                                    aggregated = QueryFilters.runSumFunction(aggregated, ebv);
+                                    aggregated = QueryFilters.runSumFunctionOnPreprocessedOperandsSync(aggregated, ebv);
                                 }
                             }
                         }
@@ -949,7 +949,7 @@ QueryFilters.runEqualityFunctionOnPreprocessedOperandsSync = function(op1, op2, 
  * Some criteria are not clear
  * @todo make it async
  */
-QueryFilters.runTotalGtFunctionSync = function(op1, op2) {
+QueryFilters.runTotalGtFunctionOnPreprocessedOperandsSync = function(op1, op2) {
     if(QueryFilters.isEbvError(op1) || QueryFilters.isEbvError(op2)) {
         return QueryFilters.ebvError();
     }
@@ -1040,7 +1040,7 @@ QueryFilters.runGtFunctionOnPreprocessedOperandsSync = function(op1, op2, bindin
 };
 
 QueryFilters.runAddition = function(summand, summands, bindings, queryEngine, dataset, env, callback) {
-    var summandOp = QueryFilters.runFilter(summand,bindings,queryEngine, dataset, env, function(summandOp) {
+    QueryFilters.runFilter(summand,bindings,queryEngine, dataset, env, function(summandOp) {
         if(QueryFilters.isEbvError(summandOp)) {
             callback(QueryFilters.ebvError()); return;
         }
@@ -1054,10 +1054,10 @@ QueryFilters.runAddition = function(summand, summands, bindings, queryEngine, da
             var nextSummandOp = summandOps[i];
             /** @todo test isNumeric */
             if(summands[i].operator === '+') {
-              acum = QueryFilters.runSumFunction(acum, nextSummandOp);
+              acum = QueryFilters.runSumFunctionOnPreprocessedOperandsSync(acum, nextSummandOp);
             }
             else if(summands[i].operator === '-') {
-              acum = QueryFilters.runSubFunction(acum, nextSummandOp);
+              acum = QueryFilters.runSubFunctionOnPreprocessedOperandsSync(acum, nextSummandOp);
             }
           }
           callback(acum);
@@ -1065,7 +1065,7 @@ QueryFilters.runAddition = function(summand, summands, bindings, queryEngine, da
     });
 };
 
-QueryFilters.runSumFunction = function(suma, sumb) {
+QueryFilters.runSumFunctionOnPreprocessedOperandsSync = function(suma, sumb) {
     if(QueryFilters.isEbvError(suma) || QueryFilters.isEbvError(sumb)) {
         return QueryFilters.ebvError();
     }
@@ -1082,7 +1082,7 @@ QueryFilters.runSumFunction = function(suma, sumb) {
     }
 };
 
-QueryFilters.runSubFunction = function(suma, sumb) {
+QueryFilters.runSubFunctionOnPreprocessedOperandsSync = function(suma, sumb) {
     if(QueryFilters.isEbvError(suma) || QueryFilters.isEbvError(sumb)) {
         return QueryFilters.ebvError();
     }
@@ -1117,10 +1117,10 @@ QueryFilters.runMultiplication = function(factor, factors, bindings, queryEngine
                 }
                 else if(QueryFilters.isNumeric(results[i])) {
                     if(factors[i].operator === '*') {
-                        acum = QueryFilters.runMulFunction(acum, results[i]);
+                        acum = QueryFilters.runMulFunctionOnPreprocessedOperandsSync(acum, results[i]);
                     }
                     else if(factors[i].operator === '/') {
-                        acum = QueryFilters.runDivFunction(acum, results[i]);
+                        acum = QueryFilters.runDivFunctionOnPreprocessedOperandsSync(acum, results[i]);
                     }
                 }
                 else {
@@ -1133,7 +1133,7 @@ QueryFilters.runMultiplication = function(factor, factors, bindings, queryEngine
     });
 };
 
-QueryFilters.runMulFunction = function(faca, facb) {
+QueryFilters.runMulFunctionOnPreprocessedOperandsSync = function(faca, facb) {
     if(QueryFilters.isEbvError(faca) || QueryFilters.isEbvError(facb)) {
         return QueryFilters.ebvError();
     }
@@ -1150,7 +1150,7 @@ QueryFilters.runMulFunction = function(faca, facb) {
     }
 };
 
-QueryFilters.runDivFunction = function(faca, facb) {
+QueryFilters.runDivFunctionOnPreprocessedOperandsSync = function(faca, facb) {
     if(QueryFilters.isEbvError(faca) || QueryFilters.isEbvError(facb)) {
         return QueryFilters.ebvError();
     }
@@ -1302,7 +1302,7 @@ QueryFilters.runBuiltInCall = function(builtincall, args, bindings, queryEngine,
 };
 
 QueryFilters.runUnaryExpression = function(unaryexpression, expression, bindings, queryEngine, dataset, env) {
-    var op = QueryFilters.runFilter(expression, bindings,queryEngine, dataset, env, function(op) {
+    QueryFilters.runFilter(expression, bindings,queryEngine, dataset, env, function(op) {
         if(QueryFilters.isEbvError(op)) {
             return op;
         }
