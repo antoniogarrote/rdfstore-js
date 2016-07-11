@@ -386,6 +386,11 @@ var eachSeries = function (arr, iterator, callback) {
     iterate();
 };
 
+var range = function(exclusiveMax) {
+  var ret = [];
+  for(var i = 0; i < exclusiveMax; ++i) ret.push(i);
+  return ret;
+}
 
 var reduce = function (arr, memo, iterator, callback) {
     eachSeries(arr, function (x, callback) {
@@ -445,6 +450,7 @@ module.exports = {
     whilst: whilst,
     eachSeries: eachSeries,
     seq: seq,
+    range: range,
     yieldFrequency: function(value){
         yieldFrequency = value;
     }

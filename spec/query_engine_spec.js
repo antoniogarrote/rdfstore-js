@@ -492,6 +492,7 @@ describe("QueryEngine", function(){
                     engine.execute("PREFIX foaf:    <http://xmlns.com/foaf/0.1/>\
                                                    SELECT ?name WHERE { ?x foaf:name ?name } ORDER BY ?name",
                         function(err, results) {
+                            if(err) throw err;
                             expect(results.length).toBe(3);
                             expect(results[0].name.value).toBe('Alice');
                             expect(results[1].name.value).toBe('Bob');
@@ -1362,6 +1363,7 @@ describe("QueryEngine", function(){
 
                 engine.execute(query, function(err, result){
                     engine.execute('PREFIX : <http://example/> SELECT (MAX(?v) AS ?maxv) {  ?s ?p ?v . } GROUP BY ?s', function(err, results){
+                        if(err) throw err;
                         expect(results.length).toBe(2);
                         expect(results[0].maxv.value).toBe('9');
                         expect(results[1].maxv.value).toBe('2');

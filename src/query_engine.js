@@ -202,11 +202,11 @@ QueryEngine.prototype.compareFilteredBindings = function(a, b, order, env) {
 
         // uris
         if(a.value[i].token === 'uri' && b.value[i].token === 'uri') {
-            if(QueryFilters.runEqualityFunction(a.value[i], b.value[i], [], this, env).value == true) {
+            if(QueryFilters.runEqualityFunctionSync(a.value[i], b.value[i], [], this, env).value == true) {
                 i++;
                 continue;
             } else {
-                filterResult = QueryFilters.runTotalGtFunction(a.value[i], b.value[i], []);
+                filterResult = QueryFilters.runTotalGtFunctionSync(a.value[i], b.value[i], []);
             }
         } else if(a.value[i].token === 'uri') {
             filterResult = {value: false};
@@ -216,11 +216,11 @@ QueryEngine.prototype.compareFilteredBindings = function(a, b, order, env) {
 
         // simple literals
         if(a.value[i].token === 'literal' && b.value[i].token === 'literal' && a.value[i].type == null && b.value[i].type == null) {
-            if(QueryFilters.runEqualityFunction(a.value[i], b.value[i], [], this, env).value == true) {
+            if(QueryFilters.runEqualityFunctionSync(a.value[i], b.value[i], [], this, env).value == true) {
                 i++;
                 continue;
             } else {
-                filterResult = QueryFilters.runTotalGtFunction(a.value[i], b.value[i], []);
+                filterResult = QueryFilters.runTotalGtFunctionSync(a.value[i], b.value[i], []);
             }
         } else if(a.value[i].token === 'literal' && a.value[i].type == null) {
             filterResult = {value: false};
@@ -229,11 +229,11 @@ QueryEngine.prototype.compareFilteredBindings = function(a, b, order, env) {
         } else
 
         // literals
-        if(QueryFilters.runEqualityFunction(a.value[i], b.value[i], [], this, env).value == true) {
+        if(QueryFilters.runEqualityFunctionSync(a.value[i], b.value[i], [], this, env).value == true) {
             i++;
             continue;
         } else {
-            filterResult = QueryFilters.runTotalGtFunction(a.value[i], b.value[i], []);
+            filterResult = QueryFilters.runTotalGtFunctionSync(a.value[i], b.value[i], []);
         }
 
 
@@ -291,16 +291,21 @@ QueryEngine.prototype.removeDefaultGraphBindings = function(bindingsList, datase
 
 QueryEngine.prototype.aggregateBindings = function(projection, bindingsGroup, dataset, env, callback) {
     this.copyDenormalizedBindings(bindingsGroup, env.outCache, function(denormBindings){
+        var that = this;
         var aggregatedBindings = {};
-        for(var i=0; i<projection.length; i++) {
-            var aggregatedValue = QueryFilters.runAggregator(projection[i], denormBindings, this, dataset, env);
-            if(projection[i].alias) {
-                aggregatedBindings[projection[i].alias.value] = aggregatedValue;
-            } else {
-                aggregatedBindings[projection[i].value.value] = aggregatedValue;
-            }
-        }
-        callback(aggregatedBindings);
+        _.eachSeries(projection, function(p, k) {
+            QueryFilters.runAggregator(p, denormBindings, that, dataset, env, function(aggregatedValue) {
+                if(p.alias) {
+                    aggregatedBindings[p.alias.value] = aggregatedValue;
+                }
+                else {
+                    aggregatedBindings[p.value.value] = aggregatedValue;
+                }
+                k();
+            });
+        }, function() {
+            callback(aggregatedBindings);
+        })
     });
 };
 
@@ -1879,20 +1884,25 @@ QueryEngine.prototype.runBinds = function(binds, bindings, dataset, env, callbac
     var originalBindings = bindings;
     if(binds != null && binds.length > 0) {
         that.copyDenormalizedBindings(bindings, env.outCache, function(denormBindings){
-            for(var i=0; i<bindings.length; i++) {
-                for(var j=0; j<binds.length; j++) {
-                    var bind = binds[j];
-                    var thisDenormBindings = denormBindings[i];
-                    var ebv = QueryFilters.runFilter(bind.expression, thisDenormBindings, that, dataset, env);
-                    if(QueryFilters.isEbvError(ebv)) {
-                        callback(ebv);
-                    } else {
-                        // we set the value for the new binding
-                        originalBindings[i][bind.as.value] = ebv;
+            _.eachSeries(_.range(bindings.length), function(i, k) {
+                var thisDenormBindings = denormBindings[i];
+                QueryFilters.runFilters(binds.map(function(b) { return b.expression }), thisDenormBindings, that, dataset, env, function(results) {
+                    for(var j=0; j < results.length; ++j) {
+                        var bind = binds[j];
+                        var ebv = results[j];
+                        if(QueryFilters.isEbvError(ebv)) {
+                            callback(ebv);
+                            return;
+                        }
+                        else {
+                            originalBindings[i][bind.as.value] = ebv;
+                        }
                     }
-                }
-            }
-            callback(null, bindings);
+                    return k();
+                })
+            }, function() {
+                callback(null, bindings);
+            })
         });
     } else {
         callback(null, bindings);
