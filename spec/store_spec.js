@@ -752,7 +752,7 @@ describe("Store", function () {
                     expect(triples.length).toBe(1);
                     store.unsubscribe(observerFn);
                 } else if (counter === 3) {
-                    expect(false);
+                    expect(false).toBe(true);
                 }
             });
 

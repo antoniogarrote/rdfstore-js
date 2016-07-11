@@ -492,6 +492,7 @@ describe("QueryEngine", function(){
                     engine.execute("PREFIX foaf:    <http://xmlns.com/foaf/0.1/>\
                                                    SELECT ?name WHERE { ?x foaf:name ?name } ORDER BY ?name",
                         function(err, results) {
+                            if(err) throw err;
                             expect(results.length).toBe(3);
                             expect(results[0].name.value).toBe('Alice');
                             expect(results[1].name.value).toBe('Bob');
@@ -1362,6 +1363,7 @@ describe("QueryEngine", function(){
 
                 engine.execute(query, function(err, result){
                     engine.execute('PREFIX : <http://example/> SELECT (MAX(?v) AS ?maxv) {  ?s ?p ?v . } GROUP BY ?s', function(err, results){
+                        if(err) throw err;
                         expect(results.length).toBe(2);
                         expect(results[0].maxv.value).toBe('9');
                         expect(results[1].maxv.value).toBe('2');
@@ -1653,6 +1655,40 @@ describe("QueryEngine", function(){
                         expect(success);
                         expect(result.length).toEqual(1);
                         expect(result[0].title.value).toEqual('The Semantic Web');
+                        done();
+                    })
+                })
+            });
+        });
+    });
+    it('Test FILTER EXISTS composition', function(done) {
+        new Lexicon(function(lexicon){
+            new QuadBackend({treeOrder: 15}, function(backend){
+                var engine = new QueryEngine({backend: backend,
+                    lexicon: lexicon});
+                var query = 'BASE <http://example.org/book/>\
+                             PREFIX dc:  <http://purl.org/dc/elements/1.1/> \
+                             PREFIX ns:  <http://example.org/ns#>\
+                             INSERT DATA {\
+                               <book1>  dc:title     "SPARQL Tutorial" .\
+                               <book1>  ns:price     42 .\
+                               <book1>  ns:discount  0.2 .\
+                               <book1>  ns:relatedTo <book2> .\
+                               <book2>  dc:title     "The Semantic Web" .\
+                               <book2>  ns:price     23 .\
+                               <book2>  ns:discount  0.25 .\
+                             }';
+                engine.execute(query, function(success, result) {
+                    var query = 'PREFIX  dc:  <http://purl.org/dc/elements/1.1/>\
+                                 PREFIX  ns:  <http://example.org/ns#>\
+                                 SELECT  * \
+                                 { ?x ns:discount ?discount .\
+                                   ?x dc:title ?title .\
+                                    FILTER EXISTS { ?x ns:price ?p FILTER (?p = 23 || EXISTS { ?x ns:price 42 }) } .\
+                                 }';
+                    engine.execute(query, function(success, result) {
+                        expect(success);
+                        expect(result.length).toEqual(2);
                         done();
                     })
                 })
