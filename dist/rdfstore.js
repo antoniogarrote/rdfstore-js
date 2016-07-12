@@ -19428,7 +19428,7 @@ Store.prototype.close = function(cb) {
 /**
  * Version of the store
  */
-Store.VERSION = "0.9.14";
+Store.VERSION = "0.9.15";
 
 /**
  * Create a new RDFStore instance that will be
@@ -27027,6 +27027,42 @@ QueryFilters.preprocessExistentialFilters = function(filters, bindings, queryEng
                     k();
                 });
             });
+        } else if (filter.value.expressionType === "conditionalor" || filter.value.expressionType === "conditionaland") {
+            var operands = filter.value.operands.map(function(operand){ return {"value": operand}; });
+            QueryFilters.preprocessExistentialFilters(operands, bindings, queryEngine, dataset, env, function(preprocessedOperands){
+                filter.value.operands = preprocessedOperands.map(function(operand){ return operand.value; });
+                preProcessedFilters.push(filter);
+                k();
+            });
+        } else if (filter.value.expressionType === "multiplicativeexpression") {
+            var operands = filter.value.factors.map(function(operand){ return {"value": operand}; });
+            QueryFilters.preprocessExistentialFilters(operands, bindings, queryEngine, dataset, env, function(preprocessedOperands){
+                filter.value.factors = preprocessedOperands.map(function(operand){ return operand.value; });
+                preProcessedFilters.push(filter);
+                k();
+            });
+        } else if (filter.value.expressionType === "additiveexpression") {
+            var operands = filter.value.summands.map(function(operand){ return {"value": operand}; });
+            QueryFilters.preprocessExistentialFilters(operands, bindings, queryEngine, dataset, env, function(preprocessedOperands){
+                filter.value.summands = preprocessedOperands.map(function(operand){ return operand.value; });
+                preProcessedFilters.push(filter);
+                k();
+            });
+        } else if(filter.value.expressionType === "relationalexpression") {
+            var operands = [ {"value": filter.value.op1}, {"value": filter.value.op2}];
+            QueryFilters.preprocessExistentialFilters(operands, bindings, queryEngine, dataset, env, function(preprocessedOperands){
+                filter.value.op1 = preprocessedOperands[0].value;
+                filter.value.op2 = preprocessedOperands[1].value;
+                preProcessedFilters.push(filter);
+                k();
+            });
+        } else if(filter.value.expressionType === "irireforfunction" || filter.value.expressionType === "custom") {
+            var operands = filter.value.args.map(function(operand){ return {"value": operand}; });
+            QueryFilters.preprocessExistentialFilters(operands, bindings, queryEngine, dataset, env, function(preprocessedOperands){
+                filter.value.args = preprocessedOperands.map(function(operand){ return operand.value; });
+                preProcessedFilters.push(filter);
+                k();
+            });
         } else {
             preProcessedFilters.push(filter);
             k();
@@ -27062,7 +27098,7 @@ QueryFilters.boundVars = function(filterExpr) {
         } else if(expressionType == 'multiplicativeexpression') {
             var acum = QueryFilters.boundVars(filterExpr.factor);
             for(var i=0; i<filterExpr.factors.length; i++) {
-                acum = acum.concat(QueryFilters.boundVars(filterExpr.factors[i].expression))
+                acum = acum.concat(QueryFilters.boundVars(filterExpr.factors[i].expression));
             }
             return acum;
         } else if(expressionType == 'additiveexpression') {
@@ -27312,7 +27348,7 @@ QueryFilters.runFilter = function(filterExpr, bindings, queryEngine, dataset, en
         } else if(expressionType == 'irireforfunction') {
             return QueryFilters.runIriRefOrFunction(filterExpr.iriref, filterExpr.args, bindings, queryEngine, dataset, env);
         } else if(expressionType == 'regex') {
-            return QueryFilters.runRegex(filterExpr.text, filterExpr.pattern, filterExpr.flags, bindings, queryEngine, dataset, env)
+            return QueryFilters.runRegex(filterExpr.text, filterExpr.pattern, filterExpr.flags, bindings, queryEngine, dataset, env);
         } else if(expressionType == 'custom') {
             return QueryFilters.runBuiltInCall(filterExpr.name, filterExpr.args, bindings, queryEngine, dataset, env);
         } else if(expressionType == 'atomic') {
