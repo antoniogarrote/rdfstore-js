@@ -719,10 +719,10 @@ describe("Store", function () {
                         store.stopObservingNode(observerFn);
                         store.execute('INSERT DATA { GRAPH <http://example/graph> { <http://example/book> <http://example.com/vocab#title2> <http://test.com/example3> } }');
                         store.close(function () {
-                            done()
+                            done();
                         });
                     } else if (counter === 3) {
-                        expect(false);
+                        expect(false).toBe(true);
                     }
                 });
             });
@@ -752,7 +752,7 @@ describe("Store", function () {
                     expect(triples.length).toBe(1);
                     store.unsubscribe(observerFn);
                 } else if (counter === 3) {
-                    expect(false);
+                    expect(false).toBe(true);
                 }
             });
 

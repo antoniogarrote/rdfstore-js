@@ -71,21 +71,21 @@ QueryFilters.preprocessExistentialFilters = function(filters, bindings, queryEng
                 });
             });
         } else if (filter.value.expressionType === "conditionalor" || filter.value.expressionType === "conditionaland") {
-            var operands = filter.value.operands.map(function(operand){ return {"value": operand}; });
+            var operands = _.map(filter.value.operands, function(operand){ return {"value": operand}; });
             QueryFilters.preprocessExistentialFilters(operands, bindings, queryEngine, dataset, env, function(preprocessedOperands){
                 filter.value.operands = preprocessedOperands.map(function(operand){ return operand.value; });
                 preProcessedFilters.push(filter);
                 k();
             });
         } else if (filter.value.expressionType === "multiplicativeexpression") {
-            var operands = filter.value.factors.map(function(operand){ return {"value": operand}; });
+            var operands = _.map(filter.value.factors, function(operand){ return {"value": operand}; });
             QueryFilters.preprocessExistentialFilters(operands, bindings, queryEngine, dataset, env, function(preprocessedOperands){
                 filter.value.factors = preprocessedOperands.map(function(operand){ return operand.value; });
                 preProcessedFilters.push(filter);
                 k();
             });
         } else if (filter.value.expressionType === "additiveexpression") {
-            var operands = filter.value.summands.map(function(operand){ return {"value": operand}; });
+            var operands = _.map(filter.value.summands, function(operand){ return {"value": operand}; });
             QueryFilters.preprocessExistentialFilters(operands, bindings, queryEngine, dataset, env, function(preprocessedOperands){
                 filter.value.summands = preprocessedOperands.map(function(operand){ return operand.value; });
                 preProcessedFilters.push(filter);
@@ -100,7 +100,7 @@ QueryFilters.preprocessExistentialFilters = function(filters, bindings, queryEng
                 k();
             });
         } else if(filter.value.expressionType === "irireforfunction" || filter.value.expressionType === "custom") {
-            var operands = filter.value.args.map(function(operand){ return {"value": operand}; });
+            var operands = _.map(filter.value.args, function(operand){ return {"value": operand}; });
             QueryFilters.preprocessExistentialFilters(operands, bindings, queryEngine, dataset, env, function(preprocessedOperands){
                 filter.value.args = preprocessedOperands.map(function(operand){ return operand.value; });
                 preProcessedFilters.push(filter);
