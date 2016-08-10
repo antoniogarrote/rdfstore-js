@@ -1127,7 +1127,7 @@ DataBlockValue "[65] DataBlockValue"
  [61]	FunctionCall	  ::=	IRIref ArgList
  */
 FunctionCall "[61] FunctionCall"
-    = i:IRIref args:ArgList {
+    = i:IRIref WS* args:ArgList {
     var fcall = {};
     fcall.token = "expression";
     fcall.expressionType = 'irireforfunction'
@@ -1147,11 +1147,11 @@ ArgList "[62] ArgList"
     args.value = [];
     return args;
 }
-/ '(' d:('DISTINCT'/'distinct')? e:Expression es:( ',' Expression)* ')' {
+/ '(' WS* d:('DISTINCT'/'distinct')? WS* e:Expression WS* es:( ',' WS* Expression)* ')' {
     var cleanEx = [];
 
     for(var i=0; i<es.length; i++) {
-	cleanEx.push(es[i][1]);
+	cleanEx.push(es[i][2]);
     }
     var args = {};
     args.token = 'args';
@@ -2610,12 +2610,12 @@ return exp
  [117]		IRIrefOrFunction	  ::=	IRIref ArgList?
  */
 IRIrefOrFunction "[117] IRIrefOrFunction"
-    = i:IRIref args:ArgList? {
+    = i:IRIref WS* args:ArgList? {
     var fcall = {};
 fcall.token = "expression";
 fcall.expressionType = 'irireforfunction';
 fcall.iriref = i;
-fcall.args = args.value;
+fcall.args = (args != null ? args.value : args);
 
 return fcall;
 }
