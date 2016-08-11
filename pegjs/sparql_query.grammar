@@ -1176,11 +1176,11 @@ ExpressionList "[63] ExpressionList"
     args.value = [];
     return args;
 }
-/ '(' e:(IRIref / Expression) es:( ',' (IRIref / Expression))* ')' {
+/ '(' WS* e:(IRIref / Expression) WS* es:( ',' WS* (IRIref / Expression))* ')' {
     var cleanEx = [];
 
     for(var i=0; i<es.length; i++) {
-	cleanEx.push(es[i][1]);
+	cleanEx.push(es[i][2]);
     }
     var args = {};
     args.token = 'args';
