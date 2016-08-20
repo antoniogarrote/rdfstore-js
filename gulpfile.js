@@ -26,16 +26,18 @@ gulp.task('browserify', ['clean-dist'], function() {
         .pipe(gulp.dest('./dist'));
 });
 
-gulp.task('minimize', ['browserify'], function() {
+gulp.task('minimize', [/* 'browserify' */], function() {
     return gulp.src('dist/*.js')
         .pipe(closureCompiler({
-            compilerPath: './node_modules/closure-compiler/lib/vendor/compiler.jar',
+            continueWithWarnings: true,
+            compilerPath: './node_modules/google-closure-compiler/compiler.jar',
             fileName: 'dist/rdfstore_min.js',
             compilerFlags: {
                 'language_in': 'ECMASCRIPT5'
                 //'compilation_level': 'ADVANCED_OPTIMIZATIONS'
             }
-        }));
+        }))
+        .pipe(gulp.dest("."));
 });
 
 gulp.task('performance',function(){
@@ -43,7 +45,7 @@ gulp.task('performance',function(){
 });
 
 gulp.task('specs', function () {
-    return gulp.src('./spec/*.js')
+    return gulp.src('./spec/query_engine_spec.js')
         .pipe(jasmine({includeStackTrace: true, verbose:true}));
 });
 
@@ -52,7 +54,8 @@ gulp.task('parseGrammar', function(){
         if(err) {
             throw err;
         } else {
-            var parser =  PEG.buildParser(grammar, {output: 'source', optimize: 'size'});
+            var parser =  PEG.generate(grammar, {output: 'source'});
+            //var parser =  PEG.buildParser(grammar, {output: 'source', optimize: 'size'});
             fs.unlinkSync('src/parser.js');
             fs.writeFileSync('src/parser.js',"module.exports = "+parser);
         }

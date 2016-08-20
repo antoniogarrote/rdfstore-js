@@ -447,7 +447,7 @@ OrderClause "[22] OrderClause"
  [23]	OrderCondition	  ::=	 ( ( 'ASC' | 'DESC' ) BrackettedExpression ) | ( Constraint | Var )
  */
 OrderCondition "[23] OrderCondition"
-    = ( direction:( 'ASC'/ 'asc' / 'DESC'/ 'desc' ) WS* e:BrackettedExpression WS* ) {
+    =  direction:( 'ASC'/ 'asc' / 'DESC'/ 'desc' ) WS* e:BrackettedExpression WS*  {
     return { direction: direction.toUpperCase(), expression:e };
 }
 / e:( Constraint / Var ) WS* {
