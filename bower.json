@@ -1,6 +1,6 @@
 {
   "name": "rdfstore",
-  "version": "0.9.8",
+  "version": "0.9.15",
   "homepage": "https://github.com/antoniogarrote/rdfstore-js",
   "authors": [
     "Antonio Garrote <antoniogarrote@gmail.com>"
@@ -25,6 +25,5 @@
     "bower_components",
     "test",
     "tests"
-  ],
-  "dependencies": {}
+  ]
 }
