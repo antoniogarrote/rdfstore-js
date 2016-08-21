@@ -285,8 +285,76 @@ QueryPlanDPSize.executeBushyTree = function(queryPlan, dataset, queryEngine, env
     }
 };
 
-
+// faster version
 QueryPlanDPSize.executeAndBGPsDPSize = function(allBgps, dataset, queryEngine, env, callback) {
+    var groups = QueryPlanDPSize.executeAndBGPsGroups(allBgps);
+    var groupResults = [];
+
+    async.eachSeries(groups, function(groupBgps, k) {
+        // build left join tree for this group
+        var costFactor = 1;
+        queryEngine.computeCosts(groupBgps, env, function(bgps) {
+            // Building plans of size 1
+            var size1Plans = bgps.map(QueryPlanDPSize.buildSize1Plan);
+            var plan = size1Plans[0];
+            for(var i=1; i<size1Plans.length;++i) {
+              plan = QueryPlanDPSize.createJoinTree(plan, size1Plans[i]);
+            }
+            groupResults.push(plan);
+            k();
+        })
+    }, function() {
+        // now execute the Bushy trees and perform
+        // cross products between groups
+        var acum = null;
+        async.eachSeries(groupResults, function(tree,k) {
+
+
+            QueryPlanDPSize.executeBushyTree(tree, dataset, queryEngine, env, function(result) {
+                if(result) {
+                    if(acum == null) {
+                        acum = result;
+                        k();
+                    } else {
+                        acum = QueryPlanDPSize.crossProductBindings(acum, result);
+                        k();
+                    }
+                } else {
+                    k("Error executing bushy tree");
+                }
+
+            });
+        },function(err){
+            if(err) {
+                callback(null, err);
+            } else {
+                callback(acum);
+            }
+        });
+    });
+};
+
+QueryPlanDPSize.buildSize1Plan = function(bgp, index) {
+    var vars = [];
+
+    delete bgp['variables']; // @todo why?
+    for(var comp in bgp) {
+        if(comp != '_cost') {
+            if(bgp[comp].token === 'var') {
+                vars.push(bgp[comp].value);
+            } else if(bgp[comp].token === 'blank') {
+                vars.push(bgp[comp].value);
+            }
+        }
+    }
+
+    var plan         = {left: bgp, right:null, cost:bgp._cost, i:('_'+index+'_'), vars:vars};
+    delete bgp['_cost'];
+
+    return plan;
+}
+
+QueryPlanDPSize.executeAndBGPsDPSizeOld = function(allBgps, dataset, queryEngine, env, callback) {
 
     var groups = QueryPlanDPSize.executeAndBGPsGroups(allBgps);
     var groupResults = [];
@@ -418,7 +486,6 @@ QueryPlanDPSize.executeAndBGPsDPSize = function(allBgps, dataset, queryEngine, e
         });
     });
 };
-
 
 QueryPlanDPSize.executeEmptyJoinBGP = function(bgp, dataset, queryEngine, queryEnv, callback) {
     return QueryPlanDPSize.executeBGPDatasets(bgp, dataset, queryEngine, queryEnv, callback);
