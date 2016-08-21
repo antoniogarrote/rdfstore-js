@@ -1,8 +1,6 @@
 
 // imports
 var utils = require('./utils');
-var _ = utils;
-var async = utils;
 
 /*
  * "perfect" indices for RDF indexing
@@ -17,7 +15,7 @@ var async = utils;
  * @param configuration['dbName'] Name for the IndexedDB
  * @return The newly created backend.
  */
-QuadBackend = function (configuration, callback) {
+PersistentQuadBackend = function (configuration, callback) {
     var that = this;
 
     if (arguments !== 0) {
@@ -47,7 +45,7 @@ QuadBackend = function (configuration, callback) {
         request.onupgradeneeded = function(event) {
             var db = event.target.result;
             var objectStore = db.createObjectStore(that.dbName, { keyPath: 'SPOG'});
-            _.each(that.indices, function(index){
+            utils.each(that.indices, function(index){
                 if(index !== 'SPOG') {
                     objectStore.createIndex(index,index,{unique: false});
                 }
@@ -57,9 +55,9 @@ QuadBackend = function (configuration, callback) {
 };
 
 
-QuadBackend.prototype.index = function (quad, callback) {
+PersistentQuadBackend.prototype.index = function (quad, callback) {
     var that = this;
-    _.each(this.indices, function(index){
+    utils.each(this.indices, function(index){
         quad[index] = that._genMinIndexKey(quad, index);
     });
 
@@ -77,7 +75,7 @@ QuadBackend.prototype.index = function (quad, callback) {
     };
 };
 
-QuadBackend.prototype.range = function (pattern, callback) {
+PersistentQuadBackend.prototype.range = function (pattern, callback) {
     var that = this;
     var objectStore = that.db.transaction([that.dbName]).objectStore(that.dbName);
     var indexKey = this._indexForPattern(pattern);
@@ -104,7 +102,7 @@ QuadBackend.prototype.range = function (pattern, callback) {
     }
 };
 
-QuadBackend.prototype.search = function (quad, callback) {
+PersistentQuadBackend.prototype.search = function (quad, callback) {
     var that = this;
     var objectStore = that.db.transaction([that.dbName]).objectStore(that.dbName);
     var indexKey = this._genMinIndexKey(quad, 'SPOG');
@@ -118,7 +116,7 @@ QuadBackend.prototype.search = function (quad, callback) {
 };
 
 
-QuadBackend.prototype.delete = function (quad, callback) {
+PersistentQuadBackend.prototype.delete = function (quad, callback) {
     var that = this;
     var indexKey = that._genMinIndexKey(quad, 'SPOG');
     var request = that.db.transaction([that.dbName], "readwrite")
@@ -132,9 +130,9 @@ QuadBackend.prototype.delete = function (quad, callback) {
     };
 };
 
-QuadBackend.prototype._genMinIndexKey = function(quad,index) {
+PersistentQuadBackend.prototype._genMinIndexKey = function(quad,index) {
     var indexComponents = this.componentOrders[index];
-    return _.map(indexComponents, function(component){
+    return utils.map(indexComponents, function(component){
         if(typeof(quad[component]) === 'string' || quad[component] == null) {
             return "-1";
         } else {
@@ -143,7 +141,7 @@ QuadBackend.prototype._genMinIndexKey = function(quad,index) {
     }).join('.');
 };
 
-QuadBackend.prototype._genMaxIndexKey = function(quad,index) {
+PersistentQuadBackend.prototype._genMaxIndexKey = function(quad,index) {
     var indexComponents = this.componentOrders[index];
     var acum = [];
     var foundFirstMissing = false;
@@ -162,20 +160,20 @@ QuadBackend.prototype._genMaxIndexKey = function(quad,index) {
             acum[i] = componentValue;
         }
     }
-    return _.map(acum, function(componentValue){
+    return utils.map(acum, function(componentValue){
         return ""+componentValue
     }).join('.');
 };
 
 
-QuadBackend.prototype._indexForPattern = function (pattern) {
+PersistentQuadBackend.prototype._indexForPattern = function (pattern) {
     var indexKey = pattern.indexKey;
 
     for (var i = 0; i < this.indices.length; i++) {
         var index = this.indices[i];
         var indexComponents = this.componentOrders[index];
         for (var j = 0; j < indexComponents.length; j++) {
-            if (_.include(indexKey, indexComponents[j]) === false) {
+            if (utils.include(indexKey, indexComponents[j]) === false) {
                 break;
             }
             if (j == indexKey.length - 1) {
@@ -188,7 +186,7 @@ QuadBackend.prototype._indexForPattern = function (pattern) {
 };
 
 
-QuadBackend.prototype.clear = function(callback) {
+PersistentQuadBackend.prototype.clear = function(callback) {
     var that = this;
     var transaction = that.db.transaction([that.dbName],"readwrite"), request;
     request = transaction.objectStore(that.dbName).clear();
@@ -196,4 +194,4 @@ QuadBackend.prototype.clear = function(callback) {
     request.onerror = function(){ callback(); };
 };
 
-module.exports.QuadBackend = QuadBackend;
+module.exports.PersistentQuadBackend = PersistentQuadBackend;

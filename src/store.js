@@ -1,9 +1,9 @@
 // imports
 var QueryEngine = require("./query_engine").QueryEngine;
 var InMemoryQuadBackend = require("./quad_backend").QuadBackend;
-var PersistentBackend = require("./persistent_quad_backend").QuadBackend;
+var PersistentBackend = require("./persistent_quad_backend").PersistentQuadBackend;
 var InMemoryLexicon = require("./lexicon").Lexicon;
-var PersistentLexicon = require("./persistent_lexicon").Lexicon;
+var PersistentLexicon = require("./persistent_lexicon").PersistentLexicon;
 var RDFModel = require("./rdf_model");
 var _ = require("./utils");
 
@@ -30,26 +30,26 @@ Store = function(arg1, arg2) {
     var params   = null;
 
     if(arguments.length == 0) {
-	params ={};
+		params ={};
     } else if(arguments.length == 1) {
-	params   = {};
-	callback = arg1;
+		params   = {};
+		callback = arg1;
     } else if(arguments.length > 1) {
-	params   = arg1;
-	callback = arg2;
+		params   = arg1;
+		callback = arg2;
     } else {
 	throw("An optional argument map and a callback must be provided");
     }
 
     if(params['treeOrder'] == null) {
-	params['treeOrder'] = 15;
+		params['treeOrder'] = 15;
     }
 
     var Lexicon = InMemoryLexicon;
     var QuadBackend = InMemoryQuadBackend;
     if(params['persistent'] === true){
-	Lexicon = PersistentLexicon;
-	QuadBackend = PersistentBackend;
+		Lexicon = PersistentLexicon;
+		QuadBackend = PersistentBackend;
     }
     this.functionMap = {};
 
@@ -940,3 +940,8 @@ Store.yieldFrequency = function(val) {
 module.exports.Store = Store;
 module.exports.create = create;
 module.exports.connect = connect;
+
+
+if(_.isWorker()) {
+	(require("./quad_backend").QuadBackend)();
+}

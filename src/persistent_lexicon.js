@@ -8,7 +8,7 @@ var InMemoryLexicon = require('./lexicon').Lexicon;
  */
 
 
-Lexicon = function(callback, dbName){
+PersistentLexicon = function(callback, dbName){
     var that = this;
 
     utils.registerIndexedDB(that);
@@ -54,7 +54,7 @@ Lexicon = function(callback, dbName){
  * @param uriToken
  * @param callback
  */
-Lexicon.prototype.registerGraph = function(oid, uriToken, callback){
+PersistentLexicon.prototype.registerGraph = function(oid, uriToken, callback){
     if(oid != this.defaultGraphOid) {
         var transaction = this.db.transaction(['knownGraphs'], 'readwrite');
         transaction.onerror = function (event) {
@@ -75,7 +75,7 @@ Lexicon.prototype.registerGraph = function(oid, uriToken, callback){
  * @param returnUris
  * @param callback
  */
-Lexicon.prototype.registeredGraphs = function(returnUris, callback) {
+PersistentLexicon.prototype.registeredGraphs = function(returnUris, callback) {
     var graphs = [];
     var objectStore = this.db.transaction(['knownGraphs'],'readwrite').objectStore("knownGraphs");
 
@@ -105,7 +105,7 @@ Lexicon.prototype.registeredGraphs = function(returnUris, callback) {
  * @param callback
  * @returns URI's OID.
  */
-Lexicon.prototype.registerUri = function(uri, callback) {
+PersistentLexicon.prototype.registerUri = function(uri, callback) {
     var that = this;
     if(uri === this.defaultGraphUri) {
         callback(this.defaultGraphOid);
@@ -148,7 +148,7 @@ Lexicon.prototype.registerUri = function(uri, callback) {
  * @param uri
  * @param callback
  */
-Lexicon.prototype.resolveUri = function(uri,callback) {
+PersistentLexicon.prototype.resolveUri = function(uri,callback) {
     if(uri === this.defaultGraphUri) {
         callback(this.defaultGraphOid);
     } else {
@@ -172,7 +172,7 @@ Lexicon.prototype.resolveUri = function(uri,callback) {
  * @param uri
  * @returns {*}
  */
-Lexicon.prototype.resolveUriCost = function(uri, callback) {
+PersistentLexicon.prototype.resolveUriCost = function(uri, callback) {
     if(uri === this.defaultGraphUri) {
         callback(0);
     } else {
@@ -195,7 +195,7 @@ Lexicon.prototype.resolveUriCost = function(uri, callback) {
  * @param label
  * @returns {string}
  */
-Lexicon.prototype.registerBlank = function(callback) {
+PersistentLexicon.prototype.registerBlank = function(callback) {
     var oidStr = guid();
     var that = this;
 
@@ -214,7 +214,7 @@ Lexicon.prototype.registerBlank = function(callback) {
  * @param oid
  * @param callback
  */
-//Lexicon.prototype.resolveBlank = function(oid,callback) {
+//PersistentLexicon.prototype.resolveBlank = function(oid,callback) {
 //    var that = this;
 //    var objectStore = that.db.transaction(["blanks"]).objectStore("blanks");
 //    var request = objectStore.get(oid);
@@ -248,7 +248,7 @@ Lexicon.prototype.registerBlank = function(callback) {
  * @param callback
  * @returns {number}
  */
-Lexicon.prototype.resolveBlankCost = function(label, callback) {
+PersistentLexicon.prototype.resolveBlankCost = function(label, callback) {
     callback(0);
 };
 
@@ -258,7 +258,7 @@ Lexicon.prototype.resolveBlankCost = function(label, callback) {
  * @param callback
  * @returns the OID of the newly registered literal
  */
-Lexicon.prototype.registerLiteral = function(literal, callback) {
+PersistentLexicon.prototype.registerLiteral = function(literal, callback) {
     var that = this;
 
     var objectStore = that.db.transaction(["literals"],"readwrite").objectStore("literals");
@@ -297,7 +297,7 @@ Lexicon.prototype.registerLiteral = function(literal, callback) {
  * @param literal
  * @param callback
  */
-Lexicon.prototype.resolveLiteral = function (literal,callback) {
+PersistentLexicon.prototype.resolveLiteral = function (literal,callback) {
     var objectStore = that.db.transaction(["literals"]).objectStore("literals");
     var request = objectStore.index("literal").get(literal);
     request.onsuccess = function(event) {
@@ -316,7 +316,7 @@ Lexicon.prototype.resolveLiteral = function (literal,callback) {
  * @param literal
  * @param callback
  */
-Lexicon.prototype.resolveLiteralCost = function (literal,callback) {
+PersistentLexicon.prototype.resolveLiteralCost = function (literal,callback) {
     var objectStore = that.db.transaction(["literals"]).objectStore("literals");
     var request = objectStore.index("literal").get(literal);
     request.onsuccess = function(event) {
@@ -336,7 +336,7 @@ Lexicon.prototype.resolveLiteralCost = function (literal,callback) {
  * @param literalString
  * @returns A token object with the parsed literal.
  */
-Lexicon.prototype.parseLiteral = function(literalString) {
+PersistentLexicon.prototype.parseLiteral = function(literalString) {
     return InMemoryLexicon.prototype.parseLiteral(literalString);
 };
 
@@ -345,7 +345,7 @@ Lexicon.prototype.parseLiteral = function(literalString) {
  * @param uriString
  * @returns A token object with the parsed URI.
  */
-Lexicon.prototype.parseUri = function(uriString) {
+PersistentLexicon.prototype.parseUri = function(uriString) {
     return InMemoryLexicon.prototype.parseUri(uriString);
 };
 
@@ -357,7 +357,7 @@ Lexicon.prototype.parseUri = function(uriString) {
  * @param callback
  * @returns parsed token or null if not found.
  */
-Lexicon.prototype.retrieve = function(oid, callback) {
+PersistentLexicon.prototype.retrieve = function(oid, callback) {
     var that = this;
 
     if(oid === this.defaultGraphOid) {
@@ -422,10 +422,10 @@ Lexicon.prototype.retrieve = function(oid, callback) {
 };
 
 /**
- * Empties the lexicon and restarts the counters.
+ * Empties the PersistentLexicon and restarts the counters.
  * @param callback
  */
-Lexicon.prototype.clear = function(callback) {
+PersistentLexicon.prototype.clear = function(callback) {
     var that = this;
     this.defaultGraphOid = 0;
     this.defaultGraphUri = "https://github.com/antoniogarrote/rdfstore-js#default_graph";
@@ -461,7 +461,7 @@ Lexicon.prototype.clear = function(callback) {
  * @param key
  * @param callback
  */
-Lexicon.prototype.unregister = function (quad, key, callback) {
+PersistentLexicon.prototype.unregister = function (quad, key, callback) {
     var that = this;
     async.seq(function(k){
         that._unregisterTerm(quad.subject.token, key.subject,k);
@@ -487,7 +487,7 @@ Lexicon.prototype.unregister = function (quad, key, callback) {
  * @param callback
  * @private
  */
-Lexicon.prototype._unregisterTerm = function (kind, oid, callback) {
+PersistentLexicon.prototype._unregisterTerm = function (kind, oid, callback) {
     var that = this;
     var transaction = that.db.transaction(["uris","literals","blanks", "knownGraphs"],"readwrite"), request;
     if (kind === 'uri') {
@@ -518,5 +518,5 @@ Lexicon.prototype._unregisterTerm = function (kind, oid, callback) {
 };
 
 module.exports = {
-    Lexicon: Lexicon
+    PersistentLexicon: PersistentLexicon
 };

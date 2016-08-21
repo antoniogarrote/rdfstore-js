@@ -30,7 +30,7 @@ describe("PersistenLexicon", function(){
             var uri = "http://test.com/1";
             var literal = '"this is a literal"';
 
-            async.seq(function(k){
+            utils.seq(function(k){
                 lexicon.registerUri(uri,function(oid){
                     console.log("GOT OID1: "+oid)
                     oid1 = oid;
@@ -73,7 +73,7 @@ describe("PersistenLexicon", function(){
             var uri = "http://test.com/1";
             var literal = '"this is a literal"';
 
-            async.seq(function(k){
+            utils.seq(function(k){
                 lexicon.registerUri(uri,function(oid){
                     oid1 = oid;
                     k();

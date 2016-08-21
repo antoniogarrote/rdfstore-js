@@ -14,4 +14,18 @@ describe("Utils", function () {
         expect(values[1]).toBe('c');
         done();
     })
+
+    it("Should compute parallel computations", function(done) {
+        var totals = {};
+        Utils.eachParallel([1,2,3,4], function(i,k){
+            totals[i] = i;
+            k();
+        }, function() {
+            expect(totals[1]).toBe(1);
+            expect(totals[2]).toBe(2);
+            expect(totals[3]).toBe(3);
+            expect(totals[4]).toBe(4);
+            done();
+        })
+    })
 });

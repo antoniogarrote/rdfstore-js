@@ -195,24 +195,31 @@ normalizeUnicodeLiterals = function (string) {
 };
 
 registerIndexedDB = function(that) {
-    if(typeof(window) === 'undefined') {
-        var sqlite3 = require('sqlite3')
-        var indexeddbjs = require("indexeddb-js");
+    if(typeof(window) === 'undefined' && typeof(process) !== "undefined" && process.browser === false) {
+        var sqlite3 = _dereq_('sqlite3')
+        var indexeddbjs = _dereq_("indexeddb-js");
         var engine    = new sqlite3.Database(':memory:');
         var scope     = indexeddbjs.makeScope('sqlite3', engine);
         that.indexedDB = scope.indexedDB;
         that.IDBKeyRange = scope.IDBKeyRange;
     } else {
         // In the following line, you should include the prefixes of implementations you want to test.
-        window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
-        window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
+        var context
+        if(typeof(window) === "undefined") {
+            context = self;
+        } else {
+            context = window;
+        }
+
+        context.indexedDB = context.indexedDB || context.mozIndexedDB || context.webkitIndexedDB || context.msIndexedDB;
+        context.IDBKeyRange = context.IDBKeyRange || context.webkitIDBKeyRange || context.msIDBKeyRange;
         // DON'T use "var indexedDB = ..." if you're not in a function.
         // Moreover, you may need references to some window.IDB* objects:
-        if (!window.indexedDB) {
-            callback(null,new Error("The browser does not support IndexDB."));
+        if (!context.indexedDB) {
+            console.log("The browser does not support IndexDB.");
         } else {
-            that.indexedDB = window.indexedDB;
-            that.IDBKeyRange = window.IDBKeyRange;
+            that.indexedDB = context.indexedDB;
+            that.IDBKeyRange = context.IDBKeyRange;
         }
     }
 };
@@ -386,6 +393,43 @@ var eachSeries = function (arr, iterator, callback) {
     iterate();
 };
 
+var eachParallel = function (arr, iterator, callback) {
+    callback = callback || function () {};
+    if (!arr.length) {
+        return callback();
+    }
+    var failed = false;
+    var completed = 0;
+
+    var innerCallback = function(err) {
+        if(err) {
+            failed = true;
+            throw(new Error(err));
+        }
+
+        if(!failed) {
+            completed++;
+            if(completed === arr.length)
+                callback();
+        }
+    };
+
+
+    for(var i=0; i<arr.length; i++) {
+        (function(arr,i,callback,iterator) {
+            nextTick(function(){
+                try {
+                    iterator(arr[i], function () {
+                        callback();
+                    })
+                } catch (e) {
+                    callback(e);
+                }
+            });
+        })(arr,i,innerCallback,iterator)
+    }
+};
+
 
 var reduce = function (arr, memo, iterator, callback) {
     eachSeries(arr, function (x, callback) {
@@ -418,8 +462,21 @@ var seq = function (/* functions... */) {
 };
 
 
+var isWorker = function() {
+    if(typeof(process) === "undefined" || process.browser === true) {
+        if (typeof(window) === "undefined") {
+            return true;
+        } else {
+            return false;
+        }
+    } else {
+        return false;
+    }
+};
+
 
 module.exports = {
+    isWorker: isWorker,
     nextTick: nextTick,
     hasTerm: hashTerm,
     lexicalFormBaseUri: lexicalFormBaseUri,
@@ -444,6 +501,7 @@ module.exports = {
     create: create,
     whilst: whilst,
     eachSeries: eachSeries,
+    eachParallel: eachParallel,
     seq: seq,
     yieldFrequency: function(value){
         yieldFrequency = value;

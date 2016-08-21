@@ -1095,9 +1095,9 @@ var reporter = {};
     };
     async.log = _console_fn('log');
     async.dir = _console_fn('dir');
-    /*async.info = _console_fn('info');
-    async.warn = _console_fn('warn');
-    async.error = _console_fn('error');*/
+    /*utils.info = _console_fn('info');
+    utils.warn = _console_fn('warn');
+    utils.error = _console_fn('error');*/
 
     async.memoize = function (fn, hasher) {
         var memo = {};

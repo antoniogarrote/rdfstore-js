@@ -26,7 +26,7 @@ gulp.task('browserify', ['clean-dist'], function() {
         .pipe(gulp.dest('./dist'));
 });
 
-gulp.task('minimize', [/* 'browserify' */], function() {
+gulp.task('minimize', [ 'browserify' ], function() {
     return gulp.src('dist/*.js')
         .pipe(closureCompiler({
             continueWithWarnings: true,
@@ -45,7 +45,7 @@ gulp.task('performance',function(){
 });
 
 gulp.task('specs', function () {
-    return gulp.src('./spec/query_engine_spec.js')
+    return gulp.src('./spec/*.js')
         .pipe(jasmine({includeStackTrace: true, verbose:true}));
 });
 

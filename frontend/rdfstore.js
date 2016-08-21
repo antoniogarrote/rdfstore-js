@@ -3718,7 +3718,7 @@ function howMuchToRead(n, state) {
   return n;
 }
 
-// you can override either this method, or the async _read(n) below.
+// you can override either this method, or the utils _read(n) below.
 Readable.prototype.read = function(n) {
   var state = this._readableState;
   state.calledRead = true;
@@ -3761,8 +3761,8 @@ Readable.prototype.read = function(n) {
   // Note that this may be asynchronous, or synchronous.  Yes, it is
   // deeply ugly to write APIs this way, but that still doesn't mean
   // that the Readable class should behave improperly, as streams are
-  // designed to be sync/async agnostic.
-  // Take note if the _read call is sync or async (ie, if the read call
+  // designed to be sync/utils agnostic.
+  // Take note if the _read call is sync or utils (ie, if the read call
   // has returned yet), so that we know whether or not it's safe to emit
   // 'readable' etc.
   //
@@ -4233,7 +4233,7 @@ function emitDataEvents(stream, startPaused) {
   stream.emit('readable');
 }
 
-// wrap an old-style stream as the async data source.
+// wrap an old-style stream as the utils data source.
 // This is *not* part of the readable stream interface.
 // It is an ugly unfortunate mess of history.
 Readable.prototype.wrap = function(stream) {
@@ -4630,7 +4630,7 @@ function done(stream, er) {
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 // A bit simpler than readable streams.
-// Implement an async ._write(chunk, cb), and it'll handle all
+// Implement an utils ._write(chunk, cb), and it'll handle all
 // the drain event emission and buffering.
 
 module.exports = Writable;
@@ -7385,7 +7385,7 @@ jsonld.fromRDF = function(dataset, options, callback) {
 
     var callbackCalled = false;
     try {
-      // rdf parser may be async or sync, always pass callback
+      // rdf parser may be utils or sync, always pass callback
       dataset = rdfParser(dataset, function(err, dataset) {
         callbackCalled = true;
         if(err) {
@@ -7847,7 +7847,7 @@ jsonld.promises = function(options) {
 };
 
 /**
- * Converts a node.js async op into a promise w/boxed resolved value(s).
+ * Converts a node.js utils op into a promise w/boxed resolved value(s).
  *
  * @param op the operation to convert.
  *
@@ -13875,7 +13875,7 @@ return factory;
       $$asap$$queue[$$asap$$len + 1] = arg;
       $$asap$$len += 2;
       if ($$asap$$len === 2) {
-        // If len is 1, that means that we need to schedule an async flush.
+        // If len is 1, that means that we need to schedule an utils flush.
         // If additional callbacks are queued before the queue is flushed, they
         // will be processed by this flush that we are scheduling.
         $$asap$$scheduleFlush();
@@ -13941,7 +13941,7 @@ return factory;
 
     var $$asap$$scheduleFlush;
 
-    // Decide what async method to use to triggering processing of queued callbacks:
+    // Decide what utils method to use to triggering processing of queued callbacks:
     if (typeof process !== 'undefined' && {}.toString.call(process) === '[object process]') {
       $$asap$$scheduleFlush = $$asap$$useNextTick();
     } else if ($$asap$$BrowserMutationObserver) {
@@ -14718,7 +14718,7 @@ return factory;
         // something went wrong
       }
 
-      // async with promises
+      // utils with promises
       findAuthor().catch(function(reason){
         // something went wrong
       });

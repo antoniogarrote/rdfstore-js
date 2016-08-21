@@ -19076,9 +19076,9 @@ module.exports = {
 // imports
 var QueryEngine = _dereq_("./query_engine").QueryEngine;
 var InMemoryQuadBackend = _dereq_("./quad_backend").QuadBackend;
-var PersistentBackend = _dereq_("./persistent_quad_backend").QuadBackend;
+var PersistentBackend = _dereq_("./persistent_quad_backend").PersistentQuadBackend;
 var InMemoryLexicon = _dereq_("./lexicon").Lexicon;
-var PersistentLexicon = _dereq_("./persistent_lexicon").Lexicon;
+var PersistentLexicon = _dereq_("./persistent_lexicon").PersistentLexicon;
 var RDFModel = _dereq_("./rdf_model");
 var _ = _dereq_("./utils");
 
@@ -19105,26 +19105,26 @@ Store = function(arg1, arg2) {
     var params   = null;
 
     if(arguments.length == 0) {
-	params ={};
+		params ={};
     } else if(arguments.length == 1) {
-	params   = {};
-	callback = arg1;
+		params   = {};
+		callback = arg1;
     } else if(arguments.length > 1) {
-	params   = arg1;
-	callback = arg2;
+		params   = arg1;
+		callback = arg2;
     } else {
 	throw("An optional argument map and a callback must be provided");
     }
 
     if(params['treeOrder'] == null) {
-	params['treeOrder'] = 15;
+		params['treeOrder'] = 15;
     }
 
     var Lexicon = InMemoryLexicon;
     var QuadBackend = InMemoryQuadBackend;
     if(params['persistent'] === true){
-	Lexicon = PersistentLexicon;
-	QuadBackend = PersistentBackend;
+		Lexicon = PersistentLexicon;
+		QuadBackend = PersistentBackend;
     }
     this.functionMap = {};
 
@@ -20016,6 +20016,10 @@ module.exports.Store = Store;
 module.exports.create = create;
 module.exports.connect = connect;
 
+
+if(_.isWorker()) {
+	(_dereq_("./quad_backend").QuadBackend)();
+}
 }).call(this,"/")
 },{"./lexicon":44,"./persistent_lexicon":47,"./persistent_quad_backend":48,"./quad_backend":49,"./query_engine":51,"./rdf_model":55,"./utils":57}],42:[function(_dereq_,module,exports){
 //imports
@@ -21144,72 +21148,75 @@ module.exports = {
 };
 
 },{"./btree":40,"./utils":57}],45:[function(_dereq_,module,exports){
-var http = _dereq_("http");
-var https = _dereq_("https");
-var url = _dereq_("url");
+var utils = _dereq_("./utils");
+if(!utils.isWorker()) {
+    var http = _dereq_("http");
+    var https = _dereq_("https");
+    var url = _dereq_("url");
 
-NetworkTransport = {
+    NetworkTransport = {
 
-    load: function(uri, accept, callback, redirect) {
-        var redirection = redirect==null ? 3 : redirect;
-        var parts = url.parse(uri, true, true);
+        load: function (uri, accept, callback, redirect) {
+            var redirection = redirect == null ? 3 : redirect;
+            var parts = url.parse(uri, true, true);
 
-        var params = {
-            'host': parts.host,
-            'hostname': parts.hostname,
-            'method': 'GET',
-            'path': parts.path,
-            'headers': {'host':parts.hostname, 'Accept':accept}
-        };
+            var params = {
+                'host': parts.host,
+                'hostname': parts.hostname,
+                'method': 'GET',
+                'path': parts.path,
+                'headers': {'host': parts.hostname, 'Accept': accept}
+            };
 
-        var client = null;
+            var client = null;
 
-        if(parts.protocol === 'http:') {
-            params.port = (parts.port || 80);
-            client = http;
-        } else if(parts.protocol === 'https:') {
-            params.port = (parts.port || 443);
-            client = https;
+            if (parts.protocol === 'http:') {
+                params.port = (parts.port || 80);
+                client = http;
+            } else if (parts.protocol === 'https:') {
+                params.port = (parts.port || 443);
+                client = https;
+            }
+
+            var request = client.request(params, function (response) {
+                var headers = response.headers;
+                var data = "";
+
+                if (("" + response.statusCode)[0] == '2') {
+                    response.on('end', function () {
+                        callback(null, {headers: headers, data: data});
+                    });
+                    response.on('data', function (chunk) {
+                        data = data + chunk;
+                    });
+                } else if (("" + response.statusCode)[0] == '3') {
+                    if (redirection == 0) {
+                        callback(new Error("Too many redirections"));
+                    } else {
+                        var location = (headers["Location"] || headers["location"]);
+                        if (location != null) {
+                            NetworkTransport.load(location, accept, callback, (redirection - 1));
+                        } else {
+                            callback(new Error("Redirection without location header"));
+                        }
+                    }
+                } else {
+                    callback(new Error("HTTP error: " + response.statusCode));
+                }
+            });
+
+            request.on('error', callback);
+
+            request.end();
         }
 
-        var request = client.request(params, function(response){
-            var headers = response.headers;
-            var data = "";
+    };
 
-            if((""+response.statusCode)[0] == '2') {
-                response.on('end', function() {
-                    callback(null, {headers: headers, data: data});
-                });
-                response.on('data', function(chunk) {
-                    data = data + chunk;
-                });
-            } else if((""+response.statusCode)[0] == '3'){
-                if(redirection == 0) {
-                    callback(new Error("Too many redirections"));
-                } else {
-                    var location = (headers["Location"] || headers["location"]);
-                    if(location != null) {
-                        NetworkTransport.load(location, accept, callback, (redirection -1));
-                    } else {
-                        callback(new Error("Redirection without location header"));
-                    }
-                }
-            } else {
-                callback(new Error("HTTP error: "+response.statusCode));
-            }
-        });
-
-        request.on('error', callback);
-
-        request.end();
-    }
-
-};
-
-module.exports = {
-    NetworkTransport: NetworkTransport
-};
-},{"http":7,"https":22,"url":36}],46:[function(_dereq_,module,exports){
+    module.exports = {
+        NetworkTransport: NetworkTransport
+    };
+}
+},{"./utils":57,"http":7,"https":22,"url":36}],46:[function(_dereq_,module,exports){
 module.exports = /*
  * Generated by PEG.js 0.10.0.
  *
@@ -40929,7 +40936,7 @@ var InMemoryLexicon = _dereq_('./lexicon').Lexicon;
  */
 
 
-Lexicon = function(callback, dbName){
+PersistentLexicon = function(callback, dbName){
     var that = this;
 
     utils.registerIndexedDB(that);
@@ -40975,7 +40982,7 @@ Lexicon = function(callback, dbName){
  * @param uriToken
  * @param callback
  */
-Lexicon.prototype.registerGraph = function(oid, uriToken, callback){
+PersistentLexicon.prototype.registerGraph = function(oid, uriToken, callback){
     if(oid != this.defaultGraphOid) {
         var transaction = this.db.transaction(['knownGraphs'], 'readwrite');
         transaction.onerror = function (event) {
@@ -40996,7 +41003,7 @@ Lexicon.prototype.registerGraph = function(oid, uriToken, callback){
  * @param returnUris
  * @param callback
  */
-Lexicon.prototype.registeredGraphs = function(returnUris, callback) {
+PersistentLexicon.prototype.registeredGraphs = function(returnUris, callback) {
     var graphs = [];
     var objectStore = this.db.transaction(['knownGraphs'],'readwrite').objectStore("knownGraphs");
 
@@ -41026,7 +41033,7 @@ Lexicon.prototype.registeredGraphs = function(returnUris, callback) {
  * @param callback
  * @returns URI's OID.
  */
-Lexicon.prototype.registerUri = function(uri, callback) {
+PersistentLexicon.prototype.registerUri = function(uri, callback) {
     var that = this;
     if(uri === this.defaultGraphUri) {
         callback(this.defaultGraphOid);
@@ -41069,7 +41076,7 @@ Lexicon.prototype.registerUri = function(uri, callback) {
  * @param uri
  * @param callback
  */
-Lexicon.prototype.resolveUri = function(uri,callback) {
+PersistentLexicon.prototype.resolveUri = function(uri,callback) {
     if(uri === this.defaultGraphUri) {
         callback(this.defaultGraphOid);
     } else {
@@ -41093,7 +41100,7 @@ Lexicon.prototype.resolveUri = function(uri,callback) {
  * @param uri
  * @returns {*}
  */
-Lexicon.prototype.resolveUriCost = function(uri, callback) {
+PersistentLexicon.prototype.resolveUriCost = function(uri, callback) {
     if(uri === this.defaultGraphUri) {
         callback(0);
     } else {
@@ -41116,7 +41123,7 @@ Lexicon.prototype.resolveUriCost = function(uri, callback) {
  * @param label
  * @returns {string}
  */
-Lexicon.prototype.registerBlank = function(callback) {
+PersistentLexicon.prototype.registerBlank = function(callback) {
     var oidStr = guid();
     var that = this;
 
@@ -41135,7 +41142,7 @@ Lexicon.prototype.registerBlank = function(callback) {
  * @param oid
  * @param callback
  */
-//Lexicon.prototype.resolveBlank = function(oid,callback) {
+//PersistentLexicon.prototype.resolveBlank = function(oid,callback) {
 //    var that = this;
 //    var objectStore = that.db.transaction(["blanks"]).objectStore("blanks");
 //    var request = objectStore.get(oid);
@@ -41169,7 +41176,7 @@ Lexicon.prototype.registerBlank = function(callback) {
  * @param callback
  * @returns {number}
  */
-Lexicon.prototype.resolveBlankCost = function(label, callback) {
+PersistentLexicon.prototype.resolveBlankCost = function(label, callback) {
     callback(0);
 };
 
@@ -41179,7 +41186,7 @@ Lexicon.prototype.resolveBlankCost = function(label, callback) {
  * @param callback
  * @returns the OID of the newly registered literal
  */
-Lexicon.prototype.registerLiteral = function(literal, callback) {
+PersistentLexicon.prototype.registerLiteral = function(literal, callback) {
     var that = this;
 
     var objectStore = that.db.transaction(["literals"],"readwrite").objectStore("literals");
@@ -41218,7 +41225,7 @@ Lexicon.prototype.registerLiteral = function(literal, callback) {
  * @param literal
  * @param callback
  */
-Lexicon.prototype.resolveLiteral = function (literal,callback) {
+PersistentLexicon.prototype.resolveLiteral = function (literal,callback) {
     var objectStore = that.db.transaction(["literals"]).objectStore("literals");
     var request = objectStore.index("literal").get(literal);
     request.onsuccess = function(event) {
@@ -41237,7 +41244,7 @@ Lexicon.prototype.resolveLiteral = function (literal,callback) {
  * @param literal
  * @param callback
  */
-Lexicon.prototype.resolveLiteralCost = function (literal,callback) {
+PersistentLexicon.prototype.resolveLiteralCost = function (literal,callback) {
     var objectStore = that.db.transaction(["literals"]).objectStore("literals");
     var request = objectStore.index("literal").get(literal);
     request.onsuccess = function(event) {
@@ -41257,7 +41264,7 @@ Lexicon.prototype.resolveLiteralCost = function (literal,callback) {
  * @param literalString
  * @returns A token object with the parsed literal.
  */
-Lexicon.prototype.parseLiteral = function(literalString) {
+PersistentLexicon.prototype.parseLiteral = function(literalString) {
     return InMemoryLexicon.prototype.parseLiteral(literalString);
 };
 
@@ -41266,7 +41273,7 @@ Lexicon.prototype.parseLiteral = function(literalString) {
  * @param uriString
  * @returns A token object with the parsed URI.
  */
-Lexicon.prototype.parseUri = function(uriString) {
+PersistentLexicon.prototype.parseUri = function(uriString) {
     return InMemoryLexicon.prototype.parseUri(uriString);
 };
 
@@ -41278,7 +41285,7 @@ Lexicon.prototype.parseUri = function(uriString) {
  * @param callback
  * @returns parsed token or null if not found.
  */
-Lexicon.prototype.retrieve = function(oid, callback) {
+PersistentLexicon.prototype.retrieve = function(oid, callback) {
     var that = this;
 
     if(oid === this.defaultGraphOid) {
@@ -41343,10 +41350,10 @@ Lexicon.prototype.retrieve = function(oid, callback) {
 };
 
 /**
- * Empties the lexicon and restarts the counters.
+ * Empties the PersistentLexicon and restarts the counters.
  * @param callback
  */
-Lexicon.prototype.clear = function(callback) {
+PersistentLexicon.prototype.clear = function(callback) {
     var that = this;
     this.defaultGraphOid = 0;
     this.defaultGraphUri = "https://github.com/antoniogarrote/rdfstore-js#default_graph";
@@ -41382,7 +41389,7 @@ Lexicon.prototype.clear = function(callback) {
  * @param key
  * @param callback
  */
-Lexicon.prototype.unregister = function (quad, key, callback) {
+PersistentLexicon.prototype.unregister = function (quad, key, callback) {
     var that = this;
     async.seq(function(k){
         that._unregisterTerm(quad.subject.token, key.subject,k);
@@ -41408,7 +41415,7 @@ Lexicon.prototype.unregister = function (quad, key, callback) {
  * @param callback
  * @private
  */
-Lexicon.prototype._unregisterTerm = function (kind, oid, callback) {
+PersistentLexicon.prototype._unregisterTerm = function (kind, oid, callback) {
     var that = this;
     var transaction = that.db.transaction(["uris","literals","blanks", "knownGraphs"],"readwrite"), request;
     if (kind === 'uri') {
@@ -41439,15 +41446,13 @@ Lexicon.prototype._unregisterTerm = function (kind, oid, callback) {
 };
 
 module.exports = {
-    Lexicon: Lexicon
+    PersistentLexicon: PersistentLexicon
 };
 
 },{"./btree":40,"./lexicon":44,"./utils":57}],48:[function(_dereq_,module,exports){
 
 // imports
 var utils = _dereq_('./utils');
-var _ = utils;
-var async = utils;
 
 /*
  * "perfect" indices for RDF indexing
@@ -41462,7 +41467,7 @@ var async = utils;
  * @param configuration['dbName'] Name for the IndexedDB
  * @return The newly created backend.
  */
-QuadBackend = function (configuration, callback) {
+PersistentQuadBackend = function (configuration, callback) {
     var that = this;
 
     if (arguments !== 0) {
@@ -41492,7 +41497,7 @@ QuadBackend = function (configuration, callback) {
         request.onupgradeneeded = function(event) {
             var db = event.target.result;
             var objectStore = db.createObjectStore(that.dbName, { keyPath: 'SPOG'});
-            _.each(that.indices, function(index){
+            utils.each(that.indices, function(index){
                 if(index !== 'SPOG') {
                     objectStore.createIndex(index,index,{unique: false});
                 }
@@ -41502,9 +41507,9 @@ QuadBackend = function (configuration, callback) {
 };
 
 
-QuadBackend.prototype.index = function (quad, callback) {
+PersistentQuadBackend.prototype.index = function (quad, callback) {
     var that = this;
-    _.each(this.indices, function(index){
+    utils.each(this.indices, function(index){
         quad[index] = that._genMinIndexKey(quad, index);
     });
 
@@ -41522,7 +41527,7 @@ QuadBackend.prototype.index = function (quad, callback) {
     };
 };
 
-QuadBackend.prototype.range = function (pattern, callback) {
+PersistentQuadBackend.prototype.range = function (pattern, callback) {
     var that = this;
     var objectStore = that.db.transaction([that.dbName]).objectStore(that.dbName);
     var indexKey = this._indexForPattern(pattern);
@@ -41549,7 +41554,7 @@ QuadBackend.prototype.range = function (pattern, callback) {
     }
 };
 
-QuadBackend.prototype.search = function (quad, callback) {
+PersistentQuadBackend.prototype.search = function (quad, callback) {
     var that = this;
     var objectStore = that.db.transaction([that.dbName]).objectStore(that.dbName);
     var indexKey = this._genMinIndexKey(quad, 'SPOG');
@@ -41563,7 +41568,7 @@ QuadBackend.prototype.search = function (quad, callback) {
 };
 
 
-QuadBackend.prototype.delete = function (quad, callback) {
+PersistentQuadBackend.prototype.delete = function (quad, callback) {
     var that = this;
     var indexKey = that._genMinIndexKey(quad, 'SPOG');
     var request = that.db.transaction([that.dbName], "readwrite")
@@ -41577,9 +41582,9 @@ QuadBackend.prototype.delete = function (quad, callback) {
     };
 };
 
-QuadBackend.prototype._genMinIndexKey = function(quad,index) {
+PersistentQuadBackend.prototype._genMinIndexKey = function(quad,index) {
     var indexComponents = this.componentOrders[index];
-    return _.map(indexComponents, function(component){
+    return utils.map(indexComponents, function(component){
         if(typeof(quad[component]) === 'string' || quad[component] == null) {
             return "-1";
         } else {
@@ -41588,7 +41593,7 @@ QuadBackend.prototype._genMinIndexKey = function(quad,index) {
     }).join('.');
 };
 
-QuadBackend.prototype._genMaxIndexKey = function(quad,index) {
+PersistentQuadBackend.prototype._genMaxIndexKey = function(quad,index) {
     var indexComponents = this.componentOrders[index];
     var acum = [];
     var foundFirstMissing = false;
@@ -41607,20 +41612,20 @@ QuadBackend.prototype._genMaxIndexKey = function(quad,index) {
             acum[i] = componentValue;
         }
     }
-    return _.map(acum, function(componentValue){
+    return utils.map(acum, function(componentValue){
         return ""+componentValue
     }).join('.');
 };
 
 
-QuadBackend.prototype._indexForPattern = function (pattern) {
+PersistentQuadBackend.prototype._indexForPattern = function (pattern) {
     var indexKey = pattern.indexKey;
 
     for (var i = 0; i < this.indices.length; i++) {
         var index = this.indices[i];
         var indexComponents = this.componentOrders[index];
         for (var j = 0; j < indexComponents.length; j++) {
-            if (_.include(indexKey, indexComponents[j]) === false) {
+            if (utils.include(indexKey, indexComponents[j]) === false) {
                 break;
             }
             if (j == indexKey.length - 1) {
@@ -41633,7 +41638,7 @@ QuadBackend.prototype._indexForPattern = function (pattern) {
 };
 
 
-QuadBackend.prototype.clear = function(callback) {
+PersistentQuadBackend.prototype.clear = function(callback) {
     var that = this;
     var transaction = that.db.transaction([that.dbName],"readwrite"), request;
     request = transaction.objectStore(that.dbName).clear();
@@ -41641,13 +41646,13 @@ QuadBackend.prototype.clear = function(callback) {
     request.onerror = function(){ callback(); };
 };
 
-module.exports.QuadBackend = QuadBackend;
+module.exports.PersistentQuadBackend = PersistentQuadBackend;
 
 },{"./utils":57}],49:[function(_dereq_,module,exports){
 
 // imports
 var QuadIndex = _dereq_("./quad_index").QuadIndex;
-var async = _dereq_('./utils');
+var utils = _dereq_('./utils');
 var _ = _dereq_('./utils');
 
 /*
@@ -41664,42 +41669,42 @@ var _ = _dereq_('./utils');
  * @return The newly created backend.
  */
 QuadBackend = function (configuration, callback) {
-    if (arguments !== 0) {
-        this.indexMap = {};
-        this.treeOrder = configuration['treeOrder'];
-        this.indices = ['SPOG', 'GP', 'OGS', 'POG', 'GSP', 'OS'];
-        this.componentOrders = {
-            SPOG:['subject', 'predicate', 'object', 'graph'],
-            GP:['graph', 'predicate', 'subject', 'object'],
-            OGS:['object', 'graph', 'subject', 'predicate'],
-            POG:['predicate', 'object', 'graph', 'subject'],
-            GSP:['graph', 'subject', 'predicate', 'object'],
-            OS:['object', 'subject', 'predicate', 'graph']
-        };
-        var that = this;
-        var i = 0;
+    this.indexMap = {};
+    this.treeOrder = configuration['treeOrder'];
+    this.indices = (configuration["index"] || QuadBackend.allIndices);
+    this.componentOrders = QuadBackend.componentOrders;
+    var that = this;
 
-        async.eachSeries(this.indices,function(indexKey,k){
-            new QuadIndex({
-                    order:that.treeOrder,
-                    componentOrder:that.componentOrders[indexKey]
-                },function (tree) {
-                that.indexMap[indexKey] = tree;
-                k();
-            });
-        },function(){
-            callback(that);
+    utils.eachSeries(this.indices,function(indexKey, k){
+        new QuadIndex({
+            order:that.treeOrder,
+            componentOrder:that.componentOrders[indexKey]
+        },function (tree) {
+            that.indexMap[indexKey] = tree;
+            k();
         });
-    }
+    },function(){
+        callback(that);
+    });
+};
+
+QuadBackend.allIndices = ['SPOG', 'GP', 'OGS', 'POG', 'GSP', 'OS'];
+QuadBackend.componentOrders = {
+    SPOG:['subject', 'predicate', 'object', 'graph'],
+    GP:['graph', 'predicate', 'subject', 'object'],
+    OGS:['object', 'graph', 'subject', 'predicate'],
+    POG:['predicate', 'object', 'graph', 'subject'],
+    GSP:['graph', 'subject', 'predicate', 'object'],
+    OS:['object', 'subject', 'predicate', 'graph']
 };
 
 
 QuadBackend.prototype._indexForPattern = function (pattern) {
     var indexKey = pattern.indexKey;
 
-    for (var i = 0; i < this.indices.length; i++) {
-        var index = this.indices[i];
-        var indexComponents = this.componentOrders[index];
+    for (var i = 0; i < QuadBackend.allIndices.length; i++) {
+        var index = QuadBackend.allIndices[i];
+        var indexComponents = QuadBackend.componentOrders[index];
         for (var j = 0; j < indexComponents.length; j++) {
             if (_.include(indexKey, indexComponents[j]) === false) {
                 break;
@@ -41716,62 +41721,267 @@ QuadBackend.prototype._indexForPattern = function (pattern) {
 
 QuadBackend.prototype.index = function (quad, callback) {
     var that = this;
-    async.eachSeries(this.indices, function(indexKey,k){
+    if(this.indices.length === 1) {
+        var indexKey = this.indices[0];
         var index = that.indexMap[indexKey];
-        index.insert(quad, function(){
-            k();
+        index.insert(quad, function () {
+          callback(true);
         })
-    },function(){
-        callback(that);
-    });
+    } else {
+        utils.eachSeries(this.indices, function (indexKey, k) {
+            var index = that.indexMap[indexKey];
+            index.insert(quad, function () {
+                k();
+            })
+        }, function () {
+            callback(true);
+        });
+    }
 };
 
 QuadBackend.prototype.range = function (pattern, callback) {
     var indexKey = this._indexForPattern(pattern);
     var index = this.indexMap[indexKey];
-    index.range(pattern, function (quads) {
-        callback(quads);
-    });
+    if(index != null) {
+        index.range(pattern, function (quads) {
+            callback(quads);
+        });
+    }
 };
 
 QuadBackend.prototype.search = function (quad, callback) {
     var index = this.indexMap['SPOG'];
-
-    index.search(quad, function (result) {
-        callback(result != null);
-    });
+    if(index != null) {
+        index.search(quad, function (result) {
+            callback(result != null);
+        });
+    }
 };
 
 
 QuadBackend.prototype.delete = function (quad, callback) {
     var that = this;
-
-    async.eachSeries(this.indices, function(indexKey,k){
-        var index = that.indexMap[indexKey];
-        index.delete(quad, function(){
-            k();
-        })
-    },function(){
-        callback(that);
-    });
+    if(this.indices.length === 1) {
+        var indexKey = this.indices[0];
+        var index = this.indexMap[indexKey];
+        index.delete(quad, function () {
+            callback(true);
+        });
+    } else {
+        utils.eachSeries(this.indices, function (indexKey, k) {
+            var index = that.indexMap[indexKey];
+            index.delete(quad, function () {
+                k();
+            });
+        }, function () {
+            callback(true);
+        });
+    }
 };
 
 QuadBackend.prototype.clear = function(callback) {
     var that = this;
-    async.eachSeries(this.indices,function(indexKey,k){
+    if(this.indices.length === 1) {
+        var indexKey = this.indices[0];
         new QuadIndex({
-            order:that.treeOrder,
-            componentOrder:that.componentOrders[indexKey]
-        },function (tree) {
+            order: that.treeOrder,
+            componentOrder: that.componentOrders[indexKey]
+        }, function (tree) {
             that.indexMap[indexKey] = tree;
-            k();
+            callback(true);
         });
-    },function(){
-        callback(that);
-    });
+    } else {
+        utils.eachSeries(this.indices, function (indexKey, k) {
+            new QuadIndex({
+                order: that.treeOrder,
+                componentOrder: that.componentOrders[indexKey]
+            }, function (tree) {
+                that.indexMap[indexKey] = tree;
+                k();
+            });
+        }, function () {
+            callback(true);
+        });
+    }
 };
 
-module.exports.QuadBackend = QuadBackend;
+
+QuadBackendWorker = function (configuration, callback) {
+    var that = this;
+    if(utils.isWorker()) {
+        // register
+        onmessage = function(request){
+            try {
+                var message = request.data;
+                var id = message.id;
+                var name = message.function;
+                var args = message.args;
+                if(name === 'init') {
+                    new QuadBackend(args, function(backend){
+                        that.backend = backend;
+                        postMessage({"id": id, "result": true});
+                    });
+                } else {
+                    args.push(function (res) {
+                        postMessage({"id": id, "result": res});
+                    });
+                    that.backend[name].apply(that.backend, args);
+                }
+            } catch(e) {
+                postMessage({"error": e.toString()});
+            }
+        };
+    } else {
+        if(typeof("window") !== "undefined" && window.Worker && configuration["workers"] === true) {
+            // WebWorkers supported
+            var rdfstoreFile = (configuration["worker_file"] || "rdfstore.js");
+            this.requestId = 0;
+            this.indices = ['SPOG', 'GP', 'OGS', 'POG', 'GSP', 'OS'];
+            this.workers = {};
+            this.mailbox = {};
+            utils.eachParallel(this.indices, function(index, k){
+                that.workers[index] = new Worker(rdfstoreFile);
+                that.workers[index].onmessage = function(response){
+                    var message = response.data;
+                    if(typeof(message) === "string") {
+                        throw(new Error(message));
+                    }
+                    if(message.error != null) {
+                        throw new Error(message.error);
+                    }
+                    if(message.id != null && message.id == 0) {
+                        k();
+                    } else {
+                        var cb = that.mailbox[message.id];
+                        delete that.mailbox[message.id];
+                        if (message.id != null && cb != null) {
+                            cb(message.result);
+                        } else {
+                            throw(new Error("Cannot find callback for message with id:"+message.id));
+                        }
+                    }
+                };
+                configuration["index"] = [index];
+                that.workers[index].postMessage({"id": 0, "function":"init", "args":configuration});
+            }, function(){
+                callback(that);
+            })
+        } else {
+            new QuadBackend(configuration, function(backend){
+                callback(backend);
+            });
+        }
+    }
+};
+
+QuadBackendWorker.prototype.postMessage = function(index, name, args, cb) {
+    if(this.requestId < (Number.MAX_SAFE_INTEGER || 1000000)) {
+        this.requestId++;
+    } else {
+        this.requestId = 0;
+    }
+    var id = this.requestId;
+    var message = {"id":id, "function":name, "args":args};
+    this.mailbox[id] = cb;
+    this.workers[index].postMessage(message);
+};
+
+QuadBackendWorker.prototype._indexForPattern = function (pattern) {
+    return QuadBackend.prototype._indexForPattern(pattern);
+};
+
+
+QuadBackendWorker.prototype.index = function (quad, callback) {
+    var that = this;
+    if(utils.isWorker()) {
+        this.backend(quad,callback);
+    } else {
+        if(typeof(window) !== "undefined" && window.Worker) {
+            utils.eachParallel(this.indices, function(index, k){
+                that.postMessage(index, "index", [quad], k);
+            }, function(){
+                callback(that);
+            });
+        } else {
+            throw new Error("Invoking method of worker proxy in no supported env")
+        }
+    }
+};
+
+QuadBackendWorker.prototype.range = function (pattern, callback) {
+    if(utils.isWorker()) {
+        this.backend(quad,callback);
+    } else {
+        if(typeof(window) !== "undefined" && window.Worker) {
+            var indexKey = this._indexForPattern(pattern);
+            this.postMessage(indexKey, "range", [pattern], callback);
+        } else {
+            throw new Error("Invoking method of worker proxy in no supported env")
+        }
+    }
+};
+
+QuadBackendWorker.prototype.search = function (quad, callback) {
+    if(utils.isWorker()) {
+        this.backend(quad,callback);
+    } else {
+        if(typeof(window) !== "undefined" && window.Worker) {
+            this.postMessage('SPOG', "search", [quad], callback);
+        } else {
+            throw new Error("Invoking method of worker proxy in no supported env")
+        }
+    }
+};
+
+
+QuadBackendWorker.prototype.delete = function (quad, callback) {
+    var that = this;
+    if(utils.isWorker()) {
+        this.backend(quad,callback);
+    } else {
+        if(typeof(window) !== "undefined" && window.Worker) {
+            utils.eachParallel(this.indices, function(index, k){
+                that.postMessage(index, "delete", [quad], k);
+            }, function(){
+                callback(that);
+            });
+        } else {
+            throw new Error("Invoking method of worker proxy in no supported env")
+        }
+    }
+};
+
+QuadBackendWorker.prototype.clear = function(callback) {
+    var that = this;
+    if(utils.isWorker()) {
+        this.backend(quad,callback);
+    } else {
+        if(typeof(window) !== "undefined" && window.Worker) {
+            utils.eachParallel(this.indices, function(index, k){
+                that.postMessage(index, "clear", [], k);
+            }, function(){
+                callback(that);
+            });
+        } else {
+            throw new Error("Invoking method of worker proxy in no supported env")
+        }
+    }
+};
+
+var BackendToExport;
+
+if(utils.isWorker()) {
+    BackendToExport = QuadBackendWorker;
+} else {
+    if(typeof(window) !== "undefined" && window.Worker) {
+        BackendToExport = QuadBackendWorker;
+    } else {
+        BackendToExport = QuadBackend;
+    }
+}
+
+
+module.exports.QuadBackend = BackendToExport;
 
 },{"./quad_index":50,"./utils":57}],50:[function(_dereq_,module,exports){
 var BaseTree = _dereq_("./btree").Tree;
@@ -47545,7 +47755,7 @@ normalizeUnicodeLiterals = function (string) {
 };
 
 registerIndexedDB = function(that) {
-    if(typeof(window) === 'undefined') {
+    if(typeof(window) === 'undefined' && typeof(process) !== "undefined" && process.browser === false) {
         var sqlite3 = _dereq_('sqlite3')
         var indexeddbjs = _dereq_("indexeddb-js");
         var engine    = new sqlite3.Database(':memory:');
@@ -47554,15 +47764,22 @@ registerIndexedDB = function(that) {
         that.IDBKeyRange = scope.IDBKeyRange;
     } else {
         // In the following line, you should include the prefixes of implementations you want to test.
-        window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
-        window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
+        var context
+        if(typeof(window) === "undefined") {
+            context = self;
+        } else {
+            context = window;
+        }
+
+        context.indexedDB = context.indexedDB || context.mozIndexedDB || context.webkitIndexedDB || context.msIndexedDB;
+        context.IDBKeyRange = context.IDBKeyRange || context.webkitIDBKeyRange || context.msIDBKeyRange;
         // DON'T use "var indexedDB = ..." if you're not in a function.
         // Moreover, you may need references to some window.IDB* objects:
-        if (!window.indexedDB) {
-            callback(null,new Error("The browser does not support IndexDB."));
+        if (!context.indexedDB) {
+            console.log("The browser does not support IndexDB.");
         } else {
-            that.indexedDB = window.indexedDB;
-            that.IDBKeyRange = window.IDBKeyRange;
+            that.indexedDB = context.indexedDB;
+            that.IDBKeyRange = context.IDBKeyRange;
         }
     }
 };
@@ -47736,6 +47953,43 @@ var eachSeries = function (arr, iterator, callback) {
     iterate();
 };
 
+var eachParallel = function (arr, iterator, callback) {
+    callback = callback || function () {};
+    if (!arr.length) {
+        return callback();
+    }
+    var failed = false;
+    var completed = 0;
+
+    var innerCallback = function(err) {
+        if(err) {
+            failed = true;
+            throw(new Error(err));
+        }
+
+        if(!failed) {
+            completed++;
+            if(completed === arr.length)
+                callback();
+        }
+    };
+
+
+    for(var i=0; i<arr.length; i++) {
+        (function(arr,i,callback,iterator) {
+            nextTick(function(){
+                try {
+                    iterator(arr[i], function () {
+                        callback();
+                    })
+                } catch (e) {
+                    callback(e);
+                }
+            });
+        })(arr,i,innerCallback,iterator)
+    }
+};
+
 
 var reduce = function (arr, memo, iterator, callback) {
     eachSeries(arr, function (x, callback) {
@@ -47768,8 +48022,21 @@ var seq = function (/* functions... */) {
 };
 
 
+var isWorker = function() {
+    if(typeof(process) === "undefined" || process.browser === true) {
+        if (typeof(window) === "undefined") {
+            return true;
+        } else {
+            return false;
+        }
+    } else {
+        return false;
+    }
+};
+
 
 module.exports = {
+    isWorker: isWorker,
     nextTick: nextTick,
     hasTerm: hashTerm,
     lexicalFormBaseUri: lexicalFormBaseUri,
@@ -47794,6 +48061,7 @@ module.exports = {
     create: create,
     whilst: whilst,
     eachSeries: eachSeries,
+    eachParallel: eachParallel,
     seq: seq,
     yieldFrequency: function(value){
         yieldFrequency = value;
