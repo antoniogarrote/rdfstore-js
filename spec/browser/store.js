@@ -33,13 +33,6 @@ this.suite_store.testBlankNodesQuery = function(test) {
     });
 };
 
-this.suite_store.testBlankNodesQueryWorkers = function(test) {
-    rdfstore.create({"workers":true}, function(err,store) {
-        testBlankNodesQueryFn(store, test);
-    });
-};
-
-
 var testIntegration1Fn = function(store, test) {
     store.execute('INSERT DATA {  <http://example/book3> <http://example.com/vocab#title> <http://test.com/example> }', function(err, msg){
         store.execute('SELECT * { ?s ?p ?o }', function(err,results) {
@@ -66,12 +59,6 @@ this.suite_store.testIntegration1Persistent = function(test){
     });
 };
 
-this.suite_store.testIntegration1Workers = function(test){
-    new rdfstore.Store({name:'testIntegration1Persistence', workers:true, overwrite:true}, function(err, store){
-        testIntegration1Fn(store,test);
-    });
-};
-
 var testIntegration2Fn = function(store,test) {
     store.execute('INSERT DATA {  <http://example/book3> <http://example.com/vocab#title> <http://test.com/example> }', function(){
         store.execute('SELECT * { ?s ?p ?o }', function(err,results) {
@@ -94,12 +81,6 @@ this.suite_store.testIntegration2 = function(test){
 
 this.suite_store.testIntegration2Persistent = function(test){
     new rdfstore.Store({name:'testIntegration2', persistent: true, overwrite:true}, function(err,store){
-        testIntegration2Fn(store,test)
-    });
-};
-
-this.suite_store.testIntegration2Workers = function(test){
-    new rdfstore.Store({name:'testIntegration2', workers: true, overwrite:true}, function(err,store){
         testIntegration2Fn(store,test)
     });
 };
@@ -149,12 +130,6 @@ this.suite_store.testGraph1 = function(test) {
 
 this.suite_store.testGraph1Persistent = function(test) {
     new Store({persistent: true, name: 'testGraph1',overwrite:true}, function(err,store) {
-        testGraph1Fn(store,test);
-    });
-};
-
-this.suite_store.testGraph1Workers = function(test) {
-    new Store({workers: true, name: 'testGraph1',overwrite:true}, function(err,store) {
         testGraph1Fn(store,test);
     });
 };
@@ -217,12 +192,6 @@ this.suite_store.testGraph2Persistent = function(test) {
     });
 };
 
-this.suite_store.testGraph2Workers = function(test) {
-    new rdfstore.Store({name:'testGraph2b', workers: true, overwrite:true}, function(err,store) {
-        testGraph2Fn(store,test);
-    });
-};
-
 var testSubject1Fn = function(store,test) {
     var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
                      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
@@ -258,12 +227,6 @@ this.suite_store.testSubject1 = function(test) {
 
 this.suite_store.testSubject1Persistent = function(test) {
     new rdfstore.Store({name:'testSubject1', persistent:true, overwrite:true}, function(err,store) {
-        testSubject1Fn(store,test);
-    });
-};
-
-this.suite_store.testSubject1Workers = function(test) {
-    new rdfstore.Store({name:'testSubject1', workers:true, overwrite:true}, function(err,store) {
         testSubject1Fn(store,test);
     });
 };
@@ -322,12 +285,6 @@ this.suite_store.testSubject2 = function(test) {
 
 this.suite_store.testSubject2Persistent = function(test) {
     new rdfstore.Store({name:'testSubject2', persistent:true, overwrite:true}, function(err,store) {
-        testSubject2Fn(store,test);
-    });
-};
-
-this.suite_store.testSubject2Workers = function(test) {
-    new rdfstore.Store({name:'testSubject2', workers:true, overwrite:true}, function(err,store) {
         testSubject2Fn(store,test);
     });
 };
@@ -391,12 +348,6 @@ this.suite_store.testPrefixesPersistent = function(test) {
     });
 };
 
-this.suite_store.testPrefixesPersistentWorkers = function(test) {
-    new rdfstore.Store({name:'testPrefixes', workers:true, overwrite:true}, function(err,store) {
-        testPrefixesFn(store,test);
-    });
-};
-
 var testDefaultPrefixFn = function(store,test) {
     var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
                      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
@@ -456,12 +407,6 @@ this.suite_store.testDefaultPrefixPersistent = function(test) {
     });
 };
 
-this.suite_store.testDefaultPrefixWorkers = function(test) {
-    new rdfstore.Store({name:'testDefaultPrefix', workers:true, overwrite:true}, function(err,store) {
-        testDefaultPrefixFn(store,test);
-    });
-};
-
 var testInsert1Fn = function(store,test) {
     store.setPrefix("ex", "http://example.org/people/");
 
@@ -497,12 +442,6 @@ this.suite_store.testInsert1Persistent = function(test) {
     });
 };
 
-this.suite_store.testInsert1Workers = function(test) {
-    rdfstore.create({name:'testInsert1', workers:true, overwrite:true}, function(err,store) {
-        testInsert1Fn(store,test);
-    });
-};
-
 var testInsert2Fn = function(store,test) {
     store.setPrefix("ex", "http://example.org/people/");
 
@@ -534,12 +473,6 @@ this.suite_store.testInsert2 = function(test) {
 
 this.suite_store.testInsert2Persistent = function(test) {
     rdfstore.create({name:'testInsert2', persistent:true, overwrite:true}, function(err,store) {
-        testInsert2Fn(store,test);
-    });
-};
-
-this.suite_store.testInsert2Workers = function(test) {
-    rdfstore.create({name:'testInsert2', workers:true, overwrite:true}, function(err,store) {
         testInsert2Fn(store,test);
     });
 };
@@ -585,12 +518,6 @@ this.suite_store.testDelete1Persistent = function(test) {
     });
 };
 
-this.suite_store.testDelete1Workers = function(test) {
-    rdfstore.create({name:'testDelete1', workers:true, overwrite:true}, function(err,store) {
-        testDelete1Fn(store,test);
-    });
-};
-
 var testDelete2Fn = function(store,test) {
     store.setPrefix("ex", "http://example.org/people/");
 
@@ -628,12 +555,6 @@ this.suite_store.testDelete2 = function(test) {
 
 this.suite_store.testDelete2Persistent = function(test) {
     rdfstore.create({name:'testDelete2', persistent:true, overwrite:true}, function(err,store) {
-        testDelete2Fn(store,test);
-    });
-};
-
-this.suite_store.testDelete2Workers = function(test) {
-    rdfstore.create({name:'testDelete2', workers:true, overwrite:true}, function(err,store) {
         testDelete2Fn(store,test);
     });
 };
@@ -679,12 +600,6 @@ this.suite_store.testClearPersistent = function(test) {
     });
 };
 
-this.suite_store.testClearWorkers = function(test) {
-    rdfstore.create({name:'testClear', workers:true, overwrite:true}, function(err,store) {
-        testClearFn(store,test);
-    });
-};
-
 var testLoad1Fn = function(store,test) {
     store.setPrefix("ex", "http://example.org/people/");
 
@@ -724,12 +639,6 @@ this.suite_store.testLoad1Persistent = function(test) {
     });
 };
 
-this.suite_store.testLoad1Workers = function(test) {
-    rdfstore.create({name:'testLoad1', workers:true, overwrite:true}, function(err,store) {
-        testLoad1Fn(store,test);
-    });
-};
-
 var testLoad3Fn = function(store,test) {
     store.setPrefix("ex", "http://example.org/examples/");
 
@@ -765,12 +674,6 @@ this.suite_store.testLoad3 = function(test) {
 
 this.suite_store.testLoad3Persistent = function(test) {
     rdfstore.create({name:'testLoad3', persistent:true, overwrite:true}, function(err,store) {
-        testLoad3Fn(store,test);
-    });
-};
-
-this.suite_store.testLoad3Workers = function(test) {
-    rdfstore.create({name:'testLoad3', workers:true, overwrite:true}, function(err,store) {
         testLoad3Fn(store,test);
     });
 };
@@ -954,13 +857,6 @@ this.suite_store.testRegisteredGraphPersistent = function(test) {
     });
 };
 
-this.suite_store.testRegisteredGraphWorkers = function(test) {
-    new rdfstore.Store({name:'testRegisteredGraph2', workers:true, overwrite:true}, function(err,store) {
-        testRegisteredGraphFn(store,test);
-    });
-};
-
-
 var testDefaultPrefixesFn = function(store,test) {
     store.execute('INSERT DATA {  <http://example/person1> <http://xmlns.com/foaf/0.1/name> "Celia" }', function(result, msg){
         store.execute('SELECT * { ?s foaf:name ?name }', function(err,results) {
@@ -987,12 +883,6 @@ this.suite_store.testDefaultPrefixes = function(test){
 
 this.suite_store.testDefaultPrefixesPersistent = function(test){
     new rdfstore.Store({name:'testDefaultPefixes', persistent:true, overwrite:true}, function(err,store){
-        testDefaultPrefixesFn(store,test);
-    });
-};
-
-this.suite_store.testDefaultPrefixesWorkers = function(test){
-    new rdfstore.Store({name:'testDefaultPefixes', workers:true, overwrite:true}, function(err,store){
         testDefaultPrefixesFn(store,test);
     });
 };
@@ -1025,12 +915,6 @@ this.suite_store.testDuplicatedInsertPersistent = function(test) {
     });
 };
 
-this.suite_store.testDuplicatedInsertWorkers = function(test) {
-    new rdfstore.Store({name:'testDuplicatedInsert', workers:true, overwrite:true}, function(err,store){
-        testDuplicatedInsertFn(store,test);
-    });
-};
-
 var testDuplicatedParsingFn = function(store,test) {
     var data = {'@id': 'http://test.com/me', 'http://somproperty.org/prop': 'data'};
     store.load('application/json',data, function(result, msg){
@@ -1053,12 +937,6 @@ this.suite_store.testDuplicatedParsing = function(test) {
 
 this.suite_store.testDuplicatedParsingPersistent = function(test) {
     new rdfstore.Store({name:'testDuplicatedParsing', persistent:true, overwrite:true}, function(err,store){
-        testDuplicatedParsingFn(store,test);
-    });
-};
-
-this.suite_store.testDuplicatedParsingWorkers = function(test) {
-    new rdfstore.Store({name:'testDuplicatedParsing', workers:true, overwrite:true}, function(err,store){
         testDuplicatedParsingFn(store,test);
     });
 };
@@ -1122,12 +1000,6 @@ this.suite_store.testConstructBlankNodes = function(test) {
 
 this.suite_store.testConstructBlankNodesPersistent = function(test) {
     new rdfstore.Store({name:'testConstructBlankNodes', persistent:true, overwrite:true}, function(err,store){
-        testConstructBlankNodesFn(store,test);
-    });
-};
-
-this.suite_store.testConstructBlankNodesWorkers = function(test) {
-    new rdfstore.Store({name:'testConstructBlankNodes', workers:true, overwrite:true}, function(err,store){
         testConstructBlankNodesFn(store,test);
     });
 };

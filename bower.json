@@ -1,6 +1,6 @@
 {
   "name": "rdfstore",
-  "version": "0.9.15",
+  "version": "0.9.16",
   "homepage": "https://github.com/antoniogarrote/rdfstore-js",
   "authors": [
     "Antonio Garrote <antoniogarrote@gmail.com>"

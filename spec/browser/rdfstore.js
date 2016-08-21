@@ -19072,7 +19072,6 @@ module.exports = {
     Node: Node
 };
 },{"./utils":57}],41:[function(_dereq_,module,exports){
-(function (__dirname){
 // imports
 var QueryEngine = _dereq_("./query_engine").QueryEngine;
 var InMemoryQuadBackend = _dereq_("./quad_backend").QuadBackend;
@@ -19133,26 +19132,20 @@ Store = function(arg1, arg2) {
     new Lexicon(function(lexicon){
 	var createQuadBackend = function() {
 	    new QuadBackend(params, function (backend) {
-		/*
-		 if(params['overwrite'] === true) {
-		 // delete index values
-		 backend.clear();
-		 }
-		 */
 		var createEngine = function() {
 		    params.backend = backend;
 		    params.lexicon = lexicon;
 		    that.engine = new QueryEngine(params);
 
 		    callback(null, that);
-		}
+		};
 		if(params['overwrite']) {
 		    backend.clear(createEngine)
 		} else {
 		    createEngine();
 		}
 	    });
-	}
+	};
 	if(params['overwrite'] === true) {
 	    // delete lexicon values
 	    lexicon.clear(createQuadBackend);
@@ -19931,7 +19924,7 @@ Store.prototype.close = function(cb) {
 /**
  * Version of the store
  */
-Store.VERSION = "0.9.15";
+Store.VERSION = "0.9.16";
 
 /**
  * Create a new RDFStore instance that will be
@@ -19957,26 +19950,15 @@ Store.VERSION = "0.9.15";
  * @param {Function} callback Callback function that will be invoked with an error flag and the connection/store object.
  */
 var connect = function() {
-    var path, args, callback;
+    var callback;
     if(arguments.length == 1) {
-	path = __dirname;
-	args = {};
-	callback = arguments[0];
+		callback = arguments[0];
     } else if(arguments.length == 2) {
-	if(typeof(arguments[0]) === 'string') {
-	    path = arguments[0];
-	    args = {};
+		callback = arguments[1];
 	} else {
-	    path = __dirname+"/index.js";
-	    args = arguments[0];
-	}
-	callback = arguments[1];
-    } else {
-	path = arguments[0];
-	args = arguments[1];
 	callback = arguments[2];
     }
-    callback(new Error("Store#connect is not supported in the 1.x series of the library"));
+    callback(new Error("Store#connect is not supported in the 0.9.X series of the library"));
 };
 
 /**
@@ -20009,18 +19991,13 @@ var create = function(){
 };
 
 Store.yieldFrequency = function(val) {
-    Utils.yieldFrequency(val);
+    _.yieldFrequency(val);
 };
 
 module.exports.Store = Store;
 module.exports.create = create;
 module.exports.connect = connect;
 
-
-if(_.isWorker()) {
-	(_dereq_("./quad_backend").QuadBackend)();
-}
-}).call(this,"/")
 },{"./lexicon":44,"./persistent_lexicon":47,"./persistent_quad_backend":48,"./quad_backend":49,"./query_engine":51,"./rdf_model":55,"./utils":57}],42:[function(_dereq_,module,exports){
 //imports
 var _ = _dereq_('./utils');
@@ -41653,7 +41630,6 @@ module.exports.PersistentQuadBackend = PersistentQuadBackend;
 // imports
 var QuadIndex = _dereq_("./quad_index").QuadIndex;
 var utils = _dereq_('./utils');
-var _ = _dereq_('./utils');
 
 /*
  * "perfect" indices for RDF indexing
@@ -41706,7 +41682,7 @@ QuadBackend.prototype._indexForPattern = function (pattern) {
         var index = QuadBackend.allIndices[i];
         var indexComponents = QuadBackend.componentOrders[index];
         for (var j = 0; j < indexComponents.length; j++) {
-            if (_.include(indexKey, indexComponents[j]) === false) {
+            if (utils.include(indexKey, indexComponents[j]) === false) {
                 break;
             }
             if (j == indexKey.length - 1) {
@@ -41721,22 +41697,14 @@ QuadBackend.prototype._indexForPattern = function (pattern) {
 
 QuadBackend.prototype.index = function (quad, callback) {
     var that = this;
-    if(this.indices.length === 1) {
-        var indexKey = this.indices[0];
+    utils.eachSeries(this.indices, function (indexKey, k) {
         var index = that.indexMap[indexKey];
         index.insert(quad, function () {
-          callback(true);
+            k();
         })
-    } else {
-        utils.eachSeries(this.indices, function (indexKey, k) {
-            var index = that.indexMap[indexKey];
-            index.insert(quad, function () {
-                k();
-            })
-        }, function () {
-            callback(true);
-        });
-    }
+    }, function () {
+        callback(true);
+    });
 };
 
 QuadBackend.prototype.range = function (pattern, callback) {
@@ -41761,227 +41729,32 @@ QuadBackend.prototype.search = function (quad, callback) {
 
 QuadBackend.prototype.delete = function (quad, callback) {
     var that = this;
-    if(this.indices.length === 1) {
-        var indexKey = this.indices[0];
-        var index = this.indexMap[indexKey];
+    utils.eachSeries(this.indices, function (indexKey, k) {
+        var index = that.indexMap[indexKey];
         index.delete(quad, function () {
-            callback(true);
+            k();
         });
-    } else {
-        utils.eachSeries(this.indices, function (indexKey, k) {
-            var index = that.indexMap[indexKey];
-            index.delete(quad, function () {
-                k();
-            });
-        }, function () {
-            callback(true);
-        });
-    }
+    }, function () {
+        callback(true);
+    });
 };
 
 QuadBackend.prototype.clear = function(callback) {
     var that = this;
-    if(this.indices.length === 1) {
-        var indexKey = this.indices[0];
+    utils.eachSeries(this.indices, function (indexKey, k) {
         new QuadIndex({
             order: that.treeOrder,
             componentOrder: that.componentOrders[indexKey]
         }, function (tree) {
             that.indexMap[indexKey] = tree;
-            callback(true);
+            k();
         });
-    } else {
-        utils.eachSeries(this.indices, function (indexKey, k) {
-            new QuadIndex({
-                order: that.treeOrder,
-                componentOrder: that.componentOrders[indexKey]
-            }, function (tree) {
-                that.indexMap[indexKey] = tree;
-                k();
-            });
-        }, function () {
-            callback(true);
-        });
-    }
+    }, function () {
+        callback(true);
+    });
 };
 
-
-QuadBackendWorker = function (configuration, callback) {
-    var that = this;
-    if(utils.isWorker()) {
-        // register
-        onmessage = function(request){
-            try {
-                var message = request.data;
-                var id = message.id;
-                var name = message.function;
-                var args = message.args;
-                if(name === 'init') {
-                    new QuadBackend(args, function(backend){
-                        that.backend = backend;
-                        postMessage({"id": id, "result": true});
-                    });
-                } else {
-                    args.push(function (res) {
-                        postMessage({"id": id, "result": res});
-                    });
-                    that.backend[name].apply(that.backend, args);
-                }
-            } catch(e) {
-                postMessage({"error": e.toString()});
-            }
-        };
-    } else {
-        if(typeof("window") !== "undefined" && window.Worker && configuration["workers"] === true) {
-            // WebWorkers supported
-            var rdfstoreFile = (configuration["worker_file"] || "rdfstore.js");
-            this.requestId = 0;
-            this.indices = ['SPOG', 'GP', 'OGS', 'POG', 'GSP', 'OS'];
-            this.workers = {};
-            this.mailbox = {};
-            utils.eachParallel(this.indices, function(index, k){
-                that.workers[index] = new Worker(rdfstoreFile);
-                that.workers[index].onmessage = function(response){
-                    var message = response.data;
-                    if(typeof(message) === "string") {
-                        throw(new Error(message));
-                    }
-                    if(message.error != null) {
-                        throw new Error(message.error);
-                    }
-                    if(message.id != null && message.id == 0) {
-                        k();
-                    } else {
-                        var cb = that.mailbox[message.id];
-                        delete that.mailbox[message.id];
-                        if (message.id != null && cb != null) {
-                            cb(message.result);
-                        } else {
-                            throw(new Error("Cannot find callback for message with id:"+message.id));
-                        }
-                    }
-                };
-                configuration["index"] = [index];
-                that.workers[index].postMessage({"id": 0, "function":"init", "args":configuration});
-            }, function(){
-                callback(that);
-            })
-        } else {
-            new QuadBackend(configuration, function(backend){
-                callback(backend);
-            });
-        }
-    }
-};
-
-QuadBackendWorker.prototype.postMessage = function(index, name, args, cb) {
-    if(this.requestId < (Number.MAX_SAFE_INTEGER || 1000000)) {
-        this.requestId++;
-    } else {
-        this.requestId = 0;
-    }
-    var id = this.requestId;
-    var message = {"id":id, "function":name, "args":args};
-    this.mailbox[id] = cb;
-    this.workers[index].postMessage(message);
-};
-
-QuadBackendWorker.prototype._indexForPattern = function (pattern) {
-    return QuadBackend.prototype._indexForPattern(pattern);
-};
-
-
-QuadBackendWorker.prototype.index = function (quad, callback) {
-    var that = this;
-    if(utils.isWorker()) {
-        this.backend(quad,callback);
-    } else {
-        if(typeof(window) !== "undefined" && window.Worker) {
-            utils.eachParallel(this.indices, function(index, k){
-                that.postMessage(index, "index", [quad], k);
-            }, function(){
-                callback(that);
-            });
-        } else {
-            throw new Error("Invoking method of worker proxy in no supported env")
-        }
-    }
-};
-
-QuadBackendWorker.prototype.range = function (pattern, callback) {
-    if(utils.isWorker()) {
-        this.backend(quad,callback);
-    } else {
-        if(typeof(window) !== "undefined" && window.Worker) {
-            var indexKey = this._indexForPattern(pattern);
-            this.postMessage(indexKey, "range", [pattern], callback);
-        } else {
-            throw new Error("Invoking method of worker proxy in no supported env")
-        }
-    }
-};
-
-QuadBackendWorker.prototype.search = function (quad, callback) {
-    if(utils.isWorker()) {
-        this.backend(quad,callback);
-    } else {
-        if(typeof(window) !== "undefined" && window.Worker) {
-            this.postMessage('SPOG', "search", [quad], callback);
-        } else {
-            throw new Error("Invoking method of worker proxy in no supported env")
-        }
-    }
-};
-
-
-QuadBackendWorker.prototype.delete = function (quad, callback) {
-    var that = this;
-    if(utils.isWorker()) {
-        this.backend(quad,callback);
-    } else {
-        if(typeof(window) !== "undefined" && window.Worker) {
-            utils.eachParallel(this.indices, function(index, k){
-                that.postMessage(index, "delete", [quad], k);
-            }, function(){
-                callback(that);
-            });
-        } else {
-            throw new Error("Invoking method of worker proxy in no supported env")
-        }
-    }
-};
-
-QuadBackendWorker.prototype.clear = function(callback) {
-    var that = this;
-    if(utils.isWorker()) {
-        this.backend(quad,callback);
-    } else {
-        if(typeof(window) !== "undefined" && window.Worker) {
-            utils.eachParallel(this.indices, function(index, k){
-                that.postMessage(index, "clear", [], k);
-            }, function(){
-                callback(that);
-            });
-        } else {
-            throw new Error("Invoking method of worker proxy in no supported env")
-        }
-    }
-};
-
-var BackendToExport;
-
-if(utils.isWorker()) {
-    BackendToExport = QuadBackendWorker;
-} else {
-    if(typeof(window) !== "undefined" && window.Worker) {
-        BackendToExport = QuadBackendWorker;
-    } else {
-        BackendToExport = QuadBackend;
-    }
-}
-
-
-module.exports.QuadBackend = BackendToExport;
+module.exports.QuadBackend = QuadBackend;
 
 },{"./quad_index":50,"./utils":57}],50:[function(_dereq_,module,exports){
 var BaseTree = _dereq_("./btree").Tree;
@@ -46232,7 +46005,6 @@ QueryPlanDPSize.executeBushyTree = function(queryPlan, dataset, queryEngine, env
     }
 };
 
-
 QueryPlanDPSize.executeAndBGPsDPSize = function(allBgps, dataset, queryEngine, env, callback) {
 
     var groups = QueryPlanDPSize.executeAndBGPsGroups(allBgps);
@@ -46365,7 +46137,6 @@ QueryPlanDPSize.executeAndBGPsDPSize = function(allBgps, dataset, queryEngine, e
         });
     });
 };
-
 
 QueryPlanDPSize.executeEmptyJoinBGP = function(bgp, dataset, queryEngine, queryEnv, callback) {
     return QueryPlanDPSize.executeBGPDatasets(bgp, dataset, queryEngine, queryEnv, callback);
