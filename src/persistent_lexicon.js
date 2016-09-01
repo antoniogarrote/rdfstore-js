@@ -517,7 +517,10 @@ PersistentLexicon.prototype._unregisterTerm = function (kind, oid, callback) {
     }
 };
 
-
+/**
+ * Generates a new, unique OID and returns it.
+ * @private
+ */
 PersistentLexicon.prototype._newId = function(){
     var varName = this.dbName+"-lexicon-lastId";
     var lastId = localStorage.getItem(varName);
