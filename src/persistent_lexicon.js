@@ -13,7 +13,7 @@ PersistentLexicon = function(callback, dbName){
 
     utils.registerIndexedDB(that);
 
-    this.defaultGraphOid = that._newId();
+    this.defaultGraphOid = 0;
     this.defaultGraphUri = "https://github.com/antoniogarrote/rdfstore-js#default_graph";
     this.defaultGraphUriTerm = {"token":"uri","prefix":null,"suffix":null,"value":this.defaultGraphUri};
     this.oidCounter = 1;
@@ -427,7 +427,7 @@ PersistentLexicon.prototype.retrieve = function(oid, callback) {
  */
 PersistentLexicon.prototype.clear = function(callback) {
     var that = this;
-    this.defaultGraphOid = that._newId();
+    this.defaultGraphOid = 0;
     this.defaultGraphUri = "https://github.com/antoniogarrote/rdfstore-js#default_graph";
     this.defaultGraphUriTerm = {"token":"uri","prefix":null,"suffix":null,"value":this.defaultGraphUri};
 
@@ -524,7 +524,7 @@ PersistentLexicon.prototype._unregisterTerm = function (kind, oid, callback) {
 PersistentLexicon.prototype._newId = function(){
     var varName = this.dbName+"-lexicon-lastId";
     var lastId = localStorage.getItem(varName);
-    if(lastId==null) lastId=-1;
+    if(lastId==null) lastId=0;
     else lastId*=1;
     localStorage.setItem(varName,lastId+1);
     return lastId+1;
