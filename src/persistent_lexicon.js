@@ -13,7 +13,7 @@ PersistentLexicon = function(callback, dbName){
 
     utils.registerIndexedDB(that);
 
-    this.defaultGraphOid = 0;
+    this.defaultGraphOid = that._newId();
     this.defaultGraphUri = "https://github.com/antoniogarrote/rdfstore-js#default_graph";
     this.defaultGraphUriTerm = {"token":"uri","prefix":null,"suffix":null,"value":this.defaultGraphUri};
     this.oidCounter = 1;
@@ -127,7 +127,7 @@ PersistentLexicon.prototype.registerUri = function(uri, callback) {
                 };
             } else {
                 // not found -> create
-                var requestAdd = objectStore.add({uri: uri, counter:0});
+                var requestAdd = objectStore.add({uri: uri, id:that._newId(), counter:0});
                 requestAdd.onsuccess = function(event){
                     callback(event.target.result);
                 };
@@ -200,7 +200,7 @@ PersistentLexicon.prototype.registerBlank = function(callback) {
     var that = this;
 
     var objectStore = that.db.transaction(["blanks"],"readwrite").objectStore("blanks");
-    var requestAdd = objectStore.add({label: oidStr, counter:0});
+    var requestAdd = objectStore.add({label: oidStr, id:that._newId(), counter:0});
     requestAdd.onsuccess = function(event){
         callback(event.target.result);
     };
@@ -278,7 +278,7 @@ PersistentLexicon.prototype.registerLiteral = function(literal, callback) {
             };
         } else {
             // not found -> create
-            var requestAdd = objectStore.add({literal: literal, counter:0});
+            var requestAdd = objectStore.add({literal: literal, id:that._newId(), counter:0});
             requestAdd.onsuccess = function(event){
                 callback(event.target.result);
             };
@@ -515,6 +515,17 @@ PersistentLexicon.prototype._unregisterTerm = function (kind, oid, callback) {
     } else {
         callback();
     }
+};
+
+
+PersistentLexicon.prototype._newId = function(){
+    var varName = this.dbName+"-lexicon-lastId";
+    var lastId = localStorage.getItem(varName);
+    if(lastId==null) lastId=-1;
+    else lastId*=1;
+    localStorage.setItem(varName,lastId+1);
+    return lastId+1;
+
 };
 
 module.exports = {
