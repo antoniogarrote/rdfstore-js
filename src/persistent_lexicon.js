@@ -427,7 +427,7 @@ PersistentLexicon.prototype.retrieve = function(oid, callback) {
  */
 PersistentLexicon.prototype.clear = function(callback) {
     var that = this;
-    this.defaultGraphOid = 0;
+    this.defaultGraphOid = that._newId();
     this.defaultGraphUri = "https://github.com/antoniogarrote/rdfstore-js#default_graph";
     this.defaultGraphUriTerm = {"token":"uri","prefix":null,"suffix":null,"value":this.defaultGraphUri};
 
