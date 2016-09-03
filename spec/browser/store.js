@@ -17,12 +17,10 @@ var testBlankNodesQueryFn = function(store, test) {
                        ?contributorIRI foaf:name ?contributorName \
                      }";
         store.execute(query, function (err, results) {
-            console.log("RESULTS:");
-            console.log(results);
             test.ok(results.length === 2);
             test.ok(results[0]['contributorName'].value === 'Foo');
             test.ok(results[1]['contributorName'].value === 'Bar');
-            test.done()
+            test.done();
         });
     });
 };
@@ -85,7 +83,6 @@ this.suite_store.testIntegration2Persistent = function(test){
     });
 };
 
-
 var testGraph1Fn = function(store,test) {
     var query = 'PREFIX foaf: <http://xmlns.com/foaf/0.1/>\
                      PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\
@@ -108,7 +105,6 @@ var testGraph1Fn = function(store,test) {
     store.execute(query, function(err, results) {
         store.graph(function(err, graph){
             var results = graph.filter( store.rdf.filters.describes("http://example.org/people/alice") );
-
             var resultsCount = results.toArray().length;
 
             var resultsSubject = results.filter(store.rdf.filters.s("http://example.org/people/alice"))
@@ -121,6 +117,7 @@ var testGraph1Fn = function(store,test) {
         });
     });
 };
+
 
 this.suite_store.testGraph1 = function(test) {
     new Store({name: 'testGraph1',overwrite:true}, function(err,store) {
@@ -187,7 +184,7 @@ this.suite_store.testGraph2 = function(test) {
 };
 
 this.suite_store.testGraph2Persistent = function(test) {
-    new rdfstore.Store({name:'testGraph2b', persistent: true, overwrite:true}, function(err,store) {
+    new rdfstore.Store({name:'testGraph2d', persistent: true, overwrite:true}, function(err,store) {
         testGraph2Fn(store,test);
     });
 };
@@ -784,16 +781,18 @@ this.suite_store.testEventsAPI3 = function(test){
             }
         });
 
-        store.execute('INSERT DATA {  <http://example/book> <http://example.com/vocab#title> <http://test.com/example> }', function(){
-            store.execute('INSERT DATA {  <http://example/book> <http://example.com/vocab#title2> <http://test.com/example2>.\
-                                          <http://example/book> <http://example.com/vocab#title3> <http://test.com/example3> }', function(){
-                store.execute('DELETE DATA {  <http://example/book> <http://example.com/vocab#title2> <http://test.com/example2> }',function(){
-                    store.execute('INSERT DATA {  <http://example/book> <http://example.com/vocab#title2> <http://test.com/example3> }', function(){
-                        test.done();
-                    });
-                });
-            });
-        });
+        setTimeout(function(){
+          store.execute('INSERT DATA {  <http://example/book> <http://example.com/vocab#title> <http://test.com/example> }', function(){
+              store.execute('INSERT DATA {  <http://example/book> <http://example.com/vocab#title2> <http://test.com/example2>.\
+                                            <http://example/book> <http://example.com/vocab#title3> <http://test.com/example3> }', function(){
+                  store.execute('DELETE DATA {  <http://example/book> <http://example.com/vocab#title2> <http://test.com/example2> }',function(){
+                      store.execute('INSERT DATA {  <http://example/book> <http://example.com/vocab#title2> <http://test.com/example3> }', function(){
+                          test.done();
+                      });
+                  });
+              });
+          });
+        },1000);
     });
 };
 
@@ -1179,7 +1178,34 @@ this.suite_store.testPersistence = function(test) {
                 test.done();
             });
         });
-    })
+    });
+};
+
+
+this.suite_store.testPersistence2 = function(test) {
+    var queries = ["PREFIX dc: <http://purl.org/dc/elements/1.1/> SELECT ?s ?p ?o { ?s ?p ?o}",
+                   "PREFIX dc: <http://purl.org/dc/elements/1.1/>\
+                    INSERT DATA\
+                    { \
+                      <http://example/book1> dc:title \"A new book\" .\
+                    }"];
+    new Store({persistent: true, name: 'testPersistence2e'}, function(err, store){
+        store.execute("PREFIX dc: <http://purl.org/dc/elements/1.1/>\
+      INSERT DATA\
+      { \
+        <http://example/book1> dc:title \"A new book\" .\
+      }", function(){
+          store.execute("PREFIX dc: <http://purl.org/dc/elements/1.1/> SELECT ?s ?p ?o { ?s ?p ?o}", function(err,results) {
+                test.ok(err === null);
+                test.ok(results.length === 1);
+                test.ok(results[0].s.value === "http://example/book1");
+                test.ok(results[0].p.value === "http://purl.org/dc/elements/1.1/title");
+                test.ok(results[0].o.value === "A new book");
+
+                test.done();
+            });
+        });
+    });
 };
 
 
@@ -1189,4 +1215,3 @@ this.suite_store.testPackageEntryPoints = function(test) {
     test.ok(rdfstore.Store != null);
     test.done();
 };
-
