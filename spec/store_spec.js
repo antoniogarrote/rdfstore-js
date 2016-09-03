@@ -15,7 +15,7 @@ describe("Store", function () {
                     expect(results[0].p.value).toBe("http://example.com/vocab#title");
                     expect(results[0].o.value).toBe("http://test.com/example");
                     store.close(function () {
-                        done()
+                        done();
                     });
                 });
             });
@@ -35,7 +35,7 @@ describe("Store", function () {
                     expect(results[0].o.value).toBe("http://test.com/example");
 
                     store.close(function () {
-                        done()
+                        done();
                     });
                 });
             });
@@ -78,7 +78,7 @@ describe("Store", function () {
                     expect((resultsObject.toArray().length + resultsSubject.toArray().length)).toBe(resultsCount);
 
                     store.close(function () {
-                        done()
+                        done();
                     });
                 });
             });
@@ -127,7 +127,7 @@ describe("Store", function () {
 
                             expect(results.toArray().length).toBe(4);
                             store.close(function () {
-                                done()
+                                done();
                             });
                         });
                     });
@@ -163,7 +163,7 @@ describe("Store", function () {
                     expect(err).toBe(null);
                     expect(graph.toArray().length).toBe(4);
                     store.close(function () {
-                        done()
+                        done();
                     });
                 });
             });
@@ -213,7 +213,7 @@ describe("Store", function () {
 
                             expect(results.toArray().length).toBe(4);
                             store.close(function () {
-                                done()
+                                done();
                             });
                         });
                     });
@@ -266,7 +266,7 @@ describe("Store", function () {
                             expect(err).toBe(null);
                             expect(results.toArray().length).toBe(4);
                             store.close(function () {
-                                done()
+                                done();
                             });
                         });
                     });
@@ -319,7 +319,7 @@ describe("Store", function () {
                             expect(err).toBe(null);
                             expect(results.toArray().length).toBe(4);
                             store.close(function () {
-                                done()
+                                done();
                             });
                         });
                     });
@@ -349,7 +349,7 @@ describe("Store", function () {
                 store.node("ex:Alice", function (err, graph) {
                     expect(graph.toArray().length).toBe(2);
                     store.close(function () {
-                        done()
+                        done();
                     });
                 });
 
@@ -378,7 +378,7 @@ describe("Store", function () {
                 store.node("ex:Alice", "ex:alice", function (err, graph) {
                     expect(graph.toArray().length).toBe(2);
                     store.close(function () {
-                        done()
+                        done();
                     });
                 });
 
@@ -409,7 +409,7 @@ describe("Store", function () {
                         store.node("ex:Alice", function (err, graph) {
                             expect(graph.toArray().length).toBe(0);
                             store.close(function () {
-                                done()
+                                done();
                             });
                         })
                     });
@@ -442,7 +442,7 @@ describe("Store", function () {
                         store.node("ex:Alice", function (err, graph) {
                             expect(graph.toArray().length).toBe(0);
                             store.close(function () {
-                                done()
+                                done();
                             });
                         })
                     });
@@ -474,7 +474,7 @@ describe("Store", function () {
                         store.node("ex:Alice", function (err, graph) {
                             expect(graph.toArray().length).toBe(0);
                             store.close(function () {
-                                done()
+                                done();
                             });
                         });
                     });
@@ -563,7 +563,7 @@ describe("Store", function () {
 
                     expect(counter).toBe(2);
                     store.close(function () {
-                        done()
+                        done();
                     });
                 });
             });
@@ -596,7 +596,7 @@ describe("Store", function () {
 
                     expect(counter).toBe(2);
                     store.close(function () {
-                        done()
+                        done();
                     });
                 });
             });
@@ -627,7 +627,7 @@ describe("Store", function () {
 
                     expect(counter).toBe(2);
                     store.close(function () {
-                        done()
+                        done();
                     });
                 });
             });
@@ -662,7 +662,7 @@ describe("Store", function () {
 
                     expect(counter).toBe(2);
                     store.close(function () {
-                        done()
+                        done();
                     });
                 });
             });
@@ -689,7 +689,7 @@ describe("Store", function () {
                         store.stopObservingNode(observerFn);
                         store.execute('INSERT DATA {  <http://example/book> <http://example.com/vocab#title2> <http://test.com/example3> }');
                         store.close(function () {
-                            done()
+                            done();
                         });
                     } else if (counter === 3) {
                         expect(false).toBe(true);
@@ -762,7 +762,7 @@ describe("Store", function () {
                     store.execute('DELETE DATA {  <http://example/book> <http://example.com/vocab#title2> <http://test.com/example2> }', function () {
                         store.execute('INSERT DATA {  <http://example/book> <http://example.com/vocab#title2> <http://test.com/example3> }', function () {
                             store.close(function () {
-                                done()
+                                done();
                             });
                         });
                     });
@@ -815,7 +815,7 @@ describe("Store", function () {
                         expect(values[0]).toBe('http://example.org/people/alice');
                         expect(values[1]).toBe('http://example.org/people/bob');
                         store.close(function () {
-                            done()
+                            done();
                         });
                     });
                 });
@@ -840,7 +840,7 @@ describe("Store", function () {
 //                    // an easier way
 //                    expect(graph.toNT() == n3);
 //
-//                    store.close(function(){ done() });
+//                    store.close(function(){ done(); });
 //                });
 //            });
 //        });
@@ -862,7 +862,7 @@ describe("Store", function () {
                         expect(results.length).toBe(1);
                         expect(results[0].name.value).toBe("Celia");
                         store.close(function () {
-                            done()
+                            done();
                         });
                     });
                 });
@@ -882,7 +882,7 @@ describe("Store", function () {
                         expect(results[0].o.value).toBe("http://test.com/example");
 
                         store.close(function () {
-                            done()
+                            done();
                         });
                     });
                 });
@@ -901,7 +901,7 @@ describe("Store", function () {
                         expect(results.length).toBe(1);
                         expect(results[0].s.value).toBe('http://test.com/me');
                         store.close(function () {
-                            done()
+                            done();
                         });
                     });
                 });
@@ -957,7 +957,7 @@ describe("Store", function () {
 
                     expect(numDistinctBlankSujects).toBe(1);
                     store.close(function () {
-                        done()
+                        done();
                     });
                 });
             });
@@ -974,7 +974,7 @@ describe("Store", function () {
                         'SELECT *  WHERE { ?x ?p ?x }',
                         function (err, results) {
                             expect(results.length).toBe(0);
-                            done()
+                            done();
                         }
                     );
                 });
@@ -993,7 +993,7 @@ describe("Store", function () {
                         'SELECT *  WHERE { ?x ?p ?x }',
                         function (err, results) {
                             expect(results.length).toBe(1);
-                            done()
+                            done();
                         }
                     );
                 });
@@ -1016,7 +1016,7 @@ describe("Store", function () {
                             });
 
                             expect(counter).toBe(0);
-                            done()
+                            done();
                         }
                     );
                 });
@@ -1040,7 +1040,7 @@ describe("Store", function () {
                             });
 
                             expect(counter).toBe(1);
-                            done()
+                            done();
                         }
                     );
                 });
@@ -1347,6 +1347,30 @@ describe("Store", function () {
                 });
             });
         });
+    });
+
+    it("Should process filters on variables and URIs", function(done){
+        new Store.Store({name: 'test', overwrite: true}, function(err,store){
+            var rdf = '@prefix test: <http://test.com/> .\
+                       test:A test:prop 5.\
+                       test:B test:prop 4.\
+                       test:A test:prop 1.\
+                       test:D test:prop 3.';
+
+            store.load('text/turtle', rdf, function(s,d){
+
+                var query = `SELECT ?s ?p ?o WHERE {
+                    ?s ?p ?o.
+             FILTER (?s=<http://test.com/A>)
+             } `;
+
+                store.execute(query, function(success, results){
+                    expect(results.length).toBe(2);
+                    done();
+                });
+            });
+        });
+
     });
 
     it("Should process functions in BIND expressions", function(done){

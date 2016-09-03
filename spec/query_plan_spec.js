@@ -2,7 +2,7 @@ var QueryPlan = require("../src/query_plan").QueryPlan;
 
 
 var makeVar = function(n) {
-    return { token: 'var', value: n }
+    return { token: 'var', value: n };
 };
 
 var pred = { token: 'uri',

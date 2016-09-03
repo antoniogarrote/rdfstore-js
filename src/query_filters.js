@@ -100,12 +100,21 @@ QueryFilters.preprocessExistentialFilters = function(filters, bindings, queryEng
                 k();
             });
         } else if(filter.value.expressionType === "irireforfunction" || filter.value.expressionType === "custom") {
-            var operands = _.map(filter.value.args, function(operand){ return {"value": operand}; });
-            QueryFilters.preprocessExistentialFilters(operands, bindings, queryEngine, dataset, env, function(preprocessedOperands){
-                filter.value.args = preprocessedOperands.map(function(operand){ return operand.value; });
+            if(filter.value.args != null) {
+                var operands = _.map(filter.value.args, function (operand) {
+                    return {"value": operand};
+                });
+                QueryFilters.preprocessExistentialFilters(operands, bindings, queryEngine, dataset, env, function (preprocessedOperands) {
+                    filter.value.args = preprocessedOperands.map(function (operand) {
+                        return operand.value;
+                    });
+                    preProcessedFilters.push(filter);
+                    k();
+                });
+            } else {
                 preProcessedFilters.push(filter);
                 k();
-            });
+            }
         } else {
             preProcessedFilters.push(filter);
             k();
