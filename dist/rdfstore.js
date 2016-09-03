@@ -19924,7 +19924,7 @@ Store.prototype.close = function(cb) {
 /**
  * Version of the store
  */
-Store.VERSION = "0.9.16";
+Store.VERSION = "0.9.17";
 
 /**
  * Create a new RDFStore instance that will be
@@ -40938,15 +40938,9 @@ PersistentLexicon = function(callback, dbName){
         // graphs
         var graphStore = that.db.createObjectStore('knownGraphs', { keyPath: 'oid'});
         graphStore.createIndex("uriToken","uriToken",{unique: true});
-        // uris mapping
-        var uriStore = that.db.createObjectStore('uris', { keyPath: 'id', autoIncrement : true });
-        uriStore.createIndex("uri","uri",{unique: true});
-        // blanks mapping
-        var blankStore = that.db.createObjectStore('blanks', { keyPath: 'id', autoIncrement : true });
-        blankStore.createIndex("label","label",{unique: true});
-        // literals mapping
-        var literalStore = that.db.createObjectStore('literals', { keyPath: 'id', autoIncrement : true });
-        literalStore.createIndex("literal","literal",{unique: true});
+        // uris,literal,blanks mapping
+        var uriStore = that.db.createObjectStore('components', { keyPath: 'id', autoIncrement : true });
+        uriStore.createIndex("value","value",{unique: true});
 
         //setTimeout(function(){ callback(that); },0);
     };
@@ -40966,10 +40960,19 @@ PersistentLexicon.prototype.registerGraph = function(oid, uriToken, callback){
             callback(null, new Error(event.target.statusCode));
         };
         var objectStore = transaction.objectStore('knownGraphs');
-        var request = objectStore.add({oid: oid, uriToken: uriToken});
-        request.onsuccess = function (event) {
-            callback(true);
-        };
+        var request = objectStore.get(uriToken)
+        request.onsuccess = function(event) {
+            var graphData = event.target.result;
+            if(graphData) {
+                // found graph -> return
+                callback(true)
+            } else {
+                var request = objectStore.add({oid: oid, uriToken: uriToken});
+                request.onsuccess = function (_) {
+                    callback(true);
+                };
+            }
+        }
     } else {
         callback();
     }
@@ -41015,8 +41018,8 @@ PersistentLexicon.prototype.registerUri = function(uri, callback) {
     if(uri === this.defaultGraphUri) {
         callback(this.defaultGraphOid);
     } else{
-        var objectStore = that.db.transaction(["uris"],"readwrite").objectStore("uris");
-        var request = objectStore.index("uri").get(uri);
+        var objectStore = that.db.transaction(["components"],"readwrite").objectStore("components");
+        var request = objectStore.index("value").get("_u:"+uri);
         request.onsuccess = function(event) {
             var uriData = event.target.result;
             if(uriData) {
@@ -41024,7 +41027,7 @@ PersistentLexicon.prototype.registerUri = function(uri, callback) {
                 uriData.counter++;
                 var oid = uriData.id;
                 var requestUpdate = objectStore.put(uriData);
-                requestUpdate.onsuccess =function (event) {
+                requestUpdate.onsuccess =function (_) {
                     callback(oid);
                 };
                 requestUpdate.onerror = function (event) {
@@ -41032,7 +41035,7 @@ PersistentLexicon.prototype.registerUri = function(uri, callback) {
                 };
             } else {
                 // not found -> create
-                var requestAdd = objectStore.add({uri: uri, counter:0});
+                var requestAdd = objectStore.add({value: "_u:"+uri, counter:0, uri:true});
                 requestAdd.onsuccess = function(event){
                     callback(event.target.result);
                 };
@@ -41057,12 +41060,12 @@ PersistentLexicon.prototype.resolveUri = function(uri,callback) {
     if(uri === this.defaultGraphUri) {
         callback(this.defaultGraphOid);
     } else {
-        var objectStore = this.db.transaction(["uris"]).objectStore("uris");
-        var request = objectStore.index("uri").get(uri);
+        var objectStore = this.db.transaction(["components"]).objectStore("components");
+        var request = objectStore.index("value").get("_u:"+uri);
         request.onsuccess = function(event) {
-            if(event.target.result != null)
+            if(event.target.result != null) {
                 callback(event.target.result.id);
-            else
+            } else
                 callback(-1);
         };
         request.onerror = function(event) {
@@ -41081,8 +41084,8 @@ PersistentLexicon.prototype.resolveUriCost = function(uri, callback) {
     if(uri === this.defaultGraphUri) {
         callback(0);
     } else {
-        var objectStore = that.db.transaction(["uris"]).objectStore("uris");
-        var request = objectStore.index("uri").get(uri);
+        var objectStore = that.db.transaction(["components"]).objectStore("components");
+        var request = objectStore.index("value").get("_u:"+uri);
         request.onsuccess = function(event) {
             if(event.target.result != null)
                 callback(event.target.result.cost);
@@ -41104,8 +41107,8 @@ PersistentLexicon.prototype.registerBlank = function(callback) {
     var oidStr = guid();
     var that = this;
 
-    var objectStore = that.db.transaction(["blanks"],"readwrite").objectStore("blanks");
-    var requestAdd = objectStore.add({label: oidStr, counter:0});
+    var objectStore = that.db.transaction(["components"],"readwrite").objectStore("components");
+    var requestAdd = objectStore.add({value: "_b:"+oidStr, counter:0, label:true});
     requestAdd.onsuccess = function(event){
         callback(event.target.result);
     };
@@ -41166,8 +41169,8 @@ PersistentLexicon.prototype.resolveBlankCost = function(label, callback) {
 PersistentLexicon.prototype.registerLiteral = function(literal, callback) {
     var that = this;
 
-    var objectStore = that.db.transaction(["literals"],"readwrite").objectStore("literals");
-    var request = objectStore.index("literal").get(literal);
+    var objectStore = that.db.transaction(["components"],"readwrite").objectStore("components");
+    var request = objectStore.index("value").get("_l:"+literal);
     request.onsuccess = function(event) {
         var literalData = event.target.result;
         if(literalData) {
@@ -41183,7 +41186,7 @@ PersistentLexicon.prototype.registerLiteral = function(literal, callback) {
             };
         } else {
             // not found -> create
-            var requestAdd = objectStore.add({literal: literal, counter:0});
+            var requestAdd = objectStore.add({value: "_l:"+literal, counter:0, literal:true});
             requestAdd.onsuccess = function(event){
                 callback(event.target.result);
             };
@@ -41203,12 +41206,12 @@ PersistentLexicon.prototype.registerLiteral = function(literal, callback) {
  * @param callback
  */
 PersistentLexicon.prototype.resolveLiteral = function (literal,callback) {
-    var objectStore = that.db.transaction(["literals"]).objectStore("literals");
-    var request = objectStore.index("literal").get(literal);
+    var objectStore = that.db.transaction(["components"]).objectStore("components");
+    var request = objectStore.index("value").get("_l:"+literal);
     request.onsuccess = function(event) {
-        if(event.target.result != null)
+        if(event.target.result != null) {
             callback(event.target.result.id);
-        else
+        } else
             callback(-1);
     };
     request.onerror = function(event) {
@@ -41222,8 +41225,8 @@ PersistentLexicon.prototype.resolveLiteral = function (literal,callback) {
  * @param callback
  */
 PersistentLexicon.prototype.resolveLiteralCost = function (literal,callback) {
-    var objectStore = that.db.transaction(["literals"]).objectStore("literals");
-    var request = objectStore.index("literal").get(literal);
+    var objectStore = that.db.transaction(["components"]).objectStore("components");
+    var request = objectStore.index("components").get(literal);
     request.onsuccess = function(event) {
         if(event.target.result != null)
             callback(event.target.result.cost);
@@ -41263,7 +41266,7 @@ PersistentLexicon.prototype.parseUri = function(uriString) {
  * @returns parsed token or null if not found.
  */
 PersistentLexicon.prototype.retrieve = function(oid, callback) {
-    var that = this;
+    var that = this, transaction, request;
 
     if(oid === this.defaultGraphOid) {
         callback({
@@ -41274,55 +41277,28 @@ PersistentLexicon.prototype.retrieve = function(oid, callback) {
             defaultGraph: true
         });
     } else {
-        var transaction = that.db.transaction(["uris","literals","blanks"]);
-        async.seq(function(found,k){
-            var request = transaction.objectStore("uris").get(oid);
-            request.onsuccess = function(event) {
-                if(event.target.result != null)
-                    k(null, that.parseUri(event.target.result.uri));
-                else
-                    k(null,null)
-            };
-            request.onerror = function(event) {
-                k(new Error("Error searching in URIs data "+event.target.errorCode));
-            };
-        }, function(found,k){
-            if(found == null) {
-                var request = transaction.objectStore("literals").get(oid);
-                request.onsuccess = function(event) {
-                    if(event.target.result != null)
-                        k(null, that.parseLiteral(event.target.result.literal));
-                    else
-                        k(null,null)
-                };
-                request.onerror = function(event) {
-                    k(new Error("Error searching in Literals data "+event.target.errorCode));
-                };
+        transaction = that.db.transaction(["components"]);
+        request = transaction.objectStore("components").get(oid);
+        request.onsuccess = function(event) {
+            if(event.target.result != null) {
+                if(event.target.result.label != null) {
+                    var label = "_:" + event.target.result.id;
+                    callback({token: "blank", value: label});
+                } else if(event.target.result.uri != null) {
+                    callback(that.parseUri(event.target.result.value.slice(3,event.target.result.value.length)));
+                } else if(event.target.result.literal != null) {
+                    callback(that.parseLiteral(event.target.result.value.slice(3,event.target.result.value.length)));
+                } else {
+                    console.log(event.target.result);
+                    callback(null,new Error("Unknown type of component "+event.target.result));
+                }
             } else {
-                k(null,found);
+                callback(null,null);
             }
-        }, function(found,k){
-            if(found == null) {
-                var request = transaction.objectStore("blanks").get(oid);
-                request.onsuccess = function(event) {
-                    if(event.target.result != null) {
-                        var label = "_:" + event.target.result.id;
-                        k(null, that.parseLiteral({token: "blank", value: label}));
-                    } else
-                        k(null,null)
-                };
-                request.onerror = function(event) {
-                    k(new Error("Error searching in blanks data "+event.target.errorCode));
-                };
-            } else {
-                k(null,found);
-            }
-        })(null,function(err,found){
-            if(err)
-                callback(null,err);
-            else
-                callback(found);
-        });
+        };
+        request.onerror = function(event) {
+            callback(null, new Error("Error searching in blanks data "+event.target.errorCode));
+        };
     }
 };
 
@@ -41336,27 +41312,17 @@ PersistentLexicon.prototype.clear = function(callback) {
     this.defaultGraphUri = "https://github.com/antoniogarrote/rdfstore-js#default_graph";
     this.defaultGraphUriTerm = {"token":"uri","prefix":null,"suffix":null,"value":this.defaultGraphUri};
 
-    var transaction = that.db.transaction(["uris","literals","blanks"],"readwrite"), request;
-    var uris= transaction.objectStore("uris");
-    var literals = transaction.objectStore("literals");
-    var blanks = transaction.objectStore("blanks");
+    var transaction = that.db.transaction(["components"],"readwrite"), request;
+    var components = transaction.objectStore("components");
 
     var k = function() {
         if(callback != null)
             callback();
     };
 
-    request = uris.clear();
-    request.onsuccess = function(){
-        request = literals.clear();
-        request.onsuccess = function(){
-            request = blanks.clear();
-            request.onsuccess = k;
-            request.onerror = k;
-        };
-        request.onerror = k;
-    };
-    request.onerror =k;
+    request = components.clear();
+    request.onsuccess = k;
+    request.onerror = k;
 };
 
 /**
@@ -41393,32 +41359,22 @@ PersistentLexicon.prototype.unregister = function (quad, key, callback) {
  * @private
  */
 PersistentLexicon.prototype._unregisterTerm = function (kind, oid, callback) {
-    var that = this;
-    var transaction = that.db.transaction(["uris","literals","blanks", "knownGraphs"],"readwrite"), request;
+    var that = this, request;
+    var transaction = that.db.transaction(["components", "knownGraphs"],"readwrite");
     if (kind === 'uri') {
         if (oid != this.defaultGraphOid) {
             var removeKnownGraphs = function() {
                 var request = transaction.objectStore("knownGraphs").delete(oid);
                 request.onsuccess = function() { callback(); };
-                //request.onerror = function(){ callback(); };
             };
-            var request = transaction.objectStore("uris").delete(oid);
+            request = transaction.objectStore("components").delete(oid);
             request.onsuccess = removeKnownGraphs();
-            //request.onerror = removeKnownGraphs();
         } else {
             callback();
         }
-    } else if (kind === 'literal') {
-        var request = transaction.objectStore("literals").delete(oid);
-        request.onsuccess = function() { callback(); };
-        //request.onerror = function() { callback(); };
-
-    } else if (kind === 'blank') {
-        var request = transaction.objectStore("blanks").delete(oid);
-        request.onsuccess = function() { callback(); };
-        //request.onerror = function() { callback(); };
     } else {
-        callback();
+        request = transaction.objectStore("components").delete(oid);
+        request.onsuccess = function() { callback(); };
     }
 };
 
@@ -41452,15 +41408,30 @@ PersistentQuadBackend = function (configuration, callback) {
         utils.registerIndexedDB(that);
 
         this.indexMap = {};
-        this.indices = ['SPOG', 'GP', 'OGS', 'POG', 'GSP', 'OS'];
+        this.indices = ['S','P','O','G','SP','SO','SG','PO','PG','OG','SPO','SPG','SOG','POG','SPOG']
         this.componentOrders = {
-            SPOG:['subject', 'predicate', 'object', 'graph'],
-            GP:['graph', 'predicate', 'subject', 'object'],
-            OGS:['object', 'graph', 'subject', 'predicate'],
-            POG:['predicate', 'object', 'graph', 'subject'],
-            GSP:['graph', 'subject', 'predicate', 'object'],
-            OS:['object', 'subject', 'predicate', 'graph']
+            S: ['subject','predicate','object','graph'],
+            P: ['predicate','subject','object','graph'],
+            O: ['object','subject','predicate','graph'],
+            G: ['graph','subject','predicate','object'],
+            SP: ['subject','predicate','object','graph'],
+            SO: ['subject', 'object','predicate','graph'],
+            SG: ['subject', 'graph','predicate','object'],
+            PO: ['predicate','object','subject','graph'],
+            PG: ['predicate', 'graph','subject','object'],
+            OG: ['object','graph','subject','predicate'],
+            SPO: ['subject','predicate','object','graph'],
+            SPG: ['subject', 'predicate', 'graph','object'],
+            SOG: ['subject', 'object', 'graph','predicate'],
+            POG: ['predicate', 'object', 'graph','subject'],
+            SPOG: ['subject', 'predicate', 'object', 'graph']
         };
+        this.componentOrdersMap  = {};
+        for(var index in this.componentOrders) {
+            var indexComponents = this.componentOrders[index];
+            var key = indexComponents.slice(0,index.length).sort().join(".");
+            this.componentOrdersMap[key] = index;
+        }
 
         that.dbName = configuration['name'] || "rdfstorejs";
         var request = that.indexedDB.open(this.dbName+"_db", 1);
@@ -41563,9 +41534,9 @@ PersistentQuadBackend.prototype._genMinIndexKey = function(quad,index) {
     var indexComponents = this.componentOrders[index];
     return utils.map(indexComponents, function(component){
         if(typeof(quad[component]) === 'string' || quad[component] == null) {
-            return "-1";
+            return "0";
         } else {
-            return ""+quad[component];
+            return quad[component];
         }
     }).join('.');
 };
@@ -41576,15 +41547,9 @@ PersistentQuadBackend.prototype._genMaxIndexKey = function(quad,index) {
     var foundFirstMissing = false;
     for(var i=0; i<indexComponents.length; i++){
         var component = indexComponents[i];
-        var componentValue= quad[component];
+        var componentValue = quad[component];
         if(typeof(componentValue) === 'string') {
-            if (foundFirstMissing === false) {
-                    foundFirstMissing = true;
-                if (i - 1 >= 0) {
-                    acum[i - 1] = acum[i - 1] + 1
-                }
-            }
-            acum[i] = -1;
+            acum[i] = 'z';
         } else {
             acum[i] = componentValue;
         }
@@ -41596,22 +41561,15 @@ PersistentQuadBackend.prototype._genMaxIndexKey = function(quad,index) {
 
 
 PersistentQuadBackend.prototype._indexForPattern = function (pattern) {
+    var that = this;
     var indexKey = pattern.indexKey;
-
-    for (var i = 0; i < this.indices.length; i++) {
-        var index = this.indices[i];
-        var indexComponents = this.componentOrders[index];
-        for (var j = 0; j < indexComponents.length; j++) {
-            if (utils.include(indexKey, indexComponents[j]) === false) {
-                break;
-            }
-            if (j == indexKey.length - 1) {
-                return index;
-            }
-        }
+    var indexKeyString = indexKey.sort().join(".");
+    var index = that.componentOrdersMap[indexKeyString];
+    if(index == null) {
+        throw new Error("Error, cannot find index for indexKey "+indexKeyString);
+    } else {
+        return index;
     }
-
-    return 'SPOG'; // If no other match, we return the more generic index
 };
 
 
@@ -44023,12 +43981,21 @@ QueryFilters.preprocessExistentialFilters = function(filters, bindings, queryEng
                 k();
             });
         } else if(filter.value.expressionType === "irireforfunction" || filter.value.expressionType === "custom") {
-            var operands = _.map(filter.value.args, function(operand){ return {"value": operand}; });
-            QueryFilters.preprocessExistentialFilters(operands, bindings, queryEngine, dataset, env, function(preprocessedOperands){
-                filter.value.args = preprocessedOperands.map(function(operand){ return operand.value; });
+            if(filter.value.args != null) {
+                var operands = _.map(filter.value.args, function (operand) {
+                    return {"value": operand};
+                });
+                QueryFilters.preprocessExistentialFilters(operands, bindings, queryEngine, dataset, env, function (preprocessedOperands) {
+                    filter.value.args = preprocessedOperands.map(function (operand) {
+                        return operand.value;
+                    });
+                    preProcessedFilters.push(filter);
+                    k();
+                });
+            } else {
                 preProcessedFilters.push(filter);
                 k();
-            });
+            }
         } else {
             preProcessedFilters.push(filter);
             k();

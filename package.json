@@ -1,6 +1,6 @@
 {
   "name": "rdfstore",
-  "version": "0.9.16",
+  "version": "0.9.17",
   "description": "RDF graph store supporting the SPARQL query language",
   "scripts": {
     "test": "gulp specs"
