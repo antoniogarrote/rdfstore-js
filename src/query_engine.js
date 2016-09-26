@@ -949,7 +949,7 @@ QueryEngine.prototype.executeSelectUnit = function(projection, dataset, pattern,
         });
     } else if(pattern.kind === "EMPTY_PATTERN") {
         // as an example of this case  check DAWG test case: algebra/filter-nested-2
-        callback([]);
+        callback([{}]);
     //} else if(pattern.kind === "ZERO_OR_MORE_PATH" || pattern.kind === 'ONE_OR_MORE_PATH') {
     //    return this.executeZeroOrMorePath(pattern, dataset, env);
     } else {
@@ -1158,8 +1158,11 @@ QueryEngine.prototype.executeLEFT_JOIN = function(projection, dataset, patterns,
     var setQuery1 = patterns.lvalue;
     var setQuery2 = patterns.rvalue;
     if(setQuery1.kind === "EMPTY_PATTERN") {
-        // LEFT JOIN ( Z | X) => X
-        this.executeSelectUnit(projection, dataset, setQuery2, env, callback);
+        // LEFT JOIN ( Z | X) => X; exception: X returns no results
+        this.executeSelectUnit(projection, dataset, setQuery2, env, function (result) {
+            if (result != null && result.length > 0) callback(result);
+            else callback([{}]);
+        });
     } else {
         var set1 = null;
         var set2 = null;
