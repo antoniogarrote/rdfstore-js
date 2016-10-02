@@ -3,7 +3,7 @@ var RVN3Parser = require("./rvn3_parser").RVN3Parser;
 var JSONLDParser = require("./jsonld_parser").JSONLDParser;
 var Utils = require("./utils");
 
- var RDFLoader = function (params) {
+RDFLoader = function (params) {
 
     this.precedences = ["text/turtle", "text/n3", "application/ld+json", "application/json"];
     this.parsers = {"text/turtle":RVN3Parser.parser, "text/n3":RVN3Parser.parser, "application/ld+json":JSONLDParser.parser, "application/json":JSONLDParser.parser};
@@ -75,18 +75,18 @@ RDFLoader.prototype.load = function(uri, graph, callback) {
                         var mimeParts = m.split("/");
                         if(mimeParts[1] === '*') {
                             if(mime.indexOf(mimeParts[0])!=-1) {
-                                return that.tryToParse(that.parsers[m], graph, data, {documentURI: uri}, callback);
+                                return that.tryToParse(that.parsers[m], graph, data, {documentURI: uri, format: mimeParts[0]}, callback);
                             }
                         } else {
                             if(mime.indexOf(m)!=-1) {
-                                return that.tryToParse(that.parsers[m], graph, data, {documentURI: uri}, callback);
+                                return that.tryToParse(that.parsers[m], graph, data, {documentURI: uri, format: m}, callback);
                             } else if(mime.indexOf(mimeParts[1])!=-1) {
-                                return that.tryToParse(that.parsers[m], graph, data, {documentURI: uri}, callback);
+                                return that.tryToParse(that.parsers[m], graph, data, {documentURI: uri, format: mimeParts[1]}, callback);
                             }
                         }
                     } else {
                         if(mime.indexOf(m)!=-1) {
-                            return that.tryToParse(that.parsers[m], graph, data, {documentURI: uri}, callback);
+                            return that.tryToParse(that.parsers[m], graph, data, {documentURI: uri, format: m}, callback);
                         }
                     }
                 }
@@ -133,9 +133,7 @@ RDFLoader.prototype.tryToParse = function(parser, graph, input, options, callbac
     }
 };
 
-module.exports = {
-    RDFLoader: RDFLoader
-};
+module.exports = RDFLoader;
 
 
 // var loader = require("./js-communication/src/rdf_loader").RDFLoader; loader = new loader.RDFLoader(); loader.load('http://dbpedialite.org/titles/Lisp_%28programming_language%29', function(success, results){console.log("hey"); console.log(success); console.log(results)})
