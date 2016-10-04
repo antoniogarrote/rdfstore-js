@@ -173,7 +173,7 @@ Lexicon.prototype.registerBlank = function(callback) {
     var oid = this.oidCounter;
     this.oidCounter++;
     var oidStr = ""+oid;
-    this.oidBlanks.insert(oidStr, oidStr, function(){
+    this.oidBlanks.insert(oidStr, oid, function(){
         callback(oid);
     })
 };
@@ -193,7 +193,7 @@ Lexicon.prototype.resolveBlank = function(label,callback) {
             // ??
             var oid = that.oidCounter;
             this.oidCounter++;
-            callback(""+oid);
+            callback(oid);
             //
         }
     });
