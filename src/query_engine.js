@@ -501,9 +501,10 @@ QueryEngine.prototype.normalizeQuad = function(quad, queryEnv, shouldIndex, call
 QueryEngine.prototype.denormalizeBindingsList = function(bindingsList, env, callback) {
     var that = this;
     var denormList = [];
+    var lazyCache = {};
 
     async.eachSeries(bindingsList, function(bindings, k){
-        that.denormalizeBindings(bindings, env, function(denorm){
+        that.denormalizeBindings(bindings, env, lazyCache, function(denorm){
             denormList.push(denorm);
             k();
         });
@@ -557,7 +558,7 @@ QueryEngine.prototype.copyDenormalizedBindings = function(bindingsList, out, cal
     });
 };
 
-QueryEngine.prototype.denormalizeBindings = function(bindings, env, callback) {
+QueryEngine.prototype.denormalizeBindings = function(bindings, env, lazyCache, callback) {
     var variables = _.keys(bindings);
     var envOut = env.outCache;
     var that = this;
@@ -576,12 +577,18 @@ QueryEngine.prototype.denormalizeBindings = function(bindings, env, callback) {
                 bindings[variable] = envOut[oid];
                 k();
             } else {
-                that.lexicon.retrieve(oid, function(val){
-                    bindings[variable] = val;
+                var cb = function(val){
+                    lazyCache['#'+oid] = bindings[variable] = val;
                     if(val.token === 'blank')
                         env.blanks[val.value] = oid;
                     k();
-                });
+                };
+                if (lazyCache['#'+oid]) {
+                    process.nextTick(function() { cb(lazyCache['#'+oid]) });
+                }
+                else {
+                    that.lexicon.retrieve(oid, cb);
+                }
             }
         }
     }, function(){
