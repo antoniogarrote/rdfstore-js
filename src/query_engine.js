@@ -584,7 +584,7 @@ QueryEngine.prototype.denormalizeBindings = function(bindings, env, lazyCache, c
                     k();
                 };
                 if (lazyCache['#'+oid]) {
-                    process.nextTick(function() { cb(lazyCache['#'+oid]) });
+                    _.nextTick(function() { cb(lazyCache['#'+oid]) });
                 }
                 else {
                     that.lexicon.retrieve(oid, cb);
