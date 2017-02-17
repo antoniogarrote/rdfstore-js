@@ -9,8 +9,9 @@ addons:
       - ubuntu-toolchain-r-test
     packages:
       - g++-4.8
-before_script:
-  - npm install -g gulp
+install:
   - npm install
-script: gulp specs
+  - npm install -g gulp
+script:
+  - gulp specs
 sudo: false
