@@ -358,7 +358,9 @@ var whilst = function (test, iterator, callback) {
             if (err) {
                 return callback(err);
             }
-            whilst(test, iterator, callback);
+            setTimeout(() => {
+              whilst(test, iterator, callback)
+            }, 0)
         });
     }
     else {
