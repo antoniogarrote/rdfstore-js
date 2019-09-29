@@ -1,4 +1,4 @@
-#rdfstore-js [![Build Status](https://travis-ci.org/antoniogarrote/rdfstore-js.svg?branch=master)](https://travis-ci.org/antoniogarrote/rdfstore-js) [![Join the chat at https://gitter.im/antoniogarrote/rdfstore-js](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/antoniogarrote/rdfstore-js?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+# rdfstore-js [![Build Status](https://travis-ci.org/antoniogarrote/rdfstore-js.svg?branch=master)](https://travis-ci.org/antoniogarrote/rdfstore-js) [![Join the chat at https://gitter.im/antoniogarrote/rdfstore-js](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/antoniogarrote/rdfstore-js?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ## Important Note
 
@@ -114,7 +114,7 @@ This is a list of the different kind of queries currently implemented:
 - FILTER IN / NOT IN operators
 
 
-##Installation
+## Installation
 
 The library can be installed using NPM:
 
@@ -128,7 +128,7 @@ The library can also be installed via bower using a global module:
 $ bower install rdfstore
 ```
 
-##Building
+## Building
 
 Before running the build script, you must install JavaScript dependencies with [npm](https://npmjs.org/doc/install.html) (`npm` is shipped with [node](http://nodejs.org/download/)):
 
@@ -164,7 +164,7 @@ Additionally, there are some smoke tests for both browser versions that can be f
 
 This is a small overview of the rdfstore-js API.
 
-###Store creation
+### Store creation
 
 ```javascript
 //nodejs only
@@ -185,7 +185,7 @@ new rdfstore.Store(function(err, store) {
 });
 ```
 
-###Query execution
+### Query execution
 
 ```javascript
 // simple query execution
@@ -211,7 +211,8 @@ store.executeWithEnvironment("SELECT * { ?s ?p ?o }",defaultGraph,
 });
 ```
 
-###Construct queries RDF Interfaces API
+
+## Construct queries RDF Interfaces API
 
 ```javascript
 var query = "CONSTRUCT { <http://example.org/people/Alice> ?p ?o } \
@@ -230,7 +231,7 @@ store.execute(query, function(err, graph){
 });
 ```
 
-###Loading remote graphs
+### Loading remote graphs
 
 rdfstore-js will try to retrieve remote RDF resources across the network when a 'LOAD' SPARQL query is executed.
 The node.js build of the library will use regular TCP sockets and perform proper content negotiation. It will also follow a limited number of redirections.
@@ -250,7 +251,7 @@ store.execute('LOAD <http://dbpedialite.org/titles/Lisp_%28programming_language%
 })
 ```
 
-###High level interface
+### High level interface
 
 The following interface is a convenience API to work with Javascript code instead of using SPARQL query strings. It is built on top of the RDF Interfaces W3C API.
 
@@ -328,7 +329,7 @@ store.load('remote', remoteGraphUri, function(err, results) {});
 store.registerParser("application/rdf+xml", rdXmlParser);
 ```
 
-###RDF Interface API
+### RDF Interface API
 
 The store object includes a 'rdf' object implementing a RDF environment as described in the [RDF Interfaces 1.0](http://www.w3.org/TR/rdf-interfaces/) W3C's working draft.
 This object can be used to access to the full RDF Interfaces 1.0 API.
@@ -352,7 +353,7 @@ var triples = graph.match(null, store.rdf.createNamedNode(store.rdf.resolve("foa
 console.log("worked? "+(triples[0].object.valueOf() === 'Alice'));
 ```
 
-###Default Prefixes
+### Default Prefixes
 
 Default RDF name-spaces can be specified using the *registerDefaultNamespace*. These names will be included automatically in all queries. If the same name-space is specified by the client in the query string the new prefix will shadow the default one.
 A collection of common name-spaces like rdf, rdfs, foaf, etc. can be automatically registered using the *registerDefaultProfileNamespace* function.
@@ -371,7 +372,7 @@ new Store({name:'test', overwrite:true}, function(err,store){
 });
 ```
 
-###JSON-LD Support
+### JSON-LD Support
 
 rdfstore-js implements parsers for Turtle and JSON-LD. The specification of JSON-LD is still an ongoing effort. You may expect to find some inconsistencies between this implementation and the actual specification.
 
@@ -401,7 +402,7 @@ store.load("application/ld+json", jsonld, "ex:test", function(err,results) {
 });
 ```
 
-###Events API
+### Events API
 
 rdfstore-js implements an experimental events API that allows clients to observe changes in the RDF graph and receive notifications when parts of this graph changes.
 The two main event functions are *subscribe* that makes possible to set up a callback function that will be invoked each time triples matching a certain pattern passed as an argument are added or removed, and the function *startObservingNode* that will be invoked with the modified version of the node each time triples are added or removed from the node.
@@ -452,7 +453,7 @@ store.stopObservingNode(cb);
 In the same way, there are *startObservingQuery* and *stopObservingQuery* functions that makes possible to set up callbacks for whole SPARQL queries.
 The store will try to be smart and not perform unnecessary evaluations of these query after quad insertion/deletions. Nevertheless too broad queries must be used carefully with the events API.
 
-###Custom Filter Functions
+### Custom Filter Functions
 
 Custom filter function can be registered into the store using the *registerCustomFunction* function. This function receives two argument, the name of the custom function and the associated implementation. This functions will be available in a SPARQL query using the prefix *custom*.
 You can also use a full URI to identify the function that is going to be registered.
@@ -503,7 +504,7 @@ new Store({name:'test', overwrite:true}, function(err,store) {
 });
 ```
 
-###Persistence
+### Persistence
 
 The store can be persisted in the browser using IndexedDB as the backend. In order to make the store persistent,
 the 'persistent' flag must be set to true in the store creation options.
@@ -522,7 +523,7 @@ rdfstore.Store.yieldFrequency(200); // will only yield after 200 invocations of 
 ```
 If the number is too big a number can produce stack overflow errors during execution. If you find this problem, reduce the value provided for `yieldFrequency`.
 
-##Dependencies
+## Dependencies
 
 The library include dependencies to two semantic-web libraries for
 parsing:
@@ -532,7 +533,7 @@ parsing:
 
 - [jsonld](https://github.com/digitalbazaar/jsonld.js), developed by Digital Bazaar and released under the New BSD license.
 
-##Frontend
+## Frontend
 
 A stand-along frontend for the store built using electron has been added in version 0.9.7.
 You can build the frontend running the command:
@@ -543,7 +544,7 @@ $ gulp frontend
 
 The file will be added under the releases directory.
 
-##Contributing
+## Contributing
 
 rdfstore-js is still at the beginning of its development. If you take a look at the library and find a way to improve it, please ping us. We'll be very greatful for any bug report or pull-request.
 
