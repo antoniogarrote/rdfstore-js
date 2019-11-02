@@ -44,7 +44,7 @@
     "gulp-electron": "0.0.8",
     "gulp-jasmine": "^2.3.0",
     "gulp-rename": "~1.2.2",
-    "lodash": "^2.4.1",
+    "lodash": "^4.17.15",
     "minimatch": "^2.0.4",
     "moment": "^2.9.0",
     "pegjs": "^0.10.0",
